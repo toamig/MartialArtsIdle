@@ -69,7 +69,7 @@ function HomeScreen({ cultivation }) {
             fps={boosting ? 12 : 6}
             scale={3}
           />
-          {boosting && <div className="boost-label">3x Cultivation!</div>}
+          <div className={`boost-label${boosting ? '' : ' boost-label-hidden'}`}>3x Cultivation!</div>
           <p className="tap-hint">
             {maxed ? 'Peak Achieved' : 'Hold to cultivate faster'}
           </p>

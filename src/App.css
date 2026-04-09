@@ -273,6 +273,10 @@
   animation: pulse-glow 0.6s ease-in-out infinite alternate;
 }
 
+.boost-label-hidden {
+  visibility: hidden;
+}
+
 @keyframes pulse-glow {
   from { opacity: 0.7; text-shadow: 0 0 4px rgba(245, 200, 66, 0.3); }
   to { opacity: 1; text-shadow: 0 0 12px rgba(245, 200, 66, 0.6); }
