@@ -1,26 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import REALMS from '../data/realms';
+import { saveGame, loadGame } from '../systems/save';
 
 const BASE_RATE = 5; // qi per second at 1x
 const BOOST_MULTIPLIER = 3;
-const SAVE_KEY = 'mai_cultivation';
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return null;
-}
-
-function saveState(state) {
-  try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-  } catch {}
-}
 
 export default function useCultivation() {
-  const saved = loadState();
+  const saved = loadGame();
   const [realmIndex, setRealmIndex] = useState(saved?.realmIndex ?? 0);
   const [qi, setQi] = useState(saved?.qi ?? 0);
   const [boosting, setBoosting] = useState(false);
@@ -42,10 +28,7 @@ export default function useCultivation() {
 
       if (!maxed) {
         const rate = BASE_RATE * (boostRef.current ? BOOST_MULTIPLIER : 1);
-        setQi((prev) => {
-          const next = prev + rate * dt;
-          return next;
-        });
+        setQi((prev) => prev + rate * dt);
       }
 
       raf = requestAnimationFrame(tick);
@@ -62,10 +45,10 @@ export default function useCultivation() {
     }
   }, [qi, cost, maxed]);
 
-  // Save periodically
+  // Auto-save every 2 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      saveState({ realmIndex, qi });
+      saveGame({ realmIndex, qi });
     }, 2000);
     return () => clearInterval(interval);
   }, [realmIndex, qi]);

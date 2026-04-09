@@ -370,3 +370,87 @@
   color: var(--gold);
   font-weight: 600;
 }
+
+/* Save Section */
+.save-section {
+  margin-top: 28px;
+  max-width: 400px;
+}
+
+.save-section h2 {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.save-message {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.save-success {
+  background: rgba(80, 200, 120, 0.15);
+  color: #50c878;
+  border: 1px solid rgba(80, 200, 120, 0.3);
+}
+
+.save-error {
+  background: rgba(233, 69, 96, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(233, 69, 96, 0.3);
+}
+
+.save-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.save-btn {
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.2s;
+}
+
+.save-btn:active {
+  border-color: var(--accent);
+}
+
+.save-btn-danger {
+  color: var(--accent);
+  border-color: rgba(233, 69, 96, 0.3);
+}
+
+.import-area {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.import-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: monospace;
+  font-size: 0.8rem;
+  resize: vertical;
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+.import-input::placeholder {
+  color: var(--text-muted);
+}
