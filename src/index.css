@@ -10,7 +10,7 @@
   --gold: #f5c842;
   --border: #2a2a4a;
 
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, sans-serif;
   font-size: 16px;
   line-height: 1.5;
   color: var(--text-primary);
@@ -23,12 +23,32 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior: none;
+}
+
 body {
   min-height: 100vh;
+  min-height: 100dvh;
+  /* Prevent text selection on game UI */
+  -webkit-user-select: none;
+  user-select: none;
+  /* Prevent iOS tap zoom */
+  -webkit-text-size-adjust: 100%;
+  /* Safe area padding for notched phones */
+  padding: env(safe-area-inset-top) 0 0 0;
+}
+
+/* Allow text selection in specific places if needed */
+input, textarea {
+  -webkit-user-select: auto;
+  user-select: auto;
 }
 
 #root {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
