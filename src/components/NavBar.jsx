@@ -1,11 +1,11 @@
 function NavBar({ currentScreen, onNavigate }) {
   const screens = [
-    { id: 'home', label: 'Home' },
-    { id: 'training', label: 'Training' },
-    { id: 'combat', label: 'Combat' },
-    { id: 'shop', label: 'Shop' },
-    { id: 'inventory', label: 'Inventory' },
-    { id: 'stats', label: 'Stats' },
+    { id: 'home', label: 'Home', icon: '🏠' },
+    { id: 'training', label: 'Train', icon: '⚔️' },
+    { id: 'combat', label: 'Combat', icon: '🥊' },
+    { id: 'shop', label: 'Shop', icon: '🛒' },
+    { id: 'inventory', label: 'Items', icon: '🎒' },
+    { id: 'stats', label: 'Stats', icon: '📊' },
   ];
 
   return (
@@ -16,7 +16,8 @@ function NavBar({ currentScreen, onNavigate }) {
           className={`nav-btn ${currentScreen === screen.id ? 'active' : ''}`}
           onClick={() => onNavigate(screen.id)}
         >
-          {screen.label}
+          <span className="nav-icon">{screen.icon}</span>
+          <span className="nav-label">{screen.label}</span>
         </button>
       ))}
     </nav>

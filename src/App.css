@@ -2,94 +2,147 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/* Navigation Bar */
+/* Bottom Tab Bar */
 .navbar {
   display: flex;
-  gap: 4px;
-  padding: 12px 16px;
+  gap: 2px;
+  padding: 6px 8px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom));
   background: var(--bg-secondary);
-  border-bottom: 2px solid var(--accent);
-  flex-wrap: wrap;
-  justify-content: center;
+  border-top: 2px solid var(--accent);
+  justify-content: space-around;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
 }
 
 .nav-btn {
-  padding: 10px 20px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  font-size: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  flex: 1;
+  max-width: 80px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.nav-label {
+  font-size: 10px;
+  line-height: 1;
 }
 
 .nav-btn:hover {
-  background: var(--bg-card);
   color: var(--text-primary);
-  border-color: var(--accent);
 }
 
 .nav-btn.active {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.nav-btn.active .nav-label {
+  font-weight: 700;
 }
 
 /* Screen Container */
 .screen-container {
   flex: 1;
-  padding: 32px 24px;
-  max-width: 900px;
+  padding: 20px 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  max-width: 600px;
   width: 100%;
   margin: 0 auto;
 }
 
 /* Screen Defaults */
 .screen h1 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   margin-bottom: 4px;
   color: var(--text-primary);
 }
 
 .screen .subtitle {
   color: var(--text-muted);
-  margin-bottom: 32px;
-  font-size: 1.1rem;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
 }
 
 /* Card Grid */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 480px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .screen-container {
+    max-width: 900px;
+    padding: 32px 24px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+
+  .screen h1 {
+    font-size: 2rem;
+  }
 }
 
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 24px;
-  transition: border-color 0.2s, transform 0.2s;
+  padding: 20px;
+  transition: border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.card:hover {
+.card:active {
   border-color: var(--accent);
-  transform: translateY(-2px);
+}
+
+@media (hover: hover) {
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
 }
 
 .card h2 {
-  font-size: 1.25rem;
-  margin-bottom: 8px;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
   color: var(--gold);
 }
 
 .card p {
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 /* Home Screen */
@@ -98,7 +151,13 @@
 }
 
 .home-screen h1 {
-  font-size: 2.5rem;
+  font-size: 1.8rem;
+}
+
+@media (min-width: 768px) {
+  .home-screen h1 {
+    font-size: 2.5rem;
+  }
 }
 
 .home-content {
@@ -110,8 +169,9 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 32px;
+  padding: 24px;
   max-width: 500px;
+  width: 100%;
 }
 
 .status-card h2 {
@@ -127,7 +187,7 @@
 .stats-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   max-width: 400px;
 }
 
@@ -138,7 +198,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 14px 20px;
+  padding: 12px 16px;
 }
 
 .stat-label {
