@@ -183,6 +183,80 @@
   color: var(--text-secondary);
 }
 
+/* Fighter Stage */
+.fighter-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+.tap-hint {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* VFX Layer */
+.vfx-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.vfx-effect {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+/* VFX: Hit flash */
+.vfx-hit {
+  animation: vfx-hit-anim 0.3s ease-out;
+}
+
+@keyframes vfx-hit-anim {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
+}
+
+/* VFX: Float up text */
+.vfx-float-up .vfx-content {
+  display: block;
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 1.2rem;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  animation: vfx-float-anim 0.8s ease-out forwards;
+}
+
+@keyframes vfx-float-anim {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-40px); opacity: 0; }
+}
+
+/* VFX: Burst ring */
+.vfx-burst {
+  width: 60px;
+  height: 60px;
+  border: 3px solid var(--gold);
+  border-radius: 50%;
+  animation: vfx-burst-anim 0.5s ease-out forwards;
+}
+
+@keyframes vfx-burst-anim {
+  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+
 /* Stats Screen */
 .stats-list {
   display: flex;
