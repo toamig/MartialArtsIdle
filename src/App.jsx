@@ -6,17 +6,21 @@ import CombatScreen from './screens/CombatScreen';
 import ShopScreen from './screens/ShopScreen';
 import InventoryScreen from './screens/InventoryScreen';
 import StatsScreen from './screens/StatsScreen';
+import useCultivation from './hooks/useCultivation';
+import useInventory from './hooks/useInventory';
 import './App.css';
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('home');
+  const cultivation = useCultivation();
+  const inventory = useInventory();
 
   const screens = {
-    home: <HomeScreen />,
+    home: <HomeScreen cultivation={cultivation} />,
     training: <TrainingScreen />,
     combat: <CombatScreen />,
     shop: <ShopScreen />,
-    inventory: <InventoryScreen />,
+    inventory: <InventoryScreen inventory={inventory} />,
     stats: <StatsScreen />,
   };
 

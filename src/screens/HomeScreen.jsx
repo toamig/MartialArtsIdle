@@ -1,11 +1,10 @@
 import SpriteAnimator from '../components/SpriteAnimator';
 import RealmProgressBar from '../components/RealmProgressBar';
 import { useVFX } from '../components/VFXLayer';
-import useCultivation from '../hooks/useCultivation';
 
 const BASE = import.meta.env.BASE_URL;
 
-function HomeScreen() {
+function HomeScreen({ cultivation }) {
   const {
     realmName,
     nextRealmName,
@@ -16,7 +15,7 @@ function HomeScreen() {
     maxed,
     startBoost,
     stopBoost,
-  } = useCultivation();
+  } = cultivation;
 
   const { vfxLayer, spawnVFX } = useVFX();
 

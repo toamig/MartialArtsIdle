@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ITEMS, RARITY } from '../data/items';
-import useInventory from '../hooks/useInventory';
 import ItemModal from '../components/ItemModal';
 
 const BASE = import.meta.env.BASE_URL;
@@ -11,8 +10,8 @@ const CATEGORIES = [
   { key: 'cultivation', label: 'Cultivation' },
 ];
 
-function InventoryScreen() {
-  const { getQuantity } = useInventory();
+function InventoryScreen({ inventory }) {
+  const { getQuantity } = inventory;
   const [activeCategory, setActiveCategory] = useState('herbs');
   const [selectedItem, setSelectedItem] = useState(null);
 
