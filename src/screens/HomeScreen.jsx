@@ -1,62 +1,79 @@
 import SpriteAnimator from '../components/SpriteAnimator';
+import RealmProgressBar from '../components/RealmProgressBar';
 import { useVFX } from '../components/VFXLayer';
+import useCultivation from '../hooks/useCultivation';
 
 const BASE = import.meta.env.BASE_URL;
 
 function HomeScreen() {
+  const {
+    realmName,
+    nextRealmName,
+    qi,
+    cost,
+    progress,
+    boosting,
+    maxed,
+    startBoost,
+    stopBoost,
+  } = useCultivation();
+
   const { vfxLayer, spawnVFX } = useVFX();
 
-  const handleTap = (e) => {
+  const handlePointerDown = (e) => {
+    e.preventDefault();
+    startBoost();
+
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-
     spawnVFX({
-      type: 'hit',
+      type: 'burst',
       x,
       y,
-      duration: 400,
-      sprite: {
-        src: `${BASE}sprites/hit-vfx.png`,
-        frameWidth: 48,
-        frameHeight: 48,
-        frameCount: 4,
-        fps: 12,
-        scale: 1.5,
-      },
+      duration: 600,
     });
+  };
 
-    spawnVFX({
-      type: 'float-up',
-      x: x + 10,
-      y: y - 20,
-      duration: 800,
-      content: '+1',
-    });
+  const handlePointerUp = () => {
+    stopBoost();
   };
 
   return (
     <div className="screen home-screen">
       <h1>Martial Arts Idle</h1>
-      <p className="subtitle">Train. Fight. Ascend.</p>
+      <p className="subtitle">{maxed ? 'You have reached the Peak!' : `${realmName}`}</p>
 
-      <div className="fighter-stage" onClick={handleTap}>
-        {vfxLayer}
-        <SpriteAnimator
-          src={`${BASE}sprites/fighter-idle.png`}
-          frameWidth={64}
-          frameHeight={64}
-          frameCount={6}
-          fps={8}
-          scale={3}
+      <div className="cultivation-layout">
+        <RealmProgressBar
+          progress={progress}
+          currentRealm={realmName}
+          nextRealm={nextRealmName}
+          qi={qi}
+          cost={cost}
+          boosting={boosting}
         />
-        <p className="tap-hint">Tap the fighter!</p>
-      </div>
 
-      <div className="home-content">
-        <div className="status-card">
-          <h2>Welcome, Disciple</h2>
-          <p>Your journey in the martial arts begins here. Train your body, sharpen your mind, and rise through the ranks.</p>
+        <div
+          className={`fighter-stage ${boosting ? 'stage-boosted' : ''}`}
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+        >
+          {vfxLayer}
+          <SpriteAnimator
+            src={`${BASE}sprites/fighter-meditate.png`}
+            frameWidth={64}
+            frameHeight={64}
+            frameCount={6}
+            fps={boosting ? 12 : 6}
+            scale={3}
+          />
+          {boosting && <div className="boost-label">3x Cultivation!</div>}
+          <p className="tap-hint">
+            {maxed ? 'Peak Achieved' : 'Hold to cultivate faster'}
+          </p>
         </div>
       </div>
     </div>
