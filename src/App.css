@@ -40,9 +40,16 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.nav-icon {
-  font-size: 20px;
-  line-height: 1;
+.nav-icon-img {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.nav-btn.active .nav-icon-img {
+  opacity: 1;
 }
 
 .nav-label {
