@@ -8,9 +8,8 @@ function HomeScreen({ cultivation }) {
   const {
     realmName,
     nextRealmName,
-    qi,
-    cost,
-    progress,
+    qiRef,
+    costRef,
     boosting,
     maxed,
     startBoost,
@@ -45,11 +44,10 @@ function HomeScreen({ cultivation }) {
 
       <div className="cultivation-layout">
         <RealmProgressBar
-          progress={progress}
+          qiRef={qiRef}
+          costRef={costRef}
           currentRealm={realmName}
           nextRealm={nextRealmName}
-          qi={qi}
-          cost={cost}
           boosting={boosting}
         />
 

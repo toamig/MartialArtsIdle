@@ -5,79 +5,84 @@ import { saveGame, loadGame } from '../systems/save';
 const BASE_RATE = 5; // qi per second at 1x
 const BOOST_MULTIPLIER = 3;
 
+const label = (r) => (r.stage ? `${r.name} - ${r.stage}` : r.name);
+
 export default function useCultivation() {
   const saved = loadGame();
   const [realmIndex, setRealmIndex] = useState(saved?.realmIndex ?? 0);
-  const [qi, setQi] = useState(saved?.qi ?? 0);
   const [boosting, setBoosting] = useState(false);
-  const boostRef = useRef(false);
+
+  const boostRef    = useRef(false);
   const lastTickRef = useRef(performance.now());
 
-  const realm = REALMS[realmIndex];
-  const nextRealm = REALMS[realmIndex + 1] ?? null;
-  const maxed = !nextRealm;
-  const cost = realm.cost;
-  const progress = maxed ? 1 : Math.min(qi / cost, 1);
+  // Mutable refs — updated every tick, no React re-render needed
+  const qiRef      = useRef(saved?.qi ?? 0);
+  const costRef    = useRef(REALMS[saved?.realmIndex ?? 0].cost);
+  const maxedRef   = useRef(!REALMS[(saved?.realmIndex ?? 0) + 1]);
+  const indexRef   = useRef(saved?.realmIndex ?? 0);
 
-  // Game loop
+  // Keep cost/maxed refs in sync whenever realmIndex state changes
+  useEffect(() => {
+    const realm = REALMS[realmIndex];
+    costRef.current  = realm.cost;
+    maxedRef.current = !REALMS[realmIndex + 1];
+    indexRef.current = realmIndex;
+  }, [realmIndex]);
+
+  // Single game loop — level-up handled here so it uses current refs
   useEffect(() => {
     let raf;
     const tick = (now) => {
       const dt = (now - lastTickRef.current) / 1000;
       lastTickRef.current = now;
 
-      if (!maxed) {
+      if (!maxedRef.current) {
         const rate = BASE_RATE * (boostRef.current ? BOOST_MULTIPLIER : 1);
-        setQi((prev) => prev + rate * dt);
+        qiRef.current += rate * dt;
+
+        if (qiRef.current >= costRef.current) {
+          qiRef.current -= costRef.current;
+          const nextIndex = indexRef.current + 1;
+          indexRef.current  = nextIndex;
+          costRef.current   = REALMS[nextIndex].cost;
+          maxedRef.current  = !REALMS[nextIndex + 1];
+          setRealmIndex(nextIndex);
+        }
       }
 
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [maxed]);
-
-  // Level up check
-  useEffect(() => {
-    if (!maxed && qi >= cost) {
-      setQi((prev) => prev - cost);
-      setRealmIndex((prev) => prev + 1);
-    }
-  }, [qi, cost, maxed]);
+  }, []); // runs once — reads everything via refs
 
   // Auto-save every 2 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      saveGame({ realmIndex, qi });
+      saveGame({ realmIndex: indexRef.current, qi: Math.floor(qiRef.current) });
     }, 2000);
     return () => clearInterval(interval);
-  }, [realmIndex, qi]);
-
-  const startBoost = useCallback(() => {
-    boostRef.current = true;
-    setBoosting(true);
   }, []);
 
-  const stopBoost = useCallback(() => {
-    boostRef.current = false;
-    setBoosting(false);
-  }, []);
+  const startBoost = useCallback(() => { boostRef.current = true;  setBoosting(true);  }, []);
+  const stopBoost  = useCallback(() => { boostRef.current = false; setBoosting(false); }, []);
 
-  const label = (r) => (r.stage ? `${r.name} - ${r.stage}` : r.name);
+  const realm     = REALMS[realmIndex];
+  const nextRealm = REALMS[realmIndex + 1] ?? null;
 
   return {
     realmIndex,
-    realmName: label(realm),
-    realmMajor: realm.name,
-    realmStage: realm.stage,
+    realmName:     label(realm),
+    realmMajor:    realm.name,
+    realmStage:    realm.stage,
     nextRealmName: nextRealm ? label(nextRealm) : 'Peak',
-    qi: Math.floor(qi),
-    cost,
-    progress,
+    maxed:         !nextRealm,
     boosting,
-    maxed,
     startBoost,
     stopBoost,
-    totalRealms: REALMS.length,
+    totalRealms:   REALMS.length,
+    // Refs for direct DOM updates — avoids React render lag on the progress bar
+    qiRef,
+    costRef,
   };
 }
