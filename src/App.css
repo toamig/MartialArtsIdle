@@ -2210,11 +2210,17 @@
   opacity: 0.45;
 }
 
-.region-row-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.region-row:not(.region-locked) {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.region-row:not(.region-locked):hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.region-row:not(.region-locked):active {
+  background: rgba(233, 69, 96, 0.08);
 }
 
 .region-row-info {
@@ -2236,30 +2242,6 @@
 .region-min-realm {
   font-size: 0.72rem;
   color: var(--text-muted);
-}
-
-.region-assign-btn {
-  flex-shrink: 0;
-  padding: 6px 14px;
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--accent);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.region-assign-btn:disabled {
-  border-color: var(--border);
-  color: var(--text-muted);
-  cursor: default;
-}
-
-.region-assign-btn:not(:disabled):active {
-  background: rgba(233, 69, 96, 0.15);
 }
 
 .region-row-detail {

@@ -20,20 +20,15 @@ function RegionRow({ region, tab, locked, onNavigate }) {
     ? { primary: region.herbs }
     : { primary: region.ores };
 
-  const handleAssign = () => {
-    onNavigate(SCREEN_MAP[tab], { region });
-  };
-
   return (
-    <div className={`region-row${locked ? ' region-locked' : ''}`}>
-      <div className="region-row-top">
-        <div className="region-row-info">
-          <span className="region-name">{locked ? '???' : region.name}</span>
-          <span className="region-min-realm">{region.minRealm}</span>
-        </div>
-        <button className="region-assign-btn" disabled={locked} onClick={!locked ? handleAssign : undefined}>
-          {locked ? 'Locked' : 'Assign'}
-        </button>
+    <div
+      className={`region-row${locked ? ' region-locked' : ''}`}
+      onClick={!locked ? () => onNavigate(SCREEN_MAP[tab], { region }) : undefined}
+      role={!locked ? 'button' : undefined}
+    >
+      <div className="region-row-info">
+        <span className="region-name">{locked ? '???' : region.name}</span>
+        <span className="region-min-realm">{region.minRealm}</span>
       </div>
       {!locked && (
         <div className="region-row-detail">
