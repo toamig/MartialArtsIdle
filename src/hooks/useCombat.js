@@ -41,13 +41,13 @@ export default function useCombat() {
   const enemyAttackRef  = useRef(null); // () => void — enemy lands a hit
 
   // ─── startFight — writes snapshot into refs, then triggers React render ──
-  const startFight = useCallback((stats, equippedTechs) => {
+  const startFight = useCallback((stats, equippedTechs, enemyName = 'Training Dummy') => {
     const { essence, soul, body } = stats;
     const total  = essence + soul + body;
     const pMaxHp = Math.max(100, Math.floor((essence + body) * 12 + soul * 4));
     const eMaxHp = Math.max(200, Math.floor(total * 10));
     const eAtk   = Math.max(10,  Math.floor((essence + body) * 0.15));
-    const eName  = 'Training Dummy';
+    const eName  = enemyName;
 
     const cds    = equippedTechs.map(t => t ? 0        : Infinity);
     const maxCds = equippedTechs.map(t => t ? getCooldown(t.type, t.quality) : Infinity);

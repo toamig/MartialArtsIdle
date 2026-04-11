@@ -14,6 +14,14 @@ Unlocking a region also opens it for [[Worlds/Gathering|Gathering]] and [[Worlds
 - Regions unlock sequentially within a world — clear one to open the next
 - A world's first region unlocks automatically when the player reaches its minimum realm
 
+## UI Flow
+
+1. Player opens the Worlds screen → stays on the **World** tab
+2. Each region shows its enemy types and notable drops
+3. Clicking **Assign** on an unlocked region navigates to the **Combat screen** with that region's enemies
+4. Enemies are drawn from the region's enemy list (random pick each fight)
+5. Clicking **← Back** returns to the Worlds screen
+
 ---
 
 ## The Six Worlds

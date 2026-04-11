@@ -1,6 +1,6 @@
 # Gathering
 
-A resource activity where the character is sent into a region to collect **herbs and botanical materials**. Unlike pure combat zones, Gathering is focused on harvest — but enemies occasionally appear and must be dealt with before work can resume.
+A resource activity where the character is sent into a region to collect **herbs and botanical materials**.
 
 Gathered herbs feed into the [[Items|Alchemy]] system for pill crafting.
 
@@ -10,7 +10,20 @@ Gathered herbs feed into the [[Items|Alchemy]] system for pill crafting.
 
 - **Idle/automated**: assign character to an unlocked region → they gather herbs continuously
 - The region must first be **unlocked via** [[Worlds/World|the World map]]
-- Enemies occasionally spawn and interrupt gathering — the character fights them off automatically, then resumes
+- Access via the **Gather** sub-tab in the Worlds screen → click **Assign** on any unlocked region
+
+---
+
+## UI Flow
+
+1. Player opens the Worlds screen → switches to the **Gather** tab
+2. Each region shows the herbs available there
+3. Clicking **Assign** navigates to the **Gathering screen** for that region
+4. The Gathering screen shows:
+   - The current herb being gathered (randomly chosen from the region's herb list)
+   - A **progress bar** filling toward the herb's gather cost
+   - A running list of herbs collected this session
+5. Clicking **← Back** returns to the Worlds screen
 
 ---
 
@@ -30,42 +43,35 @@ Each region tier yields herbs of a corresponding rarity range. Lower-rarity herb
 | Origin Returning | Epic – Legendary | Purple Cloud Vine, Immortal Revival Leaf |
 | Origin King+ | Legendary | Immortal Revival Leaf |
 
-Cultivation Materials (Spirit Stones, Beast Cores, etc.) can also drop as a secondary yield.
-
 ---
 
 ## Gathering Mechanics
 
-- Each region has a **Herb Density** value that depletes as herbs are gathered and recovers over time
-- Yield per tick scales with Soul, realm tier, Law bonuses, and current density
+- A herb is randomly chosen from the region's available list when gathering starts or a herb is collected
+- Gathering progresses at **gather speed** (base: **3 points/sec**) toward the herb's **gather cost**
+- When cost is reached → herb is collected and a new herb is chosen
+
+### Gather Costs by Rarity
+
+| Rarity | Gather Cost | Time at 3/s |
+|---|---|---|
+| Common | 15 | ~5 sec |
+| Uncommon | 60 | ~20 sec |
+| Rare | 180 | ~1 min |
+| Epic | 600 | ~3.5 min |
+| Legendary | 1800 | ~10 min |
+
+### Gather Rate Formula
 
 ```
-Gather Rate = Soul × RealmMult × (1 + LawBonus) × density_factor
+Gather Rate = Soul × RealmMult × (1 + LawBonus)
 ```
 
 | Variable | Notes |
 |---|---|
+| Base | 3 points/sec (before stat scaling) |
 | `RealmMult` | ~1.5× per major realm |
 | `LawBonus` | Wood/Nature-attribute Laws grant +10–25% gather speed |
-| `density_factor` | 0–1 based on current Herb Density in the region |
-
----
-
-## Enemy Interruptions
-
-- Enemies spawn at a lower frequency than in World combat zones
-- They are drawn from the lower end of the region's power distribution (not the hardest the zone can produce)
-- Gathering pauses while the character fights; it resumes automatically on kill
-- Combat drops (gold, materials) are still earned from interrupted enemies
-- If the character cannot defeat an interrupting enemy, they are expelled from the zone
-
----
-
-## Herb Density Regeneration
-
-- Herb Density recovers passively when not being gathered
-- Fully depleted regions still allow gathering but at near-zero yield until density recovers
-- Regen rate can be increased via upgrades (TBD — formations, spiritual tools)
 
 ---
 
@@ -85,11 +91,12 @@ Weights shift toward higher tiers as realm tier advances.
 
 ## TODO
 
-- [ ] Define herb density values and regen rates per region
-- [ ] Define enemy spawn frequency in Gathering zones
-- [ ] Design gathering-specific upgrades (formation arrays, spiritual tools)
+- [ ] Apply Soul stat scaling to gather speed (currently fixed at 3/s)
+- [ ] Define herb density / depletion and regen (currently ignored)
+- [ ] Define gathering-specific upgrades (formation arrays, spiritual tools)
 - [ ] Map herbs to pill recipes in [[Items]]
 - [ ] Define Cultivation Material secondary drop rates
+- [ ] Persist collected herbs to inventory
 
 ---
 
@@ -100,7 +107,6 @@ Weights shift toward higher tiers as realm tier advances.
 - [[Realm Progression]]
 - [[Worlds/World]]
 - [[Worlds/Mining]]
-- [[Combat]]
 - [[Laws]]
 
 ---

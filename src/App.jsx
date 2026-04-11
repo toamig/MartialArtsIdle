@@ -4,6 +4,9 @@ import HomeScreen from './screens/HomeScreen';
 import { initAds } from './ads/adService';
 import TrainingScreen from './screens/TrainingScreen';
 import CombatScreen from './screens/CombatScreen';
+import WorldsScreen from './screens/WorldsScreen';
+import GatheringScreen from './screens/GatheringScreen';
+import MiningScreen from './screens/MiningScreen';
 import ShopScreen from './screens/ShopScreen';
 import InventoryScreen from './screens/InventoryScreen';
 import BuildScreen from './screens/BuildScreen';
@@ -17,6 +20,7 @@ import './App.css';
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('home');
+  const [screenParam,   setScreenParam]   = useState(null);
 
   useEffect(() => { initAds(); }, []);
 
@@ -25,20 +29,46 @@ function App() {
   const techniques  = useTechniques();
   const combat      = useCombat();
 
+  // Navigate to a screen, optionally carrying a parameter (e.g. region data).
+  const navigate = (screen, param = null) => {
+    setCurrentScreen(screen);
+    setScreenParam(param);
+  };
+
+  const goBack = () => navigate('combat');
+
   const screens = {
-    home: <HomeScreen cultivation={cultivation} />,
-    training: <TrainingScreen />,
-    combat: <CombatScreen cultivation={cultivation} techniques={techniques} combat={combat} />,
-    build:  <BuildScreen  cultivation={cultivation} techniques={techniques} />,
-    shop: <ShopScreen />,
+    home:      <HomeScreen cultivation={cultivation} />,
+    training:  <TrainingScreen />,
+    // Worlds hub — the NavBar "Worlds" tab always lands here
+    combat:    <WorldsScreen cultivation={cultivation} onNavigate={navigate} />,
+    // Sub-screens launched from the Worlds hub
+    'combat-arena': <CombatScreen
+                      cultivation={cultivation}
+                      techniques={techniques}
+                      combat={combat}
+                      region={screenParam?.region ?? null}
+                      onBack={goBack}
+                    />,
+    gathering: screenParam?.region
+                 ? <GatheringScreen region={screenParam.region} onBack={goBack} />
+                 : null,
+    mining:    screenParam?.region
+                 ? <MiningScreen    region={screenParam.region} onBack={goBack} />
+                 : null,
+    build:     <BuildScreen  cultivation={cultivation} techniques={techniques} />,
+    shop:      <ShopScreen />,
     inventory: <InventoryScreen inventory={inventory} />,
-    stats:    <StatsScreen cultivation={cultivation} />,
-    settings: <SettingsScreen />,
+    stats:     <StatsScreen cultivation={cultivation} />,
+    settings:  <SettingsScreen />,
   };
 
   return (
     <div className="app">
-      <NavBar currentScreen={currentScreen} onNavigate={setCurrentScreen} />
+      <NavBar
+        currentScreen={currentScreen}
+        onNavigate={(screen) => navigate(screen)}
+      />
       <main className="screen-container">
         {screens[currentScreen]}
       </main>

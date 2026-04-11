@@ -4,8 +4,17 @@ import RealmProgressBar from '../components/RealmProgressBar';
 import OfflineEarningsModal from '../components/OfflineEarningsModal';
 import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
-import { getMeditationSprite, MW, MH } from '../sprites/meditateGen';
+
+const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+
+// 4 states: idle | boost | adboosted | adboosted-boost
+function getSpriteState(boosting, adBoostActive) {
+  if (adBoostActive && boosting) return 4;
+  if (adBoostActive)             return 3;
+  if (boosting)                  return 2;
+  return 1;
+}
 
 function HomeScreen({ cultivation }) {
   const {
@@ -48,6 +57,10 @@ function HomeScreen({ cultivation }) {
     ? formatCooldown(adBoostEndsAt - Date.now())
     : null;
 
+  const spriteState = getSpriteState(boosting, adBoostActive);
+  const spriteSrc   = `${BASE}sprites/cultivator/state${spriteState}.png`;
+  const fps         = boosting ? 14 : 5;
+
   return (
     <div className="screen home-screen">
       {/* Offline earnings modal — shown once on open if player was away 5+ min */}
@@ -83,12 +96,13 @@ function HomeScreen({ cultivation }) {
         >
           {vfxLayer}
           <SpriteAnimator
-            src={getMeditationSprite()}
-            frameWidth={MW}
-            frameHeight={MH}
-            frameCount={6}
-            fps={boosting ? 14 : 5}
-            scale={3}
+            key={spriteState}
+            src={spriteSrc}
+            frameWidth={128}
+            frameHeight={128}
+            frameCount={4}
+            fps={fps}
+            scale={1.5}
           />
           <div className={`boost-label${boosting ? '' : ' boost-label-hidden'}`}>3x Cultivation!</div>
           {adBoostActive && (

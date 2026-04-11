@@ -1,6 +1,6 @@
 # Mining
 
-A resource activity where the character is sent into a region to extract **ores, crystals, and minerals**. Like Gathering, it is focused on harvesting rather than combat — but enemies occasionally appear and interrupt work.
+A resource activity where the character is sent into a region to extract **ores, crystals, and minerals**.
 
 Mined minerals are the primary input for **Artefact Refining**, unlocked at [[Realm Progression#Emperor Realm|Emperor Realm]].
 
@@ -10,8 +10,20 @@ Mined minerals are the primary input for **Artefact Refining**, unlocked at [[Re
 
 - **Idle/automated**: assign character to an unlocked region → they mine ore veins continuously
 - The region must first be **unlocked via** [[Worlds/World|the World map]]
-- Mining speed is driven by **Body** stat
-- Enemies occasionally spawn and interrupt mining — the character fights them off automatically, then resumes
+- Access via the **Mine** sub-tab in the Worlds screen → click **Assign** on any unlocked region
+
+---
+
+## UI Flow
+
+1. Player opens the Worlds screen → switches to the **Mine** tab
+2. Each region shows the ores available there
+3. Clicking **Assign** navigates to the **Mining screen** for that region
+4. The Mining screen shows:
+   - The current ore being mined (randomly chosen from the region's ore list)
+   - A **progress bar** filling toward the ore's mine cost
+   - A running list of ores collected this session
+5. Clicking **← Back** returns to the Worlds screen
 
 ---
 
@@ -31,48 +43,41 @@ Each region tier yields minerals of a corresponding rarity range. Lower-rarity o
 | Origin Returning | Epic – Legendary | Skyfire Meteorite, Heavenly Profound Metal |
 | Origin King+ | Legendary | Heavenly Profound Metal |
 
-Cultivation Materials (Spirit Stones, Origin Crystals, etc.) can also drop as a secondary yield.
-
 ---
 
 ## Mining Mechanics
 
-- Each region has a **Vein Richness** value that depletes as ore is extracted and recovers over time
-- Yield per tick scales with Body, realm tier, Law bonuses, and current richness
+- An ore is randomly chosen from the region's available list when mining starts or an ore is collected
+- Mining progresses at **mine speed** (base: **3 points/sec**) toward the ore's **mine cost**
+- When cost is reached → ore is collected and a new ore is chosen
+
+### Mine Costs by Rarity
+
+| Rarity | Mine Cost | Time at 3/s |
+|---|---|---|
+| Common | 15 | ~5 sec |
+| Uncommon | 60 | ~20 sec |
+| Rare | 180 | ~1 min |
+| Epic | 600 | ~3.5 min |
+| Legendary | 1800 | ~10 min |
+
+### Mine Rate Formula
 
 ```
-Mine Rate = Body × RealmMult × (1 + LawBonus) × richness_factor
+Mine Rate = Body × RealmMult × (1 + LawBonus)
 ```
 
 | Variable | Notes |
 |---|---|
+| Base | 3 points/sec (before stat scaling) |
 | `RealmMult` | ~1.5× per major realm |
 | `LawBonus` | Earth/Metal-attribute Laws grant +10–25% mining speed |
-| `richness_factor` | 0–1 based on current Vein Richness in the region |
-
----
-
-## Enemy Interruptions
-
-- Enemies spawn at a lower frequency than in World combat zones
-- Cave-dwelling enemy types dominate mining zones — tend to be Body-heavy, slow, and durable
-- Mining pauses while the character fights; it resumes automatically on kill
-- Combat drops (gold, materials) are still earned from interrupted enemies
-- If the character cannot defeat an interrupting enemy, they are expelled from the zone
-
----
-
-## Vein Richness Regeneration
-
-- Vein Richness recovers passively when not being mined
-- Higher-tier veins are slower to replenish but yield higher-rarity ores
-- Regen rate can be increased via upgrades (TBD — drilling formations, spiritual tools)
 
 ---
 
 ## Ore Grades
 
-Some ores have a **refined grade** variant — a purer form required by high-tier artefact recipes. Grades are produced through a separate refining step, not mined directly.
+Some ores have a **refined grade** variant — a purer form required by high-tier artefact recipes.
 
 | Base Ore | Refined Grade | Use Case |
 |---|---|---|
@@ -100,12 +105,13 @@ Weights shift toward higher tiers as realm tier advances.
 
 ## TODO
 
-- [ ] Define vein richness values and regen rates per region
-- [ ] Define enemy spawn frequency in Mining zones
+- [ ] Apply Body stat scaling to mine speed (currently fixed at 3/s)
+- [ ] Define vein richness / depletion and regen (currently ignored)
 - [ ] Design mining-specific upgrades (formations, drills)
 - [ ] Map ores to artefact recipes in [[Items]]
 - [ ] Define ore grade refinement mechanic
 - [ ] Define Cultivation Material secondary drop rates
+- [ ] Persist collected ores to inventory
 
 ---
 
@@ -116,7 +122,6 @@ Weights shift toward higher tiers as realm tier advances.
 - [[Realm Progression]]
 - [[Worlds/World]]
 - [[Worlds/Gathering]]
-- [[Combat]]
 - [[Laws]]
 
 ---

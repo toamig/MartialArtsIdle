@@ -11,7 +11,13 @@ const LOG_COLOR = {
 };
 
 
-function CombatScreen({ cultivation, techniques, combat }) {
+function pickEnemy(region) {
+  if (!region?.enemies) return 'Training Dummy';
+  const list = region.enemies.split(',').map(s => s.trim()).filter(Boolean);
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function CombatScreen({ cultivation, techniques, combat, region = null, onBack = null }) {
   const { phase, enemy, log, startFight } = combat;
   const { equippedTechniques } = techniques;
 
@@ -26,6 +32,7 @@ function CombatScreen({ cultivation, techniques, combat }) {
         lawElement: law.element,
       },
       equippedTechniques,
+      pickEnemy(region),
     );
   };
 
@@ -33,8 +40,11 @@ function CombatScreen({ cultivation, techniques, combat }) {
 
   return (
     <div className="screen combat-screen">
+      {onBack && (
+        <button className="back-btn" onClick={onBack}>← Back</button>
+      )}
       <h1>Combat Arena</h1>
-      <p className="subtitle">{cultivation.realmName}</p>
+      <p className="subtitle">{region ? region.name : cultivation.realmName}</p>
 
       {/* ── Fighter stage ───────────────────────────────────────────────── */}
       <CombatStage
