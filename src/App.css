@@ -2080,3 +2080,201 @@
     font-size: 9px;
   }
 }
+
+/* ── Worlds Screen ─────────────────────────────────────────────────────────── */
+
+.worlds-tab-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.worlds-tab-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.worlds-tab-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(233, 69, 96, 0.08);
+}
+
+.worlds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.world-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.world-card.world-locked {
+  opacity: 0.5;
+}
+
+.world-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  gap: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.world-header:disabled {
+  cursor: default;
+}
+
+.world-header-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.world-number {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.world-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.world-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.world-realms-tag {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.world-chevron {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.world-chevron.open {
+  transform: rotate(180deg);
+}
+
+.world-lock-icon {
+  font-size: 0.9rem;
+}
+
+.region-list {
+  border-top: 1px solid var(--border);
+}
+
+.region-row {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.region-row:last-child {
+  border-bottom: none;
+}
+
+.region-row.region-locked {
+  opacity: 0.45;
+}
+
+.region-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.region-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.region-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.region-min-realm {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.region-assign-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.region-assign-btn:disabled {
+  border-color: var(--border);
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.region-assign-btn:not(:disabled):active {
+  background: rgba(233, 69, 96, 0.15);
+}
+
+.region-row-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.region-detail-primary {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.region-detail-secondary {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

@@ -4,6 +4,7 @@ import HomeScreen from './screens/HomeScreen';
 import { initAds } from './ads/adService';
 import TrainingScreen from './screens/TrainingScreen';
 import CombatScreen from './screens/CombatScreen';
+import WorldsScreen from './screens/WorldsScreen';
 import ShopScreen from './screens/ShopScreen';
 import InventoryScreen from './screens/InventoryScreen';
 import BuildScreen from './screens/BuildScreen';
@@ -28,7 +29,7 @@ function App() {
   const screens = {
     home: <HomeScreen cultivation={cultivation} />,
     training: <TrainingScreen />,
-    combat: <CombatScreen cultivation={cultivation} techniques={techniques} combat={combat} />,
+    combat: <WorldsScreen cultivation={cultivation} />,
     build:  <BuildScreen  cultivation={cultivation} techniques={techniques} />,
     shop: <ShopScreen />,
     inventory: <InventoryScreen inventory={inventory} />,

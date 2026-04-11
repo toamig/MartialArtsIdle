@@ -3,7 +3,7 @@ const BASE = import.meta.env.BASE_URL;
 const SCREENS = [
   { id: 'home',      label: 'Home'   },
   { id: 'training',  label: 'Train'  },
-  { id: 'combat',    label: 'Combat' },
+  { id: 'combat',    label: 'Worlds' },
   { id: 'build',     label: 'Equip'  },
   { id: 'shop',      label: 'Shop'   },
   { id: 'inventory', label: 'Items'  },
