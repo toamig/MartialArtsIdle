@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:native": "vite --mode native",
-    "build": "vite build",
+    "build": "vite build --mode browser",
     "build:browser": "vite build --mode browser",
     "build:native": "vite build --mode native",
     "build:android": "npm run build:native && cap sync android && cap open android",
