@@ -25,14 +25,14 @@ Unlocking a region also opens it for [[Worlds/Gathering|Gathering]] and [[Worlds
 
 The settled edges of the cultivation world — training grounds, wilderness, and minor spirit zones. Enemies are human cultivators, beast packs, and low-grade demonic animals. Drops are modest but consistent.
 
-| Region | Min Realm | Enemies | Notable Drops |
-|---|---|---|---|
-| Outer Sect Training Grounds | Tempered Body L1 | Outer sect disciples, sparring dummies | Common materials, gold |
-| Borderland Wilds | Tempered Body L5 | Wolf packs, bandit scouts, wandering beasts | Common herbs, Black Tortoise Iron |
-| Qi-Vein Ravines | Qi Transformation Early | Qi-sensing beasts, rogue disciples | Uncommon herbs, Crimson Flame Crystal |
-| Misty Spirit Forest | Qi Transformation Peak | Forest spirits, awakened tree demons | Uncommon materials, Beast Cores |
-| Heaven's Edge Peak | True Element Early | Sky beasts, thunder hawks, rogue cultivators | Rare herbs, Void Stone fragments |
-| Thunderstorm Plateau | True Element Peak | Lightning wyrms, storm elementals | Rare materials, Origin Crystal fragments |
+| Region                      | Min Realm               | Enemies                                      | Notable Drops                            |
+| --------------------------- | ----------------------- | -------------------------------------------- | ---------------------------------------- |
+| Outer Sect Training Grounds | Tempered Body L1        | Outer sect disciples, sparring dummies       | Common materials, gold                   |
+| Borderland Wilds            | Tempered Body L5        | Wolf packs, bandit scouts, wandering beasts  | Common herbs, Black Tortoise Iron        |
+| Qi-Vein Ravines             | Qi Transformation Early | Qi-sensing beasts, rogue disciples           | Uncommon herbs, Crimson Flame Crystal    |
+| Misty Spirit Forest         | Qi Transformation Peak  | Forest spirits, awakened tree demons         | Uncommon materials, Beast Cores          |
+| Heaven's Edge Peak          | True Element Early      | Sky beasts, thunder hawks, rogue cultivators | Rare herbs, Void Stone fragments         |
+| Thunderstorm Plateau        | True Element Peak       | Lightning wyrms, storm elementals            | Rare materials, Origin Crystal fragments |
 
 ---
 
@@ -102,14 +102,14 @@ The boundary between the mortal world and the upper heavens. Space fractures. En
 
 The threshold of true immortality. Few cultivators ever reach this world. Enemies are Open Heaven–grade beings: spatial lords, cosmic beasts, and immortal remnants. Drops here are the rarest in the game.
 
-| Region | Min Realm | Enemies | Notable Drops |
-|---|---|---|---|
-| Heaven Pillar Ascent | Half-Step | Ascending trial guardians, boundary wraiths | Top-tier artefact fragments, esoteric materials |
-| Star Sea Approaches | Open Heaven L1 | Star sea beasts, low-rank Open Heaven wanderers | Esoteric elemental cores |
-| Celestial Rift Expanse | Open Heaven L2 | Rift predators, spatial sovereign beasts | Esoteric materials, spatial law fragments |
-| Eternal Storm Arena | Open Heaven L3 | Storm sovereigns, tempest-born constructs | High-rank Open Heaven drops |
-| Cosmic Beast Grounds | Open Heaven L4 | Mid-rank Open Heaven beasts (territorial) | Peak materials |
-| Heaven's Core | Open Heaven L6 | Ancient Open Heaven cultivators, cosmic apex beasts | Rarest drops in the game |
+| Region                 | Min Realm      | Enemies                                             | Notable Drops                                   |
+| ---------------------- | -------------- | --------------------------------------------------- | ----------------------------------------------- |
+| Heaven Pillar Ascent   | Half-Step      | Ascending trial guardians, boundary wraiths         | Top-tier artefact fragments, esoteric materials |
+| Star Sea Approaches    | Open Heaven L1 | Star sea beasts, low-rank Open Heaven wanderers     | Esoteric elemental cores                        |
+| Celestial Rift Expanse | Open Heaven L2 | Rift predators, spatial sovereign beasts            | Esoteric materials, spatial law fragments       |
+| Eternal Storm Arena    | Open Heaven L3 | Storm sovereigns, tempest-born constructs           | High-rank Open Heaven drops                     |
+| Cosmic Beast Grounds   | Open Heaven L4 | Mid-rank Open Heaven beasts (territorial)           | Peak materials                                  |
+| Heaven's Core          | Open Heaven L6 | Ancient Open Heaven cultivators, cosmic apex beasts | Rarest drops in the game                        |
 
 ---
 
@@ -122,23 +122,11 @@ The threshold of true immortality. Few cultivators ever reach this world. Enemie
 
 ---
 
-## First-Unlock Events
-
-When a region is unlocked for the first time:
-
-| Event | Chance | Reward |
-|---|---|---|
-| Treasure Cache | Moderate | Random materials or pills matching the region tier |
-| Secret Manual | Rare | New Law or Secret Technique scroll |
-| Ancient Site | Very rare | Permanent passive bonus tied to this region |
-
----
-
 ## Death
 
 - Enemies have a power level drawn from a normal distribution centred on the region's difficulty
 - Outlier enemies can kill an undergeared character → sent back to the last safely farmed region
-- Death penalty beyond the setback: TBD
+- Death penalty beyond the setback: 10% of current QI progression on current minor realm
 
 ---
 
