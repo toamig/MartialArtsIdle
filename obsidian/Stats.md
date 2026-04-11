@@ -1,68 +1,64 @@
 # Stats
 
-Complete reference for every stat in the game — what it does, how it is calculated, and what sources can modify it. The [[#Modifiers|Modifiers]] section at the bottom catalogues every modifier type that exists in the game.
+Complete reference for every stat in the game — what it does and what sources can change it. The [[#Modifiers|Modifiers]] section catalogues every modifier type that can exist on any stat.
 
 ---
 
-## Resources
+## Stacking Types
 
-### Qi
+Every modifier on every stat belongs to one of these five types. Understanding the order of operations is critical for the damage and stat formulae.
 
-The raw cultivation energy that powers everything. It accumulates passively over time and is spent on realm breakthroughs. Qi is **not** a combat stat — it is the fuel that produces Essence, Soul, and Body.
-
-**Base formula:**
-```
-qi/sec = BASE_RATE × cultivation_speed_mult × talent_mult × pill_bonus × law_speed_mult
-```
-
-| Variable | Default | Source |
+| Type | Notation | How It Applies |
 |---|---|---|
-| `BASE_RATE` | 5 qi/sec | Hardcoded baseline |
-| `cultivation_speed_mult` | ×1.0 | Active [[Laws\|Law]] |
-| `talent_mult` | ×1.0+ | [[Reincarnation]] talent carry-over |
-| `pill_bonus` | ×1.0+ | Cultivation [[Items\|Pills]] |
-| `law_speed_mult` | ×1.0+ | Law passive — cultivation speed roll |
+| **Increased Base** | `#% increased base` | Multiplies the base value of the stat (before anything else) |
+| **Base Flat** | `adds # to base` | Adds a flat amount to the base value of the stat |
+| **Flat** | `+#` | Adds a flat amount after all base calculations are done |
+| **Increased Value** | `#% increased` | Additive % bonus applied to the value after flat additions — all sources of this type sum together then apply once |
+| **Multiplier** | `#% more` | Multiplicative — each source of this type multiplies independently; stacks multiplicatively with other `more` sources |
+| **Unique** | — | Special-case modifiers with their own rules (see [[#Unique Modifiers]]) |
 
-**What can change it:**
-- Equipping a Law with a higher `cultivation_speed_mult`
-- Reincarnation talent (permanent multiplier that grows each life)
-- Cultivation pills (temporary or permanent boosts)
-- Law passives that roll a cultivation speed bonus
-- Boosted cultivation (hold button) → ×3 while held
+### Order of Operations
+
+```
+Final Value = ((Base × (1 + Σ increased_base%) + Σ base_flat) + Σ flat) × (1 + Σ increased%) × Π more_mult
+```
+
+---
+
+## Special Resource: Qi
+
+Qi is the raw cultivation energy. It cannot be increased directly — only its **generation speed** can be modified. It accumulates passively over time and is the source of all three primary stats.
+
+**Generation formula:**
+```
+qi/sec = BASE_RATE × (1 + Σ increased_qi_speed%) × Π more_qi_speed × focus_mult (when focusing)
+```
+
+- `BASE_RATE` = 5 qi/sec (hardcoded baseline)
+- `focus_mult` = the Qi Focus Multiplier stat (base 300%; can be modified)
+- Qi generation speed is modified via [[Laws|Law]] cultivation speed, reincarnation talent, and pills
+- Qi is **spent** on realm breakthroughs; it does not convert to stats directly but sets the ceiling for primary stat calculation
 
 ---
 
 ## Primary Stats
 
-All three primary stats follow the same derivation pattern. The Law defines base multipliers; other sources layer on top.
+The three primary stats are derived from Qi via the active [[Laws|Law]]'s conversion multipliers. All other modifier types layer on top of this base.
 
 ```
-Stat = Qi × law_mult × affinity_mult + artefact_flat + pill_flat
+Base = Qi × law_mult
+Final = ((Base × (1 + Σ increased_base%) + Σ base_flat) + Σ flat) × (1 + Σ increased%) × Π more
 ```
-
-The `law_mult` is the main lever early game. Artefacts and pills add flat value on top; reincarnation affinity adds a percentage boost.
 
 ---
 
 ### Essence
 
-Elemental power — the energy of the cultivator's chosen element made manifest.
+Elemental power — the cultivator's chosen element made manifest.
 
-**Derived from:** `Qi × essence_mult` (from active Law)
-
-**Used for:**
-- Primary driver of **elemental attacks**
-- Contributes to **DEF** (Essence + Body)
-- Required threshold for equipping some [[Secret Techniques]]
-
-**What can change it:**
-| Source | Effect |
-|---|---|
-| Active Law (`essence_mult`) | Base multiplier — primary lever |
-| Artefacts (rings, gauntlets, body) | Flat Essence bonus |
-| Pills | Flat or % Essence bonus |
-| Reincarnation mental affinity | % bonus to Essence |
-| Law passive: Essence boost | % or flat roll on the law |
+- **Derived from:** `Qi × essence_mult` (Law)
+- **Feeds into:** Elemental Damage, DEF, Secret Technique equip thresholds
+- **Unlocked:** Qi Transformation (when a Law is equipped)
 
 ---
 
@@ -70,24 +66,9 @@ Elemental power — the energy of the cultivator's chosen element made manifest.
 
 Spiritual power — consciousness and will made tangible.
 
-**Derived from:** `Qi × soul_mult` (from active Law)
-
-> Soul is unlocked at [[Realm Progression#Saint|Saint]] realm. Before that, `soul_mult` is effectively 0 and Soul-dependent systems are inactive.
-
-**Used for:**
-- Primary driver of **spiritual / mental attacks**
-- Contributes to **Intuition** (secondary stat)
-- Required threshold for equipping some [[Secret Techniques]]
-- Drives [[Worlds/Gathering]] rate
-
-**What can change it:**
-| Source | Effect |
-|---|---|
-| Active Law (`soul_mult`) | Base multiplier |
-| Artefacts (neck, head, rings) | Flat Soul bonus |
-| Pills | Flat or % Soul bonus |
-| Reincarnation mental affinity | % bonus to Soul |
-| Law passive: Soul boost | % or flat roll on the law |
+- **Derived from:** `Qi × soul_mult` (Law)
+- **Feeds into:** Psychic Damage, Soul Toughness threshold, Secret Technique equip thresholds, Harvest Gathering Speed
+- **Unlocked:** [[Realm Progression#Saint|Saint]] realm (soul_mult = 0 before this)
 
 ---
 
@@ -95,236 +76,198 @@ Spiritual power — consciousness and will made tangible.
 
 Physical power — the cultivated flesh, bones, and meridians.
 
-**Derived from:** `Qi × body_mult` (from active Law)
-
-**Used for:**
-- Primary driver of **physical attacks**
-- Contributes to **DEF** (Essence + Body)
-- Required threshold for equipping some [[Secret Techniques]]
-- Drives [[Worlds/World]] and [[Worlds/Mining]] rate
-
-**What can change it:**
-| Source | Effect |
-|---|---|
-| Active Law (`body_mult`) | Base multiplier |
-| Artefacts (waist, feet, hands, body) | Flat Body bonus |
-| Pills | Flat or % Body bonus |
-| Reincarnation physical affinity | % bonus to Body |
-| Law passive: Body boost | % or flat roll on the law |
+- **Derived from:** `Qi × body_mult` (Law)
+- **Feeds into:** Physical Damage, Defense, Secret Technique equip thresholds, Mining Speed
+- **Unlocked:** Tempered Body (always active)
 
 ---
 
-## Secondary Stats
-
-Derived from combinations of primary stats and other sources. Not directly set by the player.
+## Combat Stats
 
 ---
 
-### DEF
+### Health
 
-Passive damage mitigation in combat.
+The amount of damage the character can take before dying.
 
-```
-DEF = Essence + Body + artefact_def_flat + defend_buff
-```
-
-**What can change it:**
-| Source | Effect |
-|---|---|
-| Essence and Body (both) | Base value |
-| Armour artefacts (all slots) | Flat DEF bonus |
-| Defend-type [[Secret Techniques]] | Temporary DEF buff during combat |
-| Law passive: DEF boost | Flat or % bonus |
+- **Base value:** TBD (fixed value per realm tier)
+- All five modifier types apply
 
 ---
 
-### Intuition
+### Physical Damage
 
-Secondary stat derived from Soul. Governs speed-of-perception effects (dodge priority, reaction window — exact mechanic TBD).
+Bonus damage applied to physical secret techniques and physical default attacks.
 
-```
-Intuition = Soul × intuition_mult
-```
-
-**What can change it:**
-| Source | Effect |
-|---|---|
-| Soul | Base value |
-| Artefacts (head, neck) | Flat Intuition bonus |
-| Law passive: Intuition boost | % or flat roll |
+- **Base value:** 0 (Body is the primary driver; this stat adds on top)
+- All five modifier types apply
+- Physical secret techniques apply this in full
+- Elemental and Psychic techniques do not use this stat
 
 ---
 
-### Dodge
+### Elemental Damage
 
-Chance to fully evade an incoming hit.
+Bonus damage applied to elemental secret techniques and elemental default attacks.
 
-```
-Dodge = base_dodge + technique_dodge_buff
-```
-
-Base dodge is 0 without techniques. Dodge-type [[Secret Techniques]] provide a timed dodge buff when their cooldown fires.
-
-**What can change it:**
-| Source | Effect |
-|---|---|
-| Dodge-type Secret Techniques | Temporary % dodge chance buff |
-| Artefacts (feet slot) | Flat dodge chance bonus |
-| Law passive: Dodge | % dodge bonus |
+- **Base value:** 0 (Essence is the primary driver; this stat adds on top)
+- All five modifier types apply
+- The percentage of a secret technique that is elemental determines how much of this stat applies (e.g. a technique that is 70% elemental uses 70% of Elemental Damage)
+- Physical and Psychic techniques do not use this stat
 
 ---
 
-### Damage (Attack)
+### Psychic Damage
 
-The damage value of a single attack hit. Computed per-hit using the active technique (or default attack if no technique is ready).
+Bonus damage applied to soul-based secret techniques and soul default attacks.
 
-```
-Damage = K × (Essence + Soul + Body + artefact_dmg_flat) × arte_mult × elem_bonus + bonus_flat
-```
-
-| Variable | Meaning | Source |
-|---|---|---|
-| `K` | Technique multiplier | [[Secret Techniques]] rank × quality table |
-| `artefact_dmg_flat` | Weapon flat damage bonus | Equipped weapon |
-| `arte_mult` | Artefact-specific multiplier | Weapon quality tier |
-| `elem_bonus` | Elemental resonance bonus | Law element matches technique element |
-| `bonus_flat` | Flat additive damage | Technique passive rolls |
-
-Default attack (no technique ready) uses the Law's built-in attack with `K = 1.0` and no technique passives.
-
-**What can change it:**
-| Source | Effect |
-|---|---|
-| Essence + Soul + Body | Base damage pool |
-| Equipped weapon | `artefact_dmg_flat` and `arte_mult` |
-| Law element matching technique | `elem_bonus` multiplier |
-| Secret Technique rank/quality | `K` scaling |
-| Secret Technique passive: flat damage | `bonus_flat` additive |
-| Pills (combat) | Temporary damage buff (TBD) |
+- **Base value:** 0 (Soul is the primary driver; this stat adds on top)
+- All five modifier types apply
+- Soul-based techniques apply this in full
+- Physical and Elemental techniques do not use this stat
 
 ---
 
-### Cultivation Speed
+### Defense
 
-How fast Qi accumulates per second. See [[#Qi]] above for the full formula — listed here for completeness as a player-facing "stat."
+Damage reduction against **physical attacks**.
+
+- **Base value:** derived from Body (formula TBD)
+- All five modifier types apply
+- A defend-type [[Secret Techniques|Secret Technique]] applies a timed Defense buff
+
+---
+
+### Elemental Defense
+
+Damage reduction against **elemental attacks**.
+
+- **Base value:** derived from Essence (formula TBD)
+- All five modifier types apply
+
+---
+
+### Soul Toughness
+
+Damage reduction against **soul / psychic attacks**.
+
+- **Base value:** derived from Soul (formula TBD)
+- All five modifier types apply
+
+---
+
+### Exploit Chance
+
+Chance for an attack to become an **exploit attack**, triggering the Exploit Attack Multiplier.
+
+- **Base value:** 0%
+- All five modifier types apply
+- On an exploit hit, total damage is multiplied by the Exploit Attack Multiplier
+
+---
+
+### Exploit Attack Multiplier
+
+The damage multiplier applied when an attack is an exploit attack.
+
+- **Base value:** 150%
+- All five modifier types apply
 
 ---
 
 ## Activity Stats
 
-Stats that govern idle activity output outside of combat. See the Realms docs for full formulas.
+---
 
-| Stat | Primary Driver | Bonus Sources |
-|---|---|---|
-| **Exploration Rate** | Body | Wind/Space-attribute Laws (+10–25%), artefacts (TBD) |
-| **Gather Rate** | Soul | Wood/Nature-attribute Laws (+10–25%), artefacts (TBD) |
-| **Mine Rate** | Body | Earth/Metal-attribute Laws (+10–25%), artefacts (TBD) |
+### Qi Generation Speed
+
+How fast Qi accumulates per second. See [[#Special Resource Qi|Qi]] above.
+
+- All five modifier types apply
+- Focus multiplier is a separate stat (see below)
+
+---
+
+### Qi Focus Multiplier
+
+The multiplier applied to Qi generation while the player is actively focusing (holding the boost button).
+
+- **Base value:** 300%
+- All five modifier types apply
+
+---
+
+### Harvest Gathering Speed
+
+How fast the character collects herbs in [[Worlds/Gathering|Gathering]] zones.
+
+- **Base value:** derived from Soul (formula TBD)
+- All five modifier types apply
+
+---
+
+### Harvest Gathering Luck
+
+Shifts herb drop weights toward higher rarities.
+
+- **Base value:** 0
+- All five modifier types apply
+- Higher luck pushes Epic/Legendary weights up and Common/Uncommon weights down
+
+---
+
+### Mining Speed
+
+How fast the character extracts ores in [[Worlds/Mining|Mining]] zones.
+
+- **Base value:** derived from Body (formula TBD)
+- All five modifier types apply
+
+---
+
+### Mining Luck
+
+Shifts ore drop weights toward higher rarities.
+
+- **Base value:** 0
+- All five modifier types apply
 
 ---
 
 ## Modifiers
 
-A modifier is any value that alters a stat. Every modifier has a **type** (how it stacks) and a **source** (what grants it).
+Every stat listed above can receive modifiers of the five stacking types. This section does not list per-stat modifier tables — any stat can have any of the five types applied to it. The tables below cover only the **Unique Modifiers**, which have special rules.
 
-### Stacking Types
+---
 
-| Type | Symbol | How It Applies |
+### Unique Modifiers
+
+Unique modifiers do not fit the standard stacking model. Each has its own rule. Multiple unique modifiers of the same entry do not stack (only one copy is active unless noted).
+
+| # | Modifier | Rule |
 |---|---|---|
-| **Additive flat** | `+N` | Adds a fixed amount to the final stat value |
-| **Additive %** | `+N%` | All additive % bonuses from the same category sum together, then apply once |
-| **Multiplicative** | `×N` | Applied as a separate multiply on top of the additive total |
-
-> **Convention:** Law multipliers (`essence_mult`, etc.) are treated as **base multipliers** — they run before additive bonuses. Artefact flats and pill flats are **additive flat** on top. Reincarnation affinities are **multiplicative** on the final value.
-
----
-
-### Qi Generation Modifiers
-
-| Modifier | Type | Effect | Sources |
-|---|---|---|---|
-| **Base Qi Rate** | Additive flat | Sets qi/sec before any multiplier | Hardcoded (5 qi/sec); upgrades TBD |
-| **Cultivation Speed** | Multiplicative | Multiplies total qi/sec | Law `cultivation_speed_mult`, law passives |
-| **Boost Multiplier** | Multiplicative | ×3 while boost is held | Player input |
-| **Talent Multiplier** | Multiplicative | Permanent cross-life qi bonus | Reincarnation talent |
-| **Pill: Cultivation Boost** | Multiplicative | Temporary qi/sec boost | Cultivation pills (e.g. Qi Condensation Pill) |
-
----
-
-### Stat Conversion Modifiers
-
-These govern how Qi converts into Essence, Soul, and Body.
-
-| Modifier | Type | Effect | Sources |
-|---|---|---|---|
-| **Essence Conversion** (`essence_mult`) | Base multiplier | Qi → Essence ratio | Active Law |
-| **Soul Conversion** (`soul_mult`) | Base multiplier | Qi → Soul ratio | Active Law |
-| **Body Conversion** (`body_mult`) | Base multiplier | Qi → Body ratio | Active Law |
-| **Essence Flat Bonus** | Additive flat | +N to Essence | Artefacts, pills |
-| **Soul Flat Bonus** | Additive flat | +N to Soul | Artefacts, pills |
-| **Body Flat Bonus** | Additive flat | +N to Body | Artefacts, pills |
-| **Essence % Bonus** | Additive % | +N% to Essence | Law passives, reincarnation mental affinity |
-| **Soul % Bonus** | Additive % | +N% to Soul | Law passives, reincarnation mental affinity |
-| **Body % Bonus** | Additive % | +N% to Body | Law passives, reincarnation physical affinity |
-
----
-
-### Combat Modifiers
-
-| Modifier | Type | Effect | Sources |
-|---|---|---|---|
-| **Technique Multiplier** (`K`) | Multiplicative | Scales total damage | Secret Technique rank × quality |
-| **Weapon Flat Damage** | Additive flat | +N to damage before K | Equipped weapon |
-| **Weapon Multiplier** (`arte_mult`) | Multiplicative | Multiplies damage | Weapon quality tier |
-| **Elemental Bonus** (`elem_bonus`) | Multiplicative | Bonus when Law element matches technique | Law element + Technique element match |
-| **Flat Damage Bonus** | Additive flat | +N additive after all multiplies | Secret Technique passive rolls |
-| **Increased Damage %** | Additive % | +N% total damage | Law passives, pills (combat), artefact passives |
-| **DEF Flat Bonus** | Additive flat | +N to DEF | Armour artefacts |
-| **DEF % Bonus** | Additive % | +N% to DEF | Law passives, artefact passives |
-| **Defend Buff** | Additive flat (timed) | +N to DEF for buff duration | Defend-type Secret Techniques |
-| **Dodge Chance** | Additive % | +N% chance to fully dodge a hit | Dodge-type Secret Techniques, feet artefacts |
-| **Technique Cooldown Reduction** | Multiplicative | Reduces technique cooldown by N% | Secret Technique quality tier |
-| **Elemental Resistance** | Additive % | Reduces damage from a specific element | Artefacts (neck, head), law passives |
-| **HP Restoration** | Additive flat (timed) | Heals N HP when Heal technique fires | Heal-type Secret Techniques |
-
----
-
-### Activity Modifiers
-
-| Modifier | Type | Effect | Sources |
-|---|---|---|---|
-| **Exploration Rate Bonus** | Additive % | +N% to exploration progress/sec | Wind/Space-attribute Laws, artefacts (TBD) |
-| **Gather Rate Bonus** | Additive % | +N% to herb yield/sec | Wood/Nature-attribute Laws, artefacts (TBD) |
-| **Mine Rate Bonus** | Additive % | +N% to ore yield/sec | Earth/Metal-attribute Laws, artefacts (TBD) |
-| **Herb Density Regen** | Additive flat | +N/sec to region herb density | Upgrades (TBD) |
-| **Vein Richness Regen** | Additive flat | +N/sec to region vein richness | Upgrades (TBD) |
-| **Loot Rarity Shift** | Additive % | Shifts drop weight toward higher tiers | Realm advancement (automatic), artefacts (TBD) |
-
----
-
-### Reincarnation Modifiers
-
-Permanent modifiers that carry over across lives and compound with each reincarnation.
-
-| Modifier | Type | Effect | Sources |
-|---|---|---|---|
-| **Talent Multiplier** | Multiplicative | Permanent qi/sec multiplier | Reincarnation — grows each life |
-| **Mental Affinity** | Multiplicative | % bonus to Essence and Soul | Reincarnation carry-over; multiple affinities can combine |
-| **Physical Affinity** | Multiplicative | % bonus to Body | Reincarnation carry-over |
-| **Starting Cultivation Boost** | Additive flat | Begin each new life with N qi pre-filled | Unlocked at higher realms |
-| **Soul-Bound Artefact Stats** | Additive flat | Retain equipped artefact bonuses | Soul-bound artefacts that survive reset |
+| U1 | **Qi bleeds into Gathering** | 5% of Qi Generation Speed is added to Harvest Gathering Speed (flat addition) |
+| U2 | **Qi bleeds into Mining** | 5% of Qi Generation Speed is added to Mining Speed (flat addition) |
+| U3 | **Cross-defense** | `-Type- attacks use 30% of -defense type- to defend from -Type- attacks` (e.g. physical attacks partially mitigated by Elemental Defense) |
+| U4 | **Zero-stat cross-defense** | If the matching primary stat for a defense type is 0, that defense type uses 50% of another defense type instead |
+| U5 | **Guaranteed exploit** | Exploit Chance is fixed at 100%; Exploit Attack Multiplier is fixed at 130% (overrides both stats) |
+| U6 | **Healer's resilience** | Health is increased by 30% if a Heal-type [[Secret Techniques\|Secret Technique]] is equipped |
+| U7 | **Ring amplification** | Stats granted by ring artefacts are increased by 10% |
+| U8 | **Focus boost** | Qi Focus Multiplier is set to 600% (overrides base) |
+| U9 | **Balanced destruction** | All damage type stats are increased by 130%; all damage type stats use the lowest damage type value among them as their effective value |
+| U10 | **Dual elemental bonus** | Dual-element [[Secret Techniques\|Secret Techniques]] deal 20% more damage |
 
 ---
 
 ## TODO
 
-- [ ] Define `intuition_mult` and Intuition's concrete gameplay effect
-- [ ] Define HP as an explicit stat (current docs assume it implicitly)
-- [ ] Define pill modifier values (flat vs % and duration)
-- [ ] Define artefact stat bonus ranges per slot and rarity
-- [ ] Define elemental resistance values per artefact
-- [ ] Define Law passive modifier ranges (% and flat) per rarity tier
-- [ ] Specify whether additive % caps exist (e.g. max dodge %, max elemental resistance)
-- [ ] Decide if Boosted cultivation (×3) should be a modifier vs hardcoded
+- [ ] Define Health base value per realm tier
+- [ ] Define Defense / Elemental Defense / Soul Toughness base formulas (how much of Body/Essence/Soul converts)
+- [ ] Define Harvest Gathering Speed and Mining Speed base formulas (how much of Soul/Body converts)
+- [ ] Define modifier value ranges per source (Law passives, artefact slots, pills)
+- [ ] Clarify whether `#% increased base` and `base flat` apply before or after the Law conversion (they apply after — base = Qi × law_mult)
+- [ ] Define elemental % split on dual-element secret techniques (for Elemental Damage weighting)
+- [ ] Decide if Exploit Chance caps below 100% (without U5)
 
 ---
 
@@ -344,3 +287,14 @@ Permanent modifiers that carry over across lives and compound with each reincarn
 ---
 
 ## Claude Commands
+
+> **[CONCLUDED]**
+> *Commands executed (2026-04-11):*
+>
+> - ~~Update stacking types: Increased Base, Base Flat, Flat, Increased Value, Multiplier, Unique~~
+> - ~~Clear previously generated modifier tables — modifier system is now generic (any stat can take any type)~~
+> - ~~Qi reframed as generation-speed-only; cannot be increased directly~~
+> - ~~Added stats: Essence, Soul, Body (primary); Elemental/Physical/Psychic Damage; Health; Defense; Elemental Defense; Soul Toughness; Exploit Chance; Exploit Attack Multiplier; Qi Generation Speed; Qi Focus Multiplier; Harvest Gathering Speed; Harvest Gathering Luck; Mining Speed; Mining Luck~~
+> - ~~Unique modifier catalogue added (U1–U10)~~
+>
+> *Changes made:* Full rewrite of Stats.md. Old per-source modifier tables removed. New stat list with stacking type formula and order-of-operations. Generic modifier model (no per-stat source tables). Unique Modifiers table with all 10 entries.
