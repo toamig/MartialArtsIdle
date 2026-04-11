@@ -4,8 +4,9 @@ import { getSprites, FW, FH } from '../sprites/spriteGen';
 
 const BASE = import.meta.env.BASE_URL;
 
-// Custom player idle: 128×128 px per frame, displayed at 1.5×
+// Custom player sprites: 128×128 px per frame, displayed at 1.5×
 const PLAYER_IDLE_SRC   = `${BASE}sprites/combat/player-idle.png`;
+const PLAYER_ATTACK_SRC = `${BASE}sprites/combat/player-attack.png`;
 const PLAYER_IDLE_FW    = 128;
 const PLAYER_IDLE_FH    = 128;
 const PLAYER_IDLE_SCALE = 1.5;
@@ -148,14 +149,14 @@ export default function CombatStage({
           />
         ) : (
           <SpriteAnimator
-            src={sprites.playerAttack}
-            frameWidth={FW}
-            frameHeight={FH}
+            src={PLAYER_ATTACK_SRC}
+            frameWidth={PLAYER_IDLE_FW}
+            frameHeight={PLAYER_IDLE_FH}
             frameCount={4}
             fps={10}
             loop={false}
             onComplete={onPlayerAttackDone}
-            scale={GEN_SCALE}
+            scale={PLAYER_IDLE_SCALE}
           />
         )}
       </div>
