@@ -1,4 +1,5 @@
-const SAVE_KEY = 'mai_save';
+const SAVE_KEY  = 'mai_save';
+const TECH_KEY  = 'mai_techniques';
 
 /**
  * Cookie Clicker-style save system.
@@ -23,6 +24,23 @@ export function loadGame() {
 
 export function wipeSave() {
   localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem(TECH_KEY);
+}
+
+// ─── Technique slots ──────────────────────────────────────────────────────────
+
+export function saveTechniques(slots) {
+  try {
+    localStorage.setItem(TECH_KEY, JSON.stringify(slots));
+  } catch {}
+}
+
+export function loadTechniques() {
+  try {
+    const raw = localStorage.getItem(TECH_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
 }
 
 export function exportSave() {

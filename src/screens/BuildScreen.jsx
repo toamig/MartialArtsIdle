@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import GearSlotModal from '../components/GearSlotModal';
+import TechniqueSlotModal from '../components/TechniqueSlotModal';
 import { LAW_RARITY } from '../data/laws';
+import { TECHNIQUE_QUALITY, TYPE_COLOR, getCooldown } from '../data/techniques';
 
 // col/row are 1-indexed CSS grid positions (3 columns, 5 rows)
 const GEAR_SLOTS = [
@@ -21,10 +23,54 @@ const GEAR_SLOTS = [
   { id: 'ring_4', label: 'Ring',   type: 'ring',   col: 3, row: 5 },
 ];
 
-function BuildScreen({ cultivation }) {
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const { activeLaw, isLawUnlocked } = cultivation;
+const SLOT_LABELS = ['I', 'II', 'III'];
+
+function TechSlotCard({ index, tech, onClick }) {
+  if (!tech) {
+    return (
+      <button className="card build-slot build-tech-slot" onClick={onClick}>
+        <span className="build-slot-label">Technique {SLOT_LABELS[index]}</span>
+        <p className="build-slot-empty">None</p>
+      </button>
+    );
+  }
+
+  const quality = TECHNIQUE_QUALITY[tech.quality];
+  const cd      = getCooldown(tech.type, tech.quality);
+
+  return (
+    <button className="card build-slot build-tech-slot build-tech-filled" onClick={onClick}>
+      <span className="build-slot-label">Technique {SLOT_LABELS[index]}</span>
+      <span className="build-tech-name">{tech.name}</span>
+      <div className="build-tech-badges">
+        <span className="build-tech-badge" style={{ color: TYPE_COLOR[tech.type], borderColor: TYPE_COLOR[tech.type] }}>
+          {tech.type}
+        </span>
+        <span className="build-tech-badge" style={{ color: quality.color, borderColor: quality.color }}>
+          {quality.label}
+        </span>
+        <span className="build-tech-badge build-tech-rank">{tech.rank}</span>
+      </div>
+      <span className="build-tech-cd">CD: {cd.toFixed(1)}s</span>
+    </button>
+  );
+}
+
+function BuildScreen({ cultivation, techniques }) {
+  const [selectedSlot,     setSelectedSlot]     = useState(null);
+  const [selectedTechSlot, setSelectedTechSlot] = useState(null);
+
+  const { activeLaw, isLawUnlocked, realmIndex } = cultivation;
   const rarity = LAW_RARITY[activeLaw.rarity];
+
+  const handleEquip = (slotIndex, id) => {
+    if (id === null) {
+      techniques.unequip(slotIndex);
+    } else {
+      techniques.equip(slotIndex, id);
+    }
+    setSelectedTechSlot(null);
+  };
 
   return (
     <div className="screen build-screen">
@@ -78,6 +124,22 @@ function BuildScreen({ cultivation }) {
 
             <div className="law-divider" />
 
+            {/* Multipliers */}
+            <div className="law-stat-row">
+              <span className="law-stat-label">Essence Mult</span>
+              <span className="law-stat-value">{activeLaw.essenceMult}</span>
+            </div>
+            <div className="law-stat-row">
+              <span className="law-stat-label">Soul Mult</span>
+              <span className="law-stat-value">{activeLaw.soulMult}</span>
+            </div>
+            <div className="law-stat-row">
+              <span className="law-stat-label">Body Mult</span>
+              <span className="law-stat-value">{activeLaw.bodyMult}</span>
+            </div>
+
+            <div className="law-divider" />
+
             {/* Passives */}
             <div className="law-passives">
               <span className="law-stat-label">
@@ -109,17 +171,29 @@ function BuildScreen({ cultivation }) {
       <section className="build-section">
         <h2 className="build-section-title">Secret Techniques</h2>
         <div className="card-grid">
-          {['Technique I', 'Technique II', 'Technique III'].map((t) => (
-            <div key={t} className="card build-slot">
-              <span className="build-slot-label">{t}</span>
-              <p className="build-slot-empty">None</p>
-            </div>
+          {[0, 1, 2].map(i => (
+            <TechSlotCard
+              key={i}
+              index={i}
+              tech={techniques.equippedTechniques[i]}
+              onClick={() => setSelectedTechSlot(i)}
+            />
           ))}
         </div>
       </section>
 
       {selectedSlot && (
         <GearSlotModal slot={selectedSlot} onClose={() => setSelectedSlot(null)} />
+      )}
+
+      {selectedTechSlot !== null && (
+        <TechniqueSlotModal
+          slotIndex={selectedTechSlot}
+          currentId={techniques.slots[selectedTechSlot]}
+          realmIndex={realmIndex}
+          onEquip={handleEquip}
+          onClose={() => setSelectedTechSlot(null)}
+        />
       )}
     </div>
   );
