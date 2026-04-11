@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-
-// Soul stat unlocks at Saint realm (index 24)
-const SAINT_INDEX = 24;
+import { computeAllStats } from '../data/stats';
 
 function fmt(n) {
   if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + 'B';
@@ -15,24 +13,14 @@ function fmt(n) {
 function EssenceSprite({ size = 44 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 44 44" fill="none">
-      {/* Hexagonal crystal body */}
-      <polygon
-        points="22,3 38,12 38,32 22,41 6,32 6,12"
-        fill="#0c4a6e" stroke="#38bdf8" strokeWidth="1.8"
-      />
-      {/* Inner facet lines */}
-      <line x1="22" y1="3"  x2="22" y2="41" stroke="#7dd3fc" strokeWidth="0.8" opacity="0.45"/>
-      <line x1="6"  y1="22" x2="38" y2="22" stroke="#7dd3fc" strokeWidth="0.8" opacity="0.45"/>
-      <line x1="6"  y1="12" x2="38" y2="32" stroke="#7dd3fc" strokeWidth="0.6" opacity="0.3"/>
-      <line x1="38" y1="12" x2="6"  y2="32" stroke="#7dd3fc" strokeWidth="0.6" opacity="0.3"/>
-      {/* Inner diamond facet */}
-      <polygon
-        points="22,13 30,22 22,31 14,22"
-        fill="#0ea5e9" stroke="#bae6fd" strokeWidth="1"
-      />
-      {/* Glowing center */}
-      <circle cx="22" cy="22" r="3.5" fill="#e0f2fe"/>
-      <circle cx="22" cy="22" r="1.5" fill="#fff"/>
+      <polygon points="22,3 38,12 38,32 22,41 6,32 6,12" fill="#0c4a6e" stroke="#38bdf8" strokeWidth="1.8" />
+      <line x1="22" y1="3"  x2="22" y2="41" stroke="#7dd3fc" strokeWidth="0.8" opacity="0.45" />
+      <line x1="6"  y1="22" x2="38" y2="22" stroke="#7dd3fc" strokeWidth="0.8" opacity="0.45" />
+      <line x1="6"  y1="12" x2="38" y2="32" stroke="#7dd3fc" strokeWidth="0.6" opacity="0.3" />
+      <line x1="38" y1="12" x2="6"  y2="32" stroke="#7dd3fc" strokeWidth="0.6" opacity="0.3" />
+      <polygon points="22,13 30,22 22,31 14,22" fill="#0ea5e9" stroke="#bae6fd" strokeWidth="1" />
+      <circle cx="22" cy="22" r="3.5" fill="#e0f2fe" />
+      <circle cx="22" cy="22" r="1.5" fill="#fff" />
     </svg>
   );
 }
@@ -40,9 +28,7 @@ function EssenceSprite({ size = 44 }) {
 function SoulSprite({ size = 44, locked = false }) {
   return (
     <svg width={size} height={size} viewBox="0 0 44 44" fill="none" opacity={locked ? 0.3 : 1}>
-      {/* Dashed outer ring */}
-      <circle cx="22" cy="22" r="19" stroke="#7c3aed" strokeWidth="1.2" strokeDasharray="3 2.5" fill="#1e1b4b"/>
-      {/* 6 lotus petals — each is an ellipse rotated around center */}
+      <circle cx="22" cy="22" r="19" stroke="#7c3aed" strokeWidth="1.2" strokeDasharray="3 2.5" fill="#1e1b4b" />
       {[0, 60, 120, 180, 240, 300].map((deg) => (
         <ellipse
           key={deg}
@@ -51,11 +37,9 @@ function SoulSprite({ size = 44, locked = false }) {
           transform={`rotate(${deg} 22 22)`}
         />
       ))}
-      {/* Center iris */}
-      <circle cx="22" cy="22" r="6.5" fill="#6d28d9" stroke="#ddd6fe" strokeWidth="1.2"/>
-      {/* Pupil highlight */}
-      <circle cx="22" cy="22" r="2.5" fill="#f5f3ff"/>
-      <circle cx="20.5" cy="20.5" r="1" fill="#fff" opacity="0.7"/>
+      <circle cx="22" cy="22" r="6.5" fill="#6d28d9" stroke="#ddd6fe" strokeWidth="1.2" />
+      <circle cx="22" cy="22" r="2.5" fill="#f5f3ff" />
+      <circle cx="20.5" cy="20.5" r="1" fill="#fff" opacity="0.7" />
     </svg>
   );
 }
@@ -63,25 +47,16 @@ function SoulSprite({ size = 44, locked = false }) {
 function BodySprite({ size = 44 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 44 44" fill="none">
-      {/* Mountain base */}
-      <polygon points="22,4 41,41 3,41" fill="#431407" stroke="#f97316" strokeWidth="1.8"/>
-      {/* Inner relief */}
-      <polygon points="22,14 32,33 12,33" fill="#7c2d12" stroke="#fb923c" strokeWidth="0.9"/>
-      {/* Snow cap */}
-      <polygon points="22,4 27.5,17 16.5,17" fill="#fed7aa" opacity="0.85"/>
-      {/* Peak shine */}
-      <line x1="22" y1="4" x2="22" y2="11" stroke="#fff" strokeWidth="1.5" opacity="0.6"/>
-      {/* Base line glow */}
-      <line x1="3" y1="41" x2="41" y2="41" stroke="#f97316" strokeWidth="1" opacity="0.35"/>
+      <polygon points="22,4 41,41 3,41" fill="#431407" stroke="#f97316" strokeWidth="1.8" />
+      <polygon points="22,14 32,33 12,33" fill="#7c2d12" stroke="#fb923c" strokeWidth="0.9" />
+      <polygon points="22,4 27.5,17 16.5,17" fill="#fed7aa" opacity="0.85" />
+      <line x1="22" y1="4" x2="22" y2="11" stroke="#fff" strokeWidth="1.5" opacity="0.6" />
+      <line x1="3" y1="41" x2="41" y2="41" stroke="#f97316" strokeWidth="1" opacity="0.35" />
     </svg>
   );
 }
 
-// ─── Triangle connector SVG overlay ──────────────────────────────────────────
-// Container is 280×230. Circle centers:
-//   Soul    → (140, 44)
-//   Essence → ( 44, 186)
-//   Body    → (236, 186)
+// ─── Triangle connector ───────────────────────────────────────────────────────
 const STAT_COLORS = { soul: '#a855f7', essence: '#38bdf8', body: '#f97316' };
 const TRANSITION  = { transition: 'stroke 0.25s, stroke-width 0.25s' };
 
@@ -95,15 +70,10 @@ function TriangleLines({ activeStat }) {
       style: TRANSITION,
     };
   };
-
   return (
-    <svg
-      className="stat-triangle-lines"
-      viewBox="0 0 280 230"
-      preserveAspectRatio="xMidYMid meet"
-    >
-      <line x1="140" y1="44" x2="44"  y2="186" {...lineProps('soul', 'essence')} />
-      <line x1="140" y1="44" x2="236" y2="186" {...lineProps('soul', 'body')} />
+    <svg className="stat-triangle-lines" viewBox="0 0 280 230" preserveAspectRatio="xMidYMid meet">
+      <line x1="140" y1="44"  x2="44"  y2="186" {...lineProps('soul', 'essence')} />
+      <line x1="140" y1="44"  x2="236" y2="186" {...lineProps('soul', 'body')} />
       <line x1="44"  y1="186" x2="236" y2="186" {...lineProps('essence', 'body')} />
     </svg>
   );
@@ -128,45 +98,27 @@ function StatCircle({ label, value, locked, glowColor, active, onEnter, onLeave,
   );
 }
 
-// ─── Detail panel (shown on hover / tap) ─────────────────────────────────────
+// ─── Detail panel (hover / tap) ───────────────────────────────────────────────
 function DetailPanel({ stat, qi, law, realmIndex }) {
+  const SAINT_INDEX = 24;
   const locked = stat === 'soul' && realmIndex < SAINT_INDEX;
 
   const configs = {
     essence: {
-      title: 'Essence',
-      subtitle: 'Elemental Power',
-      color: '#38bdf8',
-      mult: law.essenceMult,
-      multKey: 'essence_mult',
-      effects: [
-        'Drives elemental attacks (fire, water, ice…)',
-        'Contributes to DEF alongside Body',
-      ],
+      title: 'Essence', subtitle: 'Elemental Power', color: '#38bdf8',
+      mult: law.essenceMult, multKey: 'essence_mult',
+      effects: ['Drives elemental attacks', 'Contributes to Defense and Elemental Defense'],
     },
     soul: {
-      title: 'Soul',
-      subtitle: 'Spiritual Power',
-      color: '#c084fc',
-      mult: law.soulMult,
-      multKey: 'soul_mult',
-      effects: [
-        'Drives mental / spiritual attacks',
-        'Powers Secret Techniques',
-        'Contributes to Intuition',
-      ],
+      title: 'Soul', subtitle: 'Spiritual Power', color: '#c084fc',
+      mult: law.soulMult, multKey: 'soul_mult',
+      effects: ['Drives psychic attacks', 'Powers Secret Techniques', 'Feeds Harvest Gathering Speed'],
       lockMsg: 'Unlocks at Saint realm',
     },
     body: {
-      title: 'Body',
-      subtitle: 'Physical Power',
-      color: '#f97316',
-      mult: law.bodyMult,
-      multKey: 'body_mult',
-      effects: [
-        'Drives physical attacks',
-        'Contributes to DEF alongside Essence',
-      ],
+      title: 'Body', subtitle: 'Physical Power', color: '#f97316',
+      mult: law.bodyMult, multKey: 'body_mult',
+      effects: ['Drives physical attacks', 'Contributes to Defense', 'Feeds Mining Speed'],
     },
   };
 
@@ -185,9 +137,7 @@ function DetailPanel({ stat, qi, law, realmIndex }) {
       ) : (
         <>
           <div className="sdp-formula">
-            <code className="sdp-code">
-              Qi × {cfg.multKey}
-            </code>
+            <code className="sdp-code">Qi × {cfg.multKey}</code>
             <code className="sdp-code sdp-calc">
               {fmt(qi)} × {cfg.mult} = <strong style={{ color: cfg.color }}>{fmt(val)}</strong>
             </code>
@@ -195,12 +145,35 @@ function DetailPanel({ stat, qi, law, realmIndex }) {
           </div>
           <div className="sdp-divider" />
           <ul className="sdp-effects">
-            {cfg.effects.map((e) => (
-              <li key={e}>{e}</li>
-            ))}
+            {cfg.effects.map((e) => <li key={e}>{e}</li>)}
           </ul>
         </>
       )}
+    </div>
+  );
+}
+
+// ─── Stat table helpers ───────────────────────────────────────────────────────
+function StatGroup({ title, children }) {
+  return (
+    <div className="secondary-stats">
+      <p className="secondary-stats-title">{title}</p>
+      {children}
+    </div>
+  );
+}
+
+function StatRow({ label, hint, value, unit = '', locked = false }) {
+  return (
+    <div className="secondary-stat-row">
+      <span className="secondary-stat-label">{label}</span>
+      {hint && <span className="secondary-stat-formula">{hint}</span>}
+      <span
+        className="secondary-stat-value"
+        style={locked ? { color: 'var(--text-muted)', fontWeight: 400 } : undefined}
+      >
+        {locked ? 'Locked' : `${fmt(value)}${unit}`}
+      </span>
     </div>
   );
 }
@@ -212,18 +185,13 @@ function StatsScreen({ cultivation }) {
   const [qi, setQi]             = useState(Math.floor(qiRef.current));
   const [activeStat, setActive] = useState(null);
 
-  // Live qi update every 250 ms
   useEffect(() => {
     const id = setInterval(() => setQi(Math.floor(qiRef.current)), 250);
     return () => clearInterval(id);
   }, [qiRef]);
 
-  const isSoulLocked = realmIndex < SAINT_INDEX;
-  const essence   = Math.floor(qi * activeLaw.essenceMult);
-  const soul      = Math.floor(qi * activeLaw.soulMult);
-  const body      = Math.floor(qi * activeLaw.bodyMult);
-  const def       = essence + body;
-  const intuition = isSoulLocked ? null : soul;
+  const { meta, primary, combat, activity } = computeAllStats(qi, activeLaw, realmIndex);
+  const { soulUnlocked } = meta;
 
   const toggle = (stat) => setActive((s) => (s === stat ? null : stat));
   const enter  = (stat) => setActive(stat);
@@ -239,44 +207,40 @@ function StatsScreen({ cultivation }) {
         <div className="stat-triangle-container">
           <TriangleLines activeStat={activeStat} />
 
-          {/* Soul — top center */}
           <div
             className="stat-circle-wrap stat-wrap-soul"
             onMouseEnter={() => enter('soul')}
             onMouseLeave={leave}
             onClick={() => toggle('soul')}
           >
-            <StatCircle label="Soul" value={soul} locked={isSoulLocked} glowColor="#c084fc" active={activeStat === 'soul'}>
-              <SoulSprite size={40} locked={isSoulLocked} />
+            <StatCircle label="Soul" value={primary.soul} locked={!soulUnlocked} glowColor="#c084fc" active={activeStat === 'soul'}>
+              <SoulSprite size={40} locked={!soulUnlocked} />
             </StatCircle>
           </div>
 
-          {/* Essence — bottom left */}
           <div
             className="stat-circle-wrap stat-wrap-essence"
             onMouseEnter={() => enter('essence')}
             onMouseLeave={leave}
             onClick={() => toggle('essence')}
           >
-            <StatCircle label="Essence" value={essence} locked={false} glowColor="#38bdf8" active={activeStat === 'essence'}>
+            <StatCircle label="Essence" value={primary.essence} locked={false} glowColor="#38bdf8" active={activeStat === 'essence'}>
               <EssenceSprite size={40} />
             </StatCircle>
           </div>
 
-          {/* Body — bottom right */}
           <div
             className="stat-circle-wrap stat-wrap-body"
             onMouseEnter={() => enter('body')}
             onMouseLeave={leave}
             onClick={() => toggle('body')}
           >
-            <StatCircle label="Body" value={body} locked={false} glowColor="#f97316" active={activeStat === 'body'}>
+            <StatCircle label="Body" value={primary.body} locked={false} glowColor="#f97316" active={activeStat === 'body'}>
               <BodySprite size={40} />
             </StatCircle>
           </div>
         </div>
 
-        {/* Side detail panel */}
         <div className="stat-detail-side">
           {activeStat ? (
             <DetailPanel stat={activeStat} qi={qi} law={activeLaw} realmIndex={realmIndex} />
@@ -289,22 +253,28 @@ function StatsScreen({ cultivation }) {
         </div>
       </div>
 
-      {/* ── Secondary Stats ── */}
-      <div className="secondary-stats">
-        <p className="secondary-stats-title">Secondary Stats</p>
-        <div className="secondary-stat-row">
-          <span className="secondary-stat-label">DEF</span>
-          <span className="secondary-stat-formula">Essence + Body</span>
-          <span className="secondary-stat-value">{fmt(def)}</span>
-        </div>
-        <div className="secondary-stat-row">
-          <span className="secondary-stat-label">Intuition</span>
-          <span className="secondary-stat-formula">from Soul</span>
-          <span className="secondary-stat-value" style={{ color: isSoulLocked ? 'var(--text-muted)' : undefined }}>
-            {isSoulLocked ? 'Locked' : fmt(intuition)}
-          </span>
-        </div>
-      </div>
+      {/* ── Combat Stats ── */}
+      <StatGroup title="Combat">
+        <StatRow label="Health"         hint="(Essence + Body) × 12"  value={combat.health} />
+        <StatRow label="Defense"        hint="Essence + Body"          value={combat.defense} />
+        <StatRow label="Elem Defense"   hint="from Essence"            value={combat.elemDef} />
+        <StatRow label="Soul Toughness" hint="from Soul"               value={combat.soulTough}    locked={!soulUnlocked} />
+        <StatRow label="Phys Damage"    hint="bonus"                   value={combat.physDmg} />
+        <StatRow label="Elem Damage"    hint="bonus"                   value={combat.elemDmg} />
+        <StatRow label="Psych Damage"   hint="bonus"                   value={combat.psychDmg}     locked={!soulUnlocked} />
+        <StatRow label="Exploit Chance" hint=""                        value={combat.exploitChance} unit="%" />
+        <StatRow label="Exploit Mult"   hint=""                        value={combat.exploitMult}   unit="%" />
+      </StatGroup>
+
+      {/* ── Activity Stats ── */}
+      <StatGroup title="Activity">
+        <StatRow label="Qi Speed"       hint="base × law mult"         value={activity.qiSpeed}      unit="/s" />
+        <StatRow label="Focus Mult"     hint="while boosting"          value={activity.focusMult}    unit="%" />
+        <StatRow label="Harvest Speed"  hint="from Soul"               value={activity.harvestSpeed} locked={!soulUnlocked} />
+        <StatRow label="Harvest Luck"   hint=""                        value={activity.harvestLuck} />
+        <StatRow label="Mining Speed"   hint="from Body"               value={activity.miningSpeed} />
+        <StatRow label="Mining Luck"    hint=""                        value={activity.miningLuck} />
+      </StatGroup>
     </div>
   );
 }
