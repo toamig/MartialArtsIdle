@@ -1648,3 +1648,16 @@
 .offline-double-btn {
   max-width: 100%;
 }
+
+.wipe-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.wipe-confirm-label {
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: 500;
+}

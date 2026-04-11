@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { exportSave, importSave, wipeSave } from '../systems/save';
 
 function SettingsScreen() {
-  const [showImport, setShowImport] = useState(false);
-  const [importText, setImportText] = useState('');
-  const [message, setMessage]       = useState(null);
+  const [showImport,  setShowImport]  = useState(false);
+  const [importText,  setImportText]  = useState('');
+  const [message,     setMessage]     = useState(null);
+  const [confirmWipe, setConfirmWipe] = useState(false);
 
   const flash = (text, isError) => {
     setMessage({ text, isError });
@@ -31,12 +32,13 @@ function SettingsScreen() {
     }
   };
 
-  const handleWipe = () => {
-    if (window.confirm('Are you sure? This will delete ALL progress!')) {
-      wipeSave();
-      flash('Save wiped! Reloading…', false);
-      setTimeout(() => window.location.reload(), 1000);
-    }
+  const handleWipe = () => setConfirmWipe(true);
+
+  const confirmDoWipe = () => {
+    setConfirmWipe(false);
+    wipeSave();
+    flash('Save wiped! Reloading…', false);
+    setTimeout(() => window.location.reload(), 1000);
   };
 
   return (
@@ -56,7 +58,15 @@ function SettingsScreen() {
         <div className="save-buttons">
           <button className="save-btn" onClick={handleExport}>Export Save</button>
           <button className="save-btn" onClick={() => setShowImport(!showImport)}>Import Save</button>
-          <button className="save-btn save-btn-danger" onClick={handleWipe}>Wipe Save</button>
+          {confirmWipe ? (
+            <div className="wipe-confirm">
+              <span className="wipe-confirm-label">Are you sure?</span>
+              <button className="save-btn save-btn-danger" onClick={confirmDoWipe}>Yes, wipe</button>
+              <button className="save-btn" onClick={() => setConfirmWipe(false)}>Cancel</button>
+            </div>
+          ) : (
+            <button className="save-btn save-btn-danger" onClick={handleWipe}>Wipe Save</button>
+          )}
         </div>
 
         {showImport && (
