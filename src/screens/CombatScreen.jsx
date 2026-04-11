@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { TYPE_COLOR, getCooldown } from '../data/techniques';
 import { pickEnemy } from '../data/enemies';
 import CombatStage from '../components/CombatStage';
+
+const AUTO_RESTART_MS = 1500;
 
 const LOG_COLOR = {
   damage:         'var(--accent)',
@@ -16,13 +18,9 @@ function CombatScreen({ cultivation, techniques, combat, region = null, onBack =
   const { phase, enemy, log, startFight } = combat;
   const { equippedTechniques } = techniques;
 
-  // Resolve a random enemy from the region's pool once per mount.
-  // Falls back to null (Training Dummy) when no region is provided.
-  const [resolvedEnemy] = useState(() =>
-    region?.enemyPool ? pickEnemy(region.enemyPool) : null
-  );
-
-  const handleStart = () => {
+  // Always-fresh ref so the auto-restart timer never captures stale closures.
+  const doStartRef = useRef(null);
+  doStartRef.current = () => {
     const qi  = cultivation.qiRef.current;
     const law = cultivation.activeLaw;
     startFight(
@@ -33,9 +31,20 @@ function CombatScreen({ cultivation, techniques, combat, region = null, onBack =
         lawElement: law.element,
       },
       equippedTechniques,
-      resolvedEnemy,
+      region?.enemyPool ? pickEnemy(region.enemyPool) : null,
     );
   };
+
+  // Auto-start the first fight when the screen mounts.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { doStartRef.current(); }, []);
+
+  // Auto-restart after a short delay whenever a fight ends.
+  useEffect(() => {
+    if (phase !== 'won' && phase !== 'lost') return;
+    const t = setTimeout(() => doStartRef.current(), AUTO_RESTART_MS);
+    return () => clearTimeout(t);
+  }, [phase]);
 
   const isFighting = phase === 'fighting';
 
@@ -74,9 +83,7 @@ function CombatScreen({ cultivation, techniques, combat, region = null, onBack =
         <span className="combat-vs">vs</span>
 
         <div className="combatant combatant-enemy">
-          <span className="combatant-label">
-            {phase === 'idle' ? (resolvedEnemy?.name ?? 'Enemy') : enemy.name}
-          </span>
+          <span className="combatant-label">{enemy.name || 'Enemy'}</span>
           <div className="hp-bar-track">
             <div
               ref={combat.eHpBarRef}
@@ -120,22 +127,9 @@ function CombatScreen({ cultivation, techniques, combat, region = null, onBack =
         })}
       </div>
 
-      {/* ── Phase banner + action button ──────────────────────────────────── */}
-      {phase === 'idle' && (
-        <button className="combat-start-btn" onClick={handleStart}>Start Fight</button>
-      )}
-      {phase === 'won' && (
-        <div className="combat-result combat-result-won">
-          <span>Victory!</span>
-          <button className="combat-start-btn" onClick={handleStart}>Fight Again</button>
-        </div>
-      )}
-      {phase === 'lost' && (
-        <div className="combat-result combat-result-lost">
-          <span>Defeated</span>
-          <button className="combat-start-btn" onClick={handleStart}>Retry</button>
-        </div>
-      )}
+      {/* ── Result flash (auto-dismissed when next fight starts) ─────────── */}
+      {phase === 'won'  && <div className="combat-result combat-result-won" >Victory!</div>}
+      {phase === 'lost' && <div className="combat-result combat-result-lost">Defeated</div>}
 
       {/* ── Combat log ───────────────────────────────────────────────────── */}
       {log.length > 0 && (
