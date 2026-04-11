@@ -10,7 +10,7 @@ export const TECHNIQUE_QUALITY = {
 // ─── Rank definitions ─────────────────────────────────────────────────────────
 // minRealmIndex matches REALMS array in realms.js
 export const TECHNIQUE_RANK = {
-  Saint:    { label: 'Saint',    minRealmIndex: 24 },
+  Saint:    { label: 'Saint',    minRealmIndex: 10 },
   Emperor:  { label: 'Emperor',  minRealmIndex: 36 },
   Immortal: { label: 'Immortal', minRealmIndex: 44 },
 };
