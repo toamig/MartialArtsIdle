@@ -32,7 +32,7 @@ function HomeScreen({ cultivation }) {
     activateAdBoost(AD_BOOST_DURATION_MS);
   }, [activateAdBoost]);
 
-  const cultivationAd = useRewardedAd(onCultivationReward);
+  const cultivationAd = useRewardedAd(onCultivationReward, 30 * 60 * 1000, 'mai_ad_cd_cultivation');
 
   // ── Pointer handlers ────────────────────────────────────────────────────────
   const handlePointerDown = (e) => {

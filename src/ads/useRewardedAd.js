@@ -16,12 +16,17 @@ import { loadRewardedAd, showRewardedAd } from './adService';
  *   show: function,
  * }}
  */
-export function useRewardedAd(onReward, cooldownMs = 30 * 60 * 1000) {
-  const [status, setStatus] = useState('loading');
-  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+export function useRewardedAd(onReward, cooldownMs = 30 * 60 * 1000, storageKey = null) {
+  const savedCooldownEnd = storageKey
+    ? parseInt(localStorage.getItem(storageKey) ?? '0', 10)
+    : 0;
+  const restoredRemaining = Math.max(0, savedCooldownEnd - Date.now());
+
+  const [status, setStatus] = useState(restoredRemaining > 0 ? 'cooldown' : 'loading');
+  const [cooldownRemaining, setCooldownRemaining] = useState(restoredRemaining);
 
   const cooldownInterval = useRef(null);
-  const cooldownEnd      = useRef(0);
+  const cooldownEnd      = useRef(restoredRemaining > 0 ? savedCooldownEnd : 0);
   const onRewardRef      = useRef(onReward);
   onRewardRef.current    = onReward;
 
@@ -31,8 +36,23 @@ export function useRewardedAd(onReward, cooldownMs = 30 * 60 * 1000) {
     setStatus(ok ? 'ready' : 'unavailable');
   }, []);
 
-  // Load on mount
-  useEffect(() => { load(); }, [load]);
+  // Restore cooldown interval if we resumed mid-cooldown
+  useEffect(() => {
+    if (restoredRemaining <= 0) { load(); return; }
+    cooldownInterval.current = setInterval(() => {
+      const remaining = cooldownEnd.current - Date.now();
+      if (remaining <= 0) {
+        clearInterval(cooldownInterval.current);
+        if (storageKey) localStorage.removeItem(storageKey);
+        setCooldownRemaining(0);
+        load();
+      } else {
+        setCooldownRemaining(remaining);
+      }
+    }, 1000);
+    return () => clearInterval(cooldownInterval.current);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Cleanup cooldown timer on unmount
   useEffect(() => () => clearInterval(cooldownInterval.current), []);
@@ -48,6 +68,7 @@ export function useRewardedAd(onReward, cooldownMs = 30 * 60 * 1000) {
 
       // Start cooldown
       cooldownEnd.current = Date.now() + cooldownMs;
+      if (storageKey) localStorage.setItem(storageKey, cooldownEnd.current.toString());
       setCooldownRemaining(cooldownMs);
       setStatus('cooldown');
 
@@ -55,6 +76,7 @@ export function useRewardedAd(onReward, cooldownMs = 30 * 60 * 1000) {
         const remaining = cooldownEnd.current - Date.now();
         if (remaining <= 0) {
           clearInterval(cooldownInterval.current);
+          if (storageKey) localStorage.removeItem(storageKey);
           setCooldownRemaining(0);
           load();
         } else {

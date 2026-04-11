@@ -14,7 +14,10 @@ export default function useCultivation() {
   const saved = loadGame();
   const [realmIndex, setRealmIndex] = useState(saved?.realmIndex ?? 0);
   const [boosting, setBoosting] = useState(false);
-  const [adBoostEndsAt, setAdBoostEndsAt] = useState(0); // timestamp ms
+  const [adBoostEndsAt, setAdBoostEndsAt] = useState(() => {
+    const endsAt = saved?.adBoostEndsAt ?? 0;
+    return endsAt > Date.now() ? endsAt : 0;
+  });
   const [offlineEarnings, setOfflineEarnings] = useState(() => {
     // Calculate qi earned while the app was closed
     if (!saved?.lastSeen || !saved?.realmIndex === undefined) return 0;
@@ -28,7 +31,9 @@ export default function useCultivation() {
   });
 
   const boostRef    = useRef(false);
-  const adBoostRef  = useRef(1); // multiplier, updated without re-render
+  const adBoostRef  = useRef(
+    (saved?.adBoostEndsAt ?? 0) > Date.now() ? AD_BOOST_MULT : 1
+  );
   const lastTickRef = useRef(performance.now());
 
   // Mutable refs — updated every tick, no React re-render needed
@@ -76,9 +81,16 @@ export default function useCultivation() {
   }, []); // runs once — reads everything via refs
 
   // Auto-save every 2 seconds
+  const adBoostEndsAtRef = useRef(adBoostEndsAt);
+  useEffect(() => { adBoostEndsAtRef.current = adBoostEndsAt; }, [adBoostEndsAt]);
+
   useEffect(() => {
     const interval = setInterval(() => {
-      saveGame({ realmIndex: indexRef.current, qi: Math.floor(qiRef.current) });
+      saveGame({
+        realmIndex:    indexRef.current,
+        qi:            Math.floor(qiRef.current),
+        adBoostEndsAt: adBoostEndsAtRef.current,
+      });
     }, 2000);
     return () => clearInterval(interval);
   }, []);
