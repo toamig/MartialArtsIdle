@@ -546,9 +546,8 @@
   display: flex;
   gap: 16px;
   align-items: stretch;
-  flex: 1;
-  min-height: 280px;
-  max-height: 380px;
+  height: 260px;
+  overflow: hidden;
 }
 
 /* Realm Progress Bar */
@@ -624,7 +623,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
   padding: 12px 24px;
   flex: 1;
   background: var(--bg-card);
@@ -639,19 +637,23 @@
 
 .stage-boosted {
   border-color: var(--gold);
-  box-shadow: inset 0 0 24px rgba(245, 200, 66, 0.06), 0 0 12px rgba(245, 200, 66, 0.1);
+  box-shadow: inset 0 0 12px rgba(245, 200, 66, 0.06);
 }
 
 /* Aura intensifies when cultivating hard */
 .stage-boosted .sprite-animator {
-  filter: brightness(1.1) saturate(1.2) drop-shadow(0 0 5px rgba(100, 160, 255, 0.45));
+  filter: brightness(1.05) saturate(1.1) drop-shadow(0 0 3px rgba(100, 160, 255, 0.22));
 }
 
 .stage-ad-boosted .sprite-animator {
-  filter: brightness(1.2) saturate(1.35) drop-shadow(0 0 9px rgba(100, 200, 255, 0.6));
+  filter: brightness(1.1) saturate(1.18) drop-shadow(0 0 5px rgba(100, 200, 255, 0.3));
 }
 
 .boost-label {
+  position: absolute;
+  top: 10px;
+  left: 0; right: 0;
+  text-align: center;
   color: var(--gold);
   font-weight: 700;
   font-size: 0.9rem;
@@ -663,11 +665,15 @@
 }
 
 @keyframes pulse-glow {
-  from { opacity: 0.7; text-shadow: 0 0 4px rgba(245, 200, 66, 0.3); }
-  to { opacity: 1; text-shadow: 0 0 12px rgba(245, 200, 66, 0.6); }
+  from { opacity: 0.8; text-shadow: 0 0 2px rgba(245, 200, 66, 0.15); }
+  to { opacity: 1; text-shadow: 0 0 6px rgba(245, 200, 66, 0.3); }
 }
 
 .tap-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 0; right: 0;
+  text-align: center;
   color: var(--text-muted);
   font-size: 0.75rem;
 }
@@ -1820,10 +1826,14 @@
 
 .stage-ad-boosted {
   border-color: #a78bfa;
-  box-shadow: inset 0 0 40px rgba(167,139,250,0.1), 0 0 20px rgba(167,139,250,0.15);
+  box-shadow: inset 0 0 20px rgba(167,139,250,0.08);
 }
 
 .ad-boost-label {
+  position: absolute;
+  bottom: 28px;
+  left: 0; right: 0;
+  text-align: center;
   color: #a78bfa;
   font-weight: 700;
   font-size: 0.85rem;
@@ -1953,13 +1963,8 @@
 
   /* ── Home screen: bigger cultivation stage ────────────────────────────── */
   .cultivation-layout {
-    min-height: 320px;
-    max-height: 460px;
+    height: 340px;
     max-width: 680px;
-  }
-
-  .fighter-stage {
-    min-height: 300px;
   }
 
   /* ── Inventory grid: more columns ─────────────────────────────────────── */
@@ -1999,7 +2004,7 @@
   }
 
   .cultivation-layout {
-    min-height: 440px;
+    height: 380px;
     max-width: 780px;
   }
 
