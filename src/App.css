@@ -1839,21 +1839,6 @@
     align-self: auto;
   }
 
-  /* Slightly smaller circles so triangle fits narrow screens */
-  .stat-triangle-container {
-    width: 260px;
-    height: 215px;
-  }
-
-  .stat-circle {
-    width: 78px;
-    height: 78px;
-  }
-
-  .stat-circle-val {
-    font-size: 0.82rem;
-  }
-
   /* ── Build screen: stack gear + law vertically ────────────────────────── */
   .build-top-row {
     flex-direction: column;
@@ -1876,6 +1861,11 @@
     grid-template-columns: repeat(3, 68px);
     grid-template-rows: repeat(5, 68px);
     gap: 6px;
+  }
+
+  .gear-slot {
+    width: 68px;
+    height: 68px;
   }
 
   /* ── Inventory: larger, easier-to-tap slots ───────────────────────────── */
@@ -1970,20 +1960,15 @@
 
 /* Very small phones (< 360px) */
 @media (max-width: 359px) {
-  .stat-triangle-container {
-    width: 240px;
-    height: 200px;
-  }
-
-  .stat-circle {
-    width: 72px;
-    height: 72px;
-  }
-
   .gear-body-layout {
     grid-template-columns: repeat(3, 60px);
     grid-template-rows: repeat(5, 60px);
     gap: 5px;
+  }
+
+  .gear-slot {
+    width: 60px;
+    height: 60px;
   }
 
   .nav-label {
