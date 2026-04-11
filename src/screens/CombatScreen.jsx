@@ -51,6 +51,8 @@ function CombatScreen({ cultivation, techniques, combat, region = null, onBack =
         phase={phase}
         playerAttackRef={combat.playerAttackRef}
         enemyAttackRef={combat.enemyAttackRef}
+        playerAnimDoneRef={combat.playerAnimDoneRef}
+        enemyAnimDoneRef={combat.enemyAnimDoneRef}
       />
 
       {/* ── HP bars ─────────────────────────────────────────────────────── */}
