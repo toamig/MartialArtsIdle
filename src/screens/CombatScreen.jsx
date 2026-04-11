@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TYPE_COLOR, getCooldown } from '../data/techniques';
 import { pickEnemy } from '../data/enemies';
 import CombatStage from '../components/CombatStage';
@@ -18,11 +18,16 @@ function CombatScreen({ cultivation, techniques, combat, region = null, onBack =
   const { phase, enemy, log, startFight } = combat;
   const { equippedTechniques } = techniques;
 
+  // Tracks the enemy def currently shown in the stage (updates on each fight start).
+  const [stageEnemy, setStageEnemy] = useState(null);
+
   // Always-fresh ref so the auto-restart timer never captures stale closures.
   const doStartRef = useRef(null);
   doStartRef.current = () => {
     const qi  = cultivation.qiRef.current;
     const law = cultivation.activeLaw;
+    const enemyDef = region?.enemyPool ? pickEnemy(region.enemyPool) : null;
+    setStageEnemy(enemyDef);
     startFight(
       {
         essence:    Math.floor(qi * law.essenceMult),
@@ -31,7 +36,7 @@ function CombatScreen({ cultivation, techniques, combat, region = null, onBack =
         lawElement: law.element,
       },
       equippedTechniques,
-      region?.enemyPool ? pickEnemy(region.enemyPool) : null,
+      enemyDef,
     );
   };
 
@@ -59,7 +64,7 @@ function CombatScreen({ cultivation, techniques, combat, region = null, onBack =
       {/* ── Fighter stage ───────────────────────────────────────────────── */}
       <CombatStage
         phase={phase}
-        enemy={resolvedEnemy}
+        enemy={stageEnemy}
         playerAttackRef={combat.playerAttackRef}
         enemyAttackRef={combat.enemyAttackRef}
         playerAnimDoneRef={combat.playerAnimDoneRef}

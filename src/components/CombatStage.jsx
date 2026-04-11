@@ -7,6 +7,7 @@ const BASE = import.meta.env.BASE_URL;
 // Custom player sprites: 128×128 px per frame, displayed at 1.5×
 const PLAYER_IDLE_SRC   = `${BASE}sprites/combat/player-idle.png`;
 const PLAYER_ATTACK_SRC = `${BASE}sprites/combat/player-attack.png`;
+const PLAYER_HIT_SRC    = `${BASE}sprites/combat/player-hit.png`;
 const PLAYER_IDLE_FW    = 128;
 const PLAYER_IDLE_FH    = 128;
 const PLAYER_IDLE_SCALE = 1.5;
@@ -82,6 +83,7 @@ export default function CombatStage({
 
     enemyAttackRef.current = () => {
       setEAnim('attack');
+      setPAnim('hit');
       eRef.current?.animate(
         [
           { transform: 'translateX(0)' },
@@ -89,13 +91,6 @@ export default function CombatStage({
           { transform: 'translateX(0)' },
         ],
         { duration: 400, easing: 'ease-in-out' },
-      );
-      pFlashRef.current?.animate(
-        [
-          { opacity: 1, background: 'rgba(255,80,60,0.65)' },
-          { opacity: 0, background: 'rgba(255,80,60,0)' },
-        ],
-        { duration: 250, easing: 'ease-out' },
       );
     };
 
@@ -115,6 +110,10 @@ export default function CombatStage({
   const onPlayerAttackDone = () => {
     setPAnim('idle');
     playerAnimDoneRef.current?.();
+  };
+
+  const onPlayerHitDone = () => {
+    setPAnim('idle');
   };
 
   const onEnemyAttackDone = () => {
@@ -138,7 +137,7 @@ export default function CombatStage({
       {/* ── Player (left side) ─── */}
       <div ref={pRef} className={`stage-side ${isLost ? 'stage-ko' : ''}`}>
         <div ref={pFlashRef} className="stage-flash" />
-        {pAnim === 'idle' ? (
+        {pAnim === 'idle' && (
           <SpriteAnimator
             src={PLAYER_IDLE_SRC}
             frameWidth={PLAYER_IDLE_FW}
@@ -147,7 +146,8 @@ export default function CombatStage({
             fps={isFighting ? 6 : 4}
             scale={PLAYER_IDLE_SCALE}
           />
-        ) : (
+        )}
+        {pAnim === 'attack' && (
           <SpriteAnimator
             src={PLAYER_ATTACK_SRC}
             frameWidth={PLAYER_IDLE_FW}
@@ -156,6 +156,18 @@ export default function CombatStage({
             fps={10}
             loop={false}
             onComplete={onPlayerAttackDone}
+            scale={PLAYER_IDLE_SCALE}
+          />
+        )}
+        {pAnim === 'hit' && (
+          <SpriteAnimator
+            src={PLAYER_HIT_SRC}
+            frameWidth={PLAYER_IDLE_FW}
+            frameHeight={PLAYER_IDLE_FH}
+            frameCount={4}
+            fps={12}
+            loop={false}
+            onComplete={onPlayerHitDone}
             scale={PLAYER_IDLE_SCALE}
           />
         )}

@@ -527,6 +527,8 @@
 /* Home Screen */
 .home-screen {
   text-align: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .home-screen h1 {
@@ -544,7 +546,9 @@
   display: flex;
   gap: 16px;
   align-items: stretch;
-  height: 310px;
+  flex: 1;
+  min-height: 280px;
+  max-height: 380px;
 }
 
 /* Realm Progress Bar */
@@ -621,7 +625,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 24px;
+  padding: 12px 24px;
   flex: 1;
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -635,16 +639,16 @@
 
 .stage-boosted {
   border-color: var(--gold);
-  box-shadow: inset 0 0 40px rgba(245, 200, 66, 0.1), 0 0 20px rgba(245, 200, 66, 0.15);
+  box-shadow: inset 0 0 24px rgba(245, 200, 66, 0.06), 0 0 12px rgba(245, 200, 66, 0.1);
 }
 
 /* Aura intensifies when cultivating hard */
 .stage-boosted .sprite-animator {
-  filter: brightness(1.25) saturate(1.4) drop-shadow(0 0 8px rgba(100, 160, 255, 0.7));
+  filter: brightness(1.1) saturate(1.2) drop-shadow(0 0 5px rgba(100, 160, 255, 0.45));
 }
 
 .stage-ad-boosted .sprite-animator {
-  filter: brightness(1.4) saturate(1.6) drop-shadow(0 0 14px rgba(100, 200, 255, 0.9));
+  filter: brightness(1.2) saturate(1.35) drop-shadow(0 0 9px rgba(100, 200, 255, 0.6));
 }
 
 .boost-label {
@@ -655,7 +659,7 @@
 }
 
 .boost-label-hidden {
-  visibility: hidden;
+  display: none;
 }
 
 @keyframes pulse-glow {
@@ -1705,8 +1709,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  height: 148px;
-  padding: 0 20px;
+  height: 260px;
+  padding: 0 20px 12px;
   position: relative;
   overflow: hidden;
   border-radius: 12px;
@@ -1949,7 +1953,8 @@
 
   /* ── Home screen: bigger cultivation stage ────────────────────────────── */
   .cultivation-layout {
-    min-height: 380px;
+    min-height: 320px;
+    max-height: 460px;
     max-width: 680px;
   }
 
