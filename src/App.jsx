@@ -49,6 +49,7 @@ function App() {
                       cultivation={cultivation}
                       techniques={techniques}
                       combat={combat}
+                      inventory={inventory}
                       region={screenParam?.region ?? null}
                       onBack={goBack}
                     />,

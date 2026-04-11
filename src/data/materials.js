@@ -26,6 +26,42 @@ export const ORES = {
   'Heavenly Profound Metal':      { rarity: 'Legendary', mineCost: 1800 },
 };
 
+export const CULTIVATION_MATERIALS = {
+  spirit_stone:             { name: 'Spirit Stone',             rarity: 'Common'    },
+  beast_core:               { name: 'Beast Core',               rarity: 'Uncommon'  },
+  origin_crystal:           { name: 'Origin Crystal',           rarity: 'Rare'      },
+  heaven_spirit_dew:        { name: 'Heaven Spirit Dew',        rarity: 'Epic'      },
+  elemental_essence_bead:   { name: 'Elemental Essence Bead',   rarity: 'Epic'      },
+};
+
+/** Flat lookup keyed by snake_case ID — covers all material types. */
+export const ALL_MATERIALS = {
+  // herbs
+  soul_calming_grass:          { name: 'Soul Calming Grass',          rarity: 'Common',    type: 'herb' },
+  jade_heart_flower:           { name: 'Jade Heart Flower',           rarity: 'Uncommon',  type: 'herb' },
+  netherworld_flame_mushroom:  { name: 'Netherworld Flame Mushroom',  rarity: 'Uncommon',  type: 'herb' },
+  thousand_year_ginseng:       { name: 'Thousand-Year Ginseng',       rarity: 'Rare',      type: 'herb' },
+  blood_lotus:                 { name: 'Blood Lotus',                 rarity: 'Rare',      type: 'herb' },
+  dragon_saliva_grass:         { name: 'Dragon Saliva Grass',         rarity: 'Rare',      type: 'herb' },
+  purple_cloud_vine:           { name: 'Purple Cloud Vine',           rarity: 'Epic',      type: 'herb' },
+  immortal_revival_leaf:       { name: 'Immortal Revival Leaf',       rarity: 'Legendary', type: 'herb' },
+  // ores
+  black_tortoise_iron:         { name: 'Black Tortoise Iron',         rarity: 'Common',    type: 'ore' },
+  crimson_flame_crystal:       { name: 'Crimson Flame Crystal',       rarity: 'Uncommon',  type: 'ore' },
+  void_stone:                  { name: 'Void Stone',                  rarity: 'Rare',      type: 'ore' },
+  mithril_essence:             { name: 'Mithril Essence',             rarity: 'Rare',      type: 'ore' },
+  deep_sea_cold_iron:          { name: 'Deep Sea Cold Iron',          rarity: 'Rare',      type: 'ore' },
+  star_metal_ore:              { name: 'Star Metal Ore',              rarity: 'Epic',      type: 'ore' },
+  skyfire_meteorite:           { name: 'Skyfire Meteorite',           rarity: 'Epic',      type: 'ore' },
+  heavenly_profound_metal:     { name: 'Heavenly Profound Metal',     rarity: 'Legendary', type: 'ore' },
+  // cultivation materials
+  spirit_stone:                { name: 'Spirit Stone',                rarity: 'Common',    type: 'cultivation' },
+  beast_core:                  { name: 'Beast Core',                  rarity: 'Uncommon',  type: 'cultivation' },
+  origin_crystal:              { name: 'Origin Crystal',              rarity: 'Rare',      type: 'cultivation' },
+  heaven_spirit_dew:           { name: 'Heaven Spirit Dew',           rarity: 'Epic',      type: 'cultivation' },
+  elemental_essence_bead:      { name: 'Elemental Essence Bead',      rarity: 'Epic',      type: 'cultivation' },
+};
+
 export const RARITY_COLOR = {
   Common:    '#aaa',
   Uncommon:  '#4ade80',

@@ -14,7 +14,7 @@ const LOG_COLOR = {
   system:         'var(--text-muted)',
 };
 
-function CombatScreen({ cultivation, techniques, combat, region = null, onBack = null }) {
+function CombatScreen({ cultivation, techniques, combat, inventory, region = null, onBack = null }) {
   const { phase, enemy, log, startFight } = combat;
   const { equippedTechniques } = techniques;
 
@@ -37,6 +37,7 @@ function CombatScreen({ cultivation, techniques, combat, region = null, onBack =
       },
       equippedTechniques,
       enemyDef,
+      inventory ? (drops) => drops.forEach(d => inventory.addItem(d.itemId, d.qty)) : null,
     );
   };
 
