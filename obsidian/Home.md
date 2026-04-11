@@ -8,6 +8,7 @@
 - [[Roadmap]] — Development stages
 - [[Cultivation System]] — Realms, sub-realms, breakthroughs
 - [[Primary Stats]] — Essence, Soul, Body
+- [[Stats]] — Full stat reference + modifier catalogue
 - [[Realm Progression]] — Major realms and their thresholds
 - [[Laws]] — Elemental cultivation arts
 - [[Secret Techniques]] — Advanced combat skills
