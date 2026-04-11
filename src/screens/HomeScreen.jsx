@@ -4,8 +4,7 @@ import RealmProgressBar from '../components/RealmProgressBar';
 import OfflineEarningsModal from '../components/OfflineEarningsModal';
 import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
-
-const BASE = import.meta.env.BASE_URL;
+import { getMeditationSprite, MW, MH } from '../sprites/meditateGen';
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
 function HomeScreen({ cultivation }) {
@@ -84,11 +83,11 @@ function HomeScreen({ cultivation }) {
         >
           {vfxLayer}
           <SpriteAnimator
-            src={`${BASE}sprites/fighter-meditate.png`}
-            frameWidth={64}
-            frameHeight={64}
+            src={getMeditationSprite()}
+            frameWidth={MW}
+            frameHeight={MH}
             frameCount={6}
-            fps={boosting ? 12 : 6}
+            fps={boosting ? 14 : 5}
             scale={3}
           />
           <div className={`boost-label${boosting ? '' : ' boost-label-hidden'}`}>3x Cultivation!</div>

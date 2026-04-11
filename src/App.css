@@ -528,6 +528,15 @@
   box-shadow: inset 0 0 40px rgba(245, 200, 66, 0.1), 0 0 20px rgba(245, 200, 66, 0.15);
 }
 
+/* Aura intensifies when cultivating hard */
+.stage-boosted .sprite-animator {
+  filter: brightness(1.25) saturate(1.4) drop-shadow(0 0 8px rgba(100, 160, 255, 0.7));
+}
+
+.stage-ad-boosted .sprite-animator {
+  filter: brightness(1.4) saturate(1.6) drop-shadow(0 0 14px rgba(100, 200, 255, 0.9));
+}
+
 .boost-label {
   color: var(--gold);
   font-weight: 700;
