@@ -179,7 +179,7 @@ function StatRow({ label, hint, value, unit = '', locked = false }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-function StatsScreen({ cultivation }) {
+function StatsScreen({ cultivation, artefacts }) {
   const { qiRef, activeLaw, realmName, realmIndex } = cultivation;
 
   const [qi, setQi]             = useState(Math.floor(qiRef.current));
@@ -190,7 +190,7 @@ function StatsScreen({ cultivation }) {
     return () => clearInterval(id);
   }, [qiRef]);
 
-  const { meta, primary, combat, activity } = computeAllStats(qi, activeLaw, realmIndex);
+  const { meta, primary, combat, activity } = computeAllStats(qi, activeLaw, realmIndex, artefacts?.getStatModifiers());
   const { soulUnlocked } = meta;
 
   const toggle = (stat) => setActive((s) => (s === stat ? null : stat));

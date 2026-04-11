@@ -3,6 +3,7 @@ import GearSlotModal from '../components/GearSlotModal';
 import TechniqueSlotModal from '../components/TechniqueSlotModal';
 import { LAW_RARITY } from '../data/laws';
 import { TECHNIQUE_QUALITY, TYPE_COLOR, getCooldown } from '../data/techniques';
+import { QUALITY } from '../data/artefacts';
 
 // col/row are 1-indexed CSS grid positions (3 columns, 5 rows)
 const GEAR_SLOTS = [
@@ -56,7 +57,7 @@ function TechSlotCard({ index, tech, onClick }) {
   );
 }
 
-function BuildScreen({ cultivation, techniques }) {
+function BuildScreen({ cultivation, techniques, artefacts }) {
   const [selectedSlot,     setSelectedSlot]     = useState(null);
   const [selectedTechSlot, setSelectedTechSlot] = useState(null);
 
@@ -82,17 +83,37 @@ function BuildScreen({ cultivation, techniques }) {
         <section className="build-section">
           <h2 className="build-section-title">Artefacts</h2>
           <div className="gear-body-layout">
-            {GEAR_SLOTS.map((slot) => (
-              <button
-                key={slot.id}
-                className="inv-slot gear-slot"
-                style={{ gridColumn: slot.col, gridRow: slot.row }}
-                onClick={() => setSelectedSlot(slot)}
-              >
-                <span className="gear-slot-glyph">+</span>
-                <span className="inv-name gear-slot-name">{slot.label}</span>
-              </button>
-            ))}
+            {GEAR_SLOTS.map((slot) => {
+              const art     = artefacts.getEquipped(slot.id);
+              const quality = art ? QUALITY[art.rarity] : null;
+              return (
+                <button
+                  key={slot.id}
+                  className={`inv-slot gear-slot${art ? ' gear-slot-filled' : ''}`}
+                  style={{
+                    gridColumn:  slot.col,
+                    gridRow:     slot.row,
+                    borderColor: quality?.color,
+                    borderStyle: art ? 'solid' : undefined,
+                  }}
+                  onClick={() => setSelectedSlot(slot)}
+                >
+                  {art ? (
+                    <>
+                      <span className="gear-slot-quality-dot" style={{ background: quality.color }} />
+                      <span className="gear-slot-name gear-slot-name-filled" style={{ color: quality.color }}>
+                        {art.name}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="gear-slot-glyph">+</span>
+                      <span className="inv-name gear-slot-name">{slot.label}</span>
+                    </>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -183,7 +204,7 @@ function BuildScreen({ cultivation, techniques }) {
       </section>
 
       {selectedSlot && (
-        <GearSlotModal slot={selectedSlot} onClose={() => setSelectedSlot(null)} />
+        <GearSlotModal slot={selectedSlot} artefacts={artefacts} onClose={() => setSelectedSlot(null)} />
       )}
 
       {selectedTechSlot !== null && (

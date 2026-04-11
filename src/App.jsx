@@ -16,6 +16,7 @@ import useCultivation from './hooks/useCultivation';
 import useInventory   from './hooks/useInventory';
 import useTechniques  from './hooks/useTechniques';
 import useCombat      from './hooks/useCombat';
+import useArtefacts   from './hooks/useArtefacts';
 import './App.css';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
   const inventory   = useInventory();
   const techniques  = useTechniques();
   const combat      = useCombat();
+  const artefacts   = useArtefacts();
 
   // Navigate to a screen, optionally carrying a parameter (e.g. region data).
   const navigate = (screen, param = null) => {
@@ -56,10 +58,10 @@ function App() {
     mining:    screenParam?.region
                  ? <MiningScreen    region={screenParam.region} onBack={goBack} />
                  : null,
-    build:     <BuildScreen  cultivation={cultivation} techniques={techniques} />,
+    build:     <BuildScreen  cultivation={cultivation} techniques={techniques} artefacts={artefacts} />,
     shop:      <ShopScreen />,
     inventory: <InventoryScreen inventory={inventory} />,
-    stats:     <StatsScreen cultivation={cultivation} />,
+    stats:     <StatsScreen cultivation={cultivation} artefacts={artefacts} />,
     settings:  <SettingsScreen />,
   };
 
