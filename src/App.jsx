@@ -71,10 +71,10 @@ function App() {
                       onBack={goBack}
                     />,
     gathering: screenParam?.region
-                 ? <GatheringScreen region={screenParam.region} onBack={goBack} />
+                 ? <GatheringScreen region={screenParam.region} inventory={inventory} onBack={goBack} />
                  : null,
     mining:    screenParam?.region
-                 ? <MiningScreen    region={screenParam.region} onBack={goBack} />
+                 ? <MiningScreen    region={screenParam.region} inventory={inventory} onBack={goBack} />
                  : null,
     build:     <BuildScreen  cultivation={cultivation} techniques={techniques} artefacts={artefacts} />,
     shop:      <ShopScreen />,

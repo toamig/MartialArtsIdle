@@ -7,13 +7,18 @@ function parseList(str) {
   return str.split(',').map(s => s.trim()).filter(s => s && !s.includes('TBD'));
 }
 
+/** Convert display name like "Black Tortoise Iron" → "black_tortoise_iron". */
+function nameToId(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
 function pickItem(list, lookup) {
   const name = list[Math.floor(Math.random() * list.length)];
   const data = lookup[name] ?? { rarity: 'Common', mineCost: 30 };
   return { name, ...data };
 }
 
-function MiningScreen({ region, onBack }) {
+function MiningScreen({ region, inventory, onBack }) {
   const oreList = parseList(region.ores);
 
   const [current, setCurrent]    = useState(() => pickItem(oreList, ORES));
@@ -49,6 +54,11 @@ function MiningScreen({ region, onBack }) {
       if (progressVal.current >= cost) {
         const mined = { ...currentRef.current };
         progressVal.current = 0;
+
+        // Add to inventory using snake_case id
+        if (inventory) {
+          inventory.addItem(nameToId(mined.name), 1);
+        }
 
         const next = pickItem(oreList, ORES);
         currentRef.current = next;

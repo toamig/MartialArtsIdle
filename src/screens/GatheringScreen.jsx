@@ -7,13 +7,18 @@ function parseList(str) {
   return str.split(',').map(s => s.trim()).filter(s => s && !s.includes('TBD'));
 }
 
+/** Convert display name like "Soul Calming Grass" → "soul_calming_grass". */
+function nameToId(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
 function pickItem(list, lookup) {
   const name = list[Math.floor(Math.random() * list.length)];
   const data = lookup[name] ?? { rarity: 'Common', gatherCost: 30 };
   return { name, ...data };
 }
 
-function GatheringScreen({ region, onBack }) {
+function GatheringScreen({ region, inventory, onBack }) {
   const herbList = parseList(region.herbs);
 
   const [current, setCurrent]   = useState(() => pickItem(herbList, HERBS));
@@ -50,6 +55,11 @@ function GatheringScreen({ region, onBack }) {
       if (progressVal.current >= cost) {
         const gathered = { ...currentRef.current };
         progressVal.current = 0;
+
+        // Add to inventory using snake_case id
+        if (inventory) {
+          inventory.addItem(nameToId(gathered.name), 1);
+        }
 
         // Pick next herb (may be same one again — that's fine)
         const next = pickItem(herbList, HERBS);

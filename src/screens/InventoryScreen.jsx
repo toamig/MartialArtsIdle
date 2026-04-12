@@ -61,7 +61,7 @@ function InventoryScreen({ inventory, artefacts, techniques, cultivation }) {
       {/* ── Materials ────────────────────────────────────────────────────────── */}
       {MATERIAL_KEYS.has(activeTab) && (
         <div className="inv-grid">
-          {ITEMS[activeTab].map((item) => {
+          {ITEMS[activeTab].filter(item => inventory.inventory[item.id] !== undefined).map((item) => {
             const qty    = getQuantity(item.id);
             const rarity = RARITY[item.rarity];
             return (
