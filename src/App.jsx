@@ -61,7 +61,7 @@ function App() {
                  : null,
     build:     <BuildScreen  cultivation={cultivation} techniques={techniques} artefacts={artefacts} />,
     shop:      <ShopScreen />,
-    inventory: <InventoryScreen inventory={inventory} />,
+    inventory: <InventoryScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} />,
     stats:     <StatsScreen cultivation={cultivation} artefacts={artefacts} />,
     settings:  <SettingsScreen />,
   };

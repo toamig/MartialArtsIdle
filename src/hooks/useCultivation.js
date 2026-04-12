@@ -1,7 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import REALMS from '../data/realms';
-import { DEFAULT_LAW } from '../data/laws';
+import { DEFAULT_LAW, THREE_HARMONY_MANUAL } from '../data/laws';
 import { saveGame, loadGame } from '../systems/save';
+
+const OWNED_LAWS_KEY = 'mai_owned_laws';
+export const MAX_LAWS = 100;
+
+function loadOwnedLaws() {
+  try {
+    const raw = localStorage.getItem(OWNED_LAWS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [THREE_HARMONY_MANUAL];
+}
 
 const BASE_RATE       = 5; // qi per second at 1x
 const BOOST_MULTIPLIER = 3;
@@ -18,6 +29,20 @@ export default function useCultivation() {
     const endsAt = saved?.adBoostEndsAt ?? 0;
     return endsAt > Date.now() ? endsAt : 0;
   });
+  const [ownedLaws, setOwnedLaws] = useState(loadOwnedLaws);
+
+  useEffect(() => {
+    try { localStorage.setItem(OWNED_LAWS_KEY, JSON.stringify(ownedLaws)); } catch {}
+  }, [ownedLaws]);
+
+  const addOwnedLaw = useCallback((law) => {
+    setOwnedLaws(prev => {
+      if (prev.length >= MAX_LAWS) return prev;
+      if (prev.some(l => l.id === law.id)) return prev;
+      return [...prev, law];
+    });
+  }, []);
+
   const [offlineEarnings, setOfflineEarnings] = useState(() => {
     // Calculate qi earned while the app was closed
     if (!saved?.lastSeen || !saved?.realmIndex === undefined) return 0;
@@ -136,6 +161,8 @@ export default function useCultivation() {
     costRef,
     activeLaw:     DEFAULT_LAW,
     isLawUnlocked: realmIndex >= DEFAULT_LAW.realmRequirement,
+    ownedLaws,
+    addOwnedLaw,
     // Ads
     activateAdBoost,
     adBoostActive:  adBoostEndsAt > Date.now(),

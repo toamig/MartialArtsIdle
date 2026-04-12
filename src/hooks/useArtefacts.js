@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { ARTEFACTS_BY_ID, getSlotBonuses } from '../data/artefacts';
 
 const SAVE_KEY = 'mai_artefacts';
+export const MAX_ARTEFACTS = 100;
 
 // One common artefact per slot type, auto-equipped at game start.
 const STARTER_OWNED = [
@@ -46,6 +47,17 @@ export default function useArtefacts() {
   const [state, setState] = useState(() =>
     load() ?? { owned: STARTER_OWNED, equipped: STARTER_EQUIPPED }
   );
+
+  /** Add a dropped artefact to the owned collection. Silently ignored when full. */
+  const addArtefact = useCallback((catalogueId) => {
+    setState(prev => {
+      if (prev.owned.length >= MAX_ARTEFACTS) return prev;
+      const uid = `art_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const next = { ...prev, owned: [...prev.owned, { uid, catalogueId }] };
+      save(next);
+      return next;
+    });
+  }, []);
 
   // Equip an owned artefact (by uid) into a slot.
   // If the uid is already equipped elsewhere, it is moved (prevents double-equip).
@@ -117,6 +129,7 @@ export default function useArtefacts() {
   return {
     owned:          state.owned,
     equipped:       state.equipped,
+    addArtefact,
     equip,
     unequip,
     getEquipped,

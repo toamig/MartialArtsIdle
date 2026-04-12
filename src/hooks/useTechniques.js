@@ -3,6 +3,7 @@ import { saveTechniques, loadTechniques, saveOwnedTechniques, loadOwnedTechnique
 import { getTechnique } from '../data/techniques';
 
 const SLOT_COUNT = 3;
+export const MAX_TECHNIQUES = 100;
 
 export default function useTechniques() {
   const [slots, setSlots] = useState(() => {
@@ -17,9 +18,12 @@ export default function useTechniques() {
     saveOwnedTechniques(ownedTechniques);
   }, [ownedTechniques]);
 
-  /** Add a dropped technique to the owned collection. */
+  /** Add a dropped technique to the owned collection. Silently ignored when full. */
   const addOwnedTechnique = useCallback((tech) => {
-    setOwned(prev => ({ ...prev, [tech.id]: tech }));
+    setOwned(prev => {
+      if (Object.keys(prev).length >= MAX_TECHNIQUES) return prev;
+      return { ...prev, [tech.id]: tech };
+    });
   }, []);
 
   /** Look up a technique by id — static catalogue first, then owned drops. */

@@ -1184,6 +1184,26 @@
   -webkit-box-orient: vertical;
 }
 
+.inv-quality-gem {
+  font-size: 1.4rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.inv-slot-label {
+  font-size: 0.58rem;
+  text-transform: capitalize;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.inv-cap-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: right;
+  margin: 4px 0 8px;
+}
+
 /* Item Modal */
 .modal-overlay {
   position: fixed;
