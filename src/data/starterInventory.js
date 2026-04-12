@@ -1,6 +1,5 @@
 /**
- * Starting inventory for testing — 10-50 of each item.
- * Common/uncommon get more, rare/epic/legendary get fewer.
+ * Starting inventory for testing — generous mineral supply for transmutation.
  */
 const STARTER_INVENTORY = {
   // Herbs
@@ -12,15 +11,16 @@ const STARTER_INVENTORY = {
   dragon_saliva_grass: 18,
   purple_cloud_vine: 10,
   immortal_revival_leaf: 10,
-  // Minerals
-  black_tortoise_iron: 40,
-  crimson_flame_crystal: 35,
-  void_stone: 20,
-  mithril_essence: 18,
-  deep_sea_cold_iron: 15,
-  star_metal_ore: 10,
-  skyfire_meteorite: 10,
-  heavenly_profound_metal: 10,
+  // Minerals — large stacks for crafting
+  black_tortoise_iron: 500,
+  crimson_flame_crystal: 400,
+  void_stone: 300,
+  mithril_essence: 250,
+  deep_sea_cold_iron: 200,
+  star_metal_ore: 150,
+  skyfire_meteorite: 100,
+  heavenly_profound_metal: 80,
+  chaos_jade: 200,
   // Cultivation sources
   spirit_stone: 50,
   qi_condensation_pill: 40,

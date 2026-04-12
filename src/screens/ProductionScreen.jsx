@@ -54,14 +54,10 @@ function bracketCost(mineral, op) {
 
 // Upgrade costs (quality jump)
 const UPGRADE_COST = {
-  common:   [ { itemId: 'black_tortoise_iron',     qty: 10 }, { itemId: 'crimson_flame_crystal',  qty: 3  } ],
-  uncommon: [ { itemId: 'crimson_flame_crystal',   qty: 8  }, { itemId: 'void_stone',             qty: 3  } ],
-  rare:     [ { itemId: 'void_stone',              qty: 5  }, { itemId: 'star_metal_ore',         qty: 3  } ],
-  epic:     [ { itemId: 'star_metal_ore',          qty: 8  }, { itemId: 'heavenly_profound_metal', qty: 2 } ],
-  Iron:     [ { itemId: 'black_tortoise_iron',     qty: 10 }, { itemId: 'crimson_flame_crystal',  qty: 3  } ],
-  Bronze:   [ { itemId: 'crimson_flame_crystal',   qty: 8  }, { itemId: 'void_stone',             qty: 3  } ],
-  Silver:   [ { itemId: 'void_stone',              qty: 5  }, { itemId: 'star_metal_ore',         qty: 3  } ],
-  Gold:     [ { itemId: 'star_metal_ore',          qty: 8  }, { itemId: 'heavenly_profound_metal', qty: 2 } ],
+  Iron:   [ { itemId: 'black_tortoise_iron',    qty: 10 }, { itemId: 'crimson_flame_crystal',  qty: 3  } ],
+  Bronze: [ { itemId: 'crimson_flame_crystal',  qty: 8  }, { itemId: 'void_stone',             qty: 3  } ],
+  Silver: [ { itemId: 'void_stone',             qty: 5  }, { itemId: 'star_metal_ore',         qty: 3  } ],
+  Gold:   [ { itemId: 'star_metal_ore',         qty: 8  }, { itemId: 'heavenly_profound_metal', qty: 2 } ],
 };
 
 // ─── Quality label helpers ───────────────────────────────────────────────────
@@ -298,7 +294,7 @@ function UpgradeSection({ rarity, nextQ, inventory, onUpgrade }) {
 
 function ArtefactDetail({ inst, artefacts, inventory }) {
   const art    = ARTEFACTS_BY_ID[inst.catalogueId];
-  const rarity = inst.rarity ?? art?.rarity ?? 'common';
+  const rarity = inst.rarity ?? art?.rarity ?? 'Iron';
   const q      = artQuality(rarity);
   const affixes  = inst.affixes ?? [];
   const poolSize = (AFFIX_POOL_BY_SLOT[art?.slot ?? 'weapon'] ?? []).length;
@@ -571,7 +567,7 @@ function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
       <div className="inv-grid tx-item-grid">
         {itemTab === 'artefacts' && artefacts.owned.map(inst => {
           const art    = ARTEFACTS_BY_ID[inst.catalogueId];
-          const rarity = inst.rarity ?? art?.rarity ?? 'common';
+          const rarity = inst.rarity ?? art?.rarity ?? 'Iron';
           const q      = artQuality(rarity);
           return (
             <button

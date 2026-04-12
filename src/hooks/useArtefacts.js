@@ -10,10 +10,10 @@ export const MAX_ARTEFACTS = 100;
 
 // Quality progression for artefacts (rarity keys)
 export const ARTEFACT_NEXT_RARITY = {
-  common:   'uncommon',
-  uncommon: 'rare',
-  rare:     'epic',
-  epic:     'legendary',
+  Iron:   'Bronze',
+  Bronze: 'Silver',
+  Silver: 'Gold',
+  Gold:   'Transcendent',
 };
 
 // Merge catalogue data with per-instance overrides (e.g. upgraded rarity)
@@ -56,7 +56,7 @@ function ensureAffixes(owned) {
     if (o.affixes) return o;
     const art = ARTEFACTS_BY_ID[o.catalogueId];
     if (!art) return o;
-    const rarity = o.rarity ?? art.rarity ?? 'common';
+    const rarity = o.rarity ?? art.rarity ?? 'Iron';
     changed = true;
     return { ...o, affixes: generateAffixes(art.slot, rarity) };
   });
@@ -92,7 +92,7 @@ export default function useArtefacts() {
       if (prev.owned.length >= MAX_ARTEFACTS) return prev;
       const uid    = `art_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       const art    = ARTEFACTS_BY_ID[catalogueId];
-      const rarity = art?.rarity ?? 'common';
+      const rarity = art?.rarity ?? 'Iron';
       const affixes = generateAffixes(art?.slot ?? 'weapon', rarity);
       const next = { ...prev, owned: [...prev.owned, { uid, catalogueId, affixes }] };
       save(next);
@@ -156,7 +156,7 @@ export default function useArtefacts() {
     setState(prev => {
       const owned = prev.owned.map(o => {
         if (o.uid !== uid) return o;
-        const currentRarity = o.rarity ?? ARTEFACTS_BY_ID[o.catalogueId]?.rarity ?? 'common';
+        const currentRarity = o.rarity ?? ARTEFACTS_BY_ID[o.catalogueId]?.rarity ?? 'Iron';
         const nextRarity = ARTEFACT_NEXT_RARITY[currentRarity];
         if (!nextRarity) return o;
         return { ...o, rarity: nextRarity };
@@ -173,7 +173,7 @@ export default function useArtefacts() {
       const owned = prev.owned.map(o => {
         if (o.uid !== uid) return o;
         const art    = ARTEFACTS_BY_ID[o.catalogueId];
-        const rarity = o.rarity ?? art?.rarity ?? 'common';
+        const rarity = o.rarity ?? art?.rarity ?? 'Iron';
         const pool   = AFFIX_POOL_BY_SLOT[art?.slot ?? 'weapon'] ?? [];
         const affixes = (o.affixes ?? []).map((a, i) => {
           if (i !== idx) return a;
@@ -195,7 +195,7 @@ export default function useArtefacts() {
       const owned = prev.owned.map(o => {
         if (o.uid !== uid) return o;
         const art     = ARTEFACTS_BY_ID[o.catalogueId];
-        const rarity  = o.rarity ?? art?.rarity ?? 'common';
+        const rarity  = o.rarity ?? art?.rarity ?? 'Iron';
         const affixes = o.affixes ?? [];
         const excludeIds = affixes.map(a => a.id).filter((_, i) => i !== idx);
         const newAffix = pickRandomAffix(art?.slot ?? 'weapon', rarity, excludeIds);
@@ -215,7 +215,7 @@ export default function useArtefacts() {
       const owned = prev.owned.map(o => {
         if (o.uid !== uid) return o;
         const art      = ARTEFACTS_BY_ID[o.catalogueId];
-        const rarity   = o.rarity ?? art?.rarity ?? 'common';
+        const rarity   = o.rarity ?? art?.rarity ?? 'Iron';
         const affixes  = o.affixes ?? [];
         const maxSlots = AFFIX_SLOT_COUNT[rarity] ?? 3;
         if (affixes.length >= maxSlots) return o;

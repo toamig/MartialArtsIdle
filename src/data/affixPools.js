@@ -1,89 +1,85 @@
 /**
  * affixPools.js — per-slot affix definitions for artefact transmutation.
  *
- * Each entry: { id, name, stat, type, ranges: { rarity: [min, max], ... } }
- * Slot counts: base 3 at common/Iron, +2 per quality tier above that.
+ * Each entry: { id, name, stat, type, ranges: { Iron: [min,max], ... } }
+ * Slot counts: base 3 at Iron, +2 per quality tier above that.
  * Items are generated with 1 affix; the rest must be filled via Add.
  */
 
 import { MOD } from './stats';
 
 // ─── Slot counts ──────────────────────────────────────────────────────────────
-// Base 3 at common/Iron, +2 per quality tier.
-// Actual max is naturally capped by the pool size per slot (4–5 entries).
 
 export const AFFIX_SLOT_COUNT = {
-  common: 3, uncommon: 5, rare: 7,  epic: 9,  legendary: 11,
-  Iron:   3, Bronze:   5, Silver: 7, Gold: 9,  Transcendent: 11,
+  Iron: 3, Bronze: 5, Silver: 7, Gold: 9, Transcendent: 11,
 };
 
 // ─── Rarity tiers (for cost calculation) ────────────────────────────────────
 
 export const RARITY_TIER = {
-  common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5,
-  Iron:   1, Bronze:   2, Silver: 3, Gold:  4, Transcendent: 5,
+  Iron: 1, Bronze: 2, Silver: 3, Gold: 4, Transcendent: 5,
 };
 
 // ─── Per-slot affix pools ────────────────────────────────────────────────────
 
 const WEAPON_POOL = [
-  { id: 'w_phys_dmg',  name: 'Sharpness',      stat: 'physical_damage',   type: MOD.FLAT, ranges: { common:[5,12],  uncommon:[10,24],  rare:[20,48],   epic:[40,96],   legendary:[80,192]  } },
-  { id: 'w_elem_dmg',  name: 'Spirit Edge',     stat: 'elemental_damage',  type: MOD.FLAT, ranges: { common:[4,10],  uncommon:[8,20],   rare:[16,40],   epic:[32,80],   legendary:[64,160]  } },
-  { id: 'w_essence',   name: 'Essence Channel', stat: 'essence',           type: MOD.FLAT, ranges: { common:[2,6],   uncommon:[4,12],   rare:[8,24],    epic:[16,48],   legendary:[32,96]   } },
-  { id: 'w_body',      name: 'Body Force',      stat: 'body',              type: MOD.FLAT, ranges: { common:[2,6],   uncommon:[4,12],   rare:[8,24],    epic:[16,48],   legendary:[32,96]   } },
-  { id: 'w_exploit',   name: 'Exploit Chance',  stat: 'exploit_chance',    type: MOD.FLAT, ranges: { common:[1,3],   uncommon:[2,5],    rare:[4,8],     epic:[6,12],    legendary:[10,20]   } },
+  { id: 'w_phys_dmg',  name: 'Sharpness',      stat: 'physical_damage',   type: MOD.FLAT, ranges: { Iron:[5,12],  Bronze:[10,24],  Silver:[20,48],   Gold:[40,96],   Transcendent:[80,192]  } },
+  { id: 'w_elem_dmg',  name: 'Spirit Edge',     stat: 'elemental_damage',  type: MOD.FLAT, ranges: { Iron:[4,10],  Bronze:[8,20],   Silver:[16,40],   Gold:[32,80],   Transcendent:[64,160]  } },
+  { id: 'w_essence',   name: 'Essence Channel', stat: 'essence',           type: MOD.FLAT, ranges: { Iron:[2,6],   Bronze:[4,12],   Silver:[8,24],    Gold:[16,48],   Transcendent:[32,96]   } },
+  { id: 'w_body',      name: 'Body Force',      stat: 'body',              type: MOD.FLAT, ranges: { Iron:[2,6],   Bronze:[4,12],   Silver:[8,24],    Gold:[16,48],   Transcendent:[32,96]   } },
+  { id: 'w_exploit',   name: 'Exploit Chance',  stat: 'exploit_chance',    type: MOD.FLAT, ranges: { Iron:[1,3],   Bronze:[2,5],    Silver:[4,8],     Gold:[6,12],    Transcendent:[10,20]   } },
 ];
 
 const HEAD_POOL = [
-  { id: 'h_soul_tough', name: 'Soul Barrier',    stat: 'soul_toughness',    type: MOD.FLAT, ranges: { common:[3,8],   uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128]  } },
-  { id: 'h_elem_def',   name: 'Spirit Ward',     stat: 'elemental_defense', type: MOD.FLAT, ranges: { common:[3,8],   uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128]  } },
-  { id: 'h_soul',       name: 'Mind Clarity',    stat: 'soul',              type: MOD.FLAT, ranges: { common:[2,6],   uncommon:[4,12],   rare:[8,24],    epic:[16,48],   legendary:[32,96]   } },
-  { id: 'h_health',     name: 'Vitality',        stat: 'health',            type: MOD.FLAT, ranges: { common:[15,40], uncommon:[30,80],  rare:[60,160],  epic:[120,320], legendary:[240,640] } },
-  { id: 'h_defense',    name: 'Hardened Mind',   stat: 'defense',           type: MOD.FLAT, ranges: { common:[3,8],   uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128]  } },
+  { id: 'h_soul_tough', name: 'Soul Barrier',    stat: 'soul_toughness',    type: MOD.FLAT, ranges: { Iron:[3,8],   Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128]  } },
+  { id: 'h_elem_def',   name: 'Spirit Ward',     stat: 'elemental_defense', type: MOD.FLAT, ranges: { Iron:[3,8],   Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128]  } },
+  { id: 'h_soul',       name: 'Mind Clarity',    stat: 'soul',              type: MOD.FLAT, ranges: { Iron:[2,6],   Bronze:[4,12],   Silver:[8,24],    Gold:[16,48],   Transcendent:[32,96]   } },
+  { id: 'h_health',     name: 'Vitality',        stat: 'health',            type: MOD.FLAT, ranges: { Iron:[15,40], Bronze:[30,80],  Silver:[60,160],  Gold:[120,320], Transcendent:[240,640] } },
+  { id: 'h_defense',    name: 'Hardened Mind',   stat: 'defense',           type: MOD.FLAT, ranges: { Iron:[3,8],   Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128]  } },
 ];
 
 const BODY_POOL = [
-  { id: 'b_defense',     name: 'Iron Shell',      stat: 'defense',           type: MOD.FLAT,      ranges: { common:[5,14],     uncommon:[10,28],   rare:[20,56],   epic:[40,112],  legendary:[80,224]   } },
-  { id: 'b_health',      name: 'Life Force',      stat: 'health',            type: MOD.FLAT,      ranges: { common:[20,50],    uncommon:[40,100],  rare:[80,200],  epic:[160,400], legendary:[320,800]  } },
-  { id: 'b_elem_def',    name: 'Elemental Shell', stat: 'elemental_defense', type: MOD.FLAT,      ranges: { common:[3,8],      uncommon:[6,16],    rare:[12,32],   epic:[24,64],   legendary:[48,128]   } },
-  { id: 'b_body',        name: 'Body Hardening',  stat: 'body',              type: MOD.FLAT,      ranges: { common:[2,6],      uncommon:[4,12],    rare:[8,24],    epic:[16,48],   legendary:[32,96]    } },
-  { id: 'b_defense_pct', name: 'Reinforcement',   stat: 'defense',           type: MOD.INCREASED, ranges: { common:[0.02,0.06], uncommon:[0.04,0.10],rare:[0.08,0.18],epic:[0.12,0.25],legendary:[0.20,0.40] } },
+  { id: 'b_defense',     name: 'Iron Shell',      stat: 'defense',           type: MOD.FLAT,      ranges: { Iron:[5,14],       Bronze:[10,28],     Silver:[20,56],     Gold:[40,112],    Transcendent:[80,224]    } },
+  { id: 'b_health',      name: 'Life Force',      stat: 'health',            type: MOD.FLAT,      ranges: { Iron:[20,50],      Bronze:[40,100],    Silver:[80,200],    Gold:[160,400],   Transcendent:[320,800]   } },
+  { id: 'b_elem_def',    name: 'Elemental Shell', stat: 'elemental_defense', type: MOD.FLAT,      ranges: { Iron:[3,8],        Bronze:[6,16],      Silver:[12,32],     Gold:[24,64],     Transcendent:[48,128]    } },
+  { id: 'b_body',        name: 'Body Hardening',  stat: 'body',              type: MOD.FLAT,      ranges: { Iron:[2,6],        Bronze:[4,12],      Silver:[8,24],      Gold:[16,48],     Transcendent:[32,96]     } },
+  { id: 'b_defense_pct', name: 'Reinforcement',   stat: 'defense',           type: MOD.INCREASED, ranges: { Iron:[0.02,0.06],  Bronze:[0.04,0.10], Silver:[0.08,0.18], Gold:[0.12,0.25], Transcendent:[0.20,0.40] } },
 ];
 
 const HANDS_POOL = [
-  { id: 'ha_phys_dmg', name: 'Iron Fist',   stat: 'physical_damage',   type: MOD.FLAT, ranges: { common:[4,10],  uncommon:[8,20],   rare:[16,40],   epic:[32,80],   legendary:[64,160]  } },
-  { id: 'ha_elem_dmg', name: 'Flame Palm',  stat: 'elemental_damage',  type: MOD.FLAT, ranges: { common:[3,8],   uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128]  } },
-  { id: 'ha_essence',  name: 'Qi Surge',    stat: 'essence',           type: MOD.FLAT, ranges: { common:[2,6],   uncommon:[4,12],   rare:[8,24],    epic:[16,48],   legendary:[32,96]   } },
-  { id: 'ha_body',     name: 'Stone Grip',  stat: 'body',              type: MOD.FLAT, ranges: { common:[2,6],   uncommon:[4,12],   rare:[8,24],    epic:[16,48],   legendary:[32,96]   } },
+  { id: 'ha_phys_dmg', name: 'Iron Fist',   stat: 'physical_damage',   type: MOD.FLAT, ranges: { Iron:[4,10],  Bronze:[8,20],   Silver:[16,40],   Gold:[32,80],   Transcendent:[64,160]  } },
+  { id: 'ha_elem_dmg', name: 'Flame Palm',  stat: 'elemental_damage',  type: MOD.FLAT, ranges: { Iron:[3,8],   Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128]  } },
+  { id: 'ha_essence',  name: 'Qi Surge',    stat: 'essence',           type: MOD.FLAT, ranges: { Iron:[2,6],   Bronze:[4,12],   Silver:[8,24],    Gold:[16,48],   Transcendent:[32,96]   } },
+  { id: 'ha_body',     name: 'Stone Grip',  stat: 'body',              type: MOD.FLAT, ranges: { Iron:[2,6],   Bronze:[4,12],   Silver:[8,24],    Gold:[16,48],   Transcendent:[32,96]   } },
 ];
 
 const WAIST_POOL = [
-  { id: 'wa_health',  name: 'Dantian Seal', stat: 'health',  type: MOD.FLAT, ranges: { common:[20,50],  uncommon:[40,100], rare:[80,200],  epic:[160,400], legendary:[320,800] } },
-  { id: 'wa_defense', name: 'Belt Guard',   stat: 'defense', type: MOD.FLAT, ranges: { common:[3,8],    uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128]  } },
-  { id: 'wa_body',    name: 'Core Strength',stat: 'body',    type: MOD.FLAT, ranges: { common:[2,6],    uncommon:[4,12],   rare:[8,24],    epic:[16,48],   legendary:[32,96]   } },
-  { id: 'wa_essence', name: 'Qi Storage',   stat: 'essence', type: MOD.FLAT, ranges: { common:[2,6],    uncommon:[4,12],   rare:[8,24],    epic:[16,48],   legendary:[32,96]   } },
+  { id: 'wa_health',  name: 'Dantian Seal', stat: 'health',  type: MOD.FLAT, ranges: { Iron:[20,50],  Bronze:[40,100], Silver:[80,200],  Gold:[160,400], Transcendent:[320,800] } },
+  { id: 'wa_defense', name: 'Belt Guard',   stat: 'defense', type: MOD.FLAT, ranges: { Iron:[3,8],    Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128]  } },
+  { id: 'wa_body',    name: 'Core Strength',stat: 'body',    type: MOD.FLAT, ranges: { Iron:[2,6],    Bronze:[4,12],   Silver:[8,24],    Gold:[16,48],   Transcendent:[32,96]   } },
+  { id: 'wa_essence', name: 'Qi Storage',   stat: 'essence', type: MOD.FLAT, ranges: { Iron:[2,6],    Bronze:[4,12],   Silver:[8,24],    Gold:[16,48],   Transcendent:[32,96]   } },
 ];
 
 const FEET_POOL = [
-  { id: 'fe_defense',    name: 'Rooted Stance',   stat: 'defense',           type: MOD.FLAT, ranges: { common:[3,8],   uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128]  } },
-  { id: 'fe_health',     name: 'Endurance',        stat: 'health',            type: MOD.FLAT, ranges: { common:[15,40], uncommon:[30,80],  rare:[60,160],  epic:[120,320], legendary:[240,640] } },
-  { id: 'fe_soul_tough', name: 'Mental Footing',   stat: 'soul_toughness',    type: MOD.FLAT, ranges: { common:[2,6],   uncommon:[4,12],   rare:[8,24],    epic:[16,48],   legendary:[32,96]   } },
-  { id: 'fe_elem_def',   name: 'Spirit Steps',     stat: 'elemental_defense', type: MOD.FLAT, ranges: { common:[2,6],   uncommon:[4,12],   rare:[8,24],    epic:[16,48],   legendary:[32,96]   } },
+  { id: 'fe_defense',    name: 'Rooted Stance',   stat: 'defense',           type: MOD.FLAT, ranges: { Iron:[3,8],   Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128]  } },
+  { id: 'fe_health',     name: 'Endurance',        stat: 'health',            type: MOD.FLAT, ranges: { Iron:[15,40], Bronze:[30,80],  Silver:[60,160],  Gold:[120,320], Transcendent:[240,640] } },
+  { id: 'fe_soul_tough', name: 'Mental Footing',   stat: 'soul_toughness',    type: MOD.FLAT, ranges: { Iron:[2,6],   Bronze:[4,12],   Silver:[8,24],    Gold:[16,48],   Transcendent:[32,96]   } },
+  { id: 'fe_elem_def',   name: 'Spirit Steps',     stat: 'elemental_defense', type: MOD.FLAT, ranges: { Iron:[2,6],   Bronze:[4,12],   Silver:[8,24],    Gold:[16,48],   Transcendent:[32,96]   } },
 ];
 
 const NECK_POOL = [
-  { id: 'ne_elem_def',   name: 'Warding Light',  stat: 'elemental_defense', type: MOD.FLAT, ranges: { common:[3,8],   uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128] } },
-  { id: 'ne_soul_tough', name: 'Soul Anchor',    stat: 'soul_toughness',    type: MOD.FLAT, ranges: { common:[3,8],   uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128] } },
-  { id: 'ne_essence',    name: 'Jade Resonance', stat: 'essence',           type: MOD.FLAT, ranges: { common:[2,6],   uncommon:[4,12],   rare:[8,24],    epic:[16,48],   legendary:[32,96]  } },
-  { id: 'ne_soul',       name: 'Spiritual Link', stat: 'soul',              type: MOD.FLAT, ranges: { common:[2,6],   uncommon:[4,12],   rare:[8,24],    epic:[16,48],   legendary:[32,96]  } },
+  { id: 'ne_elem_def',   name: 'Warding Light',  stat: 'elemental_defense', type: MOD.FLAT, ranges: { Iron:[3,8],   Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128] } },
+  { id: 'ne_soul_tough', name: 'Soul Anchor',    stat: 'soul_toughness',    type: MOD.FLAT, ranges: { Iron:[3,8],   Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128] } },
+  { id: 'ne_essence',    name: 'Jade Resonance', stat: 'essence',           type: MOD.FLAT, ranges: { Iron:[2,6],   Bronze:[4,12],   Silver:[8,24],    Gold:[16,48],   Transcendent:[32,96]  } },
+  { id: 'ne_soul',       name: 'Spiritual Link', stat: 'soul',              type: MOD.FLAT, ranges: { Iron:[2,6],   Bronze:[4,12],   Silver:[8,24],    Gold:[16,48],   Transcendent:[32,96]  } },
 ];
 
 const RING_POOL = [
-  { id: 'ri_essence',  name: 'Essence Flow',   stat: 'essence',          type: MOD.FLAT, ranges: { common:[3,8],   uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128] } },
-  { id: 'ri_soul',     name: 'Soul Resonance', stat: 'soul',             type: MOD.FLAT, ranges: { common:[3,8],   uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128] } },
-  { id: 'ri_body',     name: 'Body Ring',      stat: 'body',             type: MOD.FLAT, ranges: { common:[3,8],   uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128] } },
-  { id: 'ri_phys_dmg', name: 'Striker Band',   stat: 'physical_damage',  type: MOD.FLAT, ranges: { common:[3,8],   uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128] } },
-  { id: 'ri_elem_dmg', name: 'Elemental Ring', stat: 'elemental_damage', type: MOD.FLAT, ranges: { common:[3,8],   uncommon:[6,16],   rare:[12,32],   epic:[24,64],   legendary:[48,128] } },
+  { id: 'ri_essence',  name: 'Essence Flow',   stat: 'essence',          type: MOD.FLAT, ranges: { Iron:[3,8],   Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128] } },
+  { id: 'ri_soul',     name: 'Soul Resonance', stat: 'soul',             type: MOD.FLAT, ranges: { Iron:[3,8],   Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128] } },
+  { id: 'ri_body',     name: 'Body Ring',      stat: 'body',             type: MOD.FLAT, ranges: { Iron:[3,8],   Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128] } },
+  { id: 'ri_phys_dmg', name: 'Striker Band',   stat: 'physical_damage',  type: MOD.FLAT, ranges: { Iron:[3,8],   Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128] } },
+  { id: 'ri_elem_dmg', name: 'Elemental Ring', stat: 'elemental_damage', type: MOD.FLAT, ranges: { Iron:[3,8],   Bronze:[6,16],   Silver:[12,32],   Gold:[24,64],   Transcendent:[48,128] } },
 ];
 
 export const AFFIX_POOL_BY_SLOT = {
@@ -101,7 +97,7 @@ export const AFFIX_POOL_BY_SLOT = {
 
 /** Roll a single affix value within its rarity range. */
 export function rollAffix(entry, rarity) {
-  const range = entry.ranges[rarity] ?? entry.ranges.common;
+  const range = entry.ranges[rarity] ?? entry.ranges.Iron;
   const [min, max] = range;
   const value = entry.type === MOD.INCREASED
     ? Math.round((min + Math.random() * (max - min)) * 1000) / 1000
