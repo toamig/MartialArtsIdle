@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { saveTechniques, loadTechniques, saveOwnedTechniques, loadOwnedTechniques } from '../systems/save';
-import { getTechnique } from '../data/techniques';
+import { getTechnique, TECHNIQUES } from '../data/techniques';
 
 const SLOT_COUNT = 3;
 export const MAX_TECHNIQUES = 100;
@@ -11,8 +11,16 @@ export default function useTechniques() {
     return Array.from({ length: SLOT_COUNT }, (_, i) => saved?.[i] ?? null);
   });
 
-  // { [id]: techniqueObj } — techniques acquired through drops
-  const [ownedTechniques, setOwned] = useState(() => loadOwnedTechniques());
+  // { [id]: techniqueObj } — all acquired techniques (catalogue starters + drops)
+  const [ownedTechniques, setOwned] = useState(() => {
+    const saved = loadOwnedTechniques();
+    // Merge in any catalogue entries not already saved so they appear in inventory
+    const merged = { ...saved };
+    for (const t of TECHNIQUES) {
+      if (!merged[t.id]) merged[t.id] = t;
+    }
+    return merged;
+  });
 
   useEffect(() => {
     saveOwnedTechniques(ownedTechniques);

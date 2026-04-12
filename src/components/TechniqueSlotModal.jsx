@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
-  TECHNIQUES, TECHNIQUE_QUALITY, TECHNIQUE_RANK,
-  TYPE_COLOR, BASE_COOLDOWN, getCooldown, getK, canEquip,
+  TECHNIQUE_QUALITY, TECHNIQUE_RANK,
+  TYPE_COLOR, getCooldown, getK, canEquip,
 } from '../data/techniques';
 
 const FILTERS = ['All', 'Attack', 'Heal', 'Defend', 'Dodge'];
@@ -70,11 +70,8 @@ function TechniqueCard({ tech, equipped, locked, onClick }) {
 function TechniqueSlotModal({ slotIndex, currentId, realmIndex, ownedTechniques = {}, onEquip, onClose }) {
   const [filter, setFilter] = useState('All');
 
-  const owned   = Object.values(ownedTechniques);
-  const visible = [
-    ...TECHNIQUES,
-    ...owned,
-  ].filter(t => filter === 'All' || t.type === filter);
+  const visible = Object.values(ownedTechniques)
+    .filter(t => filter === 'All' || t.type === filter);
 
   return (
     <div className="modal-overlay" onClick={onClose}>

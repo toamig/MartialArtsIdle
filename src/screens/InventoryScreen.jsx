@@ -1,13 +1,23 @@
 import { useState } from 'react';
 import { ITEMS, RARITY } from '../data/items';
-import { QUALITY, ARTEFACTS_BY_ID } from '../data/artefacts';
+import { QUALITY, ARTEFACTS_BY_ID, getSlotBonuses } from '../data/artefacts';
 import { LAW_RARITY } from '../data/laws';
+import { TECHNIQUE_QUALITY, TYPE_COLOR, getCooldown, getK } from '../data/techniques';
 import { MAX_ARTEFACTS } from '../hooks/useArtefacts';
 import { MAX_TECHNIQUES } from '../hooks/useTechniques';
 import { MAX_LAWS } from '../hooks/useCultivation';
 import ItemModal from '../components/ItemModal';
 
 const BASE = import.meta.env.BASE_URL;
+
+const STAT_LABEL = {
+  physical_damage:   'Physical DMG',
+  defense:           'Defense',
+  health:            'Health',
+  soul_toughness:    'Soul Toughness',
+  essence:           'Essence',
+  elemental_defense: 'Elemental DEF',
+};
 
 const MATERIAL_TABS = [
   { key: 'herbs',       label: 'Herbs'      },
@@ -164,8 +174,9 @@ function InventoryScreen({ inventory, artefacts, techniques, cultivation }) {
       )}
 
       {selectedArtefact && (() => {
-        const art = ARTEFACTS_BY_ID[selectedArtefact.catalogueId];
-        const q   = QUALITY[art.rarity];
+        const art    = ARTEFACTS_BY_ID[selectedArtefact.catalogueId];
+        const q      = QUALITY[art.rarity];
+        const bonuses = getSlotBonuses(art.slot, art.rarity);
         return (
           <div className="modal-overlay" onClick={() => setSelectedArtefact(null)}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -175,27 +186,94 @@ function InventoryScreen({ inventory, artefacts, techniques, cultivation }) {
                 {q.label} · {art.slot}
               </span>
               <p className="modal-desc">{art.description}</p>
+              <div className="item-stat-block">
+                {bonuses.map((b, i) => (
+                  <div key={i} className="item-stat-row">
+                    <span className="item-stat-label">{STAT_LABEL[b.stat] ?? b.stat}</span>
+                    <span className="item-stat-value" style={{ color: q.color }}>+{b.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         );
       })()}
 
       {selectedTechnique && (() => {
-        const tech  = selectedTechnique;
-        const color = LAW_RARITY[tech.quality]?.color ?? '#9ca3af';
+        const tech    = selectedTechnique;
+        const quality = TECHNIQUE_QUALITY[tech.quality] ?? { label: tech.quality, color: '#9ca3af' };
+        const typeCol = TYPE_COLOR[tech.type] ?? '#fff';
+        const cd      = getCooldown(tech.type, tech.quality);
         return (
           <div className="modal-overlay" onClick={() => setSelectedTechnique(null)}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
               <button className="modal-close" onClick={() => setSelectedTechnique(null)}>x</button>
               <h2 className="modal-title">{tech.name}</h2>
-              <span className="modal-rarity" style={{ color }}>
-                {tech.quality} {tech.rank} · {tech.type}
+              <span className="modal-rarity" style={{ color: quality.color }}>
+                {quality.label} · {tech.rank}
               </span>
-              {tech.passives?.map((p, i) => (
-                <p key={i} className="modal-desc">
-                  <strong>{p.name}:</strong> {p.description}
-                </p>
-              ))}
+              <div className="item-stat-block">
+                <div className="item-stat-row">
+                  <span className="item-stat-label">Type</span>
+                  <span className="item-stat-value" style={{ color: typeCol }}>{tech.type}</span>
+                </div>
+                <div className="item-stat-row">
+                  <span className="item-stat-label">Cooldown</span>
+                  <span className="item-stat-value">{cd.toFixed(1)}s</span>
+                </div>
+                {tech.type === 'Attack' && (
+                  <div className="item-stat-row">
+                    <span className="item-stat-label">Damage ×K</span>
+                    <span className="item-stat-value">{getK(tech.rank, tech.quality)}</span>
+                  </div>
+                )}
+                {tech.type === 'Heal' && (
+                  <div className="item-stat-row">
+                    <span className="item-stat-label">Heal</span>
+                    <span className="item-stat-value">{Math.round((tech.healPercent ?? 0.25) * 100)}% HP</span>
+                  </div>
+                )}
+                {tech.type === 'Defend' && (
+                  <>
+                    <div className="item-stat-row">
+                      <span className="item-stat-label">DEF Mult</span>
+                      <span className="item-stat-value">×{tech.defMult}</span>
+                    </div>
+                    <div className="item-stat-row">
+                      <span className="item-stat-label">Duration</span>
+                      <span className="item-stat-value">{tech.buffDuration}s</span>
+                    </div>
+                  </>
+                )}
+                {tech.type === 'Dodge' && (
+                  <>
+                    <div className="item-stat-row">
+                      <span className="item-stat-label">Dodge Chance</span>
+                      <span className="item-stat-value">{Math.round((tech.dodgeChance ?? 0) * 100)}%</span>
+                    </div>
+                    <div className="item-stat-row">
+                      <span className="item-stat-label">Duration</span>
+                      <span className="item-stat-value">{tech.buffDuration}s</span>
+                    </div>
+                  </>
+                )}
+                {tech.element && tech.element !== 'Normal' && (
+                  <div className="item-stat-row">
+                    <span className="item-stat-label">Element</span>
+                    <span className="item-stat-value">{tech.element}</span>
+                  </div>
+                )}
+              </div>
+              {tech.passives?.length > 0 && (
+                <div className="item-stat-block">
+                  {tech.passives.map((p, i) => (
+                    <p key={i} className="modal-desc">
+                      <strong>{p.name}:</strong> {p.description}
+                    </p>
+                  ))}
+                </div>
+              )}
+              {tech.flavour && <p className="modal-desc tech-item-flavour">"{tech.flavour}"</p>}
             </div>
           </div>
         );
@@ -212,12 +290,35 @@ function InventoryScreen({ inventory, artefacts, techniques, cultivation }) {
               <span className="modal-rarity" style={{ color: rarity.color }}>
                 {rarity.label} · {law.element}
               </span>
-              <p className="modal-desc">{law.flavour}</p>
-              {law.passives?.map((p, i) => (
-                <p key={i} className="modal-desc">
-                  <strong>{p.name}:</strong> {p.description}
-                </p>
-              ))}
+              <div className="item-stat-block">
+                <div className="item-stat-row">
+                  <span className="item-stat-label">Cultivation Speed</span>
+                  <span className="item-stat-value">×{law.cultivationSpeedMult.toFixed(1)}</span>
+                </div>
+                <div className="item-stat-row">
+                  <span className="item-stat-label">Essence Mult</span>
+                  <span className="item-stat-value">{law.essenceMult}</span>
+                </div>
+                <div className="item-stat-row">
+                  <span className="item-stat-label">Soul Mult</span>
+                  <span className="item-stat-value">{law.soulMult}</span>
+                </div>
+                <div className="item-stat-row">
+                  <span className="item-stat-label">Body Mult</span>
+                  <span className="item-stat-value">{law.bodyMult}</span>
+                </div>
+              </div>
+              {law.passives?.length > 0 && (
+                <div className="item-stat-block">
+                  <span className="item-stat-section">Passives ({law.passives.length}/{rarity.passiveSlots})</span>
+                  {law.passives.map((p, i) => (
+                    <p key={i} className="modal-desc">
+                      <strong>{p.name}:</strong> {p.description}
+                    </p>
+                  ))}
+                </div>
+              )}
+              <p className="modal-desc tech-item-flavour">"{law.flavour}"</p>
             </div>
           </div>
         );

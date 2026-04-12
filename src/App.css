@@ -1184,6 +1184,36 @@
   -webkit-box-orient: vertical;
 }
 
+.item-stat-block {
+  width: 100%;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.item-stat-label {
+  color: var(--text-secondary);
+}
+
+.item-stat-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.item-stat-section {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  display: block;
+}
+
 .inv-quality-gem {
   font-size: 1.4rem;
   line-height: 1;
