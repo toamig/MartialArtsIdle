@@ -982,19 +982,15 @@ ENEMIES = {
         ),
         "idle_desc": (
             "4-frame idle animation of a massive Iron Fang Wolf. "
-            "CRITICAL — match the reference image exactly: jet-black fur (NOT grey, NOT silver), "
-            "large flowing golden qi swirl patterns curling around the chest and hindquarters, "
-            "a thick bright gold ring collar around the neck, four legs firmly planted, "
-            "head raised and alert, tail up, powerful composed stance. "
-            "All 4 frames are nearly identical — micro breathing only, nothing else moves. "
-            "Frame 1: base stance — jet-black body utterly still, gold qi swirls drifting "
-            "lazily around the flanks, bright gold collar gleaming at the neck, eyes forward. "
-            "Frame 2: chest expanding 1-2px on a slow inhale, gold swirls brightening very "
-            "slightly at the chest, gold collar catching a touch more light, nothing else moving. "
-            "Frame 3: chest settling back down, gold swirls returning to lazy drift, "
-            "black fur completely still. "
-            "Frame 4: identical to frame 1, breath cycle complete, gold swirls at baseline. "
-            f"Seamless loop. {S}"
+            "CRITICAL — every frame must look identical to the reference image: "
+            "jet-black fur, large flowing golden qi swirls around the body, "
+            "thick bright gold ring collar at the neck, four legs planted, "
+            "head raised, tail up. The wolf body does NOT move between frames. "
+            "The ONLY change across frames is the golden qi swirl particles slowly "
+            "drifting — each frame the swirls have floated 2-3px further along their "
+            "curl path, as if lazily orbiting the wolf's body in a slow loop. "
+            "Wolf silhouette, pose, fur colour, and collar are locked — only the "
+            f"golden swirl positions drift slightly each frame. Seamless loop. {S}"
         ),
         "attack_desc": (
             "4-frame attack animation of a massive Iron Fang Wolf lunging with devastating "
