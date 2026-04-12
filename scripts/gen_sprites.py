@@ -88,7 +88,7 @@ def api_get(path):
     with urllib.request.urlopen(req) as resp:
         return json.load(resp)
 
-def poll_job(job_id, max_wait=300):
+def poll_job(job_id, max_wait=600):
     print(f"    polling {job_id[:8]}...", end="", flush=True)
     for _ in range(max_wait // 5):
         time.sleep(5)

@@ -56,7 +56,7 @@ const ENEMIES = {
   bandit_scout: {
     id:       'bandit_scout',
     name:     'Bandit Scout',
-    sprite:   null,
+    sprite:   'bandit_scout',
     statMult: { hp: 0.9, atk: 1.0 },
     drops: [
       { itemId: 'spirit_stone',       chance: 0.85, qty: [2, 6] },
