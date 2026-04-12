@@ -276,6 +276,25 @@ def _reanimate_attack(enemy_id, base):
     print(f"  Attack sheet -> {enemy_id}-attack.png")
     print(f"\n  Done. Sprites in: {OUT_DIR}")
 
+
+def _reanimate_hit(enemy_id, base):
+    """Regenerate only the hit sheet, leaving idle and attack untouched."""
+    cfg = ENEMIES[enemy_id]
+    hit_frames = generate_frames(enemy_id, "hit", cfg["hit_desc"], base,
+                                 tint_strengths=[0.75, 0.50, 0.25, 0.0])
+    stitch(hit_frames, OUT_DIR / f"{enemy_id}-hit.png")
+    print(f"  Hit sheet -> {enemy_id}-hit.png")
+    print(f"\n  Done. Sprites in: {OUT_DIR}")
+
+
+def _reanimate_idle(enemy_id, base):
+    """Regenerate only the idle sheet, leaving attack and hit untouched."""
+    cfg = ENEMIES[enemy_id]
+    idle_frames = generate_frames(enemy_id, "idle", cfg["idle_desc"], base)
+    stitch(idle_frames, OUT_DIR / f"{enemy_id}-idle.png")
+    print(f"  Idle sheet -> {enemy_id}-idle.png")
+    print(f"\n  Done. Sprites in: {OUT_DIR}")
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Enemy definitions
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1915,21 +1934,51 @@ def run_reanimate_attack(enemy_id, cand_n):
     _reanimate_attack(enemy_id, base)
 
 
+def run_reanimate_hit(enemy_id, cand_n):
+    base = TMP_DIR / f"{enemy_id}_cand_{cand_n}.png"
+    if not base.exists():
+        raise FileNotFoundError(
+            f"Candidate not found: {base}\n"
+            f"Run: python gen_sprites.py generate {enemy_id}"
+        )
+    print(f"\nRegenerating hit for {enemy_id} from: {base.name}")
+    _reanimate_hit(enemy_id, base)
+
+
+def run_reanimate_idle(enemy_id, cand_n):
+    base = TMP_DIR / f"{enemy_id}_cand_{cand_n}.png"
+    if not base.exists():
+        raise FileNotFoundError(
+            f"Candidate not found: {base}\n"
+            f"Run: python gen_sprites.py generate {enemy_id}"
+        )
+    print(f"\nRegenerating idle for {enemy_id} from: {base.name}")
+    _reanimate_idle(enemy_id, base)
+
+
 if __name__ == "__main__":
     # python gen_sprites.py generate       <enemy_id>
     # python gen_sprites.py animate        <enemy_id> <cand_number>
     # python gen_sprites.py animate-attack <enemy_id> <cand_number>
+    # python gen_sprites.py animate-hit    <enemy_id> <cand_number>
+    # python gen_sprites.py animate-idle   <enemy_id> <cand_number>
     if len(sys.argv) >= 3 and sys.argv[1] == "generate":
         run_generate(sys.argv[2])
     elif len(sys.argv) == 4 and sys.argv[1] == "animate":
         run_animate(sys.argv[2], sys.argv[3])
     elif len(sys.argv) == 4 and sys.argv[1] == "animate-attack":
         run_reanimate_attack(sys.argv[2], sys.argv[3])
+    elif len(sys.argv) == 4 and sys.argv[1] == "animate-hit":
+        run_reanimate_hit(sys.argv[2], sys.argv[3])
+    elif len(sys.argv) == 4 and sys.argv[1] == "animate-idle":
+        run_reanimate_idle(sys.argv[2], sys.argv[3])
     else:
         print("Usage:")
         print(f"  python {sys.argv[0]} generate       <enemy_id>")
         print(f"  python {sys.argv[0]} animate        <enemy_id> <cand_number>")
         print(f"  python {sys.argv[0]} animate-attack <enemy_id> <cand_number>")
+        print(f"  python {sys.argv[0]} animate-hit    <enemy_id> <cand_number>")
+        print(f"  python {sys.argv[0]} animate-idle   <enemy_id> <cand_number>")
         print(f"\nKnown enemies ({len(ENEMIES)}):")
         for eid in ENEMIES:
             print(f"  {eid}")

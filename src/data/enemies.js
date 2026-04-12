@@ -105,7 +105,7 @@ const ENEMIES = {
   forest_spirit: {
     id:       'forest_spirit',
     name:     'Forest Spirit',
-    sprite:   null,
+    sprite:   'forest_spirit',
     statMult: { hp: 0.8, atk: 1.3 },
     drops: [
       { itemId: 'spirit_stone', chance: 0.70, qty: [2, 5] },
