@@ -72,8 +72,32 @@ export function initDebug(hooksRef) {
     },
 
     /**
-     * Force a specific enemy to spawn on every subsequent fight.
-     * The override persists until clearEnemy() is called.
+     * Preview mode: force a specific enemy every fight AND make it unkillable
+     * so the full animation loop (idle → attack → hit → repeat) plays forever.
+     * Call gd.clearWatch() to exit.
+     * @param {string} id  Enemy ID from listEnemies().
+     */
+    watch(id) {
+      if (!ENEMIES[id]) {
+        console.warn(`[debug] Unknown enemy: "${id}"\nCall gd.listEnemies() to see valid IDs.`);
+        return;
+      }
+      const ref = g().combat.debugRef.current;
+      ref.nextEnemy  = id;
+      ref.watchMode  = true;
+      console.log(`[debug] Watch mode ON → ${ENEMIES[id].name} (unkillable, loops forever — gd.clearWatch() to stop)`);
+    },
+
+    /** Exit watch mode and return to normal combat. */
+    clearWatch() {
+      const ref = g().combat.debugRef.current;
+      ref.nextEnemy = null;
+      ref.watchMode = false;
+      console.log('[debug] Watch mode OFF — back to normal combat');
+    },
+
+    /**
+     * Force a specific enemy to spawn on every subsequent fight (normal combat, enemy can die).
      * @param {string} id  Enemy ID from listEnemies().
      */
     watchEnemy(id) {
@@ -82,12 +106,14 @@ export function initDebug(hooksRef) {
         return;
       }
       g().combat.debugRef.current.nextEnemy = id;
-      console.log(`[debug] Forced enemy set → ${ENEMIES[id].name} (persists until gd.clearEnemy())`);
+      console.log(`[debug] Forced enemy → ${ENEMIES[id].name} (use gd.clearEnemy() to stop)`);
     },
 
     /** Remove the forced-enemy override and return to random spawns. */
     clearEnemy() {
-      g().combat.debugRef.current.nextEnemy = null;
+      const ref = g().combat.debugRef.current;
+      ref.nextEnemy = null;
+      ref.watchMode = false;
       console.log('[debug] Enemy override cleared — back to random');
     },
 
@@ -153,9 +179,10 @@ export function initDebug(hooksRef) {
       console.group('%c[debug] Game State', 'color: #c084fc; font-weight: bold');
       console.log(`Realm:      ${realm?.name ?? '?'} (index ${cult.indexRef?.current ?? cult.realmIndex})`);
       console.log(`Qi:         ${qi.toLocaleString()} / ${cost.toLocaleString()} (${Math.floor(qi / cost * 100)}%)`);
-      console.log(`Combat:     phase=${com.phase}`);
-      console.log(`God mode:   ${dbg.godMode}`);
-      console.log(`One-shot:   ${dbg.oneShot}`);
+      console.log(`Combat:       phase=${com.phase}`);
+      console.log(`God mode:     ${dbg.godMode}`);
+      console.log(`One-shot:     ${dbg.oneShot}`);
+      console.log(`Watch mode:   ${dbg.watchMode}`);
       console.log(`Forced enemy: ${dbg.nextEnemy ?? '(none)'}`);
       console.groupEnd();
     },
@@ -170,7 +197,9 @@ export function initDebug(hooksRef) {
       console.log('%cCombat', 'font-weight: bold');
       console.log('  gd.godMode(on?)           — toggle/set player invincibility');
       console.log('  gd.oneShot(on?)           — toggle/set enemy one-shot mode');
-      console.log('  gd.watchEnemy(id)         — force a specific enemy every fight (persists)');
+      console.log('  gd.watch(id)              — preview mode: force enemy + unkillable, loops forever');
+      console.log('  gd.clearWatch()           — exit preview mode, back to normal combat');
+      console.log('  gd.watchEnemy(id)         — force a specific enemy every fight (can still die)');
       console.log('  gd.clearEnemy()           — clear forced enemy override');
       console.log('  gd.listEnemies()          — show all enemy IDs and names');
       console.log('%cInventory', 'font-weight: bold');

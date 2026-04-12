@@ -59,7 +59,7 @@ export default function useCombat() {
   const cdBarRefs  = useRef([null, null, null]);
 
   // ─── Debug flags — mutated directly by gameDebug.js ─────────────────────
-  const debugRef = useRef({ godMode: false, oneShot: false, nextEnemy: null });
+  const debugRef = useRef({ godMode: false, oneShot: false, nextEnemy: null, watchMode: false });
 
   // ─── Drop callbacks — refreshed on each startFight call ─────────────────
   const onDropsRef          = useRef(null);
@@ -220,6 +220,8 @@ export default function useCombat() {
 
         // Debug: force enemy death on every hit
         if (debugRef.current.oneShot && s.eHp > 0) s.eHp = 0;
+        // Debug: keep enemy alive so full animation loop plays forever
+        if (debugRef.current.watchMode && s.eHp <= 0) s.eHp = 1;
 
         if (logs.length) setLog(prev => [...logs, ...prev].slice(0, MAX_LOG));
 
