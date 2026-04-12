@@ -60,10 +60,14 @@ export default function CombatStage({
   const hasCustomEnemy = !!enemy?.sprite;
   const eIdleSrc   = hasCustomEnemy ? enemySpriteSrc(enemy, 'idle')   : null;
   const eAttackSrc = hasCustomEnemy ? enemySpriteSrc(enemy, 'attack') : null;
+  const eHitSrc    = hasCustomEnemy ? enemySpriteSrc(enemy, 'hit')    : null;
+  const eHitSrcRef = useRef(eHitSrc);
+  eHitSrcRef.current = eHitSrc;
 
   useEffect(() => {
     playerAttackRef.current = () => {
       setPAnim('attack');
+      setEAnim('hit');
       pRef.current?.animate(
         [
           { transform: 'translateX(0)' },
@@ -72,13 +76,16 @@ export default function CombatStage({
         ],
         { duration: 400, easing: 'ease-in-out' },
       );
-      eFlashRef.current?.animate(
-        [
-          { opacity: 1, background: 'rgba(255,255,255,0.8)' },
-          { opacity: 0, background: 'rgba(255,255,255,0)' },
-        ],
-        { duration: 250, easing: 'ease-out' },
-      );
+      // Only flash if no custom hit sprite
+      if (!eHitSrcRef.current) {
+        eFlashRef.current?.animate(
+          [
+            { opacity: 1, background: 'rgba(255,255,255,0.8)' },
+            { opacity: 0, background: 'rgba(255,255,255,0)' },
+          ],
+          { duration: 250, easing: 'ease-out' },
+        );
+      }
     };
 
     enemyAttackRef.current = () => {
@@ -119,6 +126,10 @@ export default function CombatStage({
   const onEnemyAttackDone = () => {
     setEAnim('idle');
     enemyAnimDoneRef.current?.();
+  };
+
+  const onEnemyHitDone = () => {
+    setEAnim('idle');
   };
 
   // ── Enemy sprite selection ───────────────────────────────────────────────
@@ -181,14 +192,15 @@ export default function CombatStage({
       {/* ── Enemy (right side, CSS-flipped to face left) ─── */}
       <div ref={eRef} className={`stage-side ${isWon ? 'stage-ko' : ''}`}>
         <div ref={eFlashRef} className="stage-flash" />
-        {eAnim === 'idle' ? (
+        {eAnim === 'idle' && (
           <SpriteAnimator
             {...enemyIdleProps}
             frameCount={4}
             fps={isFighting ? 6 : 4}
             className="sprite-flipped"
           />
-        ) : (
+        )}
+        {eAnim === 'attack' && (
           <SpriteAnimator
             {...enemyAttackProps}
             frameCount={4}
@@ -197,6 +209,29 @@ export default function CombatStage({
             onComplete={onEnemyAttackDone}
             className="sprite-flipped"
           />
+        )}
+        {eAnim === 'hit' && (
+          eHitSrc ? (
+            <SpriteAnimator
+              src={eHitSrc}
+              frameWidth={128}
+              frameHeight={128}
+              frameCount={4}
+              fps={12}
+              loop={false}
+              onComplete={onEnemyHitDone}
+              scale={PLAYER_IDLE_SCALE}
+              className="sprite-flipped"
+            />
+          ) : (
+            // No custom hit sprite — fall back to idle and let the flash handle it
+            <SpriteAnimator
+              {...enemyIdleProps}
+              frameCount={4}
+              fps={isFighting ? 6 : 4}
+              className="sprite-flipped"
+            />
+          )
         )}
       </div>
 
