@@ -19,7 +19,7 @@ const WORLDS = [
         minRealm: 'Tempered Body L1',
         minRealmIndex: 0,
         enemies: 'Outer sect disciples, sparring dummies',
-        drops: 'Common materials, gold',
+        drops: 'Spirit Stones, Black Tortoise Iron',
         herbs: 'Soul Calming Grass',
         ores: 'Black Tortoise Iron',
         enemyPool: [
@@ -32,7 +32,7 @@ const WORLDS = [
         minRealm: 'Tempered Body L5',
         minRealmIndex: 4,
         enemies: 'Wolf packs, bandit scouts, wandering beasts',
-        drops: 'Common herbs, Black Tortoise Iron',
+        drops: 'Spirit Stones, Beast Cores, Black Tortoise Iron',
         herbs: 'Soul Calming Grass, Jade Heart Flower',
         ores: 'Black Tortoise Iron, Crimson Flame Crystal',
         enemyPool: [
@@ -46,7 +46,7 @@ const WORLDS = [
         minRealm: 'Qi Transformation Early',
         minRealmIndex: 10,
         enemies: 'Qi-sensing beasts, rogue disciples',
-        drops: 'Uncommon herbs, Crimson Flame Crystal',
+        drops: 'Spirit Stones, Beast Cores, Crimson Flame Crystal',
         herbs: 'Jade Heart Flower, Netherworld Flame Mushroom',
         ores: 'Crimson Flame Crystal',
         enemyPool: [
@@ -59,7 +59,7 @@ const WORLDS = [
         minRealm: 'Qi Transformation Peak',
         minRealmIndex: 13,
         enemies: 'Forest spirits, awakened tree demons',
-        drops: 'Uncommon materials, Beast Cores',
+        drops: 'Spirit Stones, Beast Cores',
         herbs: 'Netherworld Flame Mushroom',
         ores: 'Crimson Flame Crystal',
         enemyPool: [
@@ -72,7 +72,7 @@ const WORLDS = [
         minRealm: 'True Element Early',
         minRealmIndex: 14,
         enemies: 'Sky beasts, thunder hawks, rogue cultivators',
-        drops: 'Rare herbs, Void Stone fragments',
+        drops: 'Spirit Stones, Beast Cores, Void Stone, Crimson Flame Crystal',
         herbs: 'Jade Heart Flower, Netherworld Flame Mushroom',
         ores: 'Void Stone',
         enemyPool: [
@@ -86,7 +86,7 @@ const WORLDS = [
         minRealm: 'True Element Peak',
         minRealmIndex: 17,
         enemies: 'Lightning wyrms, storm elementals',
-        drops: 'Rare materials, Origin Crystal fragments',
+        drops: 'Spirit Stones, Beast Cores, Void Stone, Origin Crystals',
         herbs: 'Netherworld Flame Mushroom',
         ores: 'Void Stone',
         enemyPool: [
@@ -107,7 +107,7 @@ const WORLDS = [
         minRealm: 'Separation & Reunion 1st',
         minRealmIndex: 18,
         enemies: 'Sand dragons, bone constructs, desert wraiths',
-        drops: 'Rare herbs, Mithril Essence',
+        drops: 'Spirit Stones, Mithril Essence, Origin Crystals',
         herbs: 'Thousand-Year Ginseng, Blood Lotus',
         ores: 'Void Stone, Mithril Essence',
         enemyPool: [
@@ -121,7 +121,7 @@ const WORLDS = [
         minRealm: 'Separation & Reunion 3rd',
         minRealmIndex: 20,
         enemies: 'Herd-hunting beasts, elemental boars',
-        drops: 'Rare minerals, Beast Cores',
+        drops: 'Spirit Stones, Beast Cores, Mithril Essence',
         herbs: 'Blood Lotus',
         ores: 'Mithril Essence',
         enemyPool: [
@@ -134,7 +134,7 @@ const WORLDS = [
         minRealm: 'Immortal Ascension 1st',
         minRealmIndex: 21,
         enemies: 'City guardian constructs, trapped immortal shades',
-        drops: 'Rare–Epic materials, artefact fragments',
+        drops: 'Spirit Stones, Origin Crystals, Deep Sea Cold Iron',
         herbs: 'Blood Lotus, Dragon Saliva Grass',
         ores: 'Mithril Essence, Deep Sea Cold Iron',
         enemyPool: [
@@ -147,7 +147,7 @@ const WORLDS = [
         minRealm: 'Immortal Ascension 2nd',
         minRealmIndex: 22,
         enemies: 'Qi-devoured beasts, corrupted cultivators',
-        drops: 'Epic herbs, Origin Crystals',
+        drops: 'Spirit Stones, Beast Cores, Origin Crystals, Deep Sea Cold Iron',
         herbs: 'Dragon Saliva Grass',
         ores: 'Deep Sea Cold Iron',
         enemyPool: [
@@ -160,7 +160,7 @@ const WORLDS = [
         minRealm: 'Immortal Ascension 3rd',
         minRealmIndex: 23,
         enemies: 'Blood sea leviathans, qi-blood mutants',
-        drops: 'Epic materials, Dragon Saliva Grass',
+        drops: 'Spirit Stones, Beast Cores, Deep Sea Cold Iron, Origin Crystals',
         herbs: 'Dragon Saliva Grass',
         ores: 'Deep Sea Cold Iron',
         enemyPool: [
@@ -181,7 +181,7 @@ const WORLDS = [
         minRealm: 'Saint Early',
         minRealmIndex: 24,
         enemies: 'Burial guardians, remnant Saint corpse-soldiers',
-        drops: 'Epic herbs, Star Metal Ore',
+        drops: 'Spirit Stones, Origin Crystals, Star Metal Ore',
         herbs: 'Dragon Saliva Grass, Purple Cloud Vine',
         ores: 'Deep Sea Cold Iron, Star Metal Ore',
         enemyPool: [
@@ -194,7 +194,7 @@ const WORLDS = [
         minRealm: 'Saint Middle',
         minRealmIndex: 25,
         enemies: 'Qi-storm elementals, ancient beast kings',
-        drops: 'Epic materials, Purple Cloud Vine',
+        drops: 'Spirit Stones, Elemental Essence Beads, Heavenly Profound Metal',
         herbs: 'Purple Cloud Vine',
         ores: 'Star Metal Ore',
         enemyPool: [
@@ -207,7 +207,7 @@ const WORLDS = [
         minRealm: 'Saint Late',
         minRealmIndex: 26,
         enemies: 'Void-touched cultivators, spatial rift predators',
-        drops: 'Epic–Legendary herbs, Skyfire Meteorite',
+        drops: 'Spirit Stones, Heaven Spirit Dew, Skyfire Meteorite',
         herbs: 'Purple Cloud Vine',
         ores: 'Star Metal Ore, Skyfire Meteorite',
         enemyPool: [
@@ -220,7 +220,7 @@ const WORLDS = [
         minRealm: 'Saint King 1st',
         minRealmIndex: 27,
         enemies: 'Peak-Saint rogue elders, mountain demon lords',
-        drops: 'Legendary material fragments, Technique scrolls',
+        drops: 'Spirit Stones, Star Metal Ore, Heaven Spirit Dew, Skyfire Meteorite',
         herbs: 'Purple Cloud Vine',
         ores: 'Skyfire Meteorite',
         enemyPool: [
@@ -233,7 +233,7 @@ const WORLDS = [
         minRealm: 'Saint King 3rd',
         minRealmIndex: 29,
         enemies: 'Ancient construct commanders, bound war spirits',
-        drops: 'Legendary materials, rare Law books',
+        drops: 'Spirit Stones, Mithril Essence, Origin Crystals',
         herbs: 'Purple Cloud Vine, Immortal Revival Leaf',
         ores: 'Skyfire Meteorite',
         enemyPool: [
@@ -254,7 +254,7 @@ const WORLDS = [
         minRealm: 'Origin Returning 1st',
         minRealmIndex: 30,
         enemies: 'Origin-spring guardians, crystallised qi constructs',
-        drops: 'Legendary herbs, Heavenly Profound Metal shards',
+        drops: 'Spirit Stones, Heaven Spirit Dew, Heavenly Profound Metal',
         herbs: 'Immortal Revival Leaf',
         ores: 'Skyfire Meteorite, Heavenly Profound Metal',
         enemyPool: [
@@ -267,7 +267,7 @@ const WORLDS = [
         minRealm: 'Origin Returning 2nd',
         minRealmIndex: 31,
         enemies: 'Root-merged beasts, cavern elder demons',
-        drops: 'Legendary minerals, Heaven Spirit Dew',
+        drops: 'Spirit Stones, Heaven Spirit Dew, Elemental Essence Beads, Heavenly Profound Metal',
         herbs: 'Immortal Revival Leaf',
         ores: 'Heavenly Profound Metal',
         enemyPool: [
@@ -280,7 +280,7 @@ const WORLDS = [
         minRealm: 'Origin King 1st',
         minRealmIndex: 33,
         enemies: 'Ancient wood sovereigns, forest origin spirits',
-        drops: 'Immortal Revival Leaf, Elemental Essence Beads',
+        drops: 'Spirit Stones, Elemental Essence Beads, Heavenly Profound Metal',
         herbs: 'Immortal Revival Leaf',
         ores: 'Heavenly Profound Metal',
         enemyPool: [
@@ -293,7 +293,7 @@ const WORLDS = [
         minRealm: 'Origin King 2nd',
         minRealmIndex: 34,
         enemies: 'Origin King-grade beasts (territorial)',
-        drops: 'Legendary materials, soul-type Technique scrolls',
+        drops: 'Spirit Stones, Elemental Essence Beads, Heavenly Profound Metal',
         herbs: 'Immortal Revival Leaf',
         ores: 'Heavenly Profound Metal',
         enemyPool: [
@@ -306,7 +306,7 @@ const WORLDS = [
         minRealm: 'Origin King 3rd',
         minRealmIndex: 35,
         enemies: 'Awakened origin constructs, bound ancient cultivators',
-        drops: 'High-tier artefact fragments, Legendary law books',
+        drops: 'Spirit Stones, Heaven Spirit Dew, Heavenly Profound Metal',
         herbs: 'Immortal Revival Leaf',
         ores: 'Heavenly Profound Metal',
         enemyPool: [
@@ -327,7 +327,7 @@ const WORLDS = [
         minRealm: 'Void King 1st',
         minRealmIndex: 36,
         enemies: 'Space-fracture predators, void elementals',
-        drops: 'Void Stone, Skyfire Meteorite',
+        drops: 'Spirit Stones, Elemental Essence Beads, Heaven Spirit Dew, Skyfire Meteorite',
         herbs: 'Immortal Revival Leaf',
         ores: 'Void Stone, Skyfire Meteorite',
         enemyPool: [
@@ -340,7 +340,7 @@ const WORLDS = [
         minRealm: 'Void King 3rd',
         minRealmIndex: 38,
         enemies: 'Void sea leviathans, drifting war spirits',
-        drops: 'Heavenly Profound Metal, Elemental Essence Beads',
+        drops: 'Spirit Stones, Beast Cores, Deep Sea Cold Iron, Elemental Essence Beads',
         herbs: 'Immortal Revival Leaf',
         ores: 'Heavenly Profound Metal',
         enemyPool: [
@@ -353,7 +353,7 @@ const WORLDS = [
         minRealm: 'Dao Source 1st',
         minRealmIndex: 39,
         enemies: 'Dao-inscription guardians, petrified Dao cultivators',
-        drops: 'Heaven Spirit Dew, Emperor artefact fragments',
+        drops: 'Spirit Stones, Heaven Spirit Dew, Elemental Essence Beads',
         herbs: 'Immortal Revival Leaf',
         ores: 'Heavenly Profound Metal',
         enemyPool: [
@@ -366,7 +366,7 @@ const WORLDS = [
         minRealm: 'Dao Source 3rd',
         minRealmIndex: 41,
         enemies: 'Peak Dao Source ascetics, elemental sovereigns',
-        drops: 'Legendary Technique scrolls, Law books',
+        drops: 'Spirit Stones, Heaven Spirit Dew, Elemental Essence Beads',
         herbs: 'Immortal Revival Leaf',
         ores: 'Heavenly Profound Metal',
         enemyPool: [
@@ -379,7 +379,7 @@ const WORLDS = [
         minRealm: 'Emperor Realm 1st',
         minRealmIndex: 42,
         enemies: 'Tomb guardians, Emperor Realm remnant wills',
-        drops: 'Emperor-grade artefact fragments',
+        drops: 'Spirit Stones, Star Metal Ore, Heaven Spirit Dew, Elemental Essence Beads',
         herbs: 'Immortal Revival Leaf',
         ores: 'Heavenly Profound Metal',
         enemyPool: [
@@ -392,7 +392,7 @@ const WORLDS = [
         minRealm: 'Emperor Realm 3rd',
         minRealmIndex: 44,
         enemies: 'Sword Dao spirits, fallen Emperor cultivators',
-        drops: 'Rare Law books, top-tier artefact cores',
+        drops: 'Spirit Stones, Origin Crystals, Deep Sea Cold Iron',
         herbs: 'Immortal Revival Leaf',
         ores: 'Heavenly Profound Metal',
         enemyPool: [
@@ -413,7 +413,7 @@ const WORLDS = [
         minRealm: 'Half-Step Open Heaven',
         minRealmIndex: 45,
         enemies: 'Ascending trial guardians, boundary wraiths',
-        drops: 'Top-tier artefact fragments, esoteric materials',
+        drops: 'Spirit Stones, Elemental Essence Beads, Heaven Spirit Dew',
         herbs: 'Esoteric botanicals (TBD)',
         ores: 'Esoteric minerals (TBD)',
         enemyPool: [
@@ -426,7 +426,7 @@ const WORLDS = [
         minRealm: 'Open Heaven Layer 1',
         minRealmIndex: 46,
         enemies: 'Star sea beasts, low-rank Open Heaven wanderers',
-        drops: 'Esoteric elemental cores',
+        drops: 'Spirit Stones, Elemental Essence Beads',
         herbs: 'Esoteric botanicals (TBD)',
         ores: 'Esoteric minerals (TBD)',
         enemyPool: [
@@ -439,7 +439,7 @@ const WORLDS = [
         minRealm: 'Open Heaven Layer 2',
         minRealmIndex: 47,
         enemies: 'Rift predators, spatial sovereign beasts',
-        drops: 'Esoteric materials, spatial law fragments',
+        drops: 'Spirit Stones, Heaven Spirit Dew, Skyfire Meteorite, Elemental Essence Beads',
         herbs: 'Esoteric botanicals (TBD)',
         ores: 'Esoteric minerals (TBD)',
         enemyPool: [
@@ -452,7 +452,7 @@ const WORLDS = [
         minRealm: 'Open Heaven Layer 3',
         minRealmIndex: 48,
         enemies: 'Storm sovereigns, tempest-born constructs',
-        drops: 'High-rank Open Heaven drops',
+        drops: 'Spirit Stones, Origin Crystals, Elemental Essence Beads',
         herbs: 'Esoteric botanicals (TBD)',
         ores: 'Esoteric minerals (TBD)',
         enemyPool: [
@@ -465,7 +465,7 @@ const WORLDS = [
         minRealm: 'Open Heaven Layer 4',
         minRealmIndex: 49,
         enemies: 'Mid-rank Open Heaven beasts (territorial)',
-        drops: 'Peak materials',
+        drops: 'Spirit Stones, Elemental Essence Beads',
         herbs: 'Esoteric botanicals (TBD)',
         ores: 'Esoteric minerals (TBD)',
         enemyPool: [
@@ -477,7 +477,7 @@ const WORLDS = [
         minRealm: 'Open Heaven Layer 6',
         minRealmIndex: 51,
         enemies: 'Ancient Open Heaven cultivators, cosmic apex beasts',
-        drops: 'Rarest drops in the game',
+        drops: 'Spirit Stones, Elemental Essence Beads, Heaven Spirit Dew',
         herbs: 'Rarest botanicals (TBD)',
         ores: 'Rarest minerals (TBD)',
         enemyPool: [
