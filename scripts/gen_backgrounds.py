@@ -302,6 +302,43 @@ def run_generate(scene_id):
     print(f"    python gen_backgrounds.py finalize {scene_id} <0-3>")
 
 
+def crop_to_content(img, white_threshold=200):
+    """
+    Crop away transparent bands and white/mist edges that the API bakes in.
+
+    A column/row is considered "edge filler" if it is either:
+      - fully transparent (alpha == 0 for every pixel), OR
+      - opaque but with average brightness > white_threshold (mist/sky haze)
+
+    Returns the cropped image (still RGBA, not yet resized).
+    """
+    w, h = img.size
+    pixels = img.load()
+
+    def col_is_content(x):
+        vals = [pixels[x, y][c] for y in range(h) for c in range(3)
+                if pixels[x, y][3] > 0]
+        if not vals:
+            return False                     # fully transparent
+        return (sum(vals) / len(vals)) < white_threshold
+
+    def row_is_content(y):
+        vals = [pixels[x, y][c] for x in range(w) for c in range(3)
+                if pixels[x, y][3] > 0]
+        if not vals:
+            return False
+        return (sum(vals) / len(vals)) < white_threshold
+
+    left  = next((x for x in range(w)       if col_is_content(x)), 0)
+    right = next((x for x in range(w-1,-1,-1) if col_is_content(x)), w-1)
+    top   = next((y for y in range(h)       if row_is_content(y)), 0)
+    bot   = next((y for y in range(h-1,-1,-1) if row_is_content(y)), h-1)
+
+    print(f"  Content region: x={left}-{right}, y={top}-{bot} "
+          f"({right-left+1}x{bot-top+1} -> {BG_WIDTH}x{BG_HEIGHT})")
+    return img.crop((left, top, right + 1, bot + 1))
+
+
 def run_finalize(scene_id, cand_n):
     if scene_id not in SCENES:
         raise ValueError(f"Unknown scene '{scene_id}'. Known: {list(SCENES)}")
@@ -314,10 +351,11 @@ def run_finalize(scene_id, cand_n):
 
     img = Image.open(src).convert("RGBA")
 
-    # Resize to exact target dimensions if API returned something slightly off
-    if img.size != (BG_WIDTH, BG_HEIGHT):
-        img = img.resize((BG_WIDTH, BG_HEIGHT), Image.NEAREST)
-        print(f"  Resized to {BG_WIDTH}x{BG_HEIGHT}")
+    # Strip transparent padding and white/mist edge bands baked in by the API
+    img = crop_to_content(img)
+
+    # Resize to exact target dimensions
+    img = img.resize((BG_WIDTH, BG_HEIGHT), Image.LANCZOS)
 
     out_path = OUT_DIR / f"{scene_id}.png"
     img.save(str(out_path))
