@@ -34,6 +34,8 @@ export function wipeSave() {
   localStorage.removeItem('mai_inventory');
   localStorage.removeItem('mai_owned_laws');
   localStorage.removeItem('mai_active_law');
+  localStorage.removeItem('mai_pills');
+  localStorage.removeItem('mai_active_pills');
 }
 
 // ─── Technique slots ──────────────────────────────────────────────────────────

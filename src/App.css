@@ -3217,3 +3217,291 @@
   font-size: 0.85rem;
   color: var(--text-muted);
 }
+
+/* ─── Alchemy Panel ─────────────────────────────────────────────────────────── */
+
+.alchemy-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.alchemy-triangle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.alchemy-triangle-top {
+  display: flex;
+  justify-content: center;
+}
+
+.alchemy-triangle-bottom {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.alchemy-furnace {
+  font-size: 2.5rem;
+  text-align: center;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(255, 120, 0, 0.6));
+}
+
+.alchemy-slot {
+  position: relative;
+  width: 140px;
+}
+
+.alchemy-slot-btn {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alchemy-slot-btn:hover {
+  border-color: var(--accent);
+}
+
+.herb-selector {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.herb-selector-empty {
+  padding: 10px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.herb-selector-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.herb-selector-item:hover {
+  background: var(--bg-card);
+}
+
+.herb-selector-qty {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.alchemy-result {
+  width: 100%;
+  max-width: 320px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  text-align: center;
+  min-height: 60px;
+}
+
+.alchemy-result-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.alchemy-result-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.alchemy-result-rarity {
+  font-size: 0.78rem;
+}
+
+.alchemy-result-effects {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.alchemy-result-effect {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.alchemy-result-invalid {
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.alchemy-result-hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.alchemy-flash {
+  color: #22c55e;
+  font-size: 0.9rem;
+  font-weight: 600;
+  animation: alchemyFlash 1.5s ease-out;
+}
+
+@keyframes alchemyFlash {
+  0%   { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+.alchemy-craft-btn {
+  padding: 10px 32px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.alchemy-craft-btn:hover {
+  opacity: 0.9;
+}
+
+.alchemy-craft-btn-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ─── Pill Grid (Home Screen) ────────────────────────────────────────────────── */
+
+.pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  justify-content: center;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.pill-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  min-width: 90px;
+  max-width: 120px;
+  transition: border-color 0.2s;
+}
+
+.pill-card-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.pill-card-qty {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.pill-card-use {
+  padding: 2px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.pill-card-use:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.pill-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  z-index: 30;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+/* ─── Active Pills Bar ───────────────────────────────────────────────────────── */
+
+.active-pills-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 12px;
+  justify-content: center;
+}
+
+.active-pill-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg-card);
+  font-size: 0.72rem;
+}
+
+.active-pill-time {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+}

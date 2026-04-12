@@ -1,9 +1,10 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import SpriteAnimator from '../components/SpriteAnimator';
 import RealmProgressBar from '../components/RealmProgressBar';
 import OfflineEarningsModal from '../components/OfflineEarningsModal';
 import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
+import { PILLS, PILLS_BY_ID, ITEM_RARITY } from '../data/pills';
 
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
@@ -16,7 +17,75 @@ function getSpriteState(boosting, adBoostActive) {
   return 1;
 }
 
-function HomeScreen({ cultivation }) {
+// ─── Pill effect display helpers ──────────────────────────────────────────────
+
+const PILL_STAT_DISPLAY = {
+  qi_speed:          'Qi Speed',
+  defense:           'Defense',
+  health:            'Health',
+  physical_damage:   'Phys. Dmg',
+  elemental_damage:  'Elem. Dmg',
+  harvest_speed:     'Harvest Speed',
+  mining_speed:      'Mining Speed',
+  harvest_luck:      'Harvest Luck',
+  mining_luck:       'Mining Luck',
+  soul_toughness:    'Soul Tough.',
+  elemental_defense: 'Elem. Def',
+  essence:           'Essence',
+};
+
+function formatPillEffect(eff, duration) {
+  const label = PILL_STAT_DISPLAY[eff.stat] ?? eff.stat;
+  if (eff.stat === 'qi_speed') {
+    return `+${Math.round(eff.value * 100)}% ${label} (${duration}s)`;
+  }
+  if (eff.type === 'increased') {
+    return `+${Math.round(eff.value * 100)}% ${label} (${duration}s)`;
+  }
+  return `+${eff.value} ${label} (${duration}s)`;
+}
+
+function PillCard({ pillId, qty, onUse }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const pill = PILLS_BY_ID[pillId];
+  if (!pill) return null;
+  const color = ITEM_RARITY[pill.rarity]?.color ?? '#aaa';
+
+  return (
+    <div
+      className="pill-card"
+      style={{ borderColor: color }}
+      onPointerEnter={() => setShowTooltip(true)}
+      onPointerLeave={() => setShowTooltip(false)}
+    >
+      <span className="pill-card-name" style={{ color }}>{pill.name}</span>
+      <span className="pill-card-qty">x{qty}</span>
+      <button className="pill-card-use" onClick={() => onUse(pillId)}>Use</button>
+      {showTooltip && (
+        <div className="pill-tooltip">
+          {pill.effects.map((eff, i) => (
+            <div key={i}>{formatPillEffect(eff, pill.duration)}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ActivePillBadge({ active }) {
+  const pill = PILLS_BY_ID[active.pillId];
+  if (!pill) return null;
+  const remaining = Math.max(0, Math.ceil((active.expiresAt - Date.now()) / 1000));
+  const color = ITEM_RARITY[pill.rarity]?.color ?? '#aaa';
+  return (
+    <div className="active-pill-badge" style={{ borderColor: color }}>
+      <span style={{ color }}>{pill.name}</span>
+      <span className="active-pill-time">{remaining}s</span>
+    </div>
+  );
+}
+
+function HomeScreen({ cultivation, pills, inventory }) {
   const {
     realmName,
     nextRealmName,
@@ -129,6 +198,29 @@ function HomeScreen({ cultivation }) {
               ? 'Channeling...'
               : '✦ Channel Heavenly Qi — 2× for 30 min'}
           </button>
+        </div>
+      )}
+
+      {/* ── Active Pill Buffs ──────────────────────────────────────────── */}
+      {pills && pills.activePills.length > 0 && (
+        <div className="active-pills-bar">
+          {pills.activePills.map((ap, i) => (
+            <ActivePillBadge key={`${ap.pillId}-${i}`} active={ap} />
+          ))}
+        </div>
+      )}
+
+      {/* ── Pill Inventory ─────────────────────────────────────────────── */}
+      {pills && (
+        <div className="pill-grid">
+          {PILLS.filter(p => pills.getOwnedCount(p.id) > 0).map(p => (
+            <PillCard
+              key={p.id}
+              pillId={p.id}
+              qty={pills.getOwnedCount(p.id)}
+              onUse={pills.usePill}
+            />
+          ))}
         </div>
       )}
     </div>

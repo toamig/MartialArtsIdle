@@ -132,6 +132,7 @@ export default function useCultivation() {
   const activeLawRef = useRef(activeLaw);
   useEffect(() => { activeLawRef.current = activeLaw; }, [activeLaw]);
 
+  const pillQiMultRef = useRef(1);
   const boostRef    = useRef(false);
   const adBoostRef  = useRef(
     (saved?.adBoostEndsAt ?? 0) > Date.now() ? AD_BOOST_MULT : 1
@@ -164,7 +165,7 @@ export default function useCultivation() {
         const lawMult = indexRef.current >= law.realmRequirement
           ? law.cultivationSpeedMult
           : 1;
-        const rate = BASE_RATE * lawMult * (boostRef.current ? BOOST_MULTIPLIER : 1) * adBoostRef.current;
+        const rate = BASE_RATE * lawMult * (boostRef.current ? BOOST_MULTIPLIER : 1) * adBoostRef.current * pillQiMultRef.current;
         qiRef.current += rate * dt;
 
         if (qiRef.current >= costRef.current) {
@@ -248,6 +249,8 @@ export default function useCultivation() {
     honeLawMult,
     replaceLawPassive,
     addLawPassive,
+    // Pill qi multiplier ref — updated by App.jsx
+    pillQiMultRef,
     // Ads
     activateAdBoost,
     adBoostActive:  adBoostEndsAt > Date.now(),

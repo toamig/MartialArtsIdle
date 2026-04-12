@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { QUALITY, ARTEFACTS_BY_ID } from '../data/artefacts';
 import { LAW_RARITY } from '../data/laws';
 import { TECHNIQUE_QUALITY } from '../data/techniques';
-import { ITEMS_BY_ID } from '../data/items';
+import { ITEMS, ITEMS_BY_ID, RARITY } from '../data/items';
 import { MOD } from '../data/stats';
 import { RARITY_TIER, AFFIX_POOL_BY_SLOT } from '../data/affixPools';
+import { findPill } from '../data/pills';
 import { ARTEFACT_NEXT_RARITY } from '../hooks/useArtefacts';
 import { TECH_NEXT_QUALITY } from '../hooks/useTechniques';
 import { LAW_NEXT_RARITY } from '../hooks/useCultivation';
@@ -633,6 +634,176 @@ function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
   );
 }
 
+// ─── AlchemyPanel ────────────────────────────────────────────────────────────
+
+const STAT_DISPLAY = {
+  qi_speed:          'Qi Speed',
+  defense:           'Defense',
+  health:            'Health',
+  physical_damage:   'Phys. Dmg',
+  elemental_damage:  'Elem. Dmg',
+  harvest_speed:     'Harvest Speed',
+  mining_speed:      'Mining Speed',
+  harvest_luck:      'Harvest Luck',
+  mining_luck:       'Mining Luck',
+  soul_toughness:    'Soul Tough.',
+  elemental_defense: 'Elem. Def',
+  essence:           'Essence',
+};
+
+function formatEffect(eff, duration) {
+  const label = STAT_DISPLAY[eff.stat] ?? eff.stat;
+  if (eff.stat === 'qi_speed') {
+    return `+${Math.round(eff.value * 100)}% ${label} (${duration}s)`;
+  }
+  if (eff.type === 'increased') {
+    return `+${Math.round(eff.value * 100)}% ${label} (${duration}s)`;
+  }
+  return `+${eff.value} ${label} (${duration}s)`;
+}
+
+function HerbSelector({ slotIndex, selectedHerbId, onSelect, inventory }) {
+  const [open, setOpen] = useState(false);
+
+  const ownedHerbs = useMemo(() => {
+    return ITEMS.herbs.filter(h => (inventory.getQuantity(h.id) > 0));
+  }, [inventory]);
+
+  const selectedHerb = selectedHerbId ? ITEMS_BY_ID[selectedHerbId] : null;
+  const rarityColor = selectedHerb ? (RARITY[selectedHerb.rarity]?.color ?? '#aaa') : 'var(--text-muted)';
+
+  return (
+    <div className="alchemy-slot">
+      <button
+        className="alchemy-slot-btn"
+        style={{ borderColor: selectedHerb ? rarityColor : 'var(--border)' }}
+        onClick={() => setOpen(!open)}
+      >
+        {selectedHerb ? (
+          <span style={{ color: rarityColor }}>{selectedHerb.name}</span>
+        ) : (
+          <span style={{ color: 'var(--text-muted)' }}>Slot {slotIndex + 1}</span>
+        )}
+      </button>
+      {open && (
+        <div className="herb-selector">
+          {ownedHerbs.length === 0 && (
+            <div className="herb-selector-empty">No herbs owned</div>
+          )}
+          {ownedHerbs.map(h => {
+            const hColor = RARITY[h.rarity]?.color ?? '#aaa';
+            const qty = inventory.getQuantity(h.id);
+            return (
+              <button
+                key={h.id}
+                className="herb-selector-item"
+                onClick={() => { onSelect(h.id); setOpen(false); }}
+              >
+                <span style={{ color: hColor }}>{h.name}</span>
+                <span className="herb-selector-qty">x{qty}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AlchemyPanel({ inventory, pills }) {
+  const [slots, setSlots] = useState([null, null, null]);
+  const [flashMsg, setFlashMsg] = useState(null);
+
+  const setSlot = (index, herbId) => {
+    setSlots(prev => {
+      const next = [...prev];
+      next[index] = herbId;
+      return next;
+    });
+  };
+
+  const allFilled = slots[0] && slots[1] && slots[2];
+  const resultPill = allFilled ? findPill(slots[0], slots[1], slots[2]) : null;
+
+  // Check if player has herbs (accounting for duplicates in slots)
+  const hasHerbs = useMemo(() => {
+    if (!allFilled) return false;
+    const needed = {};
+    for (const id of slots) {
+      needed[id] = (needed[id] || 0) + 1;
+    }
+    for (const [id, qty] of Object.entries(needed)) {
+      if (inventory.getQuantity(id) < qty) return false;
+    }
+    return true;
+  }, [slots, allFilled, inventory]);
+
+  const canCraft = allFilled && resultPill && hasHerbs;
+
+  const handleCraft = () => {
+    if (!canCraft) return;
+    // Remove herbs
+    const needed = {};
+    for (const id of slots) {
+      needed[id] = (needed[id] || 0) + 1;
+    }
+    for (const [id, qty] of Object.entries(needed)) {
+      inventory.removeItem(id, qty);
+    }
+    // Craft pill
+    pills.craftPill(resultPill.id);
+    setFlashMsg(`Crafted ${resultPill.name}!`);
+    setTimeout(() => setFlashMsg(null), 1500);
+  };
+
+  const rarityColor = resultPill ? (RARITY[resultPill.rarity]?.color ?? '#aaa') : null;
+
+  return (
+    <div className="alchemy-panel">
+      <div className="alchemy-triangle">
+        <div className="alchemy-triangle-top">
+          <HerbSelector slotIndex={0} selectedHerbId={slots[0]} onSelect={(id) => setSlot(0, id)} inventory={inventory} />
+        </div>
+        <div className="alchemy-furnace">🔥</div>
+        <div className="alchemy-triangle-bottom">
+          <HerbSelector slotIndex={1} selectedHerbId={slots[1]} onSelect={(id) => setSlot(1, id)} inventory={inventory} />
+          <HerbSelector slotIndex={2} selectedHerbId={slots[2]} onSelect={(id) => setSlot(2, id)} inventory={inventory} />
+        </div>
+      </div>
+
+      <div className="alchemy-result">
+        {allFilled && resultPill && (
+          <div className="alchemy-result-pill">
+            <span className="alchemy-result-name" style={{ color: rarityColor }}>{resultPill.name}</span>
+            <span className="alchemy-result-rarity" style={{ color: rarityColor }}>({resultPill.rarity})</span>
+            <div className="alchemy-result-effects">
+              {resultPill.effects.map((eff, i) => (
+                <span key={i} className="alchemy-result-effect">{formatEffect(eff, resultPill.duration)}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {allFilled && !resultPill && (
+          <div className="alchemy-result-invalid">Invalid combination</div>
+        )}
+        {!allFilled && (
+          <div className="alchemy-result-hint">Select 3 herbs to see the result</div>
+        )}
+      </div>
+
+      {flashMsg && <div className="alchemy-flash">{flashMsg}</div>}
+
+      <button
+        className={`alchemy-craft-btn ${canCraft ? '' : 'alchemy-craft-btn-disabled'}`}
+        onClick={handleCraft}
+        disabled={!canCraft}
+      >
+        Craft
+      </button>
+    </div>
+  );
+}
+
 // ─── ProductionScreen ─────────────────────────────────────────────────────────
 
 const PROD_TABS = [
@@ -641,7 +812,7 @@ const PROD_TABS = [
   { key: 'transmutation', label: 'Transmutation' },
 ];
 
-function ProductionScreen({ inventory, artefacts, techniques, cultivation }) {
+function ProductionScreen({ inventory, artefacts, techniques, cultivation, pills }) {
   const [activeTab, setActiveTab] = useState('transmutation');
 
   return (
@@ -669,10 +840,7 @@ function ProductionScreen({ inventory, artefacts, techniques, cultivation }) {
       )}
 
       {activeTab === 'alchemy' && (
-        <div className="prod-coming-soon">
-          <span className="prod-coming-icon">⚗</span>
-          <p>Alchemy — coming soon</p>
-        </div>
+        <AlchemyPanel inventory={inventory} pills={pills} />
       )}
 
       {activeTab === 'transmutation' && (

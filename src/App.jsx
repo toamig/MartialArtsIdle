@@ -18,6 +18,7 @@ import useInventory   from './hooks/useInventory';
 import useTechniques  from './hooks/useTechniques';
 import useCombat      from './hooks/useCombat';
 import useArtefacts   from './hooks/useArtefacts';
+import usePills       from './hooks/usePills';
 import { initDebug } from './debug/gameDebug';
 import './App.css';
 
@@ -32,10 +33,17 @@ function App() {
   const techniques  = useTechniques();
   const combat      = useCombat();
   const artefacts   = useArtefacts();
+  const pills       = usePills();
+
+  // Keep pill qi multiplier in sync with cultivation game loop
+  const pillQiMult = pills.getQiMult();
+  useEffect(() => {
+    cultivation.pillQiMultRef.current = pillQiMult;
+  }, [pillQiMult, cultivation.pillQiMultRef]);
 
   // Keep a live ref to all hooks so debug commands always see fresh state.
   const hooksRef = useRef({});
-  hooksRef.current = { cultivation, inventory, techniques, combat, artefacts };
+  hooksRef.current = { cultivation, inventory, techniques, combat, artefacts, pills };
   useEffect(() => { initDebug(hooksRef); }, []);
 
   // Navigate to a screen, optionally carrying a parameter (e.g. region data).
@@ -47,7 +55,7 @@ function App() {
   const goBack = () => navigate('combat');
 
   const screens = {
-    home:      <HomeScreen cultivation={cultivation} />,
+    home:      <HomeScreen cultivation={cultivation} pills={pills} inventory={inventory} />,
     training:  <TrainingScreen />,
     // Worlds hub — the NavBar "Worlds" tab always lands here
     combat:    <WorldsScreen cultivation={cultivation} onNavigate={navigate} />,
@@ -69,7 +77,7 @@ function App() {
     build:     <BuildScreen  cultivation={cultivation} techniques={techniques} artefacts={artefacts} />,
     shop:      <ShopScreen />,
     inventory:  <InventoryScreen  inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} />,
-    production: <ProductionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} />,
+    production: <ProductionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} pills={pills} />,
     stats:     <StatsScreen cultivation={cultivation} artefacts={artefacts} />,
     settings:  <SettingsScreen />,
   };
