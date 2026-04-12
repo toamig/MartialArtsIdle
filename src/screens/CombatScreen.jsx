@@ -9,7 +9,7 @@ const TECH_GLYPH = {
   Defend: '⬡',
   Dodge:  '↯',
 };
-import { pickEnemy } from '../data/enemies';
+import ENEMIES, { pickEnemy } from '../data/enemies';
 import REALMS from '../data/realms';
 import CombatStage from '../components/CombatStage';
 
@@ -37,7 +37,10 @@ function CombatScreen({ cultivation, techniques, combat, inventory, region = nul
   doStartRef.current = () => {
     const qi  = cultivation.qiRef.current + cultivation.costRef.current;
     const law = cultivation.activeLaw;
-    const enemyDef = region?.enemyPool ? pickEnemy(region.enemyPool) : null;
+    const forcedId = combat.debugRef?.current?.nextEnemy;
+    const enemyDef = forcedId
+      ? (ENEMIES[forcedId] ?? (region?.enemyPool ? pickEnemy(region.enemyPool) : null))
+      : (region?.enemyPool ? pickEnemy(region.enemyPool) : null);
     setStageEnemy(enemyDef);
     // Enemy HP is anchored to the region's minimum realm cost, not the
     // player's current qi — so zone 1 enemies always have low HP and zone 6

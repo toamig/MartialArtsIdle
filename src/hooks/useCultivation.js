@@ -212,6 +212,8 @@ export default function useCultivation() {
     // Refs for direct DOM updates — avoids React render lag on the progress bar
     qiRef,
     costRef,
+    indexRef,
+    setRealmIndex,
     activeLaw:     DEFAULT_LAW,
     isLawUnlocked: realmIndex >= DEFAULT_LAW.realmRequirement,
     ownedLaws,

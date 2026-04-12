@@ -58,6 +58,9 @@ export default function useCombat() {
   const eHpTextRef = useRef(null);
   const cdBarRefs  = useRef([null, null, null]);
 
+  // ─── Debug flags — mutated directly by gameDebug.js ─────────────────────
+  const debugRef = useRef({ godMode: false, oneShot: false, nextEnemy: null });
+
   // ─── Drop callbacks — refreshed on each startFight call ─────────────────
   const onDropsRef          = useRef(null);
   const onTechniqueDropRef  = useRef(null);
@@ -215,6 +218,9 @@ export default function useCombat() {
           logs.push({ msg: `Basic attack → ${dmg.toLocaleString()} dmg`, kind: 'damage' });
         }
 
+        // Debug: force enemy death on every hit
+        if (debugRef.current.oneShot && s.eHp > 0) s.eHp = 0;
+
         if (logs.length) setLog(prev => [...logs, ...prev].slice(0, MAX_LOG));
 
         // Fire attack animation — turn advances in playerAnimDoneRef callback
@@ -267,6 +273,8 @@ export default function useCombat() {
 
         if (s.dodgeBuff.endsAt > nowSec2 && Math.random() < s.dodgeBuff.chance) {
           logs.push({ msg: 'Enemy attack — dodged!', kind: 'dodge' });
+        } else if (debugRef.current.godMode) {
+          logs.push({ msg: 'Enemy attack — negated (god mode)', kind: 'dodge' });
         } else {
           const defMult = s.defBuff.endsAt > nowSec2 ? s.defBuff.mult : 1;
           const def     = (s.stats.essence + s.stats.body) * defMult;
@@ -313,6 +321,7 @@ export default function useCombat() {
     enemy,
     log,
     stateRef,
+    debugRef,
     startFight,
     pHpBarRef,
     eHpBarRef,

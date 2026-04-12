@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import NavBar from './components/NavBar';
 import HomeScreen from './screens/HomeScreen';
 import { initAds } from './ads/adService';
@@ -18,6 +18,7 @@ import useInventory   from './hooks/useInventory';
 import useTechniques  from './hooks/useTechniques';
 import useCombat      from './hooks/useCombat';
 import useArtefacts   from './hooks/useArtefacts';
+import { initDebug } from './debug/gameDebug';
 import './App.css';
 
 function App() {
@@ -31,6 +32,11 @@ function App() {
   const techniques  = useTechniques();
   const combat      = useCombat();
   const artefacts   = useArtefacts();
+
+  // Keep a live ref to all hooks so debug commands always see fresh state.
+  const hooksRef = useRef({});
+  hooksRef.current = { cultivation, inventory, techniques, combat, artefacts };
+  useEffect(() => { initDebug(hooksRef); }, []);
 
   // Navigate to a screen, optionally carrying a parameter (e.g. region data).
   const navigate = (screen, param = null) => {
