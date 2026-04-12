@@ -468,7 +468,9 @@ function LawDetail({ law, cultivation, inventory }) {
   const baseTier   = RARITY_TIER[law.rarity] ?? 1;
   const baseMineral = SLOT_BRACKETS[baseTier - 1]?.mineral ?? 'black_tortoise_iron';
 
-  const MULT_KEYS = ['cultivationSpeedMult', 'essenceMult', 'soulMult', 'bodyMult'];
+  // Only cultivation speed is honable. Essence/Soul/Body are balanced by design
+  // (their sum is fixed) — modifying them individually would break that balance.
+  const MULT_KEYS = ['cultivationSpeedMult'];
 
   return (
     <div className="tx-detail-panel">
@@ -494,6 +496,25 @@ function LawDetail({ law, cultivation, inventory }) {
             onHone={(mk) => cultivation.honeLawMult(law.id, mk)}
           />
         ))}
+        {/* Primary stat multipliers — read-only (balanced by sum) */}
+        <div className="tx-mod-row">
+          <div className="tx-mod-left">
+            <span className="tx-mod-name">Essence Mult.</span>
+            <span className="tx-mod-value">x{(law.essenceMult ?? 0).toFixed(2)}</span>
+          </div>
+        </div>
+        <div className="tx-mod-row">
+          <div className="tx-mod-left">
+            <span className="tx-mod-name">Soul Mult.</span>
+            <span className="tx-mod-value">x{(law.soulMult ?? 0).toFixed(2)}</span>
+          </div>
+        </div>
+        <div className="tx-mod-row">
+          <div className="tx-mod-left">
+            <span className="tx-mod-name">Body Mult.</span>
+            <span className="tx-mod-value">x{(law.bodyMult ?? 0).toFixed(2)}</span>
+          </div>
+        </div>
       </div>
 
       {/* Passives */}
