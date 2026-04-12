@@ -33,7 +33,7 @@ const ENEMIES = {
   sparring_dummy: {
     id:       'sparring_dummy',
     name:     'Sparring Dummy',
-    sprite:   null,
+    sprite:   'sparring_dummy',
     statMult: { hp: 1.2, atk: 0.3 },   // tanky, low damage — constructs don't drop techniques
     drops: [
       { itemId: 'spirit_stone', chance: 0.50, qty: [1, 2] },
