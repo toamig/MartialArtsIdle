@@ -17,7 +17,7 @@ const PLAYER_IDLE_FH    = 128;
 // 128px × 1.2 = 154px per fighter × 2 + 16px padding = ~324px → fits comfortably.
 function getSpriteScale() {
   if (typeof window === 'undefined') return 1.5;
-  return window.innerWidth <= 430 ? 1.08 : 1.5;
+  return window.innerWidth <= 430 ? 0.97 : 1.5;
 }
 
 // Canvas-generated sprites: 32×40, displayed at 3×
