@@ -111,6 +111,12 @@ for (const band of BAND_CONFIG) {
   }
 }
 
+/** Reverse map: pillId → array of recipe keys (each key = "herb|herb|herb"). */
+export const RECIPES_BY_PILL = {};
+for (const [key, pillId] of Object.entries(RECIPE_MAP)) {
+  (RECIPES_BY_PILL[pillId] ??= []).push(key);
+}
+
 /**
  * Look up a pill from 3 herb IDs.
  * @returns pill object or null

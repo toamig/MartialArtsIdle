@@ -5,7 +5,7 @@ import { TECHNIQUE_QUALITY } from '../data/techniques';
 import { ITEMS, ITEMS_BY_ID, RARITY } from '../data/items';
 import { MOD } from '../data/stats';
 import { RARITY_TIER, AFFIX_POOL_BY_SLOT } from '../data/affixPools';
-import { findPill } from '../data/pills';
+import { findPill, PILLS, PILLS_BY_ID, RECIPES_BY_PILL } from '../data/pills';
 import { ARTEFACT_NEXT_RARITY } from '../hooks/useArtefacts';
 import { TECH_NEXT_QUALITY } from '../hooks/useTechniques';
 import { LAW_NEXT_RARITY } from '../hooks/useCultivation';
@@ -710,6 +710,77 @@ function HerbSelector({ slotIndex, selectedHerbId, onSelect, inventory }) {
   );
 }
 
+/** Check if the player can afford a recipe key ("herb|herb|herb"). */
+function canAffordRecipe(key, inventory) {
+  const ids = key.split('|');
+  const needed = {};
+  for (const id of ids) needed[id] = (needed[id] || 0) + 1;
+  for (const [id, qty] of Object.entries(needed)) {
+    if (inventory.getQuantity(id) < qty) return false;
+  }
+  return true;
+}
+
+function CraftableRecipes({ inventory }) {
+  // Build list of pills that have at least one affordable recipe
+  const craftable = useMemo(() => {
+    const result = [];
+    for (const pill of PILLS) {
+      const recipes = RECIPES_BY_PILL[pill.id] ?? [];
+      const affordable = recipes.filter(key => canAffordRecipe(key, inventory));
+      if (affordable.length > 0) {
+        result.push({ pill, recipes: affordable });
+      }
+    }
+    return result;
+  }, [inventory]);
+
+  if (craftable.length === 0) {
+    return (
+      <div className="recipe-book">
+        <div className="recipe-book-title">Craftable Recipes</div>
+        <p className="recipe-book-empty">No recipes available with current herbs</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="recipe-book">
+      <div className="recipe-book-title">Craftable Recipes</div>
+      {craftable.map(({ pill, recipes }) => {
+        const color = RARITY[pill.rarity]?.color ?? '#aaa';
+        return (
+          <div key={pill.id} className="recipe-pill-group">
+            <div className="recipe-pill-header">
+              <span className="recipe-pill-name" style={{ color }}>{pill.name}</span>
+              <span className="recipe-pill-rarity" style={{ color }}>{pill.rarity}</span>
+            </div>
+            <div className="recipe-pill-effects">
+              {pill.effects.map((eff, i) => (
+                <span key={i} className="recipe-pill-effect">{formatEffect(eff, pill.duration)}</span>
+              ))}
+            </div>
+            <div className="recipe-list">
+              {recipes.map(key => {
+                const herbNames = key.split('|').map(id => ITEMS_BY_ID[id]?.name ?? id);
+                return (
+                  <div key={key} className="recipe-row">
+                    {herbNames.map((name, i) => (
+                      <span key={i} className="recipe-herb">
+                        {name}{i < 2 ? ' + ' : ''}
+                      </span>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function AlchemyPanel({ inventory, pills }) {
   const [slots, setSlots] = useState([null, null, null]);
   const [flashMsg, setFlashMsg] = useState(null);
@@ -800,6 +871,8 @@ function AlchemyPanel({ inventory, pills }) {
       >
         Craft
       </button>
+
+      <CraftableRecipes inventory={inventory} />
     </div>
   );
 }
