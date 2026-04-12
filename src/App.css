@@ -1716,13 +1716,19 @@
   align-items: flex-end;
   justify-content: space-between;
   height: 260px;
-  padding: 0 20px 12px;
+  padding: 0 6px 12px;
   position: relative;
   overflow: hidden;
   border-radius: 12px;
   border: 1px solid var(--border);
   margin-bottom: 12px;
   background: linear-gradient(180deg, #080818 0%, #0d0d24 40%, #111130 100%);
+}
+
+@media (min-width: 431px) {
+  .combat-stage {
+    padding: 0 20px 12px;
+  }
 }
 
 /* Pixel ground strip */

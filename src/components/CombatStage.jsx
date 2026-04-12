@@ -4,13 +4,20 @@ import { getSprites, FW, FH } from '../sprites/spriteGen';
 
 const BASE = import.meta.env.BASE_URL;
 
-// Custom player sprites: 128×128 px per frame, displayed at 1.5×
+// Custom player sprites: 128×128 px per frame
 const PLAYER_IDLE_SRC   = `${BASE}sprites/combat/player-idle.png`;
 const PLAYER_ATTACK_SRC = `${BASE}sprites/combat/player-attack.png`;
 const PLAYER_HIT_SRC    = `${BASE}sprites/combat/player-hit.png`;
 const PLAYER_IDLE_FW    = 128;
 const PLAYER_IDLE_FH    = 128;
-const PLAYER_IDLE_SCALE = 1.5;
+
+// Responsive scale: shrink on narrow mobile so both fighters fit the stage.
+// 128px × 1.5 = 192px per fighter × 2 + 40px padding = ~424px → overflows 375px screens.
+// 128px × 1.2 = 154px per fighter × 2 + 16px padding = ~324px → fits comfortably.
+function getSpriteScale() {
+  if (typeof window === 'undefined') return 1.5;
+  return window.innerWidth <= 430 ? 1.2 : 1.5;
+}
 
 // Canvas-generated sprites: 32×40, displayed at 3×
 const GEN_SCALE = 3;
@@ -44,6 +51,7 @@ export default function CombatStage({
   enemyAnimDoneRef,
 }) {
   const sprites = getSprites();
+  const spriteScale = getSpriteScale();
 
   const [pAnim, setPAnim] = useState('idle');
   const [eAnim, setEAnim] = useState('idle');
@@ -134,12 +142,12 @@ export default function CombatStage({
 
   // ── Enemy sprite selection ───────────────────────────────────────────────
   // Custom sprite when available, canvas fallback otherwise.
-  const enemyIdleProps  = hasCustomEnemy
-    ? { src: eIdleSrc,   frameWidth: 128, frameHeight: 128, scale: PLAYER_IDLE_SCALE }
+  const enemyIdleProps   = hasCustomEnemy
+    ? { src: eIdleSrc,    frameWidth: 128, frameHeight: 128, scale: spriteScale }
     : { src: sprites.enemyIdle,   frameWidth: FW, frameHeight: FH, scale: GEN_SCALE };
 
   const enemyAttackProps = hasCustomEnemy
-    ? { src: eAttackSrc, frameWidth: 128, frameHeight: 128, scale: PLAYER_IDLE_SCALE }
+    ? { src: eAttackSrc,  frameWidth: 128, frameHeight: 128, scale: spriteScale }
     : { src: sprites.enemyAttack, frameWidth: FW, frameHeight: FH, scale: GEN_SCALE };
 
   return (
@@ -155,7 +163,7 @@ export default function CombatStage({
             frameHeight={PLAYER_IDLE_FH}
             frameCount={4}
             fps={isFighting ? 6 : 4}
-            scale={PLAYER_IDLE_SCALE}
+            scale={spriteScale}
           />
         )}
         {pAnim === 'attack' && (
@@ -167,7 +175,7 @@ export default function CombatStage({
             fps={10}
             loop={false}
             onComplete={onPlayerAttackDone}
-            scale={PLAYER_IDLE_SCALE}
+            scale={spriteScale}
           />
         )}
         {pAnim === 'hit' && (
@@ -179,7 +187,7 @@ export default function CombatStage({
             fps={12}
             loop={false}
             onComplete={onPlayerHitDone}
-            scale={PLAYER_IDLE_SCALE}
+            scale={spriteScale}
           />
         )}
       </div>
@@ -218,7 +226,7 @@ export default function CombatStage({
               fps={12}
               loop={false}
               onComplete={onEnemyHitDone}
-              scale={PLAYER_IDLE_SCALE}
+              scale={spriteScale}
             />
           ) : (
             <SpriteAnimator
