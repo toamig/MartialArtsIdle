@@ -9,6 +9,7 @@
 
 import ENEMIES from '../data/enemies';
 import { ALL_MATERIALS } from '../data/materials';
+import { ITEMS_BY_ID } from '../data/items';
 import REALMS from '../data/realms';
 
 /**
@@ -153,6 +154,28 @@ export function initDebug(hooksRef) {
       console.log(`[debug] Added ${qty}× of each material (${Object.keys(ALL_MATERIALS).length} types)`);
     },
 
+    /**
+     * Give 1000 of every material (herbs, minerals, cultivation items).
+     * @param {number} [qty=1000]
+     */
+    giveMaterials(qty = 1000) {
+      const inv = g().inventory;
+      let count = 0;
+      // items.js materials (used by inventory/crafting)
+      for (const id of Object.keys(ITEMS_BY_ID)) {
+        inv.addItem(id, qty);
+        count++;
+      }
+      // materials.js entries not already in items.js
+      for (const id of Object.keys(ALL_MATERIALS)) {
+        if (!ITEMS_BY_ID[id]) {
+          inv.addItem(id, qty);
+          count++;
+        }
+      }
+      console.log(`[debug] +${qty}× of ${count} materials`);
+    },
+
     /** Print a table of all material IDs, names, and types. */
     listMaterials() {
       console.table(
@@ -203,6 +226,7 @@ export function initDebug(hooksRef) {
       console.log('  gd.clearEnemy()           — clear forced enemy override');
       console.log('  gd.listEnemies()          — show all enemy IDs and names');
       console.log('%cInventory', 'font-weight: bold');
+      console.log('  gd.giveMaterials(n=1000)  — give n of every material');
       console.log('  gd.addItem(id, qty=1)     — add items by material ID');
       console.log('  gd.addAllMaterials(n=10)  — add n of every material');
       console.log('  gd.listMaterials()        — show all material IDs and rarities');
