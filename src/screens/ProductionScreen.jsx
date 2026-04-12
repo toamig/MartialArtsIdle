@@ -717,30 +717,36 @@ function HerbSelector({ slotIndex, selectedHerbId, onSelect, inventory }) {
 
 const REFINE_RARITIES = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
 
-// Cost multiplier per rarity tier (1, 2, 4, 8, 16 — matches QUALITY mults)
-const REFINE_COST_MULT = { Iron: 1, Bronze: 2, Silver: 4, Gold: 8, Transcendent: 16 };
-
-// Base cost recipes per refine type — multiplied by REFINE_COST_MULT[rarity]
-const REFINE_BASE_COSTS = {
-  artefact: [
-    { itemId: 'black_tortoise_iron',   qty: 5 },
-    { itemId: 'crimson_flame_crystal', qty: 3 },
-  ],
-  technique: [
-    { itemId: 'black_tortoise_iron',   qty: 3 },
-    { itemId: 'soul_calming_grass',    qty: 5 },
-    { itemId: 'jade_heart_flower',     qty: 2 },
-  ],
-  law: [
-    { itemId: 'black_tortoise_iron',   qty: 3 },
-    { itemId: 'spirit_stone',          qty: 10 },
-    { itemId: 'beast_core',            qty: 3 },
-  ],
+// Per-rarity recipes — each tier uses materials of matching rarity.
+// Artefacts: minerals only.
+// Techniques: minerals + herbs.
+// Laws:       minerals + cultivation resources.
+const REFINE_COSTS = {
+  artefact: {
+    Iron:         [{ itemId: 'black_tortoise_iron',     qty: 5 }],
+    Bronze:       [{ itemId: 'black_tortoise_iron',     qty: 5 }, { itemId: 'crimson_flame_crystal', qty: 3 }],
+    Silver:       [{ itemId: 'crimson_flame_crystal',   qty: 5 }, { itemId: 'void_stone',            qty: 3 }],
+    Gold:         [{ itemId: 'void_stone',              qty: 5 }, { itemId: 'star_metal_ore',        qty: 3 }],
+    Transcendent: [{ itemId: 'star_metal_ore',          qty: 5 }, { itemId: 'heavenly_profound_metal', qty: 3 }],
+  },
+  technique: {
+    Iron:         [{ itemId: 'black_tortoise_iron',     qty: 3 }, { itemId: 'soul_calming_grass',    qty: 5 }],
+    Bronze:       [{ itemId: 'black_tortoise_iron',     qty: 3 }, { itemId: 'jade_heart_flower',     qty: 5 }],
+    Silver:       [{ itemId: 'crimson_flame_crystal',   qty: 3 }, { itemId: 'blood_lotus',           qty: 5 }],
+    Gold:         [{ itemId: 'void_stone',              qty: 3 }, { itemId: 'purple_cloud_vine',    qty: 3 }],
+    Transcendent: [{ itemId: 'star_metal_ore',          qty: 3 }, { itemId: 'immortal_revival_leaf', qty: 3 }],
+  },
+  law: {
+    Iron:         [{ itemId: 'black_tortoise_iron',     qty: 3 }, { itemId: 'spirit_stone',          qty: 10 }],
+    Bronze:       [{ itemId: 'black_tortoise_iron',     qty: 3 }, { itemId: 'beast_core',            qty: 5 }],
+    Silver:       [{ itemId: 'crimson_flame_crystal',   qty: 3 }, { itemId: 'origin_crystal',        qty: 5 }],
+    Gold:         [{ itemId: 'void_stone',              qty: 3 }, { itemId: 'heaven_spirit_dew',     qty: 3 }],
+    Transcendent: [{ itemId: 'star_metal_ore',          qty: 3 }, { itemId: 'breakthrough_golden_pill', qty: 3 }],
+  },
 };
 
 function getRefineCost(type, rarity) {
-  const mult = REFINE_COST_MULT[rarity] ?? 1;
-  return REFINE_BASE_COSTS[type].map(c => ({ itemId: c.itemId, qty: c.qty * mult }));
+  return REFINE_COSTS[type]?.[rarity] ?? [];
 }
 
 const REFINE_INFO = {
