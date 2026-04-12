@@ -54,6 +54,10 @@ export default function CombatStage({
   playerAnimDoneRef,
   enemyAnimDoneRef,
   spawnDamageNumberRef,
+  pHpBarRef,
+  pHpTextRef,
+  eHpBarRef,
+  eHpTextRef,
 }) {
   const sprites = getSprites();
   const spriteScale = getSpriteScale();
@@ -187,6 +191,31 @@ export default function CombatStage({
       className={`combat-stage ${isFighting ? 'stage-fighting' : ''}`}
       style={{ backgroundImage: `url(${BASE}backgrounds/world_${worldId}.png)` }}
     >
+
+      {/* ── Player HUD (top-left) ─── */}
+      <div className="stage-hud stage-hud-player">
+        <span className="stage-hud-name">You</span>
+        <div className="stage-hud-track">
+          <div ref={pHpBarRef} className="stage-hud-fill stage-hud-fill-player" style={{ width: '100%' }} />
+        </div>
+        <span ref={pHpTextRef} className="stage-hud-text">—</span>
+      </div>
+
+      {/* ── Enemy HUD (top-right) ─── */}
+      <div className="stage-hud stage-hud-enemy">
+        <span className="stage-hud-name">{enemy?.name || 'Enemy'}</span>
+        <div className="stage-hud-track">
+          <div ref={eHpBarRef} className="stage-hud-fill stage-hud-fill-enemy" style={{ width: phase === 'idle' ? '100%' : undefined }} />
+        </div>
+        <span ref={eHpTextRef} className="stage-hud-text">—</span>
+      </div>
+
+      {/* ── Victory / Defeat overlay ─── */}
+      {(isWon || isLost) && (
+        <div className={`stage-result ${isWon ? 'stage-result-won' : 'stage-result-lost'}`}>
+          <span className="stage-result-text">{isWon ? 'Victory!' : 'Defeat'}</span>
+        </div>
+      )}
 
       {/* ── Player (left side) ─── */}
       <div ref={pRef} className={`stage-side ${isLost ? 'stage-ko' : ''}`}>

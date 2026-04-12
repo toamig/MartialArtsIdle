@@ -2339,6 +2339,128 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ── In-stage HP HUD ─────────────────────────────────────────────────────── */
+.stage-hud {
+  position: absolute;
+  top: 8px;
+  width: 36%;
+  background: rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(3px);
+  border-radius: 6px;
+  padding: 4px 6px 5px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.stage-hud-player { left: 8px; }
+.stage-hud-enemy  { right: 8px; text-align: right; }
+
+.stage-hud-name {
+  display: block;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stage-hud-track {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.stage-hud-fill {
+  height: 100%;
+  border-radius: 3px;
+  /* width patched by rAF — no transition */
+}
+
+.stage-hud-fill-player {
+  background: linear-gradient(to right, #16a34a, #4ade80);
+}
+
+.stage-hud-enemy .stage-hud-track {
+  /* flip so the fill grows from right, drains from left */
+  direction: rtl;
+}
+
+.stage-hud-fill-enemy {
+  background: linear-gradient(to left, #b91c1c, var(--accent));
+}
+
+.stage-hud-text {
+  display: block;
+  font-size: 0.5rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+/* ── In-stage Victory / Defeat overlay ───────────────────────────────────── */
+.stage-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 25;
+  pointer-events: none;
+  animation: stage-result-bg-in 0.35s ease-out forwards;
+}
+
+.stage-result-won {
+  background: radial-gradient(ellipse at center,
+    rgba(74, 222, 128, 0.18) 0%,
+    transparent 68%);
+}
+
+.stage-result-lost {
+  background: radial-gradient(ellipse at center,
+    rgba(233, 69, 96, 0.18) 0%,
+    transparent 68%);
+}
+
+.stage-result-text {
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  animation: stage-result-text-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.stage-result-won .stage-result-text {
+  color: #4ade80;
+  text-shadow:
+    0 0 12px rgba(74, 222, 128, 0.9),
+    0 0 32px rgba(74, 222, 128, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.stage-result-lost .stage-result-text {
+  color: #f87171;
+  text-shadow:
+    0 0 12px rgba(248, 113, 113, 0.9),
+    0 0 32px rgba(233, 69, 96, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes stage-result-bg-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes stage-result-text-in {
+  0%   { opacity: 0; transform: scale(0.45) translateY(10px); }
+  70%  { opacity: 1; transform: scale(1.08) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
 /* ── Combat Stage ─────────────────────────────────────────────────────────── */
 .combat-stage {
   display: flex;

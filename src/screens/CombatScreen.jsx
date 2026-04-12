@@ -96,36 +96,12 @@ function CombatScreen({ cultivation, techniques, combat, inventory, region = nul
         playerAnimDoneRef={combat.playerAnimDoneRef}
         enemyAnimDoneRef={combat.enemyAnimDoneRef}
         spawnDamageNumberRef={combat.spawnDamageNumberRef}
+        pHpBarRef={combat.pHpBarRef}
+        pHpTextRef={combat.pHpTextRef}
+        eHpBarRef={combat.eHpBarRef}
+        eHpTextRef={combat.eHpTextRef}
       />
 
-      {/* ── HP bars ─────────────────────────────────────────────────────── */}
-      <div className="combat-arena">
-        <div className="combatant combatant-player">
-          <span className="combatant-label">You</span>
-          <div className="hp-bar-track">
-            <div
-              ref={combat.pHpBarRef}
-              className="hp-bar-fill player-hp-fill"
-              style={{ width: '100%' }}
-            />
-          </div>
-          <span ref={combat.pHpTextRef} className="hp-bar-text">—</span>
-        </div>
-
-        <span className="combat-vs">vs</span>
-
-        <div className="combatant combatant-enemy">
-          <span className="combatant-label">{enemy.name || 'Enemy'}</span>
-          <div className="hp-bar-track">
-            <div
-              ref={combat.eHpBarRef}
-              className="hp-bar-fill enemy-hp-fill"
-              style={{ width: phase === 'idle' ? '100%' : undefined }}
-            />
-          </div>
-          <span ref={combat.eHpTextRef} className="hp-bar-text">—</span>
-        </div>
-      </div>
 
       {/* ── Technique icons ──────────────────────────────────────────────── */}
       <div className="tech-icon-grid">
@@ -162,9 +138,6 @@ function CombatScreen({ cultivation, techniques, combat, inventory, region = nul
         })}
       </div>
 
-      {/* ── Result flash (auto-dismissed when next fight starts) ─────────── */}
-      {phase === 'won'  && <div className="combat-result combat-result-won" >Victory!</div>}
-      {phase === 'lost' && <div className="combat-result combat-result-lost">Defeated</div>}
 
       {/* ── Combat log ───────────────────────────────────────────────────── */}
       {log.length > 0 && (
