@@ -68,10 +68,12 @@ export default function useCombat() {
   // ─── Sprite animation callbacks ────────────────────────────────────────────
   // playerAttackRef / enemyAttackRef: called by useCombat → CombatStage plays animation
   // playerAnimDoneRef / enemyAnimDoneRef: called by CombatStage → useCombat advances turn
-  const playerAttackRef  = useRef(null);
-  const enemyAttackRef   = useRef(null);
-  const playerAnimDoneRef = useRef(null);
-  const enemyAnimDoneRef  = useRef(null);
+  // spawnDamageNumberRef: registered by CombatStage; called here on each damage event
+  const playerAttackRef       = useRef(null);
+  const enemyAttackRef        = useRef(null);
+  const playerAnimDoneRef     = useRef(null);
+  const enemyAnimDoneRef      = useRef(null);
+  const spawnDamageNumberRef  = useRef(null);
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
   const patchBars = (s) => {
@@ -197,6 +199,7 @@ export default function useCombat() {
             const dmg = calcDamage(tech, s.stats.essence, s.stats.soul, s.stats.body, s.stats.lawElement);
             s.eHp = Math.max(0, s.eHp - dmg);
             logs.push({ msg: `${tech.name} → ${dmg.toLocaleString()} dmg`, kind: 'damage' });
+            spawnDamageNumberRef.current?.(dmg, 'enemy');
           } else if (tech.type === 'Heal') {
             const heal = Math.floor(s.pMaxHp * (tech.healPercent ?? 0.25));
             s.pHp = Math.min(s.pMaxHp, s.pHp + heal);
@@ -216,6 +219,7 @@ export default function useCombat() {
           const dmg = Math.max(5, Math.floor(s.stats.essence + s.stats.body));
           s.eHp = Math.max(0, s.eHp - dmg);
           logs.push({ msg: `Basic attack → ${dmg.toLocaleString()} dmg`, kind: 'damage' });
+          spawnDamageNumberRef.current?.(dmg, 'enemy');
         }
 
         // Debug: force enemy death on every hit
@@ -285,6 +289,7 @@ export default function useCombat() {
           const dmg     = Math.max(1, Math.floor(s.eAtk * s.eAtk / (s.eAtk + def)));
           s.pHp         = Math.max(0, s.pHp - dmg);
           logs.push({ msg: `Enemy hits → −${dmg.toLocaleString()} HP`, kind: 'damage-taken' });
+          spawnDamageNumberRef.current?.(dmg, 'player');
         }
 
         if (logs.length) setLog(prev => [...logs, ...prev].slice(0, MAX_LOG));
@@ -334,5 +339,6 @@ export default function useCombat() {
     enemyAttackRef,
     playerAnimDoneRef,
     enemyAnimDoneRef,
+    spawnDamageNumberRef,
   };
 }
