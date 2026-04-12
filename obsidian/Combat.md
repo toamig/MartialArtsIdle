@@ -50,20 +50,56 @@ Enemies in a zone have a **normally distributed** power level:
 
 ---
 
-## Combat Mechanics (from stat doc)
+## Combat Mechanics
 
-### Attack Formula (Secret Technique)
+### Player Attack — Secret Technique
 ```
-Damage = K * (Essence + Soul + Body + artefact_dmg_flat) * arte_mult * elem_bonus + bonus
+Damage = K × (Essence + Soul + Body + artefact_dmg_flat) × arte_mult × elem_bonus + bonus
+```
+See [[Secret Techniques]] for K table (rank × quality) and cooldowns.
+
+### Player Attack — Basic
+```
+Damage = Essence + Body
+```
+Fires when no technique is ready. No cooldown — triggers immediately each player turn.
+
+### Player HP
+```
+HP = (Essence + Body) × 12 + Soul × 4
 ```
 
-### Default Attack
-- Every [[Laws|Law]] provides a default attack
-- Used when no secret technique is available or on cooldown
+### Enemy Stats
+```
+Enemy HP  = (Essence + Soul + Body) × 10 × enemy_hp_mult
+Enemy ATK = (Essence + Soul + Body) × enemy_atk_mult
+```
+Both scale with the player's current stats so fights feel consistent regardless of realm.
+`hp_mult` and `atk_mult` are per-enemy constants defined in `data/enemies.js`.
+
+### Enemy Damage Formula (scale-independent)
+```
+DEF       = (Essence + Body) × def_buff_mult
+EnemyDmg  = EnemyATK² / (EnemyATK + DEF)
+```
+This formula is fully scale-independent: **hits-to-die depends only on enemy_atk_mult, not on absolute qi**. At `EnemyATK = DEF`, the enemy deals 50% of its raw attack. The `def_buff_mult` is 1 normally, raised by Defend-type [[Secret Techniques]].
+
+**Reference hits-to-die** (default law, no defence buffs):
+
+| enemy_atk_mult | Hits to die | Example enemy |
+|---|---|---|
+| 0.3 | ~107 | Sparring Dummy |
+| 0.7 | ~27 | Outer Sect Disciple |
+| 1.0 | ~16 | Wandering Beast |
+| 1.4 | ~10 | Thunder Hawk |
+| 1.6 | ~9 | Storm Elemental |
+| 2.0 | ~7 | Blood Leviathan |
+| 2.5 | ~5 | Burial Guardian |
+| 4.0 | ~3 | Origin Guardian |
 
 ### Combat Stats
 - **DEF** = Essence + Body (combo)
-- **Dodge** — increased by Dodge-type secret techniques
+- **Dodge** — increased by Dodge-type [[Secret Techniques]]
 
 ---
 

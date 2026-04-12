@@ -109,7 +109,9 @@ export default function useCombat() {
 
     const pMaxHp = Math.max(100, Math.floor((essence + body) * 12 + soul * 4));
     const eMaxHp = Math.max(200, Math.floor(total * 10 * hpMult));
-    const eAtk   = Math.max(10,  Math.floor((essence + body) * 0.15 * atkMult));
+    // eAtk scales with total player stats × enemy multiplier.
+    // Paired with the scale-independent damage formula below.
+    const eAtk   = Math.max(10,  Math.floor(total * atkMult));
 
     const cds    = equippedTechs.map(t => t ? 0        : Infinity);
     const maxCds = equippedTechs.map(t => t ? getCooldown(t.type, t.quality) : Infinity);
@@ -250,9 +252,11 @@ export default function useCombat() {
         } else {
           const defMult = s.defBuff.endsAt > nowSec2 ? s.defBuff.mult : 1;
           const def     = (s.stats.essence + s.stats.body) * defMult;
-          const dmg     = Math.max(1, Math.floor(s.eAtk * 100 / (100 + def)));
+          // Scale-independent formula: dmg = eAtk² / (eAtk + def)
+          // At equal eAtk and def → 50% reduction. Fully works at any stat scale.
+          const dmg     = Math.max(1, Math.floor(s.eAtk * s.eAtk / (s.eAtk + def)));
           s.pHp         = Math.max(0, s.pHp - dmg);
-          logs.push({ msg: `Enemy hits → −${dmg} HP`, kind: 'damage-taken' });
+          logs.push({ msg: `Enemy hits → −${dmg.toLocaleString()} HP`, kind: 'damage-taken' });
         }
 
         if (logs.length) setLog(prev => [...logs, ...prev].slice(0, MAX_LOG));
