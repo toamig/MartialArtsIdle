@@ -21,7 +21,7 @@ const ENEMIES = {
   outer_sect_disciple: {
     id:       'outer_sect_disciple',
     name:     'Outer Sect Disciple',
-    sprite:   null,
+    sprite:   'outer_sect_disciple',
     statMult: { hp: 0.8, atk: 0.7 },
     drops: [
       { itemId: 'spirit_stone',       chance: 0.90, qty: [1, 4] },
