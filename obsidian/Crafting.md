@@ -1,8 +1,8 @@
 # Crafting
 
-The system for refining, upgrading, and customising [[Artefacts]], [[Secret Techniques]], and [[Laws]] using [[Materials]]. Inspired by affix-manipulation crafting (Slormancer-style): you do not create items from scratch, you **transform items you already own**.
+The system for transforming [[Artefacts]], [[Secret Techniques]], and [[Laws]] you already own. Inspired by Slormancer's affix-manipulation crafting: you never create items from scratch — you modify what you have.
 
-Crafting is unlocked at **Qi Transformation** realm and performed at the **Refining Furnace** screen.
+Crafting is performed at the **Transmutation** station (Production tab), unlocked at **Qi Transformation** realm.
 
 ---
 
@@ -15,157 +15,114 @@ Every item has two layers:
 | **Frame** | Slot / Rank / Type — the item's identity | Never |
 | **Properties** | Affixes, passives, multipliers, element | Yes — via crafting |
 
-Crafting operations act on one or both layers of properties. No operation ever changes the frame.
+Crafting operations act on properties only. The frame is permanent.
 
 ---
 
 ## Operations
 
-Seven operations apply to all three item types. Each operation costs **Spirit Stones** plus one or more specific materials that scale with the item's current quality.
+Seven operations, all using **minerals only**. Same operations apply to all three item types (Artefacts, Techniques, Laws).
 
 | Operation | What it does |
 |---|---|
-| **Refine** | Randomise *all* properties at once (like rerolling a drop from scratch). Element and rank are kept; everything else is rerolled. |
-| **Extract** | Remove one chosen property. Frees its slot for Imbue. Does not affect other properties. |
-| **Imbue** | Add one random property to one empty slot. The added property is drawn from the same pool used when the item drops. |
-| **Hone** | Reroll the *value* of one chosen property within its quality-tier range, without changing the property type. |
-| **Seal** | Lock one property so it cannot be touched by Refine, Hone, or Transmute. One Seal per item. Sealed property shows a lock icon. |
-| **Upgrade** | Increase quality by one tier (Iron → Bronze → Silver → Gold → Transcendent). Adds one empty property slot. |
-| **Transmute** | Swap one chosen property type for another drawn randomly from the same pool (same weight tier ±1). Does not change its value range. |
+| **Upgrade** | Increase quality one tier (Iron → Bronze → … → Transcendent). Unlocks one additional property slot. |
+| **Refine** | Randomise all properties at once. Keeps frame (slot / rank / type / element). |
+| **Hone** | Reroll the value of one chosen property, keeping its type. |
+| **Imbue** | Add one random property to an empty slot. |
+| **Extract** | Remove one chosen property, freeing its slot. |
+| **Seal** | Lock one property so Refine, Hone, and Transmute cannot touch it. One Seal per item. |
+| **Transmute** | Swap one chosen property type for another from the same pool (random, same weight tier). |
 
 ---
 
-## Material Costs
+## Material Costs — Minerals Only
+
+### Mineral Roles
+
+Each mineral serves a specific crafting purpose. The tier of mineral required matches the quality of the operation.
+
+| Mineral | Rarity | Primary Use |
+|---|---|---|
+| Black Tortoise Iron | Uncommon | Low-tier operations; Refine base cost |
+| Crimson Flame Crystal | Uncommon | Mid-low operations; Upgrade to Bronze |
+| **Chaos Jade** | Uncommon | Hone — targeted single-property reroll |
+| Void Stone | Rare | Transmute; Upgrade to Silver |
+| Mithril Essence | Rare | Imbue — inscribing new properties |
+| Deep Sea Cold Iron | Rare | Seal — freezing a property in place |
+| Star Metal Ore | Epic | High-tier operations; Upgrade to Gold |
+| Skyfire Meteorite | Epic | Refine at epic/legendary quality |
+| Heavenly Profound Metal | Legendary | Upgrade to Transcendent |
+
+---
+
+### Upgrade Costs
+
+Quality-tier upgrade requires two minerals that bracket the jump.
+
+| Upgrading | Materials |
+|---|---|
+| Iron → Bronze | Black Tortoise Iron ×10 + Crimson Flame Crystal ×3 |
+| Bronze → Silver | Crimson Flame Crystal ×8 + Void Stone ×3 |
+| Silver → Gold | Void Stone ×5 + Star Metal Ore ×3 |
+| Gold → Transcendent | Star Metal Ore ×8 + Heavenly Profound Metal ×2 |
+
+Same cost for all item types (Artefacts, Techniques, Laws).
+
+---
+
+### Other Operation Costs
 
 Costs scale with the item's **current quality tier** (×1 at Iron, ×2 at Bronze, ×4 at Silver, ×8 at Gold, ×16 at Transcendent).
 
-### Artefacts
-
-| Operation | Materials | Scaling |
-|---|---|---|
-| Refine | Black Tortoise Iron × tier + Spirit Stone × (50 × tier) | ×quality |
-| Extract | Spirit Stone × 20 | flat |
-| Imbue | Mithril Essence × tier + Spirit Stone × (80 × tier) | ×quality |
-| Hone | **Chaos Jade** × tier + Spirit Stone × (40 × tier) | ×quality |
-| Seal | **Sealing Shard** × 1 | flat (rare material) |
-| Upgrade | Quality-matching ore × 3 + Beast Core × (2 × tier) + Spirit Stone × (200 × tier) | ×quality |
-| Transmute | Void Stone × tier + Elemental Essence Bead × tier | ×quality |
-
-**Quality-matching ore** per upgrade target:
-
-| Upgrading to | Required Ore |
+| Operation | Materials |
 |---|---|
-| Bronze | Crimson Flame Crystal |
-| Silver | Mithril Essence |
-| Gold | Star Metal Ore |
-| Transcendent | Heavenly Profound Metal |
+| Refine | Black Tortoise Iron × (3×tier) + Crimson Flame Crystal × tier |
+| Hone | **Chaos Jade** × (2×tier) |
+| Imbue | Mithril Essence × (2×tier) |
+| Extract | Black Tortoise Iron × 5 |
+| Seal | Deep Sea Cold Iron × 3 |
+| Transmute | Void Stone × (2×tier) |
+
+At epic/legendary quality, Refine also requires Skyfire Meteorite × tier (in addition to the base cost).
 
 ---
 
-### Secret Techniques
-
-| Operation | Materials | Scaling |
-|---|---|---|
-| Refine | Soul Calming Grass × (2 × tier) + Spirit Stone × (60 × tier) | ×quality |
-| Extract | Spirit Stone × 20 | flat |
-| Imbue | Blood Lotus × tier + Spirit Stone × (80 × tier) | ×quality |
-| Hone | Dragon Saliva Grass × tier + Spirit Stone × (40 × tier) | ×quality |
-| Seal | **Sealing Shard** × 1 | flat |
-| Upgrade | Quality-matching herb × 3 + Origin Crystal × tier + Spirit Stone × (200 × tier) | ×quality |
-| Transmute | Jade Heart Flower × (2 × tier) + Beast Core × tier | ×quality |
-
-**Quality-matching herb** per upgrade target:
-
-| Upgrading to | Required Herb |
-|---|---|
-| Bronze | Jade Heart Flower |
-| Silver | Thousand-Year Ginseng |
-| Gold | Purple Cloud Vine |
-| Transcendent | Immortal Revival Leaf |
-
----
-
-### Laws
-
-| Operation | Materials | Scaling |
-|---|---|---|
-| Refine | Thousand-Year Ginseng × (2 × tier) + Heaven Spirit Dew × tier + Spirit Stone × (100 × tier) | ×quality |
-| Extract | Soul Calming Grass × tier + Spirit Stone × 20 | ×quality |
-| Imbue | Immortal Revival Leaf × tier + Heaven Spirit Dew × (2 × tier) + Spirit Stone × (120 × tier) | ×quality |
-| Hone | Heaven Spirit Dew × (2 × tier) + Spirit Stone × (50 × tier) | ×quality |
-| Seal | **Sealing Shard** × 1 | flat |
-| Upgrade | Quality-matching herb × 3 + Heaven Spirit Dew × (3 × tier) + Spirit Stone × (200 × tier) | ×quality |
-| Transmute | Elemental Essence Bead × tier + Dragon Saliva Grass × (2 × tier) | ×quality |
-
----
-
-## What Can Be Crafted
+## What Can Be Modified
 
 ### Artefacts
 
-| Property | Refine | Hone | Extract / Imbue | Transmute |
+| Property | Refine | Hone | Imbue / Extract | Transmute |
 |---|---|---|---|---|
-| Affixes (all) | ✓ | ✓ (one value) | ✓ | ✓ |
+| Affixes | ✓ | ✓ (value only) | ✓ | ✓ |
 | Base stat | ✗ | ✗ | ✗ | ✗ |
 | Slot | ✗ | ✗ | ✗ | ✗ |
-| Quality | Upgrade only | — | — | — |
-
-Upgrading adds one affix slot. The new slot starts empty and must be filled via **Imbue**.
-
----
 
 ### Secret Techniques
 
-| Property | Refine | Hone | Extract / Imbue | Transmute |
+| Property | Refine | Hone | Imbue / Extract | Transmute |
 |---|---|---|---|---|
 | Passives | ✓ | ✓ (effect values) | ✓ | ✓ |
 | Element | ✓ | ✗ | ✗ | ✓ |
 | Type (Attack / Heal / Defend / Dodge) | ✗ | ✗ | ✗ | ✗ |
 | Rank | ✗ | ✗ | ✗ | ✗ |
-| Quality | Upgrade only | — | — | — |
-
-Element is part of the property layer and can be rerolled via Refine or Transmuted. Type and Rank are part of the frame and are permanent.
-
----
 
 ### Laws
 
-| Property | Refine | Hone | Extract / Imbue | Transmute |
+| Property | Refine | Hone | Imbue / Extract | Transmute |
 |---|---|---|---|---|
+| Stat multipliers (Essence/Soul/Body/Speed) | ✓ | ✓ (one multiplier) | ✗ | ✗ |
 | Passives | ✓ | ✓ (effect values) | ✓ | ✓ |
-| Stat multipliers (Essence / Soul / Body / Cultivation Speed) | ✓ | ✓ (one multiplier) | ✗ | ✗ |
 | Element | ✓ | ✗ | ✗ | ✓ |
 | Realm requirement | ✗ | ✗ | ✗ | ✗ |
-| Quality | Upgrade only | — | — | — |
 
 ---
 
 ## Seal Rules
 
-- **One Seal per item** — only one property can be locked at a time.
-- A Sealed property is immune to Refine, Hone, and Transmute.
-- Seal can be manually removed (costs Spirit Stones × 50), freeing the slot to Seal a different property.
-- Upgrading an item does not remove its Seal.
-
----
-
-## Upgrade Notes
-
-- Upgrading always increases quality by exactly one tier.
-- The upgrade adds **one new empty property slot**, matching the quality's new count.
-- The new slot must be filled manually with **Imbue** — it does not auto-fill.
-- There is no downgrade operation.
-
----
-
-## Crafting Limits
-
-| Limit | Value |
-|---|---|
-| Operations per item (lifetime) | Unlimited |
-| Active Seals per item | 1 |
-| Property slots | Fixed by quality (1–5) |
-| Simultaneous crafting jobs | 1 (queue planned) |
+- One Seal per item at a time.
+- Sealed property is immune to Refine, Hone, and Transmute.
+- Seal can be removed (costs Deep Sea Cold Iron × 5), freeing the slot.
+- Upgrading does not remove the Seal.
 
 ---
 
@@ -173,8 +130,8 @@ Element is part of the property layer and can be rerolled via Refine or Transmut
 
 | Operation | Unlocked At |
 |---|---|
-| Refine, Extract, Imbue | Qi Transformation |
-| Hone, Upgrade | True Element |
+| Upgrade, Extract, Imbue | Qi Transformation |
+| Refine, Hone | True Element |
 | Seal | Immortal Ascension |
 | Transmute | Saint |
 
@@ -182,12 +139,11 @@ Element is part of the property layer and can be rerolled via Refine or Transmut
 
 ## TODO
 
-- [ ] Define exact Spirit Stone costs after economy calibration
-- [ ] Design Refining Furnace UI (item picker + operation panel + cost display)
-- [ ] Decide whether Transmute respects weight — should rare affixes be transmutable from/to common ones?
-- [ ] Decide if Chaos Jade and Sealing Shard drop from specific enemy types or world nodes only
-- [ ] Define operation animations / feedback (Slormancer-style flash effect)
-- [ ] Add "preview" mode: show possible property ranges before confirming a Hone
+- [ ] Implement Refine, Hone, Imbue, Extract, Seal, Transmute in code (Upgrade is done)
+- [ ] Add Chaos Jade to enemy drop tables (World 2+ enemies)
+- [ ] Design Transmutation UI for multi-operation workflow
+- [ ] Define "preview" mode for Hone — show value range before confirming
+- [ ] Balance mineral costs once economy data is available
 
 ---
 
@@ -198,4 +154,3 @@ Element is part of the property layer and can be rerolled via Refine or Transmut
 - [[Laws]]
 - [[Materials]]
 - [[Realm Progression]]
-- [[Items]]

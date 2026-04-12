@@ -20,6 +20,7 @@ const ITEMS = {
   minerals: [
     { id: 'black_tortoise_iron', name: 'Black Tortoise Iron', rarity: 'uncommon', description: 'Extraordinarily dense and durable ore ideal for defensive armors and shields.' },
     { id: 'crimson_flame_crystal', name: 'Crimson Flame Crystal', rarity: 'uncommon', description: 'A fire-element crystal that keeps weapons permanently heated, boosting destructive power.' },
+    { id: 'chaos_jade', name: 'Chaos Jade', rarity: 'uncommon', description: 'A mottled gem that pulses with unstable energy. Used in targeted single-property rerolls during transmutation.' },
     { id: 'void_stone', name: 'Void Stone', rarity: 'rare', description: 'A space-attribute mineral used to craft spatial rings and dimensional arrays.' },
     { id: 'mithril_essence', name: 'Mithril Essence', rarity: 'rare', description: 'A lightweight, magic-conductive silver ore prized for inscription work and formation plates.' },
     { id: 'deep_sea_cold_iron', name: 'Deep Sea Cold Iron', rarity: 'rare', description: 'Mined from abyssal ocean trenches, it infuses weapons with bone-chilling ice energy.' },

@@ -257,15 +257,15 @@ The zone tier biases which quality can drop. Higher zones make Iron drops increa
 
 Full operation rules in [[Crafting]]. Quick reference for artefacts:
 
-| Goal | Operation | Key Materials |
+| Goal | Operation | Key Materials (minerals only) |
 |---|---|---|
-| Start over completely | **Refine** | Black Tortoise Iron + Spirit Stones |
-| Fix one bad affix value | **Hone** | Chaos Jade + Spirit Stones |
-| Add a missing affix | **Imbue** | Mithril Essence + Spirit Stones |
-| Delete one affix | **Extract** | Spirit Stones |
-| Protect one affix | **Seal** | Sealing Shard |
-| Change affix type | **Transmute** | Void Stone + Elemental Essence Bead |
-| Gain an extra affix slot | **Upgrade** | Tier-matching ore + Beast Core + Spirit Stones |
+| Start over completely | **Refine** | Black Tortoise Iron × (3×tier) + Crimson Flame Crystal × tier |
+| Fix one bad affix value | **Hone** | Chaos Jade × (2×tier) |
+| Add a missing affix | **Imbue** | Mithril Essence × (2×tier) |
+| Delete one affix | **Extract** | Black Tortoise Iron × 5 |
+| Protect one affix | **Seal** | Deep Sea Cold Iron × 3 |
+| Change affix type | **Transmute** | Void Stone × (2×tier) |
+| Gain an extra affix slot | **Upgrade** | Two bracket minerals (see [[Crafting#Upgrade Costs]]) |
 
 ---
 

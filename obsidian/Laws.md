@@ -128,15 +128,15 @@ A beginner's law found early in the world. Makes no elemental specialisation, in
 
 Full operation rules in [[Crafting]]. Quick reference for laws:
 
-| Goal | Operation | Key Materials |
+| Goal | Operation | Key Materials (minerals only) |
 |---|---|---|
-| Reroll all multipliers + passives + element | **Refine** | Thousand-Year Ginseng + Heaven Spirit Dew + Spirit Stones |
-| Fix one multiplier or passive value | **Hone** | Heaven Spirit Dew + Spirit Stones |
-| Add a missing passive | **Imbue** | Immortal Revival Leaf + Heaven Spirit Dew + Spirit Stones |
-| Delete one passive | **Extract** | Soul Calming Grass + Spirit Stones |
-| Protect one passive or multiplier | **Seal** | Sealing Shard |
-| Change element or passive type | **Transmute** | Elemental Essence Bead + Dragon Saliva Grass |
-| Gain an extra passive slot | **Upgrade** | Tier-matching herb + Heaven Spirit Dew + Spirit Stones |
+| Reroll all multipliers + passives + element | **Refine** | Black Tortoise Iron × (3×tier) + Crimson Flame Crystal × tier |
+| Fix one multiplier or passive value | **Hone** | Chaos Jade × (2×tier) |
+| Add a missing passive | **Imbue** | Mithril Essence × (2×tier) |
+| Delete one passive | **Extract** | Black Tortoise Iron × 5 |
+| Protect one passive or multiplier | **Seal** | Deep Sea Cold Iron × 3 |
+| Change element or passive type | **Transmute** | Void Stone × (2×tier) |
+| Gain an extra passive slot | **Upgrade** | Two bracket minerals (see [[Crafting#Upgrade Costs]]) |
 
 Realm requirement is permanent and cannot be changed by any crafting operation.
 

@@ -7,69 +7,30 @@ import { ARTEFACT_NEXT_RARITY } from '../hooks/useArtefacts';
 import { TECH_NEXT_QUALITY } from '../hooks/useTechniques';
 import { LAW_NEXT_RARITY } from '../hooks/useCultivation';
 
-// ─── Quality tier multipliers (used in cost scaling) ─────────────────────────
-const TIER_MULT = {
-  // Artefact rarity keys
-  common: 1, uncommon: 2, rare: 4, epic: 8, legendary: 16,
-  // Technique/Law quality keys
-  Iron: 1, Bronze: 2, Silver: 4, Gold: 8, Transcendent: 16,
+// ─── Unified upgrade costs — minerals only, same for all item types ───────────
+// Based on the quality jump: two bracket minerals in increasing amounts.
+const UPGRADE_COST = {
+  // Artefact rarity keys  (current quality → cost)
+  common:   [ { itemId: 'black_tortoise_iron',    qty: 10 }, { itemId: 'crimson_flame_crystal', qty: 3  } ],
+  uncommon: [ { itemId: 'crimson_flame_crystal',  qty: 8  }, { itemId: 'void_stone',            qty: 3  } ],
+  rare:     [ { itemId: 'void_stone',             qty: 5  }, { itemId: 'star_metal_ore',        qty: 3  } ],
+  epic:     [ { itemId: 'star_metal_ore',         qty: 8  }, { itemId: 'heavenly_profound_metal', qty: 2 } ],
+  // Technique / Law quality keys
+  Iron:         [ { itemId: 'black_tortoise_iron',    qty: 10 }, { itemId: 'crimson_flame_crystal', qty: 3  } ],
+  Bronze:       [ { itemId: 'crimson_flame_crystal',  qty: 8  }, { itemId: 'void_stone',            qty: 3  } ],
+  Silver:       [ { itemId: 'void_stone',             qty: 5  }, { itemId: 'star_metal_ore',        qty: 3  } ],
+  Gold:         [ { itemId: 'star_metal_ore',         qty: 8  }, { itemId: 'heavenly_profound_metal', qty: 2 } ],
 };
 
-// ─── Quality-matching materials per target quality ────────────────────────────
-const ART_UPGRADE_ORE = {
-  uncommon:  'crimson_flame_crystal',
-  rare:      'mithril_essence',
-  epic:      'star_metal_ore',
-  legendary: 'heavenly_profound_metal',
-};
-
-const TECH_UPGRADE_HERB = {
-  Bronze:       'jade_heart_flower',
-  Silver:       'thousand_year_ginseng',
-  Gold:         'purple_cloud_vine',
-  Transcendent: 'immortal_revival_leaf',
-};
-
-const LAW_UPGRADE_HERB = {
-  Bronze:       'jade_heart_flower',
-  Silver:       'thousand_year_ginseng',
-  Gold:         'purple_cloud_vine',
-  Transcendent: 'immortal_revival_leaf',
-};
-
-// ─── Cost calculators ─────────────────────────────────────────────────────────
-function artefactUpgradeCost(currentRarity) {
-  const next = ARTEFACT_NEXT_RARITY[currentRarity];
-  if (!next) return null;
-  const t = TIER_MULT[currentRarity];
-  return [
-    { itemId: ART_UPGRADE_ORE[next], qty: 3 },
-    { itemId: 'beast_core',          qty: 2 * t },
-    { itemId: 'spirit_stone',        qty: 200 * t },
-  ];
+// ─── Cost calculators — single unified function ───────────────────────────────
+function upgradeCost(currentQuality, nextQualityFn) {
+  if (!nextQualityFn(currentQuality)) return null;   // already max
+  return UPGRADE_COST[currentQuality] ?? null;
 }
 
-function techniqueUpgradeCost(currentQuality) {
-  const next = TECH_NEXT_QUALITY[currentQuality];
-  if (!next) return null;
-  const t = TIER_MULT[currentQuality];
-  return [
-    { itemId: TECH_UPGRADE_HERB[next], qty: 3 },
-    { itemId: 'origin_crystal',        qty: t },
-    { itemId: 'spirit_stone',          qty: 200 * t },
-  ];
-}
-
-function lawUpgradeCost(currentRarity) {
-  const next = LAW_NEXT_RARITY[currentRarity];
-  if (!next) return null;
-  const t = TIER_MULT[currentRarity];
-  return [
-    { itemId: LAW_UPGRADE_HERB[next], qty: 3 },
-    { itemId: 'heaven_spirit_dew',    qty: 3 * t },
-    { itemId: 'spirit_stone',         qty: 200 * t },
-  ];
-}
+function artefactUpgradeCost(currentRarity)  { return upgradeCost(currentRarity,  q => ARTEFACT_NEXT_RARITY[q]); }
+function techniqueUpgradeCost(currentQuality){ return upgradeCost(currentQuality, q => TECH_NEXT_QUALITY[q]);    }
+function lawUpgradeCost(currentRarity)       { return upgradeCost(currentRarity,  q => LAW_NEXT_RARITY[q]);     }
 
 // ─── Quality label + colour helpers ──────────────────────────────────────────
 function artQuality(rarity) {

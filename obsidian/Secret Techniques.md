@@ -143,15 +143,15 @@ Sparring Dummy (Construct archetype) does not drop techniques.
 
 Full operation rules in [[Crafting]]. Quick reference for techniques:
 
-| Goal | Operation | Key Materials |
+| Goal | Operation | Key Materials (minerals only) |
 |---|---|---|
-| Reroll all passives + element | **Refine** | Soul Calming Grass + Spirit Stones |
-| Fix one passive's value | **Hone** | Dragon Saliva Grass + Spirit Stones |
-| Add a missing passive | **Imbue** | Blood Lotus + Spirit Stones |
-| Delete one passive | **Extract** | Spirit Stones |
-| Protect one passive | **Seal** | Sealing Shard |
-| Change passive type | **Transmute** | Jade Heart Flower + Beast Core |
-| Gain an extra passive slot | **Upgrade** | Tier-matching herb + Origin Crystal + Spirit Stones |
+| Reroll all passives + element | **Refine** | Black Tortoise Iron × (3×tier) + Crimson Flame Crystal × tier |
+| Fix one passive's value | **Hone** | Chaos Jade × (2×tier) |
+| Add a missing passive | **Imbue** | Mithril Essence × (2×tier) |
+| Delete one passive | **Extract** | Black Tortoise Iron × 5 |
+| Protect one passive | **Seal** | Deep Sea Cold Iron × 3 |
+| Change passive type | **Transmute** | Void Stone × (2×tier) |
+| Gain an extra passive slot | **Upgrade** | Two bracket minerals (see [[Crafting#Upgrade Costs]]) |
 
 Type (Attack / Heal / Defend / Dodge) and Rank are permanent — they cannot be changed by any crafting operation.
 

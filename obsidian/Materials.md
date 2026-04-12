@@ -78,31 +78,19 @@ Spiritual resources that fuel cultivation directly or are used as ingredients.
 
 ## Crafting Uses (Summary)
 
-See [[Crafting]] for full cost tables.
+Crafting uses **minerals only**. See [[Crafting]] for full cost tables.
 
-| Material | Primary Crafting Use |
+| Mineral | Primary Crafting Use |
 |---|---|
-| Spirit Stone | Universal cost component for every operation |
-| Black Tortoise Iron | Artefact — Refine base cost |
-| Crimson Flame Crystal | Artefact — Upgrade to Bronze |
-| **Chaos Jade** | Artefact — Hone (single-property reroll) |
-| Void Stone | Artefact — Transmute affix type |
-| Mithril Essence | Artefact — Imbue + Upgrade to Silver |
-| **Sealing Shard** | Any item — Seal (lock one property) |
-| Star Metal Ore | Artefact — Upgrade to Gold |
-| Skyfire Meteorite | General high-tier refinement ingredient |
-| Heavenly Profound Metal | Artefact — Upgrade to Transcendent |
-| Beast Core | Artefact — Upgrade cost component |
-| Origin Crystal | Technique — Upgrade cost component |
-| Heaven Spirit Dew | Law — Refine / Hone / Upgrade |
-| Elemental Essence Bead | Artefact/Law — Transmute |
-| Soul Calming Grass | Technique — Refine base cost; Law — Extract |
-| Blood Lotus | Technique — Imbue |
-| Dragon Saliva Grass | Technique — Hone; Law — Transmute |
-| Jade Heart Flower | Technique — Upgrade to Bronze; Transmute |
-| Thousand-Year Ginseng | Law — Refine |
-| Purple Cloud Vine | Technique — Upgrade to Gold |
-| Immortal Revival Leaf | Technique/Law — Imbue (rare) |
+| Black Tortoise Iron | Upgrade Iron→Bronze; Refine (low tier); Extract |
+| Crimson Flame Crystal | Upgrade Bronze→Silver; Refine (mid tier) |
+| **Chaos Jade** | Hone — targeted single-property reroll |
+| Void Stone | Upgrade Silver→Gold; Transmute |
+| Mithril Essence | Imbue — adding new properties |
+| Deep Sea Cold Iron | Seal — locking a property in place |
+| Star Metal Ore | Upgrade Gold→Transcendent; Refine (high tier) |
+| Skyfire Meteorite | Refine at epic/legendary quality |
+| Heavenly Profound Metal | Upgrade to Transcendent |
 
 ---
 
