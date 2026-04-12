@@ -120,13 +120,14 @@ const WORLDS = [
         name: 'Demon Beast Plains',
         minRealm: 'Separation & Reunion 3rd',
         minRealmIndex: 20,
-        enemies: 'Herd-hunting beasts, elemental boars',
+        enemies: 'Herd-hunting beasts, elemental boars, iron fang wolves',
         drops: 'Spirit Stones, Beast Cores, Mithril Essence',
         herbs: 'Blood Lotus',
         ores: 'Mithril Essence',
         enemyPool: [
           { enemyId: 'wandering_beast', weight: 4 },
-          { enemyId: 'elemental_boar',  weight: 6 },
+          { enemyId: 'elemental_boar',  weight: 4 },
+          { enemyId: 'iron_fang_wolf',  weight: 2 },
         ],
       },
       {

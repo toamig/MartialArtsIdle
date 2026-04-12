@@ -93,7 +93,7 @@ const ENEMIES = {
   rogue_disciple: {
     id:       'rogue_disciple',
     name:     'Rogue Disciple',
-    sprite:   null,
+    sprite:   'rogue_disciple',
     statMult: { hp: 1.0, atk: 1.1 },
     drops: [
       { itemId: 'spirit_stone',        chance: 0.85, qty: [2, 6] },
