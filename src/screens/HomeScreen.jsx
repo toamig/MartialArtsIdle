@@ -89,6 +89,7 @@ function HomeScreen({ cultivation }) {
 
         <div
           className={`fighter-stage ${boosting ? 'stage-boosted' : ''} ${adBoostActive ? 'stage-ad-boosted' : ''}`}
+          style={{ backgroundImage: `url(${BASE}backgrounds/cultivation.png)` }}
           onPointerDown={handlePointerDown}
           onPointerUp={handlePointerUp}
           onPointerLeave={handlePointerUp}
