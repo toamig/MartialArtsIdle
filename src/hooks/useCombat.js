@@ -240,7 +240,10 @@ export default function useCombat() {
             patchBars(s2);
             setPhase('won');
           } else {
-            s2.turnPhase = 'enemy_turn';
+            setTimeout(() => {
+              if (stateRef.current.phase === 'fighting')
+                stateRef.current.turnPhase = 'enemy_turn';
+            }, 500);
           }
         };
       }
@@ -278,7 +281,10 @@ export default function useCombat() {
             patchBars(s2);
             setPhase('lost');
           } else {
-            s2.turnPhase = 'player_turn';
+            setTimeout(() => {
+              if (stateRef.current.phase === 'fighting')
+                stateRef.current.turnPhase = 'player_turn';
+            }, 500);
           }
         };
       }

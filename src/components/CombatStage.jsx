@@ -197,7 +197,6 @@ export default function CombatStage({
             {...enemyIdleProps}
             frameCount={4}
             fps={isFighting ? 6 : 4}
-            className="sprite-flipped"
           />
         )}
         {eAnim === 'attack' && (
@@ -207,7 +206,6 @@ export default function CombatStage({
             fps={10}
             loop={false}
             onComplete={onEnemyAttackDone}
-            className="sprite-flipped"
           />
         )}
         {eAnim === 'hit' && (
@@ -221,15 +219,12 @@ export default function CombatStage({
               loop={false}
               onComplete={onEnemyHitDone}
               scale={PLAYER_IDLE_SCALE}
-              className="sprite-flipped"
             />
           ) : (
-            // No custom hit sprite — fall back to idle and let the flash handle it
             <SpriteAnimator
               {...enemyIdleProps}
               frameCount={4}
               fps={isFighting ? 6 : 4}
-              className="sprite-flipped"
             />
           )
         )}
