@@ -18,7 +18,7 @@ function rollDrops(drops) {
 /**
  * Turn-based combat loop.
  *
- * Flow: player_turn → [waiting_player] → enemy_turn → [waiting_enemy] → repeat
+ * Flow: spawn_idle → player_turn → [waiting_player] → enemy_turn → [waiting_enemy] → repeat
  *
  * Damage is dealt at the START of each turn.
  * The next turn only begins once the current attack animation signals completion
@@ -131,7 +131,7 @@ export default function useCombat() {
 
     stateRef.current = {
       phase:     'fighting',
-      turnPhase: 'player_turn',
+      turnPhase: 'spawn_idle',
       pHp: pMaxHp, pMaxHp,
       eHp: eMaxHp, eMaxHp, eAtk,
       cds:    [...cds],
@@ -149,6 +149,11 @@ export default function useCombat() {
     setEnemy({ name: eName, maxHp: eMaxHp });
     setPhase('fighting');
     setLog([{ msg: `${eName} appears!`, kind: 'system' }]);
+    // Give both fighters a brief idle window before the first exchange
+    setTimeout(() => {
+      if (stateRef.current.phase === 'fighting')
+        stateRef.current.turnPhase = 'player_turn';
+    }, 500);
   }, []);
 
   // ─── rAF loop ─────────────────────────────────────────────────────────────

@@ -43,7 +43,7 @@ const ENEMIES = {
   wolf: {
     id:       'wolf',
     name:     'Pack Wolf',
-    sprite:   null,
+    sprite:   'wolf',
     statMult: { hp: 0.9, atk: 1.1 },
     drops: [
       { itemId: 'spirit_stone',       chance: 0.70, qty: [1, 3] },
@@ -177,6 +177,19 @@ const ENEMIES = {
   },
 
   // ── World 2 — The Ancient Frontier ───────────────────────────────────────
+
+  iron_fang_wolf: {
+    id:       'iron_fang_wolf',
+    name:     'Iron Fang Wolf',
+    sprite:   'iron_fang_wolf',
+    statMult: { hp: 1.7, atk: 1.9 },   // hardened pack predator, fast and hits hard
+    drops: [
+      { itemId: 'spirit_stone',    chance: 0.85, qty: [5, 12] },
+      { itemId: 'beast_core',      chance: 0.40, qty: [1, 2]  },
+      { itemId: 'mithril_essence', chance: 0.20, qty: [1, 1]  },
+    ],
+    techniqueDrop: { chance: 0.03 },
+  },
 
   sand_dragon: {
     id:       'sand_dragon',
