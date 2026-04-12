@@ -259,12 +259,21 @@ def _reanimate(enemy_id, base):
     stitch(atk_frames,  OUT_DIR / f"{enemy_id}-attack.png")
     print(f"  Attack sheet -> {enemy_id}-attack.png")
 
-    # Hit: fading red tint — 0.75 (hard flash) → 0.50 → 0.25 → 0.00 (clean)
+    # Hit: fading red tint — 0.75 (hard flash) -> 0.50 -> 0.25 -> 0.00 (clean)
     hit_frames  = generate_frames(enemy_id, "hit",    cfg["hit_desc"],    base,
                                   tint_strengths=[0.75, 0.50, 0.25, 0.0])
     stitch(hit_frames,  OUT_DIR / f"{enemy_id}-hit.png")
     print(f"  Hit sheet -> {enemy_id}-hit.png")
 
+    print(f"\n  Done. Sprites in: {OUT_DIR}")
+
+
+def _reanimate_attack(enemy_id, base):
+    """Regenerate only the attack sheet, leaving idle and hit untouched."""
+    cfg = ENEMIES[enemy_id]
+    atk_frames = generate_frames(enemy_id, "attack", cfg["attack_desc"], base)
+    stitch(atk_frames, OUT_DIR / f"{enemy_id}-attack.png")
+    print(f"  Attack sheet -> {enemy_id}-attack.png")
     print(f"\n  Done. Sprites in: {OUT_DIR}")
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -446,16 +455,25 @@ ENEMIES = {
             f"Seamless loop. {S}"
         ),
         "attack_desc": (
-            "4-frame attack animation of a lean bandit scout lunging with a quick knife slash. "
-            "Dark patched leather, face bandana, short curved blade. "
-            "Frame 1: wind-up — weight dropping back onto the rear foot, blade drawn back "
-            "behind the hip, body coiling low for the lunge, free hand raised for balance. "
-            "Frame 2: lunge — explosive forward step, whole body driving left, blade arm "
-            "extending in a diagonal slash from low to high, face bandana flapping from speed. "
-            "Frame 3: full slash — blade fully extended across the body in a sweeping cut, "
-            "front leg planted, body twisted fully into the strike, free arm swung back. "
-            "Frame 4: recovery — blade retracting, weight redistributing, body twisting back "
-            f"toward the crouched guard. {S}"
+            "4-frame attack animation of a lean bandit scout unleashing a vicious lightning-fast "
+            "knife slash. Dark patched leather, face bandana, short curved blade. "
+            "Frame 1: extreme wind-up — body wrenched hard back onto the rear foot, blade arm "
+            "pulled all the way behind the shoulder, spine coiled like a spring, free hand "
+            "raised open, entire body compressed and loaded, crouched low with knees deeply bent, "
+            "eyes locked forward with predatory intensity. "
+            "Frame 2: explosive release — body rocketing forward in a full lunge, blade arm "
+            "blurring into motion with a sharp speed-line streak trailing behind the blade edge, "
+            "bandana blown hard backward from the sudden acceleration, a visible slash arc of "
+            "gleaming white light beginning at the low hip and cutting upward diagonally, "
+            "dust exploding from the planted foot. "
+            "Frame 3: peak slash impact — blade at full extension across the body completing "
+            "the diagonal cut, a bright sharp slash-line flash of white-gold light cutting "
+            "the air at the blade tip, motion blur streaking the entire blade arm, body fully "
+            "twisted into the strike with front leg driving forward, free arm wrenched back, "
+            "bandana still whipping behind — this frame radiates danger and speed. "
+            "Frame 4: recovery — blade retracting fast, slash-line fading to a faint glint, "
+            "body snapping back toward crouched guard, weight redistributing, eyes still cold "
+            f"and locked on the target. {S}"
         ),
         "hit_desc": (
             "4-frame hit reaction of a lean bandit scout struck while in a crouched stance. "
@@ -492,16 +510,24 @@ ENEMIES = {
             f"Seamless loop. {S}"
         ),
         "attack_desc": (
-            "4-frame attack animation of a large scarred beast charging and goring with its tusks. "
-            "Thick dark brown fur, broad chest, heavy hunched back, two blunt tusks. "
-            "Frame 1: wind-up — body rocking back onto rear legs, head dipping low, tusks "
-            "angled down and back, haunches tensing for the charge. "
-            "Frame 2: charge begins — body lurching forward with enormous momentum, head and "
-            "tusks driving low and forward, all four legs pumping, dust kicking up. "
-            "Frame 3: full gore impact — tusks thrust fully forward at their lowest arc, entire "
-            "massive body committed to the strike, head down, back arched, legs splayed. "
-            "Frame 4: recovering from the charge — head lifting, body decelerating, legs "
-            f"resetting, snorting. {S}"
+            "4-frame attack animation of a large scarred beast executing a devastating full-power "
+            "charge-gore. Thick dark brown fur, broad chest, heavy hunched back, two blunt tusks. "
+            "Frame 1: extreme coil — entire massive body rocked back hard onto the haunches, "
+            "head dropped low with tusks angled down and back ready to drive forward, "
+            "front legs lifting slightly off the ground, back legs coiled like springs under the "
+            "full weight of the beast, muscles visibly bulging, small red eyes blazing. "
+            "Frame 2: eruption — beast launching forward with terrifying force, body nearly "
+            "horizontal in mid-charge, all four legs driving hard, a thick cloud of dirt and "
+            "debris exploding from the ground under the hooves, speed lines streaking along "
+            "the flanks and back, tusks aimed directly forward like battering rams. "
+            "Frame 3: full gore impact — tusks hitting their target at maximum extension, "
+            "a massive shockwave burst of dust and impact energy exploding outward from the "
+            "tusk tips, ground cracking under the planted hooves, the beast's entire enormous "
+            "mass fully committed to the strike, spine locked straight, head driven down, "
+            "debris and dirt flying outward — an overwhelming wall of brute force. "
+            "Frame 4: recoil — head lifting hard, body decelerating, hooves grinding into the "
+            "ground, dust cloud settling around the beast, nostrils flaring, still dangerous, "
+            f"small red eyes scanning. {S}"
         ),
         "hit_desc": (
             "4-frame hit reaction of a large scarred beast absorbing a blow. "
@@ -1845,17 +1871,32 @@ def run_animate(enemy_id, cand_n):
     _reanimate(enemy_id, base)
 
 
+def run_reanimate_attack(enemy_id, cand_n):
+    base = TMP_DIR / f"{enemy_id}_cand_{cand_n}.png"
+    if not base.exists():
+        raise FileNotFoundError(
+            f"Candidate not found: {base}\n"
+            f"Run: python gen_sprites.py generate {enemy_id}"
+        )
+    print(f"\nRegenerating attack for {enemy_id} from: {base.name}")
+    _reanimate_attack(enemy_id, base)
+
+
 if __name__ == "__main__":
-    # python gen_sprites.py generate <enemy_id>
-    # python gen_sprites.py animate  <enemy_id> <cand_number>
+    # python gen_sprites.py generate       <enemy_id>
+    # python gen_sprites.py animate        <enemy_id> <cand_number>
+    # python gen_sprites.py animate-attack <enemy_id> <cand_number>
     if len(sys.argv) >= 3 and sys.argv[1] == "generate":
         run_generate(sys.argv[2])
     elif len(sys.argv) == 4 and sys.argv[1] == "animate":
         run_animate(sys.argv[2], sys.argv[3])
+    elif len(sys.argv) == 4 and sys.argv[1] == "animate-attack":
+        run_reanimate_attack(sys.argv[2], sys.argv[3])
     else:
         print("Usage:")
-        print(f"  python {sys.argv[0]} generate <enemy_id>")
-        print(f"  python {sys.argv[0]} animate  <enemy_id> <cand_number>")
+        print(f"  python {sys.argv[0]} generate       <enemy_id>")
+        print(f"  python {sys.argv[0]} animate        <enemy_id> <cand_number>")
+        print(f"  python {sys.argv[0]} animate-attack <enemy_id> <cand_number>")
         print(f"\nKnown enemies ({len(ENEMIES)}):")
         for eid in ENEMIES:
             print(f"  {eid}")
