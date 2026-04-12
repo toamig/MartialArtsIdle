@@ -3470,7 +3470,22 @@
 .recipe-pill-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  gap: 8px;
+}
+
+.recipe-pill-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .recipe-pill-name {
@@ -3478,35 +3493,51 @@
   font-weight: 700;
 }
 
-.recipe-pill-rarity {
-  font-size: 0.68rem;
-  font-weight: 600;
-}
-
-.recipe-pill-effects {
+.recipe-pill-effects-inline {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 10px;
+  gap: 2px 8px;
 }
 
 .recipe-pill-effect {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--text-secondary);
 }
 
+.recipe-pill-chevron {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
 .recipe-list {
-  margin-top: 4px;
+  margin-top: 6px;
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 
 .recipe-row {
+  display: block;
+  width: 100%;
   font-size: 0.72rem;
   color: var(--text-muted);
-  padding: 2px 6px;
+  padding: 5px 8px;
   background: var(--bg-secondary);
+  border: 1px solid transparent;
   border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.recipe-row:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.recipe-row:active {
+  transform: scale(0.98);
 }
 
 .recipe-herb {

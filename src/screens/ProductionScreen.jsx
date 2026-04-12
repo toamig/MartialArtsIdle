@@ -721,8 +721,9 @@ function canAffordRecipe(key, inventory) {
   return true;
 }
 
-function CraftableRecipes({ inventory }) {
-  // Build list of pills that have at least one affordable recipe
+function CraftableRecipes({ inventory, onFillSlots }) {
+  const [expanded, setExpanded] = useState(null); // pill id or null
+
   const craftable = useMemo(() => {
     const result = [];
     for (const pill of PILLS) {
@@ -749,31 +750,44 @@ function CraftableRecipes({ inventory }) {
       <div className="recipe-book-title">Craftable Recipes</div>
       {craftable.map(({ pill, recipes }) => {
         const color = RARITY[pill.rarity]?.color ?? '#aaa';
+        const isOpen = expanded === pill.id;
         return (
           <div key={pill.id} className="recipe-pill-group">
-            <div className="recipe-pill-header">
-              <span className="recipe-pill-name" style={{ color }}>{pill.name}</span>
-              <span className="recipe-pill-rarity" style={{ color }}>{pill.rarity}</span>
-            </div>
-            <div className="recipe-pill-effects">
-              {pill.effects.map((eff, i) => (
-                <span key={i} className="recipe-pill-effect">{formatEffect(eff, pill.duration)}</span>
-              ))}
-            </div>
-            <div className="recipe-list">
-              {recipes.map(key => {
-                const herbNames = key.split('|').map(id => ITEMS_BY_ID[id]?.name ?? id);
-                return (
-                  <div key={key} className="recipe-row">
-                    {herbNames.map((name, i) => (
-                      <span key={i} className="recipe-herb">
-                        {name}{i < 2 ? ' + ' : ''}
-                      </span>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
+            <button
+              className="recipe-pill-header"
+              onClick={() => setExpanded(isOpen ? null : pill.id)}
+            >
+              <div className="recipe-pill-header-left">
+                <span className="recipe-pill-name" style={{ color }}>{pill.name}</span>
+                <span className="recipe-pill-effects-inline">
+                  {pill.effects.map((eff, i) => (
+                    <span key={i} className="recipe-pill-effect">{formatEffect(eff, pill.duration)}</span>
+                  ))}
+                </span>
+              </div>
+              <span className="recipe-pill-chevron">{isOpen ? '▾' : '▸'}</span>
+            </button>
+            {isOpen && (
+              <div className="recipe-list">
+                {recipes.map(key => {
+                  const herbs = key.split('|');
+                  const herbNames = herbs.map(id => ITEMS_BY_ID[id]?.name ?? id);
+                  return (
+                    <button
+                      key={key}
+                      className="recipe-row"
+                      onClick={() => onFillSlots(herbs)}
+                    >
+                      {herbNames.map((name, i) => (
+                        <span key={i} className="recipe-herb">
+                          {name}{i < 2 ? ' + ' : ''}
+                        </span>
+                      ))}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
       })}
@@ -872,7 +886,7 @@ function AlchemyPanel({ inventory, pills }) {
         Craft
       </button>
 
-      <CraftableRecipes inventory={inventory} />
+      <CraftableRecipes inventory={inventory} onFillSlots={(herbs) => setSlots(herbs)} />
     </div>
   );
 }
