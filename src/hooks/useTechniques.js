@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { saveTechniques, loadTechniques, saveOwnedTechniques, loadOwnedTechniques } from '../systems/save';
-import { getTechnique, TECHNIQUES, TECHNIQUE_QUALITY } from '../data/techniques';
+import { getTechnique, TECHNIQUE_QUALITY } from '../data/techniques';
 import { AFFIX_SLOT_COUNT } from '../data/affixPools';
 
 // Passive pools re-exported from techniqueDrops for use in transmutation
@@ -57,15 +57,9 @@ export default function useTechniques() {
     return Array.from({ length: SLOT_COUNT }, (_, i) => saved?.[i] ?? null);
   });
 
-  // { [id]: techniqueObj } — all acquired techniques (catalogue starters + drops)
+  // { [id]: techniqueObj } — all acquired techniques (drops only, no starter seeding)
   const [ownedTechniques, setOwned] = useState(() => {
-    const saved = loadOwnedTechniques();
-    // Merge in any catalogue entries not already saved so they appear in inventory
-    const merged = { ...saved };
-    for (const t of TECHNIQUES) {
-      if (!merged[t.id]) merged[t.id] = t;
-    }
-    return merged;
+    return loadOwnedTechniques();
   });
 
   useEffect(() => {

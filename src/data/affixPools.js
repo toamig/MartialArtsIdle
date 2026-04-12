@@ -165,3 +165,57 @@ export function pickRandomLawPassive(excludeNames = []) {
   if (!pool.length) return null;
   return pool[Math.floor(Math.random() * pool.length)];
 }
+
+// ─── Law generator ───────────────────────────────────────────────────────────
+
+const LAW_ELEMENTS = ['Normal', 'Fire', 'Water', 'Stone', 'Air', 'Metal', 'Wood', 'Ice'];
+const LAW_RARITIES = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
+const LAW_REALM_LABELS = {
+  Iron: 'Tempered Body', Bronze: 'Qi Transformation', Silver: 'True Element',
+  Gold: 'Immortal Ascension', Transcendent: 'Saint',
+};
+
+const LAW_PREFIXES = ['Crimson', 'Jade', 'Iron', 'Azure', 'Golden', 'Shadow', 'Storm', 'Void', 'Ancient', 'Heavenly'];
+const LAW_CORES   = ['Dragon', 'Phoenix', 'Lotus', 'Mountain', 'River', 'Star', 'Thunder', 'Serpent', 'Tiger', 'Crane'];
+const LAW_SUFFIXES = ['Manual', 'Scripture', 'Sutra', 'Canon', 'Art', 'Method', 'Technique', 'Path'];
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function genLawName() {
+  return `${pick(LAW_PREFIXES)} ${pick(LAW_CORES)} ${pick(LAW_SUFFIXES)}`;
+}
+
+const LAW_FLAVOURS = [
+  'A forgotten text recovered from the depths of an ancient ruin.',
+  'Inscribed on jade slips by an unknown immortal, its wisdom transcends mortal understanding.',
+  'The pages hum with latent power, waiting to be unleashed.',
+  'Written in the blood of a dying sage — every word carries the weight of a thousand battles.',
+  'A scripture so old the language predates the current era of cultivation.',
+];
+
+/**
+ * Generate a random law with randomized element, multipliers, and 1 passive.
+ * @returns Law object matching the shape of THREE_HARMONY_MANUAL.
+ */
+export function generateLaw() {
+  const rarity  = pick(LAW_RARITIES);
+  const element = pick(LAW_ELEMENTS);
+  const passives = [];
+  const p = pickRandomLawPassive([]);
+  if (p) passives.push(p);
+
+  return {
+    id:                    `law_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    name:                  genLawName(),
+    element,
+    rarity,
+    realmRequirement:      0,
+    realmRequirementLabel: LAW_REALM_LABELS[rarity] ?? 'Tempered Body',
+    flavour:               pick(LAW_FLAVOURS),
+    cultivationSpeedMult:  rollLawMult('cultivationSpeedMult', rarity),
+    essenceMult:           rollLawMult('essenceMult', rarity),
+    soulMult:              rollLawMult('soulMult', rarity),
+    bodyMult:              rollLawMult('bodyMult', rarity),
+    passives,
+  };
+}

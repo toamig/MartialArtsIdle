@@ -11,6 +11,8 @@ import ENEMIES from '../data/enemies';
 import { ALL_MATERIALS } from '../data/materials';
 import { ITEMS_BY_ID } from '../data/items';
 import REALMS from '../data/realms';
+import { generateTechnique } from '../data/techniqueDrops';
+import { generateLaw } from '../data/affixPools';
 
 /**
  * Attach window.debug using a ref that always points to the latest hook values.
@@ -188,6 +190,33 @@ export function initDebug(hooksRef) {
       );
     },
 
+    // ── Techniques & Laws ──────────────────────────────────────────────────
+
+    /**
+     * Generate and add random techniques.
+     * @param {number} [count=10]
+     * @param {number} [worldId=1]  World tier 1–6 (affects quality/element).
+     */
+    giveTechniques(count = 10, worldId = 1) {
+      const techs = g().techniques;
+      for (let i = 0; i < count; i++) {
+        techs.addOwnedTechnique(generateTechnique(worldId));
+      }
+      console.log(`[debug] +${count} random techniques (world ${worldId})`);
+    },
+
+    /**
+     * Generate and add random laws.
+     * @param {number} [count=10]
+     */
+    giveLaws(count = 10) {
+      const cult = g().cultivation;
+      for (let i = 0; i < count; i++) {
+        cult.addOwnedLaw(generateLaw());
+      }
+      console.log(`[debug] +${count} random laws`);
+    },
+
     // ── General ────────────────────────────────────────────────────────────
 
     /** Print a summary of the current game state. */
@@ -230,6 +259,9 @@ export function initDebug(hooksRef) {
       console.log('  gd.addItem(id, qty=1)     — add items by material ID');
       console.log('  gd.addAllMaterials(n=10)  — add n of every material');
       console.log('  gd.listMaterials()        — show all material IDs and rarities');
+      console.log('%cTechniques & Laws', 'font-weight: bold');
+      console.log('  gd.giveTechniques(n=10, world=1) — generate n random techniques');
+      console.log('  gd.giveLaws(n=10)                — generate n random laws');
       console.log('%cGeneral', 'font-weight: bold');
       console.log('  gd.state()                — print current game state summary');
       console.log('  gd.help()                 — show this message');
