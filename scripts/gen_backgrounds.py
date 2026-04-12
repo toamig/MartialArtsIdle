@@ -398,6 +398,13 @@ def run_finalize(scene_id, cand_n):
     # Resize to exact target dimensions
     img = img.resize((BG_WIDTH, BG_HEIGHT), Image.LANCZOS)
 
+    # Flatten alpha — composite onto a solid dark background so no transparent
+    # pixels survive into the final file (avoids gaps/holes showing as card bg).
+    BG_FILL = (8, 8, 16, 255)
+    base = Image.new("RGBA", img.size, BG_FILL)
+    base.alpha_composite(img)
+    img = base.convert("RGB")
+
     out_path = OUT_DIR / f"{scene_id}.png"
     img.save(str(out_path))
     print(f"  Saved -> {out_path}")
