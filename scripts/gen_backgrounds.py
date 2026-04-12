@@ -380,6 +380,30 @@ def crop_to_content(img, white_threshold=200):
     return cropped
 
 
+def fill_transparent(img):
+    """
+    Replace any remaining transparent pixels with their nearest opaque neighbour,
+    scanning each column vertically so sky/background tones extend naturally into
+    gaps rather than showing a flat fill colour.
+    """
+    w, h = img.size
+    px = img.load()
+    out = img.copy()
+    dst = out.load()
+
+    for x in range(w):
+        # Collect opaque pixels in this column
+        opaque = [(y, px[x, y]) for y in range(h) if px[x, y][3] > 128]
+        if not opaque:
+            continue
+        for y in range(h):
+            if px[x, y][3] <= 128:
+                nearest = min(opaque, key=lambda p: abs(p[0] - y))
+                r, g, b, _ = nearest[1]
+                dst[x, y] = (r, g, b, 255)
+    return out
+
+
 def run_finalize(scene_id, cand_n):
     if scene_id not in SCENES:
         raise ValueError(f"Unknown scene '{scene_id}'. Known: {list(SCENES)}")
@@ -392,22 +416,22 @@ def run_finalize(scene_id, cand_n):
 
     img = Image.open(src).convert("RGBA")
 
-    # Strip transparent padding and white/mist edge bands baked in by the API
+    # 1. Strip transparent padding and white/mist edge bands baked in by the API
     img = crop_to_content(img)
 
-    # Resize to exact target dimensions
-    img = img.resize((BG_WIDTH, BG_HEIGHT), Image.LANCZOS)
+    # 2. Fill any residual transparent pixels with their nearest opaque neighbour
+    #    (vertical scan — sky tones blend naturally into gaps, no flat colour fill)
+    img = fill_transparent(img)
 
-    # Flatten alpha — composite onto a solid dark background so no transparent
-    # pixels survive into the final file (avoids gaps/holes showing as card bg).
-    BG_FILL = (8, 8, 16, 255)
-    base = Image.new("RGBA", img.size, BG_FILL)
-    base.alpha_composite(img)
-    img = base.convert("RGB")
+    # 3. Drop alpha — save as opaque RGB.  CSS background-size:cover handles
+    #    display scaling; we don't force-resize so LANCZOS never re-introduces
+    #    alpha artefacts at crop boundaries.
+    img = img.convert("RGB")
 
     out_path = OUT_DIR / f"{scene_id}.png"
     img.save(str(out_path))
-    print(f"  Saved -> {out_path}")
+    cw, ch = img.size
+    print(f"  Saved {cw}x{ch} -> {out_path}")
     print(f"\n  Done.")
 
 
