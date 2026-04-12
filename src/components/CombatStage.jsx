@@ -23,6 +23,13 @@ function getSpriteScale() {
 // Canvas-generated sprites: 32×40, displayed at 3×
 const GEN_SCALE = 3;
 
+// Kick off a browser image fetch so the sprite is in cache before it's needed.
+function preload(src) {
+  if (!src) return;
+  const img = new Image();
+  img.src = src;
+}
+
 /**
  * Resolve enemy sprite src for a given animation.
  * Returns null if the enemy has no custom sprite → canvas fallback.
@@ -132,6 +139,22 @@ export default function CombatStage({
       setEAnim('idle');
     }
   }, [phase]);
+
+  // Preload player sprites once on mount — attack and hit sheets arrive in cache
+  // before the first animation fires, eliminating the first-hit flicker.
+  useEffect(() => {
+    preload(PLAYER_IDLE_SRC);
+    preload(PLAYER_ATTACK_SRC);
+    preload(PLAYER_HIT_SRC);
+  }, []);
+
+  // Preload enemy sprites whenever the enemy changes (new fight or new region).
+  useEffect(() => {
+    if (!enemy?.sprite) return;
+    preload(enemySpriteSrc(enemy, 'idle'));
+    preload(enemySpriteSrc(enemy, 'attack'));
+    preload(enemySpriteSrc(enemy, 'hit'));
+  }, [enemy?.sprite]);
 
   // Register the damage-number spawn callback so useCombat can trigger it.
   // Enemy damage (gold) spawns on the right side; player damage taken (red) on the left.
