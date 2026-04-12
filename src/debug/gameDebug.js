@@ -4,7 +4,7 @@
  * Only active when import.meta.env.DEV is true (Vite dev server).
  * Exposes `window.debug` in the browser console.
  *
- * Usage: debug.help()
+ * Usage: gd.help()
  */
 
 import ENEMIES from '../data/enemies';
@@ -23,7 +23,7 @@ export function initDebug(hooksRef) {
 
   const g = () => hooksRef.current; // always-fresh hook bundle
 
-  window.debug = {
+  window.gd = {
 
     // ── Cultivation ────────────────────────────────────────────────────────
 
@@ -79,11 +79,11 @@ export function initDebug(hooksRef) {
      */
     watchEnemy(id) {
       if (!ENEMIES[id]) {
-        console.warn(`[debug] Unknown enemy: "${id}"\nCall debug.listEnemies() to see valid IDs.`);
+        console.warn(`[debug] Unknown enemy: "${id}"\nCall gd.listEnemies() to see valid IDs.`);
         return;
       }
       g().combat.debugRef.current.nextEnemy = id;
-      console.log(`[debug] Forced enemy set → ${ENEMIES[id].name} (persists until debug.clearEnemy())`);
+      console.log(`[debug] Forced enemy set → ${ENEMIES[id].name} (persists until gd.clearEnemy())`);
     },
 
     /** Remove the forced-enemy override and return to random spawns. */
@@ -112,7 +112,7 @@ export function initDebug(hooksRef) {
      */
     addItem(id, qty = 1) {
       if (!ALL_MATERIALS[id]) {
-        console.warn(`[debug] Unknown material: "${id}"\nCall debug.listMaterials() to see valid IDs.`);
+        console.warn(`[debug] Unknown material: "${id}"\nCall gd.listMaterials() to see valid IDs.`);
         return;
       }
       g().inventory.addItem(id, qty);
@@ -165,28 +165,28 @@ export function initDebug(hooksRef) {
     help() {
       console.group('%c[debug] Available Commands', 'color: #c084fc; font-weight: bold');
       console.log('%cCultivation', 'font-weight: bold');
-      console.log('  debug.setRealm(n)           — jump to realm index n');
-      console.log('  debug.addQi(amount)          — add qi instantly');
-      console.log('  debug.fillQi()               — fill qi to just before breakthrough');
+      console.log('  gd.setRealm(n)           — jump to realm index n');
+      console.log('  gd.addQi(amount)          — add qi instantly');
+      console.log('  gd.fillQi()               — fill qi to just before breakthrough');
       console.log('%cCombat', 'font-weight: bold');
-      console.log('  debug.godMode(on?)           — toggle/set player invincibility');
-      console.log('  debug.oneShot(on?)           — toggle/set enemy one-shot mode');
-      console.log('  debug.watchEnemy(id)         — force a specific enemy every fight (persists)');
-      console.log('  debug.clearEnemy()           — clear forced enemy override');
-      console.log('  debug.listEnemies()          — show all enemy IDs and names');
+      console.log('  gd.godMode(on?)           — toggle/set player invincibility');
+      console.log('  gd.oneShot(on?)           — toggle/set enemy one-shot mode');
+      console.log('  gd.watchEnemy(id)         — force a specific enemy every fight (persists)');
+      console.log('  gd.clearEnemy()           — clear forced enemy override');
+      console.log('  gd.listEnemies()          — show all enemy IDs and names');
       console.log('%cInventory', 'font-weight: bold');
-      console.log('  debug.addItem(id, qty=1)     — add items by material ID');
-      console.log('  debug.addAllMaterials(n=10)  — add n of every material');
-      console.log('  debug.listMaterials()        — show all material IDs and rarities');
+      console.log('  gd.addItem(id, qty=1)     — add items by material ID');
+      console.log('  gd.addAllMaterials(n=10)  — add n of every material');
+      console.log('  gd.listMaterials()        — show all material IDs and rarities');
       console.log('%cGeneral', 'font-weight: bold');
-      console.log('  debug.state()                — print current game state summary');
-      console.log('  debug.help()                 — show this message');
+      console.log('  gd.state()                — print current game state summary');
+      console.log('  gd.help()                 — show this message');
       console.groupEnd();
     },
   };
 
   console.log(
-    '%c[MartialArtsIdle] Debug tools ready — type debug.help()',
+    '%c[MartialArtsIdle] Debug tools ready — type gd.help()',
     'color: #c084fc; font-weight: bold; font-size: 13px'
   );
 }
