@@ -32,7 +32,7 @@ const WORLDS = [
         name: 'Borderland Wilds',
         minRealm: 'Tempered Body L5',
         minRealmIndex: 4,
-        enemies: 'Wolf packs, bandit scouts',
+        enemies: 'Pack wolves, bandit scouts',
         drops: 'Iron Cultivation 1, Bronze Cultivation 1, Iron Mineral 1',
         herbs: 'Iron Herb 1, Bronze Herb 1',
         ores: 'Iron Mineral 1, Bronze Mineral 1',
@@ -68,29 +68,31 @@ const WORLDS = [
         ],
       },
       {
+        // Clifftop forests where spirits linger; rogue disciples seek seclusion here
         name: "Heaven's Edge Peak",
         minRealm: 'True Element Early',
         minRealmIndex: 14,
-        enemies: 'Qi-sensing beasts, rogue disciples',
+        enemies: 'Rogue disciples, forest spirits',
         drops: 'Bronze Cultivation 1, Bronze Mineral 1, Bronze Mineral 2',
         herbs: 'Bronze Herb 1, Bronze Herb 2',
         ores: 'Bronze Mineral 2',
         enemyPool: [
-          { enemyId: 'qi_beast',       weight: 5 },
           { enemyId: 'rogue_disciple', weight: 5 },
+          { enemyId: 'forest_spirit',  weight: 5 },
         ],
       },
       {
+        // Qi beasts drawn to storm lightning; rogue disciples surviving the plateau's qi storms
         name: 'Thunderstorm Plateau',
         minRealm: 'True Element Peak',
         minRealmIndex: 17,
-        enemies: 'Rogue disciples, forest spirits',
+        enemies: 'Qi-sensing beasts, rogue disciples',
         drops: 'Bronze Cultivation 1, Bronze Cultivation 2, Bronze Mineral 2',
         herbs: 'Bronze Herb 2',
         ores: 'Bronze Mineral 2',
         enemyPool: [
-          { enemyId: 'rogue_disciple', weight: 5 },
-          { enemyId: 'forest_spirit',  weight: 5 },
+          { enemyId: 'qi_beast',       weight: 6 },
+          { enemyId: 'rogue_disciple', weight: 4 },
         ],
       },
     ],
@@ -141,16 +143,17 @@ const WORLDS = [
         ],
       },
       {
+        // Bone constructs from ancient ruins scattered through the wastes; corrupted qi-mad cultivators
         name: 'Primal Qi Wastes',
         minRealm: 'Immortal Ascension 2nd',
         minRealmIndex: 22,
-        enemies: 'Corrupted cultivators, iron spine boars',
+        enemies: 'Corrupted cultivators, bone constructs',
         drops: 'Silver Cultivation 1, Silver Cultivation 2, Silver Mineral 2',
         herbs: 'Silver Herb 2',
         ores: 'Silver Mineral 2',
         enemyPool: [
           { enemyId: 'corrupted_cultivator', weight: 6 },
-          { enemyId: 'iron_spine_boar',      weight: 4 },
+          { enemyId: 'bone_construct',       weight: 4 },
         ],
       },
       {
@@ -201,42 +204,45 @@ const WORLDS = [
         ],
       },
       {
+        // Both rift-born hunters — the stalker is the faster, leaner predator of the same rift ecosystem
         name: 'Void Rift Expanse',
         minRealm: 'Saint Late',
         minRealmIndex: 26,
-        enemies: 'Void rift predators, void shades',
+        enemies: 'Void rift predators, rift stalkers',
         drops: 'Gold Cultivation 2, Gold Mineral 2, Transcendent Mineral 1',
         herbs: 'Gold Herb 1, Gold Herb 2',
         ores: 'Gold Mineral 1, Gold Mineral 2',
         enemyPool: [
-          { enemyId: 'void_rift_predator', weight: 6 },
-          { enemyId: 'void_shade',         weight: 4 },
+          { enemyId: 'void_rift_predator', weight: 5 },
+          { enemyId: 'rift_stalker',       weight: 5 },
         ],
       },
       {
+        // Cursed mountain passes haunted by void shades; the Saint Bone Sovereign claims the range as territory
         name: 'Nine-Death Mountain Range',
         minRealm: 'Saint King 1st',
         minRealmIndex: 27,
-        enemies: 'Forbidden constructs, saint bone sovereigns',
+        enemies: 'Saint bone sovereigns, void shades',
         drops: 'Gold Cultivation 2, Gold Mineral 2, Transcendent Mineral 1',
         herbs: 'Gold Herb 1, Gold Herb 2',
         ores: 'Gold Mineral 2',
         enemyPool: [
-          { enemyId: 'forbidden_construct',  weight: 5 },
           { enemyId: 'saint_bone_sovereign', weight: 5 },
+          { enemyId: 'void_shade',           weight: 5 },
         ],
       },
       {
+        // Forbidden construct guards the sealed altar; ancient war spirits are bound to the altar itself
         name: 'Sealed War Altar',
         minRealm: 'Saint King 3rd',
         minRealmIndex: 29,
-        enemies: 'Rift stalkers, ancient war spirits',
+        enemies: 'Forbidden constructs, ancient war spirits',
         drops: 'Gold Cultivation 2, Transcendent Mineral 1',
         herbs: 'Gold Herb 2, Transcendent Herb 1',
         ores: 'Gold Mineral 2',
         enemyPool: [
-          { enemyId: 'rift_stalker',       weight: 6 },
-          { enemyId: 'ancient_war_spirit', weight: 4 },
+          { enemyId: 'forbidden_construct', weight: 5 },
+          { enemyId: 'ancient_war_spirit',  weight: 5 },
         ],
       },
     ],
@@ -261,16 +267,17 @@ const WORLDS = [
         ],
       },
       {
+        // Cavern ecosystem: serpents hunt the caverns; elder demons are fused with the cavern itself
         name: 'World Root Caverns',
         minRealm: 'Origin Returning 2nd',
         minRealmIndex: 31,
-        enemies: 'Primordial serpents, root sovereigns',
+        enemies: 'Primordial serpents, cavern elder demons',
         drops: 'Transcendent Cultivation 1, Transcendent Cultivation 2, Transcendent Mineral 1',
         herbs: 'Transcendent Herb 1',
         ores: 'Transcendent Mineral 1',
         enemyPool: [
-          { enemyId: 'primordial_serpent', weight: 5 },
-          { enemyId: 'root_sovereign',     weight: 5 },
+          { enemyId: 'primordial_serpent',  weight: 5 },
+          { enemyId: 'cavern_elder_demon',  weight: 5 },
         ],
       },
       {
@@ -287,29 +294,30 @@ const WORLDS = [
         ],
       },
       {
+        // Ancient beasts claim the sanctuary as territory; world root wraiths are their ethereal guardians
         name: 'Heaven Beast Sanctuary',
         minRealm: 'Origin King 2nd',
         minRealmIndex: 34,
-        enemies: 'Ancient beasts, cavern elder demons',
+        enemies: 'Ancient beasts, world root wraiths',
         drops: 'Transcendent Cultivation 2, Transcendent Mineral 1, Transcendent Mineral 2',
         herbs: 'Transcendent Herb 1, Transcendent Herb 2',
         ores: 'Transcendent Mineral 1, Transcendent Mineral 2',
         enemyPool: [
           { enemyId: 'ancient_beast',      weight: 5 },
-          { enemyId: 'cavern_elder_demon', weight: 5 },
+          { enemyId: 'world_root_wraith',  weight: 5 },
         ],
       },
       {
         name: 'Ancient Origin Altar',
         minRealm: 'Origin King 3rd',
         minRealmIndex: 35,
-        enemies: 'World root wraiths, deep earth titans',
+        enemies: 'Root sovereigns, deep earth titans',
         drops: 'Transcendent Cultivation 2, Transcendent Mineral 2',
         herbs: 'Transcendent Herb 2',
         ores: 'Transcendent Mineral 1, Transcendent Mineral 2',
         enemyPool: [
-          { enemyId: 'world_root_wraith', weight: 5 },
-          { enemyId: 'deep_earth_titan',  weight: 5 },
+          { enemyId: 'root_sovereign',   weight: 5 },
+          { enemyId: 'deep_earth_titan', weight: 5 },
         ],
       },
     ],
@@ -355,21 +363,22 @@ const WORLDS = [
         herbs: 'Transcendent Herb 1',
         ores: 'Transcendent Mineral 1',
         enemyPool: [
-          { enemyId: 'dao_inscription_guardian',  weight: 5 },
-          { enemyId: 'dao_inscription_revenant',  weight: 5 },
+          { enemyId: 'dao_inscription_guardian', weight: 5 },
+          { enemyId: 'dao_inscription_revenant', weight: 5 },
         ],
       },
       {
+        // Star sea drifters pulled down by Dao source energy; revenants inhabiting the peak ruins
         name: 'Source Peak Summits',
         minRealm: 'Dao Source 3rd',
         minRealmIndex: 41,
-        enemies: 'Petrified dao lords, spatial fissure beasts',
+        enemies: 'Star sea drifters, dao inscription revenants',
         drops: 'Transcendent Cultivation 2, Transcendent Mineral 2',
         herbs: 'Transcendent Herb 1',
         ores: 'Transcendent Mineral 1',
         enemyPool: [
-          { enemyId: 'petrified_dao_lord',    weight: 6 },
-          { enemyId: 'spatial_fissure_beast', weight: 4 },
+          { enemyId: 'star_sea_drifter',         weight: 6 },
+          { enemyId: 'dao_inscription_revenant', weight: 4 },
         ],
       },
       {
@@ -386,16 +395,17 @@ const WORLDS = [
         ],
       },
       {
+        // Petrified Dao lords frozen mid-duel on the ridge; Emperor will fragments haunt the battlefield
         name: 'Heaven Sword Ridge',
         minRealm: 'Emperor Realm 3rd',
         minRealmIndex: 44,
-        enemies: 'Star sea drifters, emperor will fragments',
+        enemies: 'Petrified dao lords, emperor will fragments',
         drops: 'Transcendent Cultivation 2, Transcendent Mineral 2',
         herbs: 'Transcendent Herb 2',
         ores: 'Transcendent Mineral 1',
         enemyPool: [
-          { enemyId: 'star_sea_drifter',      weight: 6 },
-          { enemyId: 'emperor_will_fragment', weight: 4 },
+          { enemyId: 'petrified_dao_lord',    weight: 5 },
+          { enemyId: 'emperor_will_fragment', weight: 5 },
         ],
       },
     ],
@@ -446,29 +456,31 @@ const WORLDS = [
         ],
       },
       {
+        // The leviathan rages inside the eternal storms as a natural force, not a visitor
         name: 'Eternal Storm Arena',
         minRealm: 'Open Heaven Layer 3',
         minRealmIndex: 48,
-        enemies: 'Eternal storm titans, heaven pillar guardians',
+        enemies: 'Eternal storm titans, star sea leviathans',
         drops: 'Transcendent Cultivation 2, Transcendent Mineral 2',
         herbs: 'Esoteric botanicals (TBD)',
         ores: 'Esoteric minerals (TBD)',
         enemyPool: [
-          { enemyId: 'eternal_storm_titan',    weight: 6 },
-          { enemyId: 'heaven_pillar_guardian', weight: 4 },
+          { enemyId: 'eternal_storm_titan', weight: 6 },
+          { enemyId: 'star_sea_leviathan',  weight: 4 },
         ],
       },
       {
+        // Heaven pillar guardians patrol the beast grounds as territorial wardens
         name: 'Cosmic Beast Grounds',
         minRealm: 'Open Heaven Layer 4',
         minRealmIndex: 49,
-        enemies: 'Open heaven beasts, celestial sovereigns',
+        enemies: 'Open heaven beasts, heaven pillar guardians',
         drops: 'Transcendent Cultivation 2, Transcendent Mineral 2',
         herbs: 'Esoteric botanicals (TBD)',
         ores: 'Esoteric minerals (TBD)',
         enemyPool: [
-          { enemyId: 'open_heaven_beast',  weight: 6 },
-          { enemyId: 'celestial_sovereign', weight: 4 },
+          { enemyId: 'open_heaven_beast',      weight: 6 },
+          { enemyId: 'heaven_pillar_guardian', weight: 4 },
         ],
       },
       {

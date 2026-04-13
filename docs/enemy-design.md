@@ -137,58 +137,58 @@ statMult numbers and reading the names. Three levers to achieve this:
 ## Region Assignment (max 2 per region)
 
 ### World 1
-| Region | Pool |
-|--------|------|
-| Outer Sect Training Grounds | outer_sect_disciple, training_golem |
-| Borderland Wilds | wolf, bandit_scout |
-| Qi-Vein Ravines | wandering_beast, qi_beast |
-| Misty Spirit Forest | forest_spirit, rogue_disciple |
-| Heaven's Edge Peak | qi_beast, rogue_disciple |
-| Thunderstorm Plateau | rogue_disciple, forest_spirit |
+| Region | Pool | Rationale |
+|--------|------|-----------|
+| Outer Sect Training Grounds | outer_sect_disciple, training_golem | Sect training environment |
+| Borderland Wilds | wolf, bandit_scout | Open wilderness predators + human ambushers |
+| Qi-Vein Ravines | wandering_beast, qi_beast | Beasts drawn to dense qi veins |
+| Misty Spirit Forest | forest_spirit, rogue_disciple | Nature spirits + outcasts hiding in forest |
+| Heaven's Edge Peak | rogue_disciple, forest_spirit | Clifftop forests where spirits linger; rogue disciples in mountain seclusion |
+| Thunderstorm Plateau | qi_beast, rogue_disciple | Qi beasts attracted to storm lightning; disciples surviving the qi storms |
 
 ### World 2
-| Region | Pool |
-|--------|------|
-| Shattered Sky Desert | sand_dragon, bone_construct |
-| Demon Beast Plains | iron_fang_wolf, iron_spine_boar |
-| Sunken Immortal City | city_guardian, immortal_shade |
-| Primal Qi Wastes | corrupted_cultivator, iron_spine_boar |
-| Blood Sea Periphery | blood_leviathan, corrupted_cultivator |
+| Region | Pool | Rationale |
+|--------|------|-----------|
+| Shattered Sky Desert | sand_dragon, bone_construct | Desert predator + ancient bones animated in the ruins |
+| Demon Beast Plains | iron_fang_wolf, iron_spine_boar | Plains-hardened pack hunters and mineral-fed boars |
+| Sunken Immortal City | city_guardian, immortal_shade | City's own construct + the shade of its trapped immortal residents |
+| Primal Qi Wastes | corrupted_cultivator, bone_construct | Qi-mad cultivators + ancient bone remains scattered through the wastes |
+| Blood Sea Periphery | blood_leviathan, corrupted_cultivator | Sea apex predator + qi-corrupted cultivators drawn to the blood sea |
 
 ### World 3
-| Region | Pool |
-|--------|------|
-| Saint Burial Grounds | burial_guardian, saint_corpse_soldier |
-| Primal Qi Wastes (Deep) | ancient_war_spirit, saint_bone_sovereign |
-| Void Rift Expanse | void_rift_predator, void_shade |
-| Nine-Death Mountain Range | forbidden_construct, saint_bone_sovereign |
-| Sealed War Altar | rift_stalker, ancient_war_spirit |
+| Region | Pool | Rationale |
+|--------|------|-----------|
+| Saint Burial Grounds | burial_guardian, saint_corpse_soldier | Bound guardian sentinel + oath-driven corpse soldiers |
+| Primal Qi Wastes (Deep) | ancient_war_spirit, saint_bone_sovereign | Battle qi residue spirits + assembled Saint-bone sovereign |
+| Void Rift Expanse | void_rift_predator, rift_stalker | Both rift-evolved hunters of the same spatial ecosystem |
+| Nine-Death Mountain Range | saint_bone_sovereign, void_shade | Undead sovereign claiming the range + void shades haunting cursed passes |
+| Sealed War Altar | forbidden_construct, ancient_war_spirit | Construct guarding the sealed altar + war spirits bound to the altar itself |
 
 ### World 4
-| Region | Pool |
-|--------|------|
-| Origin Qi Spring Depths | origin_guardian, origin_crystal_golem |
-| World Root Caverns | primordial_serpent, root_sovereign |
-| Primordial Forest Core | root_sovereign, deep_earth_titan |
-| Heaven Beast Sanctuary | ancient_beast, cavern_elder_demon |
-| Ancient Origin Altar | world_root_wraith, deep_earth_titan |
+| Region | Pool | Rationale |
+|--------|------|-----------|
+| Origin Qi Spring Depths | origin_guardian, origin_crystal_golem | Spring-born elemental guardian + crystallised qi golem |
+| World Root Caverns | primordial_serpent, cavern_elder_demon | Both deep cavern creatures fused with the underground environment |
+| Primordial Forest Core | root_sovereign, deep_earth_titan | Root network controller + mantle-pressure titan at the forest's core |
+| Heaven Beast Sanctuary | ancient_beast, world_root_wraith | Primordial beasts claiming territory + their ethereal root-wraith guardians |
+| Ancient Origin Altar | root_sovereign, deep_earth_titan | Powerful earth entities guarding the origin altar |
 
 ### World 5
-| Region | Pool |
-|--------|------|
-| Fractured Space Corridors | spatial_fissure_beast, void_elemental |
-| Void Sea Shores | void_sea_leviathan, void_elemental |
-| Dao Inscription Ruins | dao_inscription_guardian, dao_inscription_revenant |
-| Source Peak Summits | petrified_dao_lord, spatial_fissure_beast |
-| Ancient Emperor Tomb | emperor_will_fragment, dao_inscription_guardian |
-| Heaven Sword Ridge | star_sea_drifter, emperor_will_fragment |
+| Region | Pool | Rationale |
+|--------|------|-----------|
+| Fractured Space Corridors | spatial_fissure_beast, void_elemental | Both evolved in/from spatial fractures and void energy |
+| Void Sea Shores | void_sea_leviathan, void_elemental | Void sea apex predator + elemental ambient threats at the shore |
+| Dao Inscription Ruins | dao_inscription_guardian, dao_inscription_revenant | Construct guardian + cultivator who became one with the inscriptions |
+| Source Peak Summits | star_sea_drifter, dao_inscription_revenant | Drifters pulled down by Dao source energy + Dao revenants at peak ruins |
+| Ancient Emperor Tomb | emperor_will_fragment, dao_inscription_guardian | Emperor consciousness fragments + inscription guardians sealing the tomb |
+| Heaven Sword Ridge | petrified_dao_lord, emperor_will_fragment | Dao lords petrified mid-duel on the ridge + Emperor wills haunting the battlefield |
 
 ### World 6
-| Region | Pool |
-|--------|------|
-| Heaven Pillar Ascent | heaven_pillar_guardian, boundary_wraith |
-| Star Sea Approaches | open_heaven_beast, star_sea_leviathan |
-| Celestial Rift Expanse | celestial_sovereign, void_apex_predator |
-| Eternal Storm Arena | eternal_storm_titan, heaven_pillar_guardian |
-| Cosmic Beast Grounds | open_heaven_beast, celestial_sovereign |
-| Heaven's Core | open_heaven_sovereign, void_apex_predator |
+| Region | Pool | Rationale |
+|--------|------|-----------|
+| Heaven Pillar Ascent | heaven_pillar_guardian, boundary_wraith | Pillar construct + wraith feeding on ascending cultivators at the boundary |
+| Star Sea Approaches | open_heaven_beast, star_sea_leviathan | Open heaven native beasts + leviathans at the star sea entry |
+| Celestial Rift Expanse | celestial_sovereign, void_apex_predator | Rift guardian sovereign + void predator hunting at the rift intersection |
+| Eternal Storm Arena | eternal_storm_titan, star_sea_leviathan | Titan born of the storm + leviathan that rages within it as a natural force |
+| Cosmic Beast Grounds | open_heaven_beast, heaven_pillar_guardian | Territorial beasts + pillar guardians patrolling the beast grounds |
+| Heaven's Core | open_heaven_sovereign, void_apex_predator | Dissolved sovereign energy + apex void predator at the highest point |
