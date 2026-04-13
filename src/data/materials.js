@@ -2,64 +2,86 @@
  * materials.js — gather/mine costs for herbs and ores.
  * Costs are in "gather points". Initial gather/mine speed = 3/sec.
  * Common=15 (5s), Uncommon=60 (20s), Rare=180 (1min), Epic=600 (3.3min), Legendary=1800 (10min)
+ *
+ * Each transmutation tier has two materials:
+ *   _1  — used for rolling stats  (hone + add operations)
+ *   _2  — used for rolling modifiers (replace operation)
  */
 
 export const HERBS = {
-  'Soul Calming Grass':           { rarity: 'Common',    gatherCost: 15  },
-  'Jade Heart Flower':            { rarity: 'Uncommon',  gatherCost: 60  },
-  'Netherworld Flame Mushroom':   { rarity: 'Uncommon',  gatherCost: 60  },
-  'Thousand-Year Ginseng':        { rarity: 'Rare',      gatherCost: 180 },
-  'Blood Lotus':                  { rarity: 'Rare',      gatherCost: 180 },
-  'Dragon Saliva Grass':          { rarity: 'Rare',      gatherCost: 180 },
-  'Purple Cloud Vine':            { rarity: 'Epic',      gatherCost: 600 },
-  'Immortal Revival Leaf':        { rarity: 'Legendary', gatherCost: 1800 },
+  'Iron Herb 1':           { rarity: 'Common',    gatherCost: 15   },
+  'Iron Herb 2':           { rarity: 'Common',    gatherCost: 15   },
+  'Bronze Herb 1':         { rarity: 'Uncommon',  gatherCost: 60   },
+  'Bronze Herb 2':         { rarity: 'Uncommon',  gatherCost: 60   },
+  'Silver Herb 1':         { rarity: 'Rare',      gatherCost: 180  },
+  'Silver Herb 2':         { rarity: 'Rare',      gatherCost: 180  },
+  'Gold Herb 1':           { rarity: 'Epic',      gatherCost: 600  },
+  'Gold Herb 2':           { rarity: 'Epic',      gatherCost: 600  },
+  'Transcendent Herb 1':   { rarity: 'Legendary', gatherCost: 1800 },
+  'Transcendent Herb 2':   { rarity: 'Legendary', gatherCost: 1800 },
 };
 
 export const ORES = {
-  'Black Tortoise Iron':          { rarity: 'Common',    mineCost: 15  },
-  'Crimson Flame Crystal':        { rarity: 'Uncommon',  mineCost: 60  },
-  'Void Stone':                   { rarity: 'Rare',      mineCost: 180 },
-  'Mithril Essence':              { rarity: 'Rare',      mineCost: 180 },
-  'Deep Sea Cold Iron':           { rarity: 'Rare',      mineCost: 180 },
-  'Star Metal Ore':               { rarity: 'Epic',      mineCost: 600 },
-  'Skyfire Meteorite':            { rarity: 'Epic',      mineCost: 600 },
-  'Heavenly Profound Metal':      { rarity: 'Legendary', mineCost: 1800 },
+  'Iron Mineral 1':           { rarity: 'Common',    mineCost: 15   },
+  'Iron Mineral 2':           { rarity: 'Common',    mineCost: 15   },
+  'Bronze Mineral 1':         { rarity: 'Uncommon',  mineCost: 60   },
+  'Bronze Mineral 2':         { rarity: 'Uncommon',  mineCost: 60   },
+  'Silver Mineral 1':         { rarity: 'Rare',      mineCost: 180  },
+  'Silver Mineral 2':         { rarity: 'Rare',      mineCost: 180  },
+  'Gold Mineral 1':           { rarity: 'Epic',      mineCost: 600  },
+  'Gold Mineral 2':           { rarity: 'Epic',      mineCost: 600  },
+  'Transcendent Mineral 1':   { rarity: 'Legendary', mineCost: 1800 },
+  'Transcendent Mineral 2':   { rarity: 'Legendary', mineCost: 1800 },
 };
 
 export const CULTIVATION_MATERIALS = {
-  spirit_stone:             { name: 'Spirit Stone',             rarity: 'Common'    },
-  beast_core:               { name: 'Beast Core',               rarity: 'Uncommon'  },
-  origin_crystal:           { name: 'Origin Crystal',           rarity: 'Rare'      },
-  heaven_spirit_dew:        { name: 'Heaven Spirit Dew',        rarity: 'Epic'      },
-  elemental_essence_bead:   { name: 'Elemental Essence Bead',   rarity: 'Epic'      },
+  iron_cultivation_1:          { name: 'Iron Cultivation 1',          rarity: 'Common'    },
+  iron_cultivation_2:          { name: 'Iron Cultivation 2',          rarity: 'Common'    },
+  bronze_cultivation_1:        { name: 'Bronze Cultivation 1',        rarity: 'Uncommon'  },
+  bronze_cultivation_2:        { name: 'Bronze Cultivation 2',        rarity: 'Uncommon'  },
+  silver_cultivation_1:        { name: 'Silver Cultivation 1',        rarity: 'Rare'      },
+  silver_cultivation_2:        { name: 'Silver Cultivation 2',        rarity: 'Rare'      },
+  gold_cultivation_1:          { name: 'Gold Cultivation 1',          rarity: 'Epic'      },
+  gold_cultivation_2:          { name: 'Gold Cultivation 2',          rarity: 'Epic'      },
+  transcendent_cultivation_1:  { name: 'Transcendent Cultivation 1',  rarity: 'Legendary' },
+  transcendent_cultivation_2:  { name: 'Transcendent Cultivation 2',  rarity: 'Legendary' },
 };
 
 /** Flat lookup keyed by snake_case ID — covers all material types. */
 export const ALL_MATERIALS = {
   // herbs
-  soul_calming_grass:          { name: 'Soul Calming Grass',          rarity: 'Common',    type: 'herb' },
-  jade_heart_flower:           { name: 'Jade Heart Flower',           rarity: 'Uncommon',  type: 'herb' },
-  netherworld_flame_mushroom:  { name: 'Netherworld Flame Mushroom',  rarity: 'Uncommon',  type: 'herb' },
-  thousand_year_ginseng:       { name: 'Thousand-Year Ginseng',       rarity: 'Rare',      type: 'herb' },
-  blood_lotus:                 { name: 'Blood Lotus',                 rarity: 'Rare',      type: 'herb' },
-  dragon_saliva_grass:         { name: 'Dragon Saliva Grass',         rarity: 'Rare',      type: 'herb' },
-  purple_cloud_vine:           { name: 'Purple Cloud Vine',           rarity: 'Epic',      type: 'herb' },
-  immortal_revival_leaf:       { name: 'Immortal Revival Leaf',       rarity: 'Legendary', type: 'herb' },
+  iron_herb_1:             { name: 'Iron Herb 1',             rarity: 'Common',    type: 'herb' },
+  iron_herb_2:             { name: 'Iron Herb 2',             rarity: 'Common',    type: 'herb' },
+  bronze_herb_1:           { name: 'Bronze Herb 1',           rarity: 'Uncommon',  type: 'herb' },
+  bronze_herb_2:           { name: 'Bronze Herb 2',           rarity: 'Uncommon',  type: 'herb' },
+  silver_herb_1:           { name: 'Silver Herb 1',           rarity: 'Rare',      type: 'herb' },
+  silver_herb_2:           { name: 'Silver Herb 2',           rarity: 'Rare',      type: 'herb' },
+  gold_herb_1:             { name: 'Gold Herb 1',             rarity: 'Epic',      type: 'herb' },
+  gold_herb_2:             { name: 'Gold Herb 2',             rarity: 'Epic',      type: 'herb' },
+  transcendent_herb_1:     { name: 'Transcendent Herb 1',     rarity: 'Legendary', type: 'herb' },
+  transcendent_herb_2:     { name: 'Transcendent Herb 2',     rarity: 'Legendary', type: 'herb' },
   // ores
-  black_tortoise_iron:         { name: 'Black Tortoise Iron',         rarity: 'Common',    type: 'ore' },
-  crimson_flame_crystal:       { name: 'Crimson Flame Crystal',       rarity: 'Uncommon',  type: 'ore' },
-  void_stone:                  { name: 'Void Stone',                  rarity: 'Rare',      type: 'ore' },
-  mithril_essence:             { name: 'Mithril Essence',             rarity: 'Rare',      type: 'ore' },
-  deep_sea_cold_iron:          { name: 'Deep Sea Cold Iron',          rarity: 'Rare',      type: 'ore' },
-  star_metal_ore:              { name: 'Star Metal Ore',              rarity: 'Epic',      type: 'ore' },
-  skyfire_meteorite:           { name: 'Skyfire Meteorite',           rarity: 'Epic',      type: 'ore' },
-  heavenly_profound_metal:     { name: 'Heavenly Profound Metal',     rarity: 'Legendary', type: 'ore' },
+  iron_mineral_1:          { name: 'Iron Mineral 1',          rarity: 'Common',    type: 'ore' },
+  iron_mineral_2:          { name: 'Iron Mineral 2',          rarity: 'Common',    type: 'ore' },
+  bronze_mineral_1:        { name: 'Bronze Mineral 1',        rarity: 'Uncommon',  type: 'ore' },
+  bronze_mineral_2:        { name: 'Bronze Mineral 2',        rarity: 'Uncommon',  type: 'ore' },
+  silver_mineral_1:        { name: 'Silver Mineral 1',        rarity: 'Rare',      type: 'ore' },
+  silver_mineral_2:        { name: 'Silver Mineral 2',        rarity: 'Rare',      type: 'ore' },
+  gold_mineral_1:          { name: 'Gold Mineral 1',          rarity: 'Epic',      type: 'ore' },
+  gold_mineral_2:          { name: 'Gold Mineral 2',          rarity: 'Epic',      type: 'ore' },
+  transcendent_mineral_1:  { name: 'Transcendent Mineral 1',  rarity: 'Legendary', type: 'ore' },
+  transcendent_mineral_2:  { name: 'Transcendent Mineral 2',  rarity: 'Legendary', type: 'ore' },
   // cultivation materials
-  spirit_stone:                { name: 'Spirit Stone',                rarity: 'Common',    type: 'cultivation' },
-  beast_core:                  { name: 'Beast Core',                  rarity: 'Uncommon',  type: 'cultivation' },
-  origin_crystal:              { name: 'Origin Crystal',              rarity: 'Rare',      type: 'cultivation' },
-  heaven_spirit_dew:           { name: 'Heaven Spirit Dew',           rarity: 'Epic',      type: 'cultivation' },
-  elemental_essence_bead:      { name: 'Elemental Essence Bead',      rarity: 'Epic',      type: 'cultivation' },
+  iron_cultivation_1:      { name: 'Iron Cultivation 1',      rarity: 'Common',    type: 'cultivation' },
+  iron_cultivation_2:      { name: 'Iron Cultivation 2',      rarity: 'Common',    type: 'cultivation' },
+  bronze_cultivation_1:    { name: 'Bronze Cultivation 1',    rarity: 'Uncommon',  type: 'cultivation' },
+  bronze_cultivation_2:    { name: 'Bronze Cultivation 2',    rarity: 'Uncommon',  type: 'cultivation' },
+  silver_cultivation_1:    { name: 'Silver Cultivation 1',    rarity: 'Rare',      type: 'cultivation' },
+  silver_cultivation_2:    { name: 'Silver Cultivation 2',    rarity: 'Rare',      type: 'cultivation' },
+  gold_cultivation_1:      { name: 'Gold Cultivation 1',      rarity: 'Epic',      type: 'cultivation' },
+  gold_cultivation_2:      { name: 'Gold Cultivation 2',      rarity: 'Epic',      type: 'cultivation' },
+  transcendent_cultivation_1: { name: 'Transcendent Cultivation 1', rarity: 'Legendary', type: 'cultivation' },
+  transcendent_cultivation_2: { name: 'Transcendent Cultivation 2', rarity: 'Legendary', type: 'cultivation' },
 };
 
 export const RARITY_COLOR = {

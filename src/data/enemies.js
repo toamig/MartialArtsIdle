@@ -24,8 +24,8 @@ const ENEMIES = {
     sprite:   'outer_sect_disciple',
     statMult: { hp: 0.8, atk: 0.7 },
     drops: [
-      { itemId: 'spirit_stone',       chance: 0.90, qty: [1, 4] },
-      { itemId: 'black_tortoise_iron', chance: 0.15, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1', chance: 0.90, qty: [1, 4] },
+      { itemId: 'iron_mineral_1',     chance: 0.15, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.02 },
   },
@@ -36,7 +36,7 @@ const ENEMIES = {
     sprite:   'training_golem',
     statMult: { hp: 1.2, atk: 0.3 },   // tanky, low damage — constructs don't drop techniques
     drops: [
-      { itemId: 'spirit_stone', chance: 0.50, qty: [1, 2] },
+      { itemId: 'iron_cultivation_1', chance: 0.50, qty: [1, 2] },
     ],
   },
 
@@ -46,9 +46,9 @@ const ENEMIES = {
     sprite:   'wolf',
     statMult: { hp: 0.9, atk: 1.1 },
     drops: [
-      { itemId: 'spirit_stone',       chance: 0.70, qty: [1, 3] },
-      { itemId: 'beast_core',         chance: 0.20, qty: [1, 1] },
-      { itemId: 'black_tortoise_iron', chance: 0.10, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1', chance: 0.70, qty: [1, 3] },
+      { itemId: 'bronze_cultivation_1', chance: 0.20, qty: [1, 1] },
+      { itemId: 'iron_mineral_1',     chance: 0.10, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.01 },
   },
@@ -59,8 +59,8 @@ const ENEMIES = {
     sprite:   'bandit_scout',
     statMult: { hp: 0.9, atk: 1.0 },
     drops: [
-      { itemId: 'spirit_stone',       chance: 0.85, qty: [2, 6] },
-      { itemId: 'black_tortoise_iron', chance: 0.20, qty: [1, 2] },
+      { itemId: 'iron_cultivation_1', chance: 0.85, qty: [2, 6] },
+      { itemId: 'iron_mineral_1',     chance: 0.20, qty: [1, 2] },
     ],
     techniqueDrop: { chance: 0.03 },
   },
@@ -71,8 +71,8 @@ const ENEMIES = {
     sprite:   'wandering_beast',
     statMult: { hp: 1.0, atk: 1.0 },
     drops: [
-      { itemId: 'spirit_stone', chance: 0.65, qty: [1, 3] },
-      { itemId: 'beast_core',   chance: 0.25, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',   chance: 0.65, qty: [1, 3] },
+      { itemId: 'bronze_cultivation_1', chance: 0.25, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.01 },
   },
@@ -83,9 +83,9 @@ const ENEMIES = {
     sprite:   'qi_beast',
     statMult: { hp: 1.1, atk: 1.2 },
     drops: [
-      { itemId: 'spirit_stone',        chance: 0.80, qty: [2, 5] },
-      { itemId: 'beast_core',          chance: 0.30, qty: [1, 1] },
-      { itemId: 'crimson_flame_crystal', chance: 0.15, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',   chance: 0.80, qty: [2, 5] },
+      { itemId: 'bronze_cultivation_1', chance: 0.30, qty: [1, 1] },
+      { itemId: 'bronze_mineral_1',     chance: 0.15, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.03 },
   },
@@ -96,8 +96,8 @@ const ENEMIES = {
     sprite:   'rogue_disciple',
     statMult: { hp: 1.0, atk: 1.1 },
     drops: [
-      { itemId: 'spirit_stone',        chance: 0.85, qty: [2, 6] },
-      { itemId: 'crimson_flame_crystal', chance: 0.20, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1', chance: 0.85, qty: [2, 6] },
+      { itemId: 'bronze_mineral_1',   chance: 0.20, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.05 },
   },
@@ -108,8 +108,8 @@ const ENEMIES = {
     sprite:   'forest_spirit',
     statMult: { hp: 0.8, atk: 1.3 },
     drops: [
-      { itemId: 'spirit_stone', chance: 0.70, qty: [2, 5] },
-      { itemId: 'beast_core',   chance: 0.35, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',   chance: 0.70, qty: [2, 5] },
+      { itemId: 'bronze_cultivation_1', chance: 0.35, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.04 },
   },
@@ -120,8 +120,8 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 1.5, atk: 0.9 },   // slow and tanky
     drops: [
-      { itemId: 'spirit_stone', chance: 0.75, qty: [3, 7] },
-      { itemId: 'beast_core',   chance: 0.40, qty: [1, 2] },
+      { itemId: 'iron_cultivation_1',   chance: 0.75, qty: [3, 7] },
+      { itemId: 'bronze_cultivation_1', chance: 0.40, qty: [1, 2] },
     ],
     techniqueDrop: { chance: 0.06 },
   },
@@ -132,9 +132,9 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 1.1, atk: 1.2 },
     drops: [
-      { itemId: 'spirit_stone', chance: 0.75, qty: [3, 7] },
-      { itemId: 'beast_core',   chance: 0.30, qty: [1, 1] },
-      { itemId: 'void_stone',   chance: 0.10, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',   chance: 0.75, qty: [3, 7] },
+      { itemId: 'bronze_cultivation_1', chance: 0.30, qty: [1, 1] },
+      { itemId: 'silver_mineral_1',     chance: 0.10, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.04 },
   },
@@ -145,8 +145,8 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 1.0, atk: 1.4 },   // fast and hits hard
     drops: [
-      { itemId: 'spirit_stone', chance: 0.80, qty: [3, 8] },
-      { itemId: 'beast_core',   chance: 0.35, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',   chance: 0.80, qty: [3, 8] },
+      { itemId: 'bronze_cultivation_1', chance: 0.35, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.05 },
   },
@@ -157,9 +157,9 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 1.3, atk: 1.5 },
     drops: [
-      { itemId: 'spirit_stone', chance: 0.80, qty: [4, 10] },
-      { itemId: 'beast_core',   chance: 0.40, qty: [1, 2] },
-      { itemId: 'void_stone',   chance: 0.20, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',   chance: 0.80, qty: [4, 10] },
+      { itemId: 'bronze_cultivation_1', chance: 0.40, qty: [1, 2] },
+      { itemId: 'silver_mineral_1',     chance: 0.20, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.07 },
   },
@@ -170,8 +170,8 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 1.2, atk: 1.6 },
     drops: [
-      { itemId: 'spirit_stone', chance: 0.85, qty: [5, 12] },
-      { itemId: 'origin_crystal', chance: 0.15, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',  chance: 0.85, qty: [5, 12] },
+      { itemId: 'silver_cultivation_1', chance: 0.15, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.07 },
   },
@@ -184,9 +184,9 @@ const ENEMIES = {
     sprite:   'iron_fang_wolf',
     statMult: { hp: 1.7, atk: 1.9 },   // hardened pack predator, fast and hits hard
     drops: [
-      { itemId: 'spirit_stone',    chance: 0.85, qty: [5, 12] },
-      { itemId: 'beast_core',      chance: 0.40, qty: [1, 2]  },
-      { itemId: 'mithril_essence', chance: 0.20, qty: [1, 1]  },
+      { itemId: 'iron_cultivation_1',   chance: 0.85, qty: [5, 12] },
+      { itemId: 'bronze_cultivation_1', chance: 0.40, qty: [1, 2]  },
+      { itemId: 'silver_mineral_2',     chance: 0.20, qty: [1, 1]  },
     ],
     techniqueDrop: { chance: 0.03 },
   },
@@ -197,8 +197,8 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 1.5, atk: 1.6 },
     drops: [
-      { itemId: 'spirit_stone',  chance: 0.85, qty: [5, 15] },
-      { itemId: 'mithril_essence', chance: 0.25, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1', chance: 0.85, qty: [5, 15] },
+      { itemId: 'silver_mineral_2',   chance: 0.25, qty: [1, 1] },
     ],
   },
 
@@ -208,8 +208,8 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 2.0, atk: 1.2 },
     drops: [
-      { itemId: 'spirit_stone',  chance: 0.80, qty: [5, 12] },
-      { itemId: 'mithril_essence', chance: 0.20, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1', chance: 0.80, qty: [5, 12] },
+      { itemId: 'silver_mineral_2',   chance: 0.20, qty: [1, 1] },
     ],
   },
 
@@ -219,8 +219,8 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 1.0, atk: 2.0 },
     drops: [
-      { itemId: 'spirit_stone',  chance: 0.85, qty: [6, 15] },
-      { itemId: 'origin_crystal', chance: 0.20, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',  chance: 0.85, qty: [6, 15] },
+      { itemId: 'silver_cultivation_1', chance: 0.20, qty: [1, 1] },
     ],
   },
 
@@ -230,9 +230,9 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 1.8, atk: 1.5 },
     drops: [
-      { itemId: 'spirit_stone',  chance: 0.85, qty: [6, 14] },
-      { itemId: 'beast_core',    chance: 0.45, qty: [1, 2] },
-      { itemId: 'mithril_essence', chance: 0.15, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',   chance: 0.85, qty: [6, 14] },
+      { itemId: 'bronze_cultivation_1', chance: 0.45, qty: [1, 2] },
+      { itemId: 'silver_mineral_2',     chance: 0.15, qty: [1, 1] },
     ],
   },
 
@@ -242,9 +242,9 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 2.5, atk: 1.8 },
     drops: [
-      { itemId: 'spirit_stone',    chance: 0.90, qty: [8, 20] },
-      { itemId: 'origin_crystal',  chance: 0.25, qty: [1, 1] },
-      { itemId: 'deep_sea_cold_iron', chance: 0.10, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',  chance: 0.90, qty: [8, 20] },
+      { itemId: 'silver_cultivation_1', chance: 0.25, qty: [1, 1] },
+      { itemId: 'silver_mineral_2',    chance: 0.10, qty: [1, 1] },
     ],
   },
 
@@ -254,8 +254,8 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 1.5, atk: 2.2 },
     drops: [
-      { itemId: 'spirit_stone',    chance: 0.85, qty: [8, 18] },
-      { itemId: 'origin_crystal',  chance: 0.30, qty: [1, 2] },
+      { itemId: 'iron_cultivation_1',  chance: 0.85, qty: [8, 18] },
+      { itemId: 'silver_cultivation_1', chance: 0.30, qty: [1, 2] },
     ],
   },
 
@@ -265,9 +265,9 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 1.6, atk: 2.0 },
     drops: [
-      { itemId: 'spirit_stone',      chance: 0.90, qty: [8, 18] },
-      { itemId: 'origin_crystal',    chance: 0.25, qty: [1, 2] },
-      { itemId: 'deep_sea_cold_iron', chance: 0.15, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',  chance: 0.90, qty: [8, 18] },
+      { itemId: 'silver_cultivation_1', chance: 0.25, qty: [1, 2] },
+      { itemId: 'silver_mineral_2',    chance: 0.15, qty: [1, 1] },
     ],
   },
 
@@ -277,9 +277,9 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 2.5, atk: 2.0 },
     drops: [
-      { itemId: 'spirit_stone',      chance: 0.90, qty: [10, 25] },
-      { itemId: 'beast_core',        chance: 0.50, qty: [1, 3] },
-      { itemId: 'deep_sea_cold_iron', chance: 0.25, qty: [1, 2] },
+      { itemId: 'iron_cultivation_1',   chance: 0.90, qty: [10, 25] },
+      { itemId: 'bronze_cultivation_1', chance: 0.50, qty: [1, 3] },
+      { itemId: 'silver_mineral_2',     chance: 0.25, qty: [1, 2] },
     ],
   },
 
@@ -291,9 +291,9 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 3.0, atk: 2.5 },
     drops: [
-      { itemId: 'spirit_stone',   chance: 0.90, qty: [15, 35] },
-      { itemId: 'origin_crystal', chance: 0.35, qty: [1, 2] },
-      { itemId: 'star_metal_ore', chance: 0.15, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',  chance: 0.90, qty: [15, 35] },
+      { itemId: 'silver_cultivation_1', chance: 0.35, qty: [1, 2] },
+      { itemId: 'gold_mineral_1',      chance: 0.15, qty: [1, 1] },
     ],
   },
 
@@ -303,9 +303,9 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 3.5, atk: 2.2 },
     drops: [
-      { itemId: 'spirit_stone',   chance: 0.90, qty: [15, 30] },
-      { itemId: 'origin_crystal', chance: 0.30, qty: [1, 2] },
-      { itemId: 'star_metal_ore', chance: 0.20, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',  chance: 0.90, qty: [15, 30] },
+      { itemId: 'silver_cultivation_1', chance: 0.30, qty: [1, 2] },
+      { itemId: 'gold_mineral_1',      chance: 0.20, qty: [1, 1] },
     ],
   },
 
@@ -315,9 +315,9 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 2.5, atk: 3.5 },
     drops: [
-      { itemId: 'spirit_stone',     chance: 0.90, qty: [20, 40] },
-      { itemId: 'heaven_spirit_dew', chance: 0.15, qty: [1, 1] },
-      { itemId: 'skyfire_meteorite', chance: 0.20, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1', chance: 0.90, qty: [20, 40] },
+      { itemId: 'gold_cultivation_1', chance: 0.15, qty: [1, 1] },
+      { itemId: 'gold_mineral_2',     chance: 0.20, qty: [1, 1] },
     ],
   },
 
@@ -329,9 +329,9 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 5.0, atk: 4.0 },
     drops: [
-      { itemId: 'spirit_stone',          chance: 0.90, qty: [30, 60] },
-      { itemId: 'heaven_spirit_dew',     chance: 0.20, qty: [1, 1] },
-      { itemId: 'heavenly_profound_metal', chance: 0.10, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',      chance: 0.90, qty: [30, 60] },
+      { itemId: 'gold_cultivation_1',      chance: 0.20, qty: [1, 1] },
+      { itemId: 'transcendent_mineral_1',  chance: 0.10, qty: [1, 1] },
     ],
   },
 
@@ -341,9 +341,9 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 6.0, atk: 4.5 },
     drops: [
-      { itemId: 'spirit_stone',          chance: 0.90, qty: [40, 80] },
-      { itemId: 'elemental_essence_bead', chance: 0.20, qty: [1, 1] },
-      { itemId: 'heavenly_profound_metal', chance: 0.15, qty: [1, 1] },
+      { itemId: 'iron_cultivation_1',      chance: 0.90, qty: [40, 80] },
+      { itemId: 'gold_cultivation_2',      chance: 0.20, qty: [1, 1] },
+      { itemId: 'transcendent_mineral_1',  chance: 0.15, qty: [1, 1] },
     ],
   },
 
@@ -355,8 +355,8 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 8.0, atk: 7.0 },
     drops: [
-      { itemId: 'spirit_stone',          chance: 0.90, qty: [60, 120] },
-      { itemId: 'elemental_essence_bead', chance: 0.25, qty: [1, 2] },
+      { itemId: 'iron_cultivation_1', chance: 0.90, qty: [60, 120] },
+      { itemId: 'gold_cultivation_2', chance: 0.25, qty: [1, 2] },
     ],
   },
 
@@ -366,9 +366,9 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 10.0, atk: 8.0 },
     drops: [
-      { itemId: 'spirit_stone',          chance: 0.90, qty: [80, 160] },
-      { itemId: 'heaven_spirit_dew',     chance: 0.30, qty: [1, 2] },
-      { itemId: 'elemental_essence_bead', chance: 0.25, qty: [1, 2] },
+      { itemId: 'iron_cultivation_1', chance: 0.90, qty: [80, 160] },
+      { itemId: 'gold_cultivation_1', chance: 0.30, qty: [1, 2] },
+      { itemId: 'gold_cultivation_2', chance: 0.25, qty: [1, 2] },
     ],
   },
 
@@ -380,8 +380,8 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 20.0, atk: 18.0 },
     drops: [
-      { itemId: 'spirit_stone',          chance: 0.90, qty: [200, 500] },
-      { itemId: 'elemental_essence_bead', chance: 0.40, qty: [1, 3] },
+      { itemId: 'iron_cultivation_1', chance: 0.90, qty: [200, 500] },
+      { itemId: 'gold_cultivation_2', chance: 0.40, qty: [1, 3] },
     ],
   },
 
@@ -391,8 +391,8 @@ const ENEMIES = {
     sprite:   null,
     statMult: { hp: 15.0, atk: 22.0 },
     drops: [
-      { itemId: 'spirit_stone',          chance: 0.90, qty: [150, 400] },
-      { itemId: 'heaven_spirit_dew',     chance: 0.40, qty: [1, 3] },
+      { itemId: 'iron_cultivation_1', chance: 0.90, qty: [150, 400] },
+      { itemId: 'gold_cultivation_1', chance: 0.40, qty: [1, 3] },
     ],
   },
 };

@@ -19,11 +19,11 @@ import { LAW_NEXT_RARITY } from '../hooks/useCultivation';
 // Each bracket has its own rarity color and mineral for craft costs.
 
 const SLOT_BRACKETS = [
-  { count: 3, tier: 1, color: '#9ca3af', label: 'Iron',         mineral: 'black_tortoise_iron'    },
-  { count: 2, tier: 2, color: '#cd7f32', label: 'Bronze',       mineral: 'crimson_flame_crystal'  },
-  { count: 2, tier: 3, color: '#c0c0c0', label: 'Silver',       mineral: 'void_stone'             },
-  { count: 2, tier: 4, color: '#f5c842', label: 'Gold',         mineral: 'star_metal_ore'         },
-  { count: 2, tier: 5, color: '#c084fc', label: 'Transcendent', mineral: 'heavenly_profound_metal' },
+  { count: 3, tier: 1, color: '#9ca3af', label: 'Iron',         mineralStat: 'iron_mineral_1',         mineralMod: 'iron_mineral_2'         },
+  { count: 2, tier: 2, color: '#cd7f32', label: 'Bronze',       mineralStat: 'bronze_mineral_1',       mineralMod: 'bronze_mineral_2'       },
+  { count: 2, tier: 3, color: '#c0c0c0', label: 'Silver',       mineralStat: 'silver_mineral_1',       mineralMod: 'silver_mineral_2'       },
+  { count: 2, tier: 4, color: '#f5c842', label: 'Gold',         mineralStat: 'gold_mineral_1',         mineralMod: 'gold_mineral_2'         },
+  { count: 2, tier: 5, color: '#c084fc', label: 'Transcendent', mineralStat: 'transcendent_mineral_1', mineralMod: 'transcendent_mineral_2' },
 ];
 
 function getActiveBrackets(rarity) {
@@ -56,17 +56,20 @@ function buildBracketSlots(items, rarity) {
 
 // ─── Craft costs — mineral matches the bracket tier ──────────────────────────
 
-function bracketCost(mineral, op) {
-  const qty = op === 'hone' ? 3 : op === 'replace' ? 5 : 8; // add = 8
-  return [{ itemId: mineral, qty }];
+// mineralStat → hone (roll value) + add (new slot)
+// mineralMod  → replace (swap modifier type)
+function bracketCost(mineralStat, mineralMod, op) {
+  if (op === 'hone')    return [{ itemId: mineralStat, qty: 3 }];
+  if (op === 'replace') return [{ itemId: mineralMod,  qty: 5 }];
+  return [{ itemId: mineralStat, qty: 8 }]; // add
 }
 
-// Upgrade costs (quality jump)
+// Upgrade costs (quality jump) — current tier stat-mineral × N + next tier stat-mineral × M
 const UPGRADE_COST = {
-  Iron:   [ { itemId: 'black_tortoise_iron',    qty: 10 }, { itemId: 'crimson_flame_crystal',  qty: 3  } ],
-  Bronze: [ { itemId: 'crimson_flame_crystal',  qty: 8  }, { itemId: 'void_stone',             qty: 3  } ],
-  Silver: [ { itemId: 'void_stone',             qty: 5  }, { itemId: 'star_metal_ore',         qty: 3  } ],
-  Gold:   [ { itemId: 'star_metal_ore',         qty: 8  }, { itemId: 'heavenly_profound_metal', qty: 2 } ],
+  Iron:   [ { itemId: 'iron_mineral_1',          qty: 10 }, { itemId: 'bronze_mineral_1',       qty: 3 } ],
+  Bronze: [ { itemId: 'bronze_mineral_1',        qty: 8  }, { itemId: 'silver_mineral_1',       qty: 3 } ],
+  Silver: [ { itemId: 'silver_mineral_1',        qty: 5  }, { itemId: 'gold_mineral_1',         qty: 3 } ],
+  Gold:   [ { itemId: 'gold_mineral_1',          qty: 8  }, { itemId: 'transcendent_mineral_1', qty: 2 } ],
 };
 
 // ─── Quality label helpers ───────────────────────────────────────────────────
@@ -156,9 +159,9 @@ function CostRow({ itemId, needed, owned }) {
 
 // ─── Modifier rows ────────────────────────────────────────────────────────────
 
-function AffixRow({ affix, gIdx, color, mineral, inventory, onHone, onReplace }) {
-  const honeCosts    = bracketCost(mineral, 'hone');
-  const replaceCosts = bracketCost(mineral, 'replace');
+function AffixRow({ affix, gIdx, color, mineralStat, mineralMod, inventory, onHone, onReplace }) {
+  const honeCosts    = bracketCost(mineralStat, mineralMod, 'hone');
+  const replaceCosts = bracketCost(mineralStat, mineralMod, 'replace');
   return (
     <div className="tx-mod-row" style={{ borderLeft: `3px solid ${color}` }}>
       <div className="tx-mod-left">
@@ -186,8 +189,8 @@ function AffixRow({ affix, gIdx, color, mineral, inventory, onHone, onReplace })
   );
 }
 
-function PassiveRow({ passive, gIdx, color, mineral, inventory, onReplace }) {
-  const replaceCosts = bracketCost(mineral, 'replace');
+function PassiveRow({ passive, gIdx, color, mineralMod, inventory, onReplace }) {
+  const replaceCosts = bracketCost(null, mineralMod, 'replace');
   return (
     <div className="tx-mod-row" style={{ borderLeft: `3px solid ${color}` }}>
       <div className="tx-mod-left">
@@ -207,8 +210,8 @@ function PassiveRow({ passive, gIdx, color, mineral, inventory, onReplace }) {
   );
 }
 
-function MultRow({ label, value, multKey, mineral, inventory, onHone }) {
-  const honeCosts = bracketCost(mineral, 'hone');
+function MultRow({ label, value, multKey, mineralStat, inventory, onHone }) {
+  const honeCosts = bracketCost(mineralStat, null, 'hone');
   return (
     <div className="tx-mod-row">
       <div className="tx-mod-left">
@@ -229,8 +232,8 @@ function MultRow({ label, value, multKey, mineral, inventory, onHone }) {
   );
 }
 
-function EmptySlotRow({ color, mineral, inventory, onAdd }) {
-  const addCosts = bracketCost(mineral, 'add');
+function EmptySlotRow({ color, mineralStat, inventory, onAdd }) {
+  const addCosts = bracketCost(mineralStat, null, 'add');
   return (
     <div className="tx-mod-row tx-mod-row-empty" style={{ borderLeft: `3px solid ${color}` }}>
       <div className="tx-mod-left">
@@ -339,7 +342,8 @@ function ArtefactDetail({ inst, artefacts, inventory }) {
               affix={slot.item}
               gIdx={slot.gIdx}
               color={b.color}
-              mineral={b.mineral}
+              mineralStat={b.mineralStat}
+              mineralMod={b.mineralMod}
               inventory={inventory}
               onHone={(idx)    => artefacts.honeAffix(inst.uid, idx)}
               onReplace={(idx) => artefacts.replaceAffix(inst.uid, idx)}
@@ -349,7 +353,7 @@ function ArtefactDetail({ inst, artefacts, inventory }) {
             <EmptySlotRow
               key={`e-${bi}-${i}`}
               color={b.color}
-              mineral={b.mineral}
+              mineralStat={b.mineralStat}
               inventory={inventory}
               onAdd={() => artefacts.addAffix(inst.uid, b.label)}
             />
@@ -426,7 +430,7 @@ function TechniqueDetail({ tech, techniques, inventory }) {
               passive={slot.item}
               gIdx={slot.gIdx}
               color={b.color}
-              mineral={b.mineral}
+              mineralMod={b.mineralMod}
               inventory={inventory}
               onReplace={(idx) => techniques.replacePassive(tech.id, idx)}
             />
@@ -435,7 +439,7 @@ function TechniqueDetail({ tech, techniques, inventory }) {
             <EmptySlotRow
               key={`e-${bi}-${i}`}
               color={b.color}
-              mineral={b.mineral}
+              mineralStat={b.mineralStat}
               inventory={inventory}
               onAdd={() => techniques.addPassive(tech.id, b.label)}
             />
@@ -455,9 +459,9 @@ function TechniqueDetail({ tech, techniques, inventory }) {
   );
 }
 
-function LawUniqueRow({ tier, color, mineral, entry, inventory, onHone, onReplace }) {
-  const honeCosts    = bracketCost(mineral, 'hone');
-  const replaceCosts = bracketCost(mineral, 'replace');
+function LawUniqueRow({ tier, color, mineralStat, mineralMod, entry, inventory, onHone, onReplace }) {
+  const honeCosts    = bracketCost(mineralStat, mineralMod, 'hone');
+  const replaceCosts = bracketCost(mineralStat, mineralMod, 'replace');
   const text = entry ? formatUniqueDescription(entry.id, entry.value) : '— Empty —';
   return (
     <div className="tx-mod-row" style={{ borderLeft: `3px solid ${color}` }}>
@@ -493,9 +497,10 @@ function LawDetail({ law, cultivation, inventory }) {
   const nextRn   = LAW_NEXT_RARITY[law.rarity];
   const nextQ       = nextRn ? lawQuality(nextRn) : null;
 
-  // Law multipliers use the item's base-tier mineral for Hone cost
-  const baseTier   = RARITY_TIER[law.rarity] ?? 1;
-  const baseMineral = SLOT_BRACKETS[baseTier - 1]?.mineral ?? 'black_tortoise_iron';
+  // Law multipliers: hone (stat roll) uses mineralStat, replace uses mineralMod
+  const baseTier       = RARITY_TIER[law.rarity] ?? 1;
+  const baseMineralStat = SLOT_BRACKETS[baseTier - 1]?.mineralStat ?? 'iron_mineral_1';
+  const baseMineralMod  = SLOT_BRACKETS[baseTier - 1]?.mineralMod  ?? 'iron_mineral_2';
 
   // Only cultivation speed is honable. Essence/Soul/Body are balanced by design
   // (their sum is fixed) — modifying them individually would break that balance.
@@ -520,7 +525,7 @@ function LawDetail({ law, cultivation, inventory }) {
             label={formatMultLabel(key)}
             value={law[key] ?? 0}
             multKey={key}
-            mineral={baseMineral}
+            mineralStat={baseMineralStat}
             inventory={inventory}
             onHone={(mk) => cultivation.honeLawMult(law.id, mk)}
           />
@@ -555,7 +560,8 @@ function LawDetail({ law, cultivation, inventory }) {
             key={b.label}
             tier={b.label}
             color={b.color}
-            mineral={b.mineral}
+            mineralStat={b.mineralStat}
+            mineralMod={b.mineralMod}
             entry={entry}
             inventory={inventory}
             onHone={() => cultivation.honeLawUnique(law.id, b.label)}
@@ -766,25 +772,25 @@ const REFINE_RARITIES = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
 // Laws:       minerals + cultivation resources.
 const REFINE_COSTS = {
   artefact: {
-    Iron:         [{ itemId: 'black_tortoise_iron',     qty: 5 }],
-    Bronze:       [{ itemId: 'black_tortoise_iron',     qty: 5 }, { itemId: 'crimson_flame_crystal', qty: 3 }],
-    Silver:       [{ itemId: 'crimson_flame_crystal',   qty: 5 }, { itemId: 'void_stone',            qty: 3 }],
-    Gold:         [{ itemId: 'void_stone',              qty: 5 }, { itemId: 'star_metal_ore',        qty: 3 }],
-    Transcendent: [{ itemId: 'star_metal_ore',          qty: 5 }, { itemId: 'heavenly_profound_metal', qty: 3 }],
+    Iron:         [{ itemId: 'iron_mineral_1',          qty: 5 }],
+    Bronze:       [{ itemId: 'bronze_mineral_1',        qty: 5 }, { itemId: 'bronze_mineral_2',        qty: 3 }],
+    Silver:       [{ itemId: 'silver_mineral_1',        qty: 5 }, { itemId: 'silver_mineral_2',        qty: 3 }],
+    Gold:         [{ itemId: 'gold_mineral_1',          qty: 5 }, { itemId: 'gold_mineral_2',          qty: 3 }],
+    Transcendent: [{ itemId: 'transcendent_mineral_1',  qty: 5 }, { itemId: 'transcendent_mineral_2',  qty: 3 }],
   },
   technique: {
-    Iron:         [{ itemId: 'black_tortoise_iron',     qty: 3 }, { itemId: 'soul_calming_grass',    qty: 5 }],
-    Bronze:       [{ itemId: 'black_tortoise_iron',     qty: 3 }, { itemId: 'jade_heart_flower',     qty: 5 }],
-    Silver:       [{ itemId: 'crimson_flame_crystal',   qty: 3 }, { itemId: 'blood_lotus',           qty: 5 }],
-    Gold:         [{ itemId: 'void_stone',              qty: 3 }, { itemId: 'purple_cloud_vine',    qty: 3 }],
-    Transcendent: [{ itemId: 'star_metal_ore',          qty: 3 }, { itemId: 'immortal_revival_leaf', qty: 3 }],
+    Iron:         [{ itemId: 'iron_mineral_1',         qty: 3 }, { itemId: 'iron_herb_1',         qty: 5 }],
+    Bronze:       [{ itemId: 'bronze_mineral_1',       qty: 3 }, { itemId: 'bronze_herb_1',       qty: 5 }],
+    Silver:       [{ itemId: 'silver_mineral_1',       qty: 3 }, { itemId: 'silver_herb_1',       qty: 5 }],
+    Gold:         [{ itemId: 'gold_mineral_1',         qty: 3 }, { itemId: 'gold_herb_1',         qty: 3 }],
+    Transcendent: [{ itemId: 'transcendent_mineral_1', qty: 3 }, { itemId: 'transcendent_herb_1', qty: 3 }],
   },
   law: {
-    Iron:         [{ itemId: 'black_tortoise_iron',     qty: 3 }, { itemId: 'spirit_stone',          qty: 10 }],
-    Bronze:       [{ itemId: 'black_tortoise_iron',     qty: 3 }, { itemId: 'beast_core',            qty: 5 }],
-    Silver:       [{ itemId: 'crimson_flame_crystal',   qty: 3 }, { itemId: 'origin_crystal',        qty: 5 }],
-    Gold:         [{ itemId: 'void_stone',              qty: 3 }, { itemId: 'heaven_spirit_dew',     qty: 3 }],
-    Transcendent: [{ itemId: 'star_metal_ore',          qty: 3 }, { itemId: 'breakthrough_golden_pill', qty: 3 }],
+    Iron:         [{ itemId: 'iron_mineral_1',         qty: 3 }, { itemId: 'iron_cultivation_1',         qty: 10 }],
+    Bronze:       [{ itemId: 'bronze_mineral_1',       qty: 3 }, { itemId: 'bronze_cultivation_1',       qty: 5  }],
+    Silver:       [{ itemId: 'silver_mineral_1',       qty: 3 }, { itemId: 'silver_cultivation_1',       qty: 5  }],
+    Gold:         [{ itemId: 'gold_mineral_1',         qty: 3 }, { itemId: 'gold_cultivation_1',         qty: 3  }],
+    Transcendent: [{ itemId: 'transcendent_mineral_1', qty: 3 }, { itemId: 'transcendent_cultivation_1', qty: 3  }],
   },
 };
 
