@@ -2373,11 +2373,9 @@
   font-family: 'Press Start 2P', monospace;
   font-size: 8px;
   color: #fff;
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  text-shadow: 1.5px 1px 1px rgba(0,0,0,1), -1.3px -0.9px 8px rgba(0,0,0,1);
   margin-bottom: 3px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .stage-hud-track {
@@ -2444,7 +2442,7 @@
   font-family: 'Press Start 2P', monospace;
   font-size: 7px;
   color: #f5c842;
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  text-shadow: 1px 0.7px 0.5px rgba(0,0,0,1), -1px -0.7px 8px rgba(0,0,0,1);
   line-height: 1;
   white-space: nowrap;
   z-index: 3;
@@ -2996,6 +2994,14 @@
 
   .tech-icon-slot {
     width: 94px;
+  }
+
+  .stage-hud-name {
+    font-size: 6px;
+  }
+
+  .stage-hud-text {
+    font-size: 5px;
   }
 
   .tech-icon-name {
