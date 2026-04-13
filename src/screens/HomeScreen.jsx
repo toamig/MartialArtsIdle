@@ -148,14 +148,6 @@ function HomeScreen({ cultivation, pills, inventory }) {
       <p className="subtitle">{maxed ? 'You have reached the Peak!' : realmName}</p>
 
       <div className="cultivation-layout">
-        <RealmProgressBar
-          qiRef={qiRef}
-          costRef={costRef}
-          currentRealm={realmName}
-          nextRealm={nextRealmName}
-          boosting={boosting}
-        />
-
         <div
           className={`fighter-stage ${boosting ? 'stage-boosted' : ''} ${adBoostActive ? 'stage-ad-boosted' : ''}`}
           style={{ backgroundImage: `url(${BASE}backgrounds/cultivation.png)` }}
@@ -182,6 +174,14 @@ function HomeScreen({ cultivation, pills, inventory }) {
             {maxed ? 'Peak Achieved' : 'Hold to cultivate faster'}
           </p>
         </div>
+
+        <RealmProgressBar
+          qiRef={qiRef}
+          costRef={costRef}
+          currentRealm={realmName}
+          nextRealm={nextRealmName}
+          boosting={boosting}
+        />
       </div>
 
       {/* ── Rewarded Ad: Channel Heavenly Qi ─────────────────────────────── */}
