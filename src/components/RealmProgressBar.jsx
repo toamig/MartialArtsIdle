@@ -24,7 +24,7 @@ function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting })
       const cost = costRef.current;
       const pct  = Math.min((qi / cost) * 100, 100);
 
-      if (fillRef.current)    fillRef.current.style.height = `${pct}%`;
+      if (fillRef.current)    fillRef.current.style.width = `${pct}%`;
       if (qiLabelRef.current) qiLabelRef.current.textContent =
         `${formatQi(Math.floor(qi))} / ${formatQi(cost)}`;
 
@@ -42,16 +42,18 @@ function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting })
 
   return (
     <div className="realm-bar">
-      <div className="realm-label realm-next">{nextRealm}</div>
+      <div className="realm-bar-row">
+        <div className="realm-label realm-current">{currentRealm}</div>
+        <div className="realm-label realm-next">{nextRealm}</div>
+      </div>
       <div className="realm-track">
         <div
           ref={fillRef}
           className="realm-fill"
-          style={{ height: `${Math.min((qiRef.current / costRef.current) * 100, 100)}%` }}
+          style={{ width: `${Math.min((qiRef.current / costRef.current) * 100, 100)}%` }}
         />
         <div ref={qiLabelRef} className="realm-qi-label" />
       </div>
-      <div className="realm-label realm-current">{currentRealm}</div>
     </div>
   );
 }
