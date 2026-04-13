@@ -198,6 +198,7 @@ function HomeScreen({ cultivation, pills, inventory }) {
           currentRealm={realmName}
           nextRealm={nextRealmName}
           boosting={boosting}
+          maxed={maxed}
         />
       </div>
 

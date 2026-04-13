@@ -12,7 +12,7 @@ function formatQi(n) {
   return String(n);
 }
 
-function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting }) {
+function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting, maxed }) {
   const fillRef    = useRef(null);
   const qiLabelRef = useRef(null);
 
@@ -20,6 +20,13 @@ function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting })
   useEffect(() => {
     let raf;
     const update = () => {
+      if (maxed) {
+        if (fillRef.current)    fillRef.current.style.width = '100%';
+        if (qiLabelRef.current) qiLabelRef.current.textContent = 'Peak';
+        raf = requestAnimationFrame(update);
+        return;
+      }
+
       const qi   = qiRef.current;
       const cost = costRef.current;
       const pct  = Math.min((qi / cost) * 100, 100);
@@ -32,7 +39,7 @@ function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting })
     };
     raf = requestAnimationFrame(update);
     return () => cancelAnimationFrame(raf);
-  }, [qiRef, costRef]);
+  }, [qiRef, costRef, maxed]);
 
   // Boosting class only changes on pointer events — fine as a React prop
   useEffect(() => {
@@ -50,7 +57,7 @@ function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting })
         <div
           ref={fillRef}
           className="realm-fill"
-          style={{ width: `${Math.min((qiRef.current / costRef.current) * 100, 100)}%` }}
+          style={{ width: maxed ? '100%' : `${Math.min((qiRef.current / costRef.current) * 100, 100)}%` }}
         />
         <div ref={qiLabelRef} className="realm-qi-label" />
       </div>
