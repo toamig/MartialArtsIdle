@@ -128,6 +128,8 @@ ELEMENTS = {
 
     "panel_scroll": {
         "size": (256, 96),
+        "two_tone_interior": True,
+        "two_tone_kwargs": {"border_pct": 0.07, "ink_threshold": 170},
         "desc": (
             "A pixel art horizontal scroll/panel background for a xianxia game combat log or info panel. "
             "Wide landscape rectangle. "
@@ -146,14 +148,15 @@ ELEMENTS = {
         "size": (128, 40),
         "desc": (
             "A pixel art rectangular button for a xianxia cultivation game. "
+            "MUST match the established UI palette: dark jade green body, aged bronze-gold border. "
             "Wide landscape rectangle, designed to hold text in its centre. "
-            "Design: carved ancient stone tablet — like a small stone memorial slab. "
-            "3D depth: 3-4 pixel thick bottom edge in darker stone to suggest depth/raise. "
-            "Top face: slightly lighter stone texture, faint horizontal chisel marks. "
-            "Border: clean pixel border in darkest stone shade. "
-            "Corner decorations: very small brass stud at each corner. "
-            "Interior: flat enough for white or gold text to be legible over it. "
-            "Palette: mid-grey weathered stone, dark stone shadow, pale stone highlight, brass studs. "
+            "Design: flat dark jade face with a clean 2-3 pixel aged bronze border on all sides. "
+            "3D depth: 2-3 pixel thick bottom edge in darker jade/bronze to suggest a raised slab. "
+            "Corner decorations: one small bronze stud at each of the 4 corners — NOTHING ELSE. "
+            "NO central ornaments, NO scroll patterns on the face, NO extra embellishments. "
+            "Interior face: flat dark jade, smooth enough for white or gold text to be legible. "
+            "Palette: dark jade green, aged bronze-gold border, slightly lighter jade highlight on top edge. "
+            "Keep it simple — the restraint IS the design. "
             f"{S}"
         ),
     },
@@ -201,6 +204,90 @@ def crop_transparent_edges(img):
     print(f"  Cropped: {w}x{h} → {cropped.size[0]}x{cropped.size[1]}")
     return cropped
 
+
+def reduce_interior_to_two_tones(img, border_pct=0.16, ink_threshold=170):
+    """
+    Reduce the interior of a scroll/panel to exactly 2 clean parchment tones.
+
+    Two-step process:
+      1. Spatial ink removal: replace every ink pixel (avg brightness below
+         ink_threshold) with its nearest parchment neighbour in the same
+         column — erases calligraphy shapes without leaving colour artifacts.
+      2. k-means quantization (k=2) on the ink-free interior to snap all
+         remaining subtle colour noise to exactly the two dominant tones.
+
+    border_pct: fraction of width/height left untouched (border/end-caps).
+    ink_threshold: avg RGB below this → treated as ink and spatially replaced.
+    """
+    w, h = img.size
+    px = img.load()
+    out = img.copy()
+    dst = out.load()
+
+    x0 = int(w * border_pct)
+    x1 = int(w * (1 - border_pct))
+    y0 = int(h * border_pct)
+    y1 = int(h * (1 - border_pct))
+
+    def brightness(pixel):
+        return (pixel[0] + pixel[1] + pixel[2]) / 3
+
+    def is_ink(pixel):
+        return brightness(pixel) < ink_threshold
+
+    # ── Step 1: spatial nearest-neighbour ink removal ──────────────────────
+    # Column-scan: replace each ink pixel with nearest non-ink pixel above/below
+    for x in range(x0, x1):
+        parchment = [(y, dst[x, y]) for y in range(y0, y1) if not is_ink(px[x, y])]
+        if not parchment:
+            continue
+        for y in range(y0, y1):
+            if is_ink(px[x, y]):
+                nearest = min(parchment, key=lambda p: abs(p[0] - y))
+                dst[x, y] = nearest[1]
+
+    # ── Step 2: k-means quantize the ink-free interior to 2 tones ──────────
+    clean_pixels = [
+        (dst[x, y][0], dst[x, y][1], dst[x, y][2])
+        for y in range(y0, y1)
+        for x in range(x0, x1)
+        if dst[x, y][3] > 10
+    ]
+
+    if not clean_pixels:
+        return out
+
+    def sq_dist(a, b):
+        return (a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2
+
+    sorted_px = sorted(clean_pixels, key=lambda p: p[0]+p[1]+p[2])
+    n = len(sorted_px)
+    c1 = sorted_px[n // 4]
+    c2 = sorted_px[3 * n // 4]
+
+    for _ in range(20):
+        g1, g2 = [], []
+        for p in clean_pixels:
+            (g1 if sq_dist(p, c1) <= sq_dist(p, c2) else g2).append(p)
+        if not g1 or not g2:
+            break
+        new_c1 = tuple(sum(p[i] for p in g1) // len(g1) for i in range(3))
+        new_c2 = tuple(sum(p[i] for p in g2) // len(g2) for i in range(3))
+        if new_c1 == c1 and new_c2 == c2:
+            break
+        c1, c2 = new_c1, new_c2
+
+    print(f"  Two-tone interior: light={c1}  dark={c2}")
+
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            r, g, b, a = dst[x, y]
+            p = (r, g, b)
+            tone = c1 if sq_dist(p, c1) <= sq_dist(p, c2) else c2
+            dst[x, y] = (tone[0], tone[1], tone[2], a)
+
+    return out
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Pipeline steps
 # ─────────────────────────────────────────────────────────────────────────────
@@ -246,12 +333,17 @@ def run_finalize(element_id, cand_n):
     if not src.exists():
         raise FileNotFoundError(f"Candidate not found: {src}")
 
+    cfg = ELEMENTS[element_id]
     print(f"\n  Finalizing {element_id} from cand_{cand_n}...")
 
     img = Image.open(src).convert("RGBA")
 
     # Trim transparent border padding
     img = crop_transparent_edges(img)
+
+    # Reduce interior to two clean parchment tones (removes calligraphy noise)
+    if cfg.get("two_tone_interior"):
+        img = reduce_interior_to_two_tones(img, **cfg.get("two_tone_kwargs", {}))
 
     out_path = OUT_DIR / f"{element_id}.png"
     img.save(str(out_path))
