@@ -8,50 +8,59 @@ Build-enabling rare modifiers for Laws, Artefacts, and Techniques. Designed in t
 
 ## Pool Power Levels
 
-| Pool | Strength | Trade-offs | Purpose |
-|---|---|---|---|
-| **Laws** | Strongest | Often have downsides | Ascendancy-style: defines a build |
-| **Artefacts** | ~70% of law strength | No major downsides | Variety, slot-themed buffs |
-| **Techniques** | Specific to that technique | Modifies the technique's behavior | Skill specialization |
+| Pool           | Strength                   | Trade-offs                        | Purpose                           |
+| -------------- | -------------------------- | --------------------------------- | --------------------------------- |
+| **Laws**       | Strongest                  | Often have downsides              | Ascendancy-style: defines a build |
+| **Artefacts**  | ~70% of law strength       | No major downsides                | Variety, slot-themed buffs        |
+| **Techniques** | Specific to that technique | Modifies the technique's behavior | Skill specialization              |
 
 ---
 
 ## Design Philosophy
 
 1. **Builds emerge from combinations** — no single modifier should be strong enough alone. The interaction of 2-5 unique modifiers across laws + artefacts + techniques is what defines a build.
-2. **Trade-offs create identity** — laws especially should make you choose. "+100% damage but cannot heal" forces a sustain-via-kill playstyle.
-3. **Conditions enable skill expression** — "+100% damage when below 25% HP" rewards risky play.
-4. **Stat conversions create new playstyles** — "30% of body counts as soul" lets soul builds use body items.
-5. **Anti-synergies prevent stacking everything** — "+100% damage. -50% defense" keeps players from being the best at everything.
+2. **Trade-offs create identity** — laws especially should make you choose. "100% increased Damage. Cannot heal." forces a sustain-via-kill playstyle.
+3. **Conditions enable skill expression** — "100% increased Damage while below 25% Health" rewards risky play.
+4. **Stat conversions create new playstyles** — "30% of Body counted as Soul" lets soul builds use body items.
+5. **Anti-synergies prevent stacking everything** — "100% increased Damage. 50% less Defense." keeps players from being the best at everything.
+
+## Text Style
+
+Modifier descriptions use the same vocabulary as normal stat modifiers:
+
+- **`increased` / `reduced`** — additive % (e.g. "15% increased Damage")
+- **`more` / `less`** — multiplicative % (e.g. "25% more Damage")
+- **Flat numbers** — "+8 Phys. Dmg"
+- **Conditions** — use `while`, `after`, `on`, `per` (e.g. "while below 50% Health", "on Kill", "per equipped Artefact")
 
 ---
 
-## Archetype Tags
+## Modifier Tags
 
-Modifiers are tagged by archetype so you can filter the pool when designing builds:
+Modifiers have descriptive tags (not structural archetypes) for filtering/searching when designing builds. These are not pool boundaries — law modifiers are a single flat pool, and any modifier may carry multiple tags.
 
-| Tag | Meaning | Example builds |
-|---|---|---|
-| `qi-glutton` | Extreme cultivation, weak combat | Deep Cultivator |
-| `body` | Body stat scaling | Body Cultivator, Tank |
-| `soul` | Soul stat scaling | Soul Walker, Mind Mage |
-| `elemental` | Element damage focus | Fire Path, Frost Knight |
-| `speed` | Cooldown reduction, mobility | Speed Demon |
-| `tank` | Defense / HP focus | Iron Wall |
-| `glass-cannon` | High damage, low survival | Berserker, Assassin |
-| `sustain` | Healing, regen, lifesteal | Vampire, Phoenix |
-| `crit` | Critical strike scaling | Lucky Striker |
-| `conversion` | Stat conversions | Hybrid builds |
-| `realm-scale` | Scales with realm progression | Late-game scaling |
-| `condition` | Triggered/conditional bonuses | Berserker, Combo |
-| `anti-synergy` | Has trade-offs / costs | Risk-reward builds |
-| `crafting` | Crafting cost reduction | Master Crafter |
-| `utility` | Misc QoL | Various |
-| `harvest` | Gathering speed/luck | Harvester |
-| `mining` | Mining speed/luck | Miner |
-| `offensive` | Pure damage | Various damage builds |
-| `defensive` | Pure mitigation | Various tank builds |
-| `hybrid` | Multiple stats | Balanced builds |
+| Tag            | Meaning                          |
+| -------------- | -------------------------------- |
+| `qi-glutton`   | Cultivation-focused              |
+| `body`         | Body stat scaling                |
+| `soul`         | Soul stat scaling                |
+| `elemental`    | Element damage focus             |
+| `speed`        | Cooldown reduction, mobility     |
+| `tank`         | Defense / HP focus               |
+| `glass-cannon` | High damage, low survival        |
+| `sustain`      | Healing, regen, lifesteal        |
+| `crit`         | Critical strike scaling          |
+| `conversion`   | Stat conversions                 |
+| `realm-scale`  | Scales with realm progression    |
+| `condition`    | Triggered/conditional bonuses    |
+| `anti-synergy` | Has trade-offs / costs           |
+| `crafting`     | Crafting cost reduction          |
+| `utility`      | Misc QoL                         |
+| `harvest`      | Gathering speed/luck             |
+| `mining`       | Mining speed/luck                |
+| `offensive`    | Pure damage                      |
+| `defensive`    | Pure mitigation                  |
+| `hybrid`       | Multiple stats                   |
 
 ---
 
@@ -116,14 +125,14 @@ Modifiers are tagged by archetype so you can filter the pool when designing buil
 
 ---
 
-## Pool Counts (Initial Design)
+## Pool Counts (Curated)
 
-- **Laws:** ~150 modifiers across 15 archetypes
-- **Artefacts:** ~160 modifiers across 8 slot types (~20 per slot)
-- **Techniques:** ~110 modifiers (40 Attack, 30 Heal, 20 Defend, 20 Dodge)
-- **Total:** ~420 modifiers
+- **Laws:** 128 modifiers (single flat pool — archetypes are descriptive, not structural)
+- **Artefacts:** 150 modifiers across 7 slot types (Weapon 23 / Head 25 / Body 25 / Hands 19 / Waist 20 / Feet 14 / Neck 24)
+- **Techniques:** 100 modifiers (Attack 39 / Heal 29 / Defend 17 / Dodge 15)
+- **Total:** 378 modifiers
 
-This is the starting set. The pool can grow to 1000+ as we add more archetypes and synergies.
+See `Unique Modifiers - Review.md` for the full curated list. Entries are ported to `src/data/uniqueModifiers.js` after final review.
 
 ---
 
