@@ -151,17 +151,20 @@ export default function CombatStage({
   // Enemy damage (gold) spawns on the right side; player damage taken (red) on the left.
   useEffect(() => {
     if (!spawnDamageNumberRef) return;
-    spawnDamageNumberRef.current = (value, side) => {
+    spawnDamageNumberRef.current = (value, side, maxHp = 1000) => {
       const id = ++dmgId;
       const isEnemy = side === 'enemy';
       const x = isEnemy
         ? `${62 + Math.random() * 16}%`
         : `${8  + Math.random() * 14}%`;
       const y = 80 + Math.random() * 55;
-      setDmgNums(prev => [...prev, { id, value, x, y, isEnemy }]);
+      // Scale font size by damage % of max HP — sqrt curve so small hits still visible
+      const pct = Math.min(1, value / maxHp);
+      const fontSize = Math.round(10 + Math.pow(pct, 0.5) * 10);
+      setDmgNums(prev => [...prev, { id, value, x, y, isEnemy, fontSize }]);
       const t = setTimeout(
         () => setDmgNums(prev => prev.filter(n => n.id !== id)),
-        1000,
+        1300,
       );
       dmgTimersRef.current.push(t);
     };
@@ -286,6 +289,7 @@ export default function CombatStage({
           key={n.id}
           value={n.value}
           color={n.isEnemy ? 'gold' : 'red'}
+          fontSize={n.fontSize}
           style={{ left: n.x, top: n.y }}
         />
       ))}

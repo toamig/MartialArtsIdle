@@ -207,7 +207,7 @@ export default function useCombat() {
             const dmg = calcDamage(tech, s.stats.essence, s.stats.soul, s.stats.body, s.stats.lawElement);
             s.eHp = Math.max(0, s.eHp - dmg);
             logs.push({ msg: `${tech.name} → ${dmg.toLocaleString()} dmg`, kind: 'damage' });
-            spawnDamageNumberRef.current?.(dmg, 'enemy');
+            spawnDamageNumberRef.current?.(dmg, 'enemy', s.eMaxHp);
           } else if (tech.type === 'Heal') {
             const heal = Math.floor(s.pMaxHp * (tech.healPercent ?? 0.25));
             s.pHp = Math.min(s.pMaxHp, s.pHp + heal);
@@ -227,7 +227,7 @@ export default function useCombat() {
           const dmg = Math.max(5, Math.floor(s.stats.essence + s.stats.body));
           s.eHp = Math.max(0, s.eHp - dmg);
           logs.push({ msg: `Basic attack → ${dmg.toLocaleString()} dmg`, kind: 'damage' });
-          spawnDamageNumberRef.current?.(dmg, 'enemy');
+          spawnDamageNumberRef.current?.(dmg, 'enemy', s.eMaxHp);
         }
 
         // Debug: force enemy death on every hit
@@ -297,7 +297,7 @@ export default function useCombat() {
           const dmg     = Math.max(1, Math.floor(s.eAtk * s.eAtk / (s.eAtk + def)));
           s.pHp         = Math.max(0, s.pHp - dmg);
           logs.push({ msg: `Enemy hits → −${dmg.toLocaleString()} HP`, kind: 'damage-taken' });
-          spawnDamageNumberRef.current?.(dmg, 'player');
+          spawnDamageNumberRef.current?.(dmg, 'player', s.pMaxHp);
         }
 
         if (logs.length) setLog(prev => [...logs, ...prev].slice(0, MAX_LOG));

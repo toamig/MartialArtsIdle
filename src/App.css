@@ -2579,21 +2579,21 @@
   position: absolute;
   display: flex;
   pointer-events: none;
-  z-index: 20;
+  z-index: 6;
   color: #f5c842;
-  filter: drop-shadow(0 0 4px rgba(245, 200, 66, 0.85));
-  animation: dmg-float 950ms ease-out forwards;
+  filter: drop-shadow(1px 1px 0px rgba(0,0,0,1)) drop-shadow(-1px -1px 4px rgba(0,0,0,0.4)) drop-shadow(0 0 6px rgba(245,200,66,0.7));
+  animation: dmg-float 1250ms ease-out forwards;
 }
 
 .damage-number-red {
-  filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.85))
-          hue-rotate(-30deg) saturate(1.4);
+  filter: drop-shadow(1px 1px 0px rgba(0,0,0,1)) drop-shadow(-1px -1px 4px rgba(0,0,0,0.4)) drop-shadow(0 0 6px rgba(239,68,68,0.7));
 }
 
 @keyframes dmg-float {
-  0%   { transform: translateY(0);     opacity: 1;   }
-  20%  { transform: translateY(-10px); opacity: 1;   }
-  100% { transform: translateY(-54px); opacity: 0;   }
+  0%   { transform: translateY(0);     opacity: 1; }
+  16%  { transform: translateY(-10px); opacity: 1; }
+  40%  { transform: translateY(-10px); opacity: 1; }
+  100% { transform: translateY(-54px); opacity: 0; }
 }
 
 .stage-clash {
