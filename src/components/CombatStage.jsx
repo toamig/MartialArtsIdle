@@ -215,8 +215,8 @@ export default function CombatStage({
             <div ref={pHpBarRef} className="stage-hud-fill stage-hud-fill-player" style={{ width: '100%' }} />
           </div>
           <img className="hud-bar-frame-img hud-bar-frame-img-flipped" src={`${BASE}ui/bar_frame.png`} alt="" />
+          <span ref={pHpTextRef} className="stage-hud-text">—</span>
         </div>
-        <span ref={pHpTextRef} className="stage-hud-text">—</span>
       </div>
 
       {/* ── Enemy HUD (top-right) ─── */}
@@ -227,8 +227,8 @@ export default function CombatStage({
             <div ref={eHpBarRef} className="stage-hud-fill stage-hud-fill-enemy" style={{ width: phase === 'idle' ? '100%' : undefined }} />
           </div>
           <img className="hud-bar-frame-img" src={`${BASE}ui/bar_frame.png`} alt="" />
+          <span ref={eHpTextRef} className="stage-hud-text">—</span>
         </div>
-        <span ref={eHpTextRef} className="stage-hud-text">—</span>
       </div>
 
       {/* ── Victory / Defeat overlay ─── */}

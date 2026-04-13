@@ -3,6 +3,14 @@ import { calcDamage, getCooldown } from '../data/techniques';
 import { ALL_MATERIALS } from '../data/materials';
 import { generateTechnique } from '../data/techniqueDrops';
 
+function fmtHp(n) {
+  if (n >= 1e12) return (n / 1e12).toFixed(1) + 'T';
+  if (n >= 1e9)  return (n / 1e9).toFixed(1)  + 'B';
+  if (n >= 1e6)  return (n / 1e6).toFixed(1)  + 'M';
+  if (n >= 1e3)  return (n / 1e3).toFixed(1)  + 'K';
+  return String(Math.ceil(n));
+}
+
 function rollDrops(drops) {
   if (!drops?.length) return [];
   const result = [];
@@ -82,9 +90,9 @@ export default function useCombat() {
     if (eHpBarRef.current)
       eHpBarRef.current.style.width = `${(s.eHp / s.eMaxHp) * 100}%`;
     if (pHpTextRef.current)
-      pHpTextRef.current.textContent = `${Math.ceil(s.pHp)} / ${s.pMaxHp}`;
+      pHpTextRef.current.textContent = `${fmtHp(s.pHp)} / ${fmtHp(s.pMaxHp)}`;
     if (eHpTextRef.current)
-      eHpTextRef.current.textContent = `${Math.ceil(s.eHp)} / ${s.eMaxHp}`;
+      eHpTextRef.current.textContent = `${fmtHp(s.eHp)} / ${fmtHp(s.eMaxHp)}`;
 
     for (let i = 0; i < 3; i++) {
       const el = cdBarRefs.current[i];
