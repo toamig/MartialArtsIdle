@@ -9,8 +9,12 @@ lerna-debug.log*
 
 node_modules
 dist
+dist-electron
 dist-ssr
 *.local
+
+# Scratch directory for asset generation / previews
+tmp
 
 # Editor directories and files
 .vscode/*

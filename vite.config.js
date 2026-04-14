@@ -11,7 +11,7 @@ export default defineConfig(({ command, mode }) => {
   // Capacitor and Steam load from file:// or a local server — base must be '/'.
   // GitHub Pages browser build needs the repo sub-path.
   // Local dev/preview always uses '/' so it works without a prefix.
-  const base = (isNative || isSteam || isDemo) ? '/' : (isProd ? '/MartialArtsIdle/' : '/');
+  const base = (isNative || isDemo) ? '/' : isSteam ? './' : (isProd ? '/MartialArtsIdle/' : '/');
 
   // PWA service worker is only useful in browser/local builds.
   // Inside a Capacitor WebView or Electron/Tauri it can conflict with the native bridge.
