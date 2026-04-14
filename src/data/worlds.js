@@ -15,12 +15,12 @@ const WORLDS = [
     realms: 'Tempered Body → True Element',
     minRealmIndex: 0,
     description: 'A misty sect compound framed by a ceremonial red-and-gold gate, stone inscription pillars, and weathered guardian statues. Bamboo groves rise beyond the training grounds and pale mountains dissolve into perpetual mist. The air carries the smell of chalk dust and residual qi from years of disciples\' practice.',
-    // W1 has 6 unique enemies → 4 regions. Wolf and rogue_disciple each appear twice;
-    // their second appearance is at True Element Peak — a full 17 realms later — where
-    // the context (storm qi, stronger cultivators) earns the repeat. Two new enemies
-    // with unique sprites needed to expand to 6 clean regions.
+    // W1 — 6 enemies across 5 regions: 1 natural pair (sect) + 4 solo regions.
+    // Solo regions give each enemy their own focused encounter with 3-item drop tables.
+    // Two new unique-sprite enemies needed to expand to 6 regions without repeats.
     regions: [
       {
+        // Disciples and golems share the same training ground — both are standard sect encounters
         name: 'Outer Sect Training Grounds',
         minRealm: 'Tempered Body L1',
         minRealmIndex: 0,
@@ -34,45 +34,55 @@ const WORLDS = [
         ],
       },
       {
+        // Pack wolves dominate the open borderlands — the first true predator encounter
         name: 'Borderland Wilds',
         minRealm: 'Tempered Body L5',
         minRealmIndex: 4,
-        enemies: 'Pack wolves, bandit scouts',
+        enemies: 'Pack wolves',
         drops: 'Mortal Qi Residue, Beast Qi Core, Sect Iron Shard, Qi Fang',
         herbs: 'Mortal Qi Grass, Qi Vein Vine',
         ores: 'Sect Iron Shard, Qi Fang',
         enemyPool: [
-          { enemyId: 'wolf',         weight: 6 },
-          { enemyId: 'bandit_scout', weight: 4 },
+          { enemyId: 'wolf', weight: 10 },
         ],
       },
       {
-        // Wandering beasts roam qi-saturated ravines; rogue disciples use the terrain for ambushes
+        // Bandits prey on travellers using the road through the outer wilderness
+        name: "Bandit's Crossing",
+        minRealm: 'Tempered Body L8',
+        minRealmIndex: 7,
+        enemies: 'Bandit scouts',
+        drops: 'Mortal Qi Residue, Condensed Qi Stone, Sect Iron Shard, Qi Fang',
+        herbs: 'Mortal Qi Grass, Qi Vein Vine',
+        ores: 'Sect Iron Shard, Qi Fang',
+        enemyPool: [
+          { enemyId: 'bandit_scout', weight: 10 },
+        ],
+      },
+      {
+        // Wandering beasts are drawn to the dense qi seeping up through the ravine rock
         name: 'Qi-Vein Ravines',
         minRealm: 'Qi Transformation Early',
         minRealmIndex: 10,
-        enemies: 'Wandering beasts, rogue disciples',
+        enemies: 'Wandering beasts',
         drops: 'Mortal Qi Residue, Beast Qi Core, Corrupted Qi Shard, Qi Fang, Spirit Wood Core',
         herbs: 'Qi Vein Vine, Misty Forest Bloom',
         ores: 'Qi Fang, Spirit Wood Core',
         enemyPool: [
-          { enemyId: 'wandering_beast', weight: 6 },
-          { enemyId: 'rogue_disciple',  weight: 4 },
+          { enemyId: 'wandering_beast', weight: 10 },
         ],
       },
       {
-        // Storm-hardened wolves drawn onto the plateau by qi surges; veteran rogues who survived the True Element threshold
-        // Wolf and rogue_disciple repeat here intentionally — 17 realms higher, harder stat scaling, richer drops
-        name: 'Thunderstorm Plateau',
-        minRealm: 'True Element Peak',
-        minRealmIndex: 17,
-        enemies: 'Pack wolves, rogue disciples',
+        // Rogue disciples shelter deep in the spirit mist, unreachable by sect hunters
+        name: 'Misty Spirit Forest',
+        minRealm: 'True Element Early',
+        minRealmIndex: 14,
+        enemies: 'Rogue disciples',
         drops: 'Beast Qi Core, Corrupted Qi Shard, Spirit Wood Core',
         herbs: 'Misty Forest Bloom',
         ores: 'Spirit Wood Core',
         enemyPool: [
-          { enemyId: 'wolf',          weight: 5 },
-          { enemyId: 'rogue_disciple', weight: 5 },
+          { enemyId: 'rogue_disciple', weight: 10 },
         ],
       },
     ],
@@ -266,17 +276,16 @@ const WORLDS = [
         ],
       },
       {
-        // Two titans at the deepest layer — deep earth titan and its ascended world-core form
+        // The Deep Earth Titan is the lone guardian of the altar — no other entity survives its pressure
         name: 'Ancient Origin Altar',
         minRealm: 'Origin King 3rd',
         minRealmIndex: 35,
-        enemies: 'Deep earth titans, world core titans',
-        drops: 'Heaven Qi Crystal, World Stone Core',
+        enemies: 'Deep earth titan',
+        drops: 'Primal Qi Core, Heaven Qi Crystal, World Stone Core',
         herbs: 'Heaven Root Vine',
         ores: 'Void Crystal, World Stone Core',
         enemyPool: [
-          { enemyId: 'deep_earth_titan', weight: 5 },
-          { enemyId: 'world_core_titan', weight: 5 },
+          { enemyId: 'deep_earth_titan', weight: 10 },
         ],
       },
     ],
@@ -289,30 +298,31 @@ const WORLDS = [
     description: 'A fractured void expanse under a sky of deep magenta, split by jagged energy cracks and floating Dao inscription tablets. A solitary stone gate stands on crumbling ground at the horizon, and a yin-yang symbol drifts overhead in charged silence. The floor is cracked like old clay — the only solid surface in a space that is constantly breaking apart at the edges.',
     regions: [
       {
-        // Two void-adapted predators hunting through the same spatial distortions — one born here, one transformed by it
+        // Three void-adapted entities sharing the fractured corridors — born here, transformed here, or manifested here
         name: 'Fractured Space Corridors',
         minRealm: 'Void King 1st',
         minRealmIndex: 36,
-        enemies: 'Spatial fissure beasts, qi-sensing beasts',
+        enemies: 'Spatial fissure beasts, qi-sensing beasts, void elementals',
         drops: 'Primal Qi Core, Void Crystal, World Stone Core',
         herbs: 'Origin Spring Petal',
         ores: 'Void Crystal, World Stone Core',
         enemyPool: [
-          { enemyId: 'spatial_fissure_beast', weight: 6 },
-          { enemyId: 'qi_beast',              weight: 4 },
+          { enemyId: 'spatial_fissure_beast', weight: 5 },
+          { enemyId: 'qi_beast',              weight: 3 },
+          { enemyId: 'void_elemental',        weight: 2 },
         ],
       },
       {
+        // The leviathan is so massive it crowds out all other life — nothing else survives on its shores
         name: 'Void Sea Shores',
         minRealm: 'Void King 3rd',
         minRealmIndex: 38,
-        enemies: 'Void sea leviathans, void elementals',
+        enemies: 'Void sea leviathan',
         drops: 'Primal Qi Core, Heaven Qi Crystal, World Stone Core',
         herbs: 'Origin Spring Petal',
         ores: 'Void Crystal',
         enemyPool: [
-          { enemyId: 'void_sea_leviathan', weight: 6 },
-          { enemyId: 'void_elemental',     weight: 4 },
+          { enemyId: 'void_sea_leviathan', weight: 10 },
         ],
       },
       {
@@ -343,17 +353,16 @@ const WORLDS = [
         ],
       },
       {
-        // Star sea drifters pulled to the ridge by catastrophic Dao pressure; sovereign-grade Emperor will claims the battlefield
+        // Star sea drifters pulled down by the ridge's catastrophic Dao convergence — they arrive alone and hunt alone
         name: 'Heaven Sword Ridge',
         minRealm: 'Emperor Realm 3rd',
         minRealmIndex: 44,
-        enemies: 'Star sea drifters, emperor will sovereigns',
+        enemies: 'Star sea drifter',
         drops: 'Heaven Qi Crystal, World Stone Core',
         herbs: 'Heaven Root Vine',
         ores: 'Void Crystal',
         enemyPool: [
-          { enemyId: 'star_sea_drifter',       weight: 5 },
-          { enemyId: 'emperor_will_sovereign', weight: 5 },
+          { enemyId: 'star_sea_drifter', weight: 10 },
         ],
       },
     ],

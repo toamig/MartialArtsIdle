@@ -58,9 +58,16 @@ statMult numbers and reading the names. Three levers to achieve this:
 
 ---
 
-## Enemy Roster (50 total — 6/8/8/10/10/8 per world)
+## Region pool size rule
 
-### World 1 — The Mortal Lands (6 enemies, 3 regions)
+Pools can be **1–3 enemies per region** (not fixed at 2). Design intent:
+- **1 enemy**: solo spotlight region. That enemy must drop 3 items to compensate for lack of variety.
+- **2 enemies**: standard pairing. Natural thematic fit.
+- **3 enemies**: used in later worlds (W5+) where fewer regions cover more enemies.
+
+## Enemy Roster (48 total — 6/8/8/9/9/8 per world)
+
+### World 1 — The Mortal Lands (6 enemies, 5 regions)
 | ID | Name | Has Sprite |
 |----|------|-----------|
 | outer_sect_disciple | Outer Sect Disciple | ✓ |
@@ -70,7 +77,7 @@ statMult numbers and reading the names. Three levers to achieve this:
 | wandering_beast | Wandering Beast | ✓ |
 | rogue_disciple | Rogue Disciple | ✓ |
 
-> ⚠️ W1 capped at 3 regions until 2 new enemies with unique sprites are added. Sprite-sharing variants were tried and reverted — they caused visual repetition across regions, defeating the purpose.
+> 1 natural pair (Training Grounds) + 4 solo regions. Two new unique-sprite enemies needed to expand to 6 regions without repeats.
 
 ### World 2 — The Ancient Frontier (8 enemies)
 | ID | Name | Has Sprite |
@@ -96,38 +103,35 @@ statMult numbers and reading the names. Three levers to achieve this:
 | void_rift_predator | Void Rift Predator | — |
 | rift_stalker | Rift Stalker | — |
 
-### World 4 — The Origin Depths (10 enemies)
+### World 4 — The Origin Depths (9 enemies)
 | ID | Name | Has Sprite | Notes |
 |----|------|-----------|-------|
 | origin_crystal_golem | Origin Crystal Golem | — | |
 | origin_guardian | Origin Guardian | — | |
 | primordial_serpent | Primordial Serpent | — | |
 | root_sovereign | Root Sovereign | — | |
-| deep_earth_titan | Deep Earth Titan | — | |
+| deep_earth_titan | Deep Earth Titan | — | solo at final altar |
 | ancient_beast | Ancient Beast | — | |
 | cavern_elder_demon | Cavern Elder Demon | — | |
 | world_root_wraith | World Root Wraith | — | |
 | forest_spirit | Forest Spirit | ✓ | moved from W1 — visual match for underground root cavern |
-| world_core_titan | World Core Titan | — | variant of deep_earth_titan — final W4 region, better drops |
 
 > forest_spirit moved from W1 — the underground root cavern background (gnarled roots through bedrock) is a far stronger visual match than the sect compound. Paired with root_sovereign in Ancient Root Grotto.
-> world_core_titan shares no sprite yet. Same concept as deep_earth_titan but at the world's deepest strata.
 
-### World 5 — The Void Sea (10 enemies)
+### World 5 — The Void Sea (9 enemies)
 | ID | Name | Has Sprite | Notes |
 |----|------|-----------|-------|
 | spatial_fissure_beast | Spatial Fissure Beast | — | |
-| void_elemental | Void Elemental | — | |
-| void_sea_leviathan | Void Sea Leviathan | — | |
+| void_elemental | Void Elemental | — | 3-pool with fissure beast + qi_beast |
+| void_sea_leviathan | Void Sea Leviathan | — | solo at Void Sea Shores |
 | dao_inscription_guardian | Dao Inscription Guardian | — | |
 | dao_inscription_revenant | Dao Inscription Revenant | — | |
 | petrified_dao_lord | Petrified Dao Lord | — | |
 | emperor_will_fragment | Emperor Will Fragment | — | |
-| star_sea_drifter | Star Sea Drifter | — | |
+| star_sea_drifter | Star Sea Drifter | — | solo at Heaven Sword Ridge |
 | qi_beast | Qi-Sensing Beast | ✓ | moved from W1 — violet veins match W5 magenta void palette |
-| emperor_will_sovereign | Emperor Will Sovereign | — | variant of emperor_will_fragment — near-complete will at Heaven Sword Ridge |
 
-> qi_beast moved here from W1 — its sprite (near-black coat, pulsing violet energy veins) is a direct visual match for the W5 magenta void sky and energy crack palette. Placed in Fractured Space Corridors alongside spatial_fissure_beast as two void-adapted predators.
+> qi_beast moved here from W1 — its sprite (near-black coat, pulsing violet energy veins) is a direct visual match for the W5 magenta void sky and energy crack palette.
 
 ### World 6 — The Open Heaven (8 enemies)
 | ID | Name | Has Sprite |
@@ -148,14 +152,15 @@ statMult numbers and reading the names. Three levers to achieve this:
 Every enemy appears in exactly one region. Variants (wolf_alpha, wandering_beast_elder, etc.) occupy the later regions of their world, replacing repeats with escalated drops.
 
 ### World 1
-| Region | Pool | Rationale |
-|--------|------|-----------|
-| Outer Sect Training Grounds | outer_sect_disciple, training_golem | Sect training environment |
-| Borderland Wilds | wolf, bandit_scout | Open wilderness predators + human ambushers |
-| Qi-Vein Ravines | wandering_beast, rogue_disciple | Beasts prowling ravines; rogues using the terrain for ambushes |
-| Thunderstorm Plateau | wolf, rogue_disciple | Storm-hardened wolves + veteran rogues — wolf and rogue_disciple repeat intentionally 17 realms later with harder scaling |
+| Region | Pool size | Pool | Rationale |
+|--------|-----------|------|-----------|
+| Outer Sect Training Grounds | 2 | outer_sect_disciple, training_golem | Both inhabit the same training ground |
+| Borderland Wilds | 1 | wolf | Pack wolves dominate the open borderlands |
+| Bandit's Crossing | 1 | bandit_scout | Bandit ambush territory on the road |
+| Qi-Vein Ravines | 1 | wandering_beast | Beast drawn to dense qi in the ravine rock |
+| Misty Spirit Forest | 1 | rogue_disciple | Rogue hiding deep in the spirit mist |
 
-> wolf and rogue_disciple each appear twice. Accepted because the second appearance is at True Element Peak — a full world tier higher — where the context (storm qi, survival conditions) earns the repeat. 2 new enemies with unique sprites needed to reach 6 clean regions.
+> 2 new unique-sprite enemies needed to expand to 6 regions. Reserved slots: Thunderstorm Plateau + Heaven's Edge Peak.
 
 ### World 2
 | Region | Pool | Rationale |
@@ -174,22 +179,22 @@ Every enemy appears in exactly one region. Variants (wolf_alpha, wandering_beast
 | Sealed War Altar | forbidden_construct, ancient_war_spirit | Construct guarding the sealed altar + war spirits bound to the altar itself |
 
 ### World 4
-| Region | Pool | Rationale |
-|--------|------|-----------|
-| Origin Qi Spring Depths | origin_guardian, origin_crystal_golem | Spring-born elemental guardian + crystallised qi golem |
-| World Root Caverns | primordial_serpent, cavern_elder_demon | Both deep cavern creatures fused with the underground environment |
-| Ancient Root Grotto | forest_spirit, root_sovereign | Root spirits drifting through root hollows + the sovereign whose underground network they inhabit |
-| Primordial Forest Core | ancient_beast, world_root_wraith | Primordial beasts claiming the forest core + their ethereal wraith guardians |
-| Ancient Origin Altar | deep_earth_titan, world_core_titan | Two titan-class entities at the deepest layer — the titan and its world-core form |
+| Region | Pool size | Pool | Rationale |
+|--------|-----------|------|-----------|
+| Origin Qi Spring Depths | 2 | origin_guardian, origin_crystal_golem | Spring-born elemental guardian + crystallised qi golem |
+| World Root Caverns | 2 | primordial_serpent, cavern_elder_demon | Both deep cavern creatures fused with the underground environment |
+| Ancient Root Grotto | 2 | forest_spirit, root_sovereign | Root spirits drifting through root hollows + the sovereign whose underground network they inhabit |
+| Primordial Forest Core | 2 | ancient_beast, world_root_wraith | Primordial beasts claiming the forest core + their ethereal wraith guardians |
+| Ancient Origin Altar | 1 | deep_earth_titan | Lone titan guardian — its pressure alone is enough, nothing else survives near it |
 
 ### World 5
-| Region | Pool | Rationale |
-|--------|------|-----------|
-| Fractured Space Corridors | spatial_fissure_beast, qi_beast | Two void-adapted predators — one born in the fractures, one transformed by generations inside them |
-| Void Sea Shores | void_sea_leviathan, void_elemental | Void sea apex predator + elemental ambient threats at the shore |
-| Dao Inscription Ruins | dao_inscription_guardian, dao_inscription_revenant | Construct guardian + cultivator who became one with the inscriptions |
-| Ancient Emperor Tomb | emperor_will_fragment, petrified_dao_lord | Emperor consciousness fragments + Dao lords sealed inside as the final line |
-| Heaven Sword Ridge | star_sea_drifter, emperor_will_sovereign | Star sea pulled toward Dao pressure + near-complete Emperor will claiming the ridge |
+| Region | Pool size | Pool | Rationale |
+|--------|-----------|------|-----------|
+| Fractured Space Corridors | 3 | spatial_fissure_beast, qi_beast, void_elemental | All three are void-adapted entities sharing the fractured space ecosystem |
+| Void Sea Shores | 1 | void_sea_leviathan | Apex predator so massive it crowds out all other life from its shores |
+| Dao Inscription Ruins | 2 | dao_inscription_guardian, dao_inscription_revenant | Construct guardian + cultivator who became one with the inscriptions |
+| Ancient Emperor Tomb | 2 | emperor_will_fragment, petrified_dao_lord | Emperor consciousness fragments + Dao lords sealed inside as the final line |
+| Heaven Sword Ridge | 1 | star_sea_drifter | Drawn down by Dao convergence — the rarest W5 encounter, hunts alone |
 
 ### World 6
 | Region | Pool | Rationale |

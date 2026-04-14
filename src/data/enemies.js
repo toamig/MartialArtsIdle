@@ -450,19 +450,6 @@ const ENEMIES = {
     techniqueDrop: { chance: 0.04 },
   },
 
-  world_core_titan: {
-    id:          'world_core_titan',
-    name:        'World Core Titan',
-    sprite:      null,
-    description: 'A titan that has descended to the world\'s deepest strata — its body no longer composed of mere compressed rock but of the molten material at the planet\'s core. Veins of pure origin qi run across its surface in shifting patterns, and its presence alone generates tremors across multiple cavern layers.',
-    statMult: { hp: 7.0, atk: 6.5 },
-    drops: [
-      { itemId: 'transcendent_cultivation_1', chance: 0.85, qty: [4, 10] },
-      { itemId: 'transcendent_cultivation_2', chance: 0.30, qty: [1, 2] },
-      { itemId: 'transcendent_mineral_2',     chance: 0.35, qty: [1, 1] },
-    ],
-  },
-
   // ── World 5 — The Void Sea ────────────────────────────────────────────────
   // Theme: fractured space corridors, void sea, Dao inscription ruins, Emperor tombs, sword ridge
   // statMult targets: hp 7.0–11.0, atk 6.5–11.0
@@ -580,19 +567,6 @@ const ENEMIES = {
       { itemId: 'transcendent_mineral_2',     chance: 0.40, qty: [1, 2] },
     ],
     techniqueDrop: { chance: 0.05 },
-  },
-
-  emperor_will_sovereign: {
-    id:          'emperor_will_sovereign',
-    name:        'Emperor Will Sovereign',
-    sprite:      null,
-    description: 'Where a mere fragment of an Emperor\'s will haunts the tomb, a sovereign-grade manifestation claims the sword ridge itself as its battlefield. This is no splinter of memory — it is a near-complete will that has absorbed the ridge\'s centuries of battle qi, growing into something that approximates the full consciousness of its original Emperor.',
-    statMult: { hp: 10.0, atk: 11.0 },
-    drops: [
-      { itemId: 'transcendent_cultivation_2', chance: 0.90, qty: [6, 15] },
-      { itemId: 'transcendent_mineral_2',     chance: 0.45, qty: [1, 3] },
-    ],
-    techniqueDrop: { chance: 0.06 },
   },
 
   // ── World 6 — The Open Heaven ─────────────────────────────────────────────
