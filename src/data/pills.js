@@ -55,6 +55,51 @@ const PILL_DEFS = [
   { id: 'eternal_vigor_pill',    name: 'Eternal Vigor Pill',    rarity: 'Transcendent', duration: 120, effects: [{ stat: 'harvest_speed', type: 'increased', value: 1.0 }, { stat: 'mining_speed', type: 'increased', value: 1.0 }, { stat: 'mining_luck', type: 'flat', value: 100 }] },
 ];
 
+// ─── Pill categorization ─────────────────────────────────────────────────────
+//
+// Classify each pill by its dominant effect type so the UI can group them.
+// A pill can belong to more than one category when its effects span roles
+// (e.g. Origin Gathering → harvest + mining).
+
+export const PILL_CATEGORIES = ['cultivation', 'combat', 'harvest', 'mining'];
+
+export const PILL_CATEGORY_LABEL = {
+  cultivation: 'Cultivation',
+  combat:      'Combat',
+  harvest:     'Harvest',
+  mining:      'Mining',
+};
+
+const STAT_TO_CATEGORY = {
+  qi_speed:          'cultivation',
+  essence:           'cultivation',
+  physical_damage:   'combat',
+  elemental_damage:  'combat',
+  defense:           'combat',
+  elemental_defense: 'combat',
+  health:            'combat',
+  soul_toughness:    'combat',
+  harvest_speed:     'harvest',
+  harvest_luck:      'harvest',
+  mining_speed:      'mining',
+  mining_luck:       'mining',
+};
+
+/** Returns the set of categories a pill belongs to (1..4). */
+export function getPillCategories(pill) {
+  const cats = new Set();
+  for (const eff of pill.effects) {
+    const cat = STAT_TO_CATEGORY[eff.stat];
+    if (cat) cats.add(cat);
+  }
+  return cats;
+}
+
+// Attach categories to each pill up-front.
+for (const pill of PILL_DEFS) {
+  pill.categories = Array.from(getPillCategories(pill));
+}
+
 export const PILLS = PILL_DEFS;
 export const PILLS_BY_ID = {};
 for (const pill of PILLS) {

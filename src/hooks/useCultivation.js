@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import REALMS from '../data/realms';
 import { DEFAULT_LAW, THREE_HARMONY_MANUAL, LAW_RARITY } from '../data/laws';
 import { saveGame, loadGame } from '../systems/save';
+import { PILLS_BY_ID } from '../data/pills';
 import { rollLawMult } from '../data/affixPools';
 import { pickRandomUnique, rollUniqueValue } from '../data/lawUniques';
 import { evaluateLawUniques, buildContext } from '../systems/lawEngine';
@@ -117,16 +118,62 @@ export default function useCultivation() {
 
   const [offlineEarnings, setOfflineEarnings] = useState(() => {
     // Calculate qi earned while the app was closed
-    if (!saved?.lastSeen || !saved?.realmIndex === undefined) return 0;
-    const awaySeconds = (Date.now() - saved.lastSeen) / 1000;
+    if (!saved?.lastSeen || saved?.realmIndex === undefined) return 0;
+    const now = Date.now();
+    const awaySeconds = (now - saved.lastSeen) / 1000;
     if (awaySeconds < MIN_OFFLINE_SEC) return 0;
     const realm = REALMS[saved.realmIndex];
     if (!realm || !REALMS[saved.realmIndex + 1]) return 0; // maxed
-    // Use first owned law for offline calc (active law not known at init)
-    const offlineLaw = loadOwnedLaws()[0] ?? DEFAULT_LAW;
+
+    // Use the active law if available, otherwise fall back to first owned
+    const allLaws = loadOwnedLaws();
+    let offlineLaw;
+    try {
+      const activeLawIdRaw = localStorage.getItem(ACTIVE_LAW_KEY);
+      const activeLawIdSaved = activeLawIdRaw ? JSON.parse(activeLawIdRaw) : null;
+      offlineLaw = (activeLawIdSaved && allLaws.find(l => l.id === activeLawIdSaved))
+        ?? allLaws[0] ?? DEFAULT_LAW;
+    } catch {
+      offlineLaw = allLaws[0] ?? DEFAULT_LAW;
+    }
+
     const lawMult = saved.realmIndex >= offlineLaw.realmRequirement
       ? offlineLaw.cultivationSpeedMult : 1;
-    return Math.floor(BASE_RATE * lawMult * awaySeconds);
+
+    // Apply offline_qi unique modifier (Seasoned Cultivator and similar)
+    let offlineQiMult = 1;
+    if (offlineLaw.uniques) {
+      const ctx = buildContext({ inCombat: false, realmIndex: saved.realmIndex, focusing: false });
+      const bundle = evaluateLawUniques(offlineLaw, ctx);
+      const offlineQiMods = bundle.statMods.offline_qi ?? [];
+      if (offlineQiMods.length > 0) offlineQiMult = computeStat(1, offlineQiMods);
+    }
+
+    const baseRate = BASE_RATE * lawMult * offlineQiMult;
+
+    // Base earnings for the full offline window
+    let total = baseRate * awaySeconds;
+
+    // Add pill qi_speed contributions, prorated to how long each pill overlapped
+    try {
+      const activePillsRaw = localStorage.getItem('mai_active_pills');
+      if (activePillsRaw) {
+        const activePills = JSON.parse(activePillsRaw);
+        for (const active of activePills) {
+          if (active.expiresAt <= saved.lastSeen) continue; // already expired before we closed
+          const pill = PILLS_BY_ID[active.pillId];
+          if (!pill) continue;
+          const pillSeconds = (Math.min(active.expiresAt, now) - saved.lastSeen) / 1000;
+          for (const eff of pill.effects) {
+            if (eff.stat === 'qi_speed') {
+              total += BASE_RATE * lawMult * offlineQiMult * eff.value * pillSeconds;
+            }
+          }
+        }
+      }
+    } catch {}
+
+    return Math.floor(total);
   });
 
   const activeLawRef = useRef(activeLaw);
@@ -144,6 +191,8 @@ export default function useCultivation() {
   const costRef    = useRef(REALMS[saved?.realmIndex ?? 0].cost);
   const maxedRef   = useRef(!REALMS[(saved?.realmIndex ?? 0) + 1]);
   const indexRef   = useRef(saved?.realmIndex ?? 0);
+  // Live cultivation rate (qi/s) — updated every tick for the HUD readout.
+  const rateRef    = useRef(0);
 
   // Keep cost/maxed refs in sync whenever realmIndex state changes
   useEffect(() => {
@@ -180,6 +229,7 @@ export default function useCultivation() {
         const rate = BASE_RATE * lawMult * qiUniqueMult *
           (boostRef.current ? BOOST_MULTIPLIER : 1) *
           adBoostRef.current * pillQiMultRef.current;
+        rateRef.current = rate;
         qiRef.current += rate * dt;
 
         if (qiRef.current >= costRef.current) {
@@ -190,6 +240,8 @@ export default function useCultivation() {
           maxedRef.current  = !REALMS[nextIndex + 1];
           setRealmIndex(nextIndex);
         }
+      } else {
+        rateRef.current = 0;
       }
 
       raf = requestAnimationFrame(tick);
@@ -253,6 +305,7 @@ export default function useCultivation() {
     qiRef,
     costRef,
     indexRef,
+    rateRef,
     setRealmIndex,
     activeLaw,
     setActiveLaw,

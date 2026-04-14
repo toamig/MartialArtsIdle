@@ -578,21 +578,291 @@
   margin-top: auto;
 }
 
-/* Home Screen */
+/* ── Home Screen ──────────────────────────────────────────────────────────── */
+
+/* Strip screen-container padding so home art bleeds to all edges */
+.screen-container:has(.home-screen) {
+  padding: 0;
+  max-width: 100%;
+}
+
+/* Home screen fills the full viewport — overrides the 1100px .screen cap on
+   ultra-wide monitors so the HUD centers on the actual viewport (matching
+   the art-anchored character, which uses window-centered positioning). */
 .home-screen {
   text-align: center;
   display: flex;
   flex-direction: column;
+  min-height: 100dvh;
+  padding: 0;
+  max-width: none !important;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Full-viewport background — fixed so it ignores screen-container padding/max-width.
+   background-size: cover scales to fill the viewport; on portrait screens the image
+   (which is landscape 16:9) is scaled to fill the height and the sides are cropped,
+   keeping the character centred regardless of screen shape. */
+.home-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+/* Top HUD: title + realm name — soft dark gradient vignette so the title
+   reads cleanly no matter how bright the art behind it is. */
+.home-hud-top {
+  position: relative;
+  z-index: 1;
+  padding: 18px 16px 28px;
+  background: linear-gradient(to bottom,
+    rgba(0,0,0,0.78) 0%,
+    rgba(0,0,0,0.60) 55%,
+    rgba(0,0,0,0.25) 85%,
+    rgba(0,0,0,0)    100%);
+}
+
+/* Title artwork replaces the H1 — scales to fit the available width
+   while keeping aspect ratio (Title.png is 1350×145). A soft drop-shadow
+   anchors it visually and keeps the edges legible over the art. */
+.home-title-img {
+  display: block;
+  max-width: min(560px, 92%);
+  width: 100%;
+  height: auto;
+  margin: 0 auto 4px;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  pointer-events: none;
+  user-select: none;
+  filter:
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.85))
+    drop-shadow(0 6px 18px rgba(0, 0, 0, 0.65));
+}
+
+/* Shrink the title slightly on desktop/browser widths so it reads as a
+   proper header rather than dominating the top of the viewport. */
+@media (min-width: 768px) {
+  .home-title-img {
+    max-width: min(510px, 92%);
+  }
+}
+
+/* QI bar anchored above the character — same viewport reference as the
+   fighter stage, so it tracks the sprite on every screen shape. */
+.home-bar-over-char {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  z-index: 2;
+  padding: 0;
 }
 
 .home-screen h1 {
   font-size: 1.5rem;
-  margin-bottom: 2px;
+  margin: 0 0 2px;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.85);
 }
 
 .home-screen .subtitle {
   font-size: 0.85rem;
-  margin-bottom: 16px;
+  margin: 0;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.85);
+}
+
+/* Spacer pushes bottom HUD to the lower portion of the screen */
+.home-spacer {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Bottom HUD: ad + pills — sits above the fixed nav bar on every platform.
+   padding-bottom leaves room for the ~80px nav strip + iOS safe area so
+   gameplay elements never get hidden behind it. */
+.home-hud-bottom {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0) 100%);
+}
+
+/* Fighter stage — anchored to a fixed point in the background art via
+   inline style (left/top/width/height set by JS). transform places the
+   sprite's feet exactly at the anchor, so the character lands in the
+   same spot on the painting across every screen shape. */
+.home-screen .home-fighter-stage {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  background: none !important;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  aspect-ratio: unset;
+  min-height: 0;
+  flex: none;
+  z-index: 2;
+}
+
+.home-screen .stage-boosted {
+  border: none;
+  box-shadow: none;
+}
+
+/* QI bar wrapper — dark backing for readability */
+.home-bar-wrap {
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 16px 4px;
+}
+
+/* Live Qi/s readout — lives under the QI progress bar text. Rate number is
+   updated via rAF (see QiRateReadout). Optional ×3 / ×2 badges appear when
+   the player is holding or the ad buff is active. */
+.qi-rate {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 6px;
+  margin: 4px auto 0;
+  padding: 2px 10px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.55);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+  letter-spacing: 0.02em;
+  transition: color 0.15s, background 0.15s, box-shadow 0.2s;
+}
+.qi-rate-value::before { content: ''; }
+.qi-rate-boosted {
+  color: var(--gold);
+  box-shadow: 0 0 10px rgba(245, 200, 66, 0.35);
+}
+.qi-rate-ad {
+  color: #c2e6ff;
+  box-shadow: 0 0 10px rgba(100, 180, 255, 0.35);
+}
+.qi-rate-boosted.qi-rate-ad {
+  color: #ffe8a0;
+  box-shadow: 0 0 12px rgba(255, 220, 120, 0.45);
+}
+.qi-rate-badge {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: rgba(245, 200, 66, 0.22);
+  color: var(--gold);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+.qi-rate-badge-ad {
+  background: rgba(100, 180, 255, 0.22);
+  color: #9cd2ff;
+}
+
+/* Hold-to-cultivate hint — sits just below the character's feet, anchored
+   via inline left/top. Auto-fades after first hold and re-appears on idle. */
+.home-hold-hint {
+  position: fixed;
+  transform: translate(-50%, 0);
+  z-index: 2;
+  padding: 3px 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  animation: hold-hint-pulse 2s ease-in-out infinite;
+}
+.home-hold-hint-fade {
+  opacity: 0;
+  transform: translate(-50%, 6px);
+  animation: none;
+}
+@keyframes hold-hint-pulse {
+  0%, 100% { transform: translate(-50%, 0);     opacity: 0.78; }
+  50%      { transform: translate(-50%, 2px);   opacity: 1; }
+}
+
+/* Floating "Heavenly Qi" rewarded-ad button — top-right of the stage.
+   Three states: ready (glowing pulse), cooldown (timer), active (×2 timer). */
+.hq-btn {
+  position: fixed;
+  top: calc(18px + env(safe-area-inset-top));
+  right: 16px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 2px solid rgba(245, 200, 66, 0.45);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(50, 35, 15, 0.95), rgba(20, 14, 6, 0.95));
+  color: var(--gold);
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, opacity 0.15s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55);
+}
+.hq-btn:disabled { cursor: not-allowed; opacity: 0.75; }
+.hq-btn .hq-icon  { font-size: 1.4rem; line-height: 1; }
+.hq-btn .hq-label { font-size: 0.7rem; font-weight: 700; line-height: 1; margin-top: 2px; }
+.hq-btn .hq-sub   { font-size: 0.55rem; opacity: 0.85; line-height: 1; margin-top: 2px; letter-spacing: 0.02em; }
+
+.hq-btn-ready {
+  border-color: var(--gold);
+  animation: hq-pulse 1.8s ease-in-out infinite;
+}
+.hq-btn-ready:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(245, 200, 66, 0.45);
+}
+.hq-btn-cd {
+  border-color: rgba(150, 120, 60, 0.45);
+  color: rgba(220, 200, 140, 0.8);
+}
+.hq-btn-active {
+  border-color: #8ccfff;
+  color: #c2e6ff;
+  background: radial-gradient(circle at 30% 30%, rgba(15, 40, 65, 0.95), rgba(8, 18, 30, 0.95));
+  box-shadow: 0 4px 14px rgba(100, 180, 255, 0.4), inset 0 0 10px rgba(140, 207, 255, 0.2);
+  animation: hq-active-pulse 2.4s ease-in-out infinite;
+}
+@keyframes hq-pulse {
+  0%, 100% { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55), 0 0 0 0    rgba(245, 200, 66, 0.55); }
+  50%      { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55), 0 0 0 8px  rgba(245, 200, 66, 0);    }
+}
+@keyframes hq-active-pulse {
+  0%, 100% { box-shadow: 0 4px 14px rgba(100, 180, 255, 0.35), inset 0 0 10px rgba(140, 207, 255, 0.2); }
+  50%      { box-shadow: 0 4px 18px rgba(100, 180, 255, 0.6),  inset 0 0 14px rgba(140, 207, 255, 0.3); }
+}
+
+/* Keep the ad button from overlapping the desktop title block on very small
+   viewports — nudge a bit lower on phones. */
+@media (max-width: 480px) {
+  .hq-btn {
+    width: 56px;
+    height: 56px;
+    top: calc(12px + env(safe-area-inset-top));
+    right: 12px;
+  }
+  .hq-btn .hq-icon { font-size: 1.2rem; }
 }
 
 /* Cultivation Layout: fighter stage on top, progress bar below */
@@ -617,6 +887,33 @@
   align-items: baseline;
 }
 
+/* Stage title above the QI bar — pixel-font nameplate (Press Start 2P)
+   so the current cultivation stage reads as the primary piece of info on
+   the home screen while matching the game's pixel-art aesthetic. */
+.realm-stage-title {
+  text-align: center;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.78rem;
+  font-weight: 400; /* Press Start 2P only ships one weight */
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  color: var(--gold);
+  padding: 4px 12px 6px;
+  margin: 0 auto 2px;
+  text-shadow:
+    2px 2px 0   rgba(0, 0, 0, 0.95),
+    0 0 12px   rgba(245, 200, 66, 0.35);
+  /* Subtle bronze underline keeps it anchored above the bar */
+  border-bottom: 1px solid rgba(245, 200, 66, 0.22);
+  width: fit-content;
+  image-rendering: pixelated;
+}
+@media (min-width: 768px) {
+  .realm-stage-title {
+    font-size: 0.92rem;
+  }
+}
+
 .realm-label {
   font-size: 0.6rem;
   font-weight: 600;
@@ -632,29 +929,55 @@
   color: var(--accent);
 }
 
+/* ── Qi bar: two mirrored half-frames side-by-side ─────────────────────── */
 .realm-track {
-  width: 100%;
-  height: 14px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 7px;
   position: relative;
-  overflow: hidden;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  /* Height is driven by the natural image aspect ratio via height:auto on imgs */
 }
 
+/* Left half: natural orientation (dragon head on left) */
+.qi-frame-left {
+  display: block;
+  width: 50%;
+  height: auto;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Right half: horizontally mirrored (dragon head on right) */
+.qi-frame-right {
+  display: block;
+  width: 50%;
+  height: auto;
+  position: relative;
+  z-index: 2;
+  transform: scaleX(-1);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Fill bar — sits behind both frame halves, visible through the transparent channel.
+   Red bar (320x60): channel carved at rows 16–42 → top=27%, bottom=28%.
+   No left/right inset — channel extends through dragon head channel rows. */
 .realm-fill {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 27%;
+  bottom: 28%;
   left: 0;
-  background: linear-gradient(to right, var(--accent), #c084fc);
-  border-radius: 6px 0 0 6px;
+  right: 0;
+  background: linear-gradient(to right, #b8860b, #ffd700, #b8860b);
+  z-index: 1;
   /* width updated every rAF frame — no CSS transition needed */
 }
 
 .realm-fill-boosted {
-  background: linear-gradient(to right, var(--gold), #ff9f43);
-  box-shadow: 0 0 12px rgba(245, 200, 66, 0.4);
+  background: linear-gradient(to right, #ff6a00, #ffd700, #ff6a00);
+  box-shadow: 0 0 10px rgba(255, 200, 0, 0.6);
 }
 
 .realm-qi-label {
@@ -664,10 +987,11 @@
   transform: translate(-50%, -50%);
   white-space: nowrap;
   font-size: 0.55rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-  z-index: 2;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  z-index: 3;
+  pointer-events: none;
 }
 
 /* Fighter Stage */
@@ -2705,60 +3029,10 @@
 
 @media (min-width: 768px) {
 
-  /* App: switch from column stack to row with sidebar */
-  .app {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-
-  /* ── Sidebar nav ──────────────────────────────────────────────────────── */
-  .navbar {
-    /* Override fixed bottom bar */
-    position: sticky;
-    top: 0;
-    bottom: auto;
-    left: auto;
-    right: auto;
-
-    /* Sidebar dimensions */
-    width: 88px;
-    height: 100dvh;
-    flex-shrink: 0;
-
-    /* Vertical stacking */
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: 4px;
-
-    /* Border: right instead of top */
-    border-top: none;
-    border-right: 2px solid var(--accent);
-
-    /* Spacing */
-    padding: 20px 6px;
-    padding-bottom: 20px; /* no safe-area needed on sidebar */
-
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-
-  .nav-btn {
-    max-width: 100%;
-    width: 100%;
-    padding: 10px 4px;
-    border-radius: 8px;
-    flex-direction: column;
-  }
-
-  .nav-icon-img {
-    width: 26px;
-    height: 26px;
-  }
-
-  .nav-label {
-    font-size: 9px;
-  }
+  /* Keep the nav bar at the BOTTOM on every platform (mobile + desktop) so
+     it never consumes horizontal space. This keeps the character (anchored
+     to the viewport center via fixed positioning) and the HUD (flowing in
+     the content column) aligned on the same vertical axis. */
 
   /* ── Content area ─────────────────────────────────────────────────────── */
   .screen-container {
@@ -2766,8 +3040,8 @@
     min-width: 0; /* prevent flex blowout */
     max-width: 1300px;
     padding: 36px 48px;
-    padding-bottom: 48px; /* no bottom navbar */
-    margin: 0;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    margin: 0 auto;
   }
 
   /* ── Card grids: more room ────────────────────────────────────────────── */
@@ -2809,27 +3083,9 @@
 /* ── Wide screens (1200px+) ───────────────────────────────────────────────── */
 @media (min-width: 1200px) {
 
-  .navbar {
-    width: 100px;
-    padding: 24px 8px;
-  }
-
-  .nav-btn {
-    padding: 12px 6px;
-  }
-
-  .nav-icon-img {
-    width: 28px;
-    height: 28px;
-  }
-
-  .nav-label {
-    font-size: 10px;
-  }
-
   .screen-container {
     padding: 44px 64px;
-    padding-bottom: 56px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
   .card-grid {
@@ -3848,6 +4104,245 @@
 
 .recipe-herb {
   font-size: 0.72rem;
+}
+
+/* Home screen overrides for pills/buffs — semi-transparent so art shows through */
+.home-screen .active-pills-bar {
+  background: rgba(0,0,0,0.35);
+  border-radius: 10px;
+  margin: 4px 16px 0;
+  max-width: 400px;
+  width: calc(100% - 32px);
+}
+
+.home-screen .pill-grid {
+  background: rgba(0,0,0,0.35);
+  border-radius: 10px;
+  margin: 4px 16px 0;
+  max-width: 400px;
+  width: calc(100% - 32px);
+}
+
+.home-screen .ad-reward-section {
+  width: 100%;
+  padding: 0 16px;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
+/* ─── Compact Pill button (Home screen) ──────────────────────────────────── */
+
+.home-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 16px 0;
+  padding: 8px 16px;
+  border: 1px solid rgba(245, 200, 66, 0.45);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(50, 35, 15, 0.92), rgba(25, 16, 6, 0.92));
+  color: var(--gold);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.home-pill-btn:hover {
+  border-color: var(--gold);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 200, 66, 0.3);
+}
+.home-pill-btn-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+.home-pill-btn-label {
+  text-transform: uppercase;
+}
+.home-pill-btn-count {
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: rgba(245, 200, 66, 0.25);
+  font-size: 0.72rem;
+}
+
+/* ─── Pill Drawer (bottom sheet with tabs) ──────────────────────────────── */
+
+.pill-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: pill-drawer-fade-in 0.2s ease-out;
+}
+@keyframes pill-drawer-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.pill-drawer {
+  width: 100%;
+  max-width: 560px;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #1a1511 0%, #0e0a07 100%);
+  border-top: 2px solid var(--gold);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.55);
+  padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* clear the nav */
+  animation: pill-drawer-slide-up 0.25s ease-out;
+}
+@keyframes pill-drawer-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.pill-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid rgba(245, 200, 66, 0.15);
+}
+.pill-drawer-title {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.82rem;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.9);
+}
+.pill-drawer-close {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+}
+.pill-drawer-close:hover { color: var(--gold); }
+
+.pill-drawer-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px 0;
+  border-bottom: 1px solid rgba(245, 200, 66, 0.12);
+}
+.pill-drawer-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.pill-drawer-tab:hover {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(245, 200, 66, 0.06);
+}
+.pill-drawer-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+.pill-drawer-tab-count {
+  padding: 0 6px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+.pill-drawer-tab.active .pill-drawer-tab-count {
+  background: rgba(245, 200, 66, 0.22);
+  color: var(--gold);
+}
+
+.pill-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px 18px;
+}
+.pill-drawer-empty {
+  text-align: center;
+  padding: 28px 16px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.pill-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.pill-drawer-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+}
+.pill-drawer-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.pill-drawer-card-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.pill-drawer-card-qty {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.pill-drawer-card-effects {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pill-drawer-card-effect {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.3;
+}
+.pill-drawer-card-use {
+  margin-top: 4px;
+  padding: 6px 0;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gold);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.pill-drawer-card-use:hover {
+  background: var(--gold);
+  color: #1a1511;
 }
 
 /* ─── Pill Grid (Home Screen) ────────────────────────────────────────────────── */

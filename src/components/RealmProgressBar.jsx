@@ -1,8 +1,10 @@
 /**
- * Vertical progress bar whose fill and qi label update every animation frame
- * by reading directly from qiRef/costRef — no React re-render needed.
+ * Cultivation Qi progress bar — decorative half-bar frame mirrored in CSS.
+ * Fill and qi label update every animation frame via direct DOM writes (no re-render).
  */
 import { useEffect, useRef } from 'react';
+
+const BASE = import.meta.env.BASE_URL;
 
 function formatQi(n) {
   if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
@@ -16,7 +18,7 @@ function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting, m
   const fillRef    = useRef(null);
   const qiLabelRef = useRef(null);
 
-  // Update fill height and qi label every frame — directly in the DOM
+  // Update fill width and qi label every frame — direct DOM, no React re-render
   useEffect(() => {
     let raf;
     const update = () => {
@@ -41,19 +43,25 @@ function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting, m
     return () => cancelAnimationFrame(raf);
   }, [qiRef, costRef, maxed]);
 
-  // Boosting class only changes on pointer events — fine as a React prop
+  // Boosting glow only changes on pointer events — fine as a React prop
   useEffect(() => {
     if (fillRef.current)
       fillRef.current.classList.toggle('realm-fill-boosted', boosting);
   }, [boosting]);
 
+  const frameSrc = `${BASE}ui/qi_bar_red.png`;
+
   return (
     <div className="realm-bar">
-      <div className="realm-bar-row">
-        <div className="realm-label realm-current">{currentRealm}</div>
-        <div className="realm-label realm-next">{nextRealm}</div>
-      </div>
+      {/* Single centered stage label above the bar — no clutter at the ends. */}
+      <div className="realm-stage-title">{currentRealm}</div>
+
+      {/* Frame: two mirrored halves side-by-side at width:50% each */}
       <div className="realm-track">
+        <img className="qi-frame-left"  src={frameSrc} alt="" draggable="false" />
+        <img className="qi-frame-right" src={frameSrc} alt="" draggable="false" />
+
+        {/* Fill sits behind the frame, clipped to the transparent channel region */}
         <div
           ref={fillRef}
           className="realm-fill"
