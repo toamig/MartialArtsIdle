@@ -45,10 +45,9 @@ const ENEMIES = {
     description: 'A squat clay-and-iron automaton stamped with sect seals, built for durability over damage — its fists are blunted iron spheres.',
     statMult: { hp: 1.2, atk: 0.4 },   // tanky construct, low damage
     drops: [
-      { itemId: 'iron_cultivation_1', chance: 0.50, qty: [1, 2] },
-      { itemId: 'iron_cultivation_2', chance: 0.20, qty: [1, 1] },
-      { itemId: 'iron_mineral_1',     chance: 0.25, qty: [1, 2] },
-      { itemId: 'iron_mineral_2',     chance: 0.15, qty: [1, 1] },
+      { itemId: 'iron_cultivation_2', chance: 0.35, qty: [1, 2] },
+      { itemId: 'iron_mineral_1',     chance: 0.30, qty: [1, 2] },
+      { itemId: 'iron_mineral_2',     chance: 0.20, qty: [1, 1] },
     ],
   },
 
@@ -61,8 +60,7 @@ const ENEMIES = {
     drops: [
       { itemId: 'iron_cultivation_1',   chance: 0.70, qty: [1, 3] },
       { itemId: 'bronze_cultivation_1', chance: 0.20, qty: [1, 1] },
-      { itemId: 'iron_mineral_1',       chance: 0.15, qty: [1, 1] },
-      { itemId: 'iron_mineral_2',       chance: 0.10, qty: [1, 1] },
+      { itemId: 'bronze_mineral_1',     chance: 0.15, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.01 },
   },
@@ -90,7 +88,7 @@ const ENEMIES = {
     drops: [
       { itemId: 'iron_cultivation_1',   chance: 0.65, qty: [1, 3] },
       { itemId: 'bronze_cultivation_1', chance: 0.25, qty: [1, 1] },
-      { itemId: 'iron_mineral_2',       chance: 0.15, qty: [1, 1] },
+      { itemId: 'bronze_mineral_1',     chance: 0.15, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.01 },
   },
@@ -104,7 +102,7 @@ const ENEMIES = {
     drops: [
       { itemId: 'iron_cultivation_1', chance: 0.85, qty: [2, 6] },
       { itemId: 'iron_cultivation_2', chance: 0.25, qty: [1, 1] },
-      { itemId: 'bronze_mineral_1',   chance: 0.20, qty: [1, 1] },
+      { itemId: 'iron_mineral_1',     chance: 0.20, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.05 },
   },
@@ -162,7 +160,7 @@ const ENEMIES = {
     statMult: { hp: 2.0, atk: 1.3 },
     drops: [
       { itemId: 'silver_cultivation_1', chance: 0.65, qty: [2, 5] },
-      { itemId: 'silver_mineral_1',     chance: 0.25, qty: [1, 1] },
+      { itemId: 'gold_mineral_1',       chance: 0.20, qty: [1, 1] },
     ],
   },
 
@@ -186,8 +184,8 @@ const ENEMIES = {
     description: 'The spectral remnant of an immortal cultivator trapped when the city sank beneath the earth. Its form flickers between solid and ghost-like, bound eternally by an unfinished vow.',
     statMult: { hp: 1.5, atk: 2.2 },
     drops: [
-      { itemId: 'silver_cultivation_1', chance: 0.80, qty: [3, 8] },
-      { itemId: 'silver_cultivation_2', chance: 0.30, qty: [1, 1] },
+      { itemId: 'silver_cultivation_2', chance: 0.80, qty: [3, 8] },
+      { itemId: 'silver_mineral_2',     chance: 0.25, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.03 },
   },
@@ -200,7 +198,7 @@ const ENEMIES = {
     statMult: { hp: 1.7, atk: 2.0 },
     drops: [
       { itemId: 'silver_cultivation_1', chance: 0.85, qty: [4, 10] },
-      { itemId: 'silver_cultivation_2', chance: 0.25, qty: [1, 1] },
+      { itemId: 'bronze_cultivation_2', chance: 0.25, qty: [1, 1] },
       { itemId: 'silver_mineral_2',     chance: 0.15, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.04 },
@@ -214,8 +212,7 @@ const ENEMIES = {
     statMult: { hp: 2.5, atk: 2.3 },
     drops: [
       { itemId: 'silver_cultivation_1', chance: 0.80, qty: [5, 12] },
-      { itemId: 'silver_cultivation_2', chance: 0.40, qty: [1, 2] },
-      { itemId: 'gold_mineral_1',       chance: 0.10, qty: [1, 1] },
+      { itemId: 'silver_mineral_1',     chance: 0.35, qty: [1, 2] },
     ],
     techniqueDrop: { chance: 0.03 },
   },
@@ -255,9 +252,8 @@ const ENEMIES = {
     description: 'A semi-translucent warrior-wraith crackling with residual battle qi, its form frozen in a war stance from an era long past. It cannot distinguish enemies from allies and attacks anything that moves.',
     statMult: { hp: 2.5, atk: 3.0 },
     drops: [
-      { itemId: 'gold_cultivation_1', chance: 0.75, qty: [3, 7] },
-      { itemId: 'gold_cultivation_2', chance: 0.20, qty: [1, 1] },
-      { itemId: 'gold_mineral_1',     chance: 0.20, qty: [1, 1] },
+      { itemId: 'gold_cultivation_1', chance: 0.80, qty: [3, 8] },
+      { itemId: 'gold_mineral_2',     chance: 0.25, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.03 },
   },
@@ -270,7 +266,7 @@ const ENEMIES = {
     statMult: { hp: 3.5, atk: 2.8 },
     drops: [
       { itemId: 'gold_cultivation_1', chance: 0.80, qty: [3, 8] },
-      { itemId: 'gold_cultivation_2', chance: 0.25, qty: [1, 1] },
+      { itemId: 'gold_mineral_1',     chance: 0.35, qty: [1, 1] },
       { itemId: 'gold_mineral_2',     chance: 0.20, qty: [1, 1] },
     ],
   },
@@ -282,8 +278,8 @@ const ENEMIES = {
     description: 'A living shadow that slipped through a void rift and shed its original form. Appears as a dark, shapeless mass with only a pair of cold void-white eyes visible, haunting mountain passes and rift-blasted terrain alike.',
     statMult: { hp: 2.0, atk: 3.5 },
     drops: [
-      { itemId: 'gold_cultivation_1', chance: 0.75, qty: [3, 8] },
-      { itemId: 'gold_cultivation_2', chance: 0.25, qty: [1, 1] },
+      { itemId: 'gold_cultivation_2', chance: 0.80, qty: [3, 8] },
+      { itemId: 'gold_mineral_2',     chance: 0.25, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.04 },
   },
@@ -295,8 +291,8 @@ const ENEMIES = {
     description: 'An ancient killing machine that was sealed behind forbidden arrays and has now broken free. Heavy, angular, covered in shattered array seals still sparking with suppressed energy. Its sole directive: eliminate all trespassers.',
     statMult: { hp: 4.0, atk: 2.5 },
     drops: [
-      { itemId: 'gold_cultivation_1', chance: 0.80, qty: [4, 10] },
-      { itemId: 'gold_mineral_2',     chance: 0.25, qty: [1, 1] },
+      { itemId: 'gold_cultivation_2', chance: 0.80, qty: [4, 10] },
+      { itemId: 'gold_mineral_2',     chance: 0.30, qty: [1, 1] },
     ],
   },
 
@@ -338,7 +334,7 @@ const ENEMIES = {
     statMult: { hp: 4.5, atk: 4.0 },
     drops: [
       { itemId: 'transcendent_cultivation_1', chance: 0.65, qty: [1, 3] },
-      { itemId: 'transcendent_mineral_1',     chance: 0.25, qty: [1, 1] },
+      { itemId: 'transcendent_mineral_2',     chance: 0.25, qty: [1, 1] },
     ],
   },
 
@@ -350,7 +346,7 @@ const ENEMIES = {
     statMult: { hp: 5.0, atk: 4.5 },
     drops: [
       { itemId: 'transcendent_cultivation_1', chance: 0.70, qty: [2, 5] },
-      { itemId: 'transcendent_mineral_1',     chance: 0.30, qty: [1, 1] },
+      { itemId: 'transcendent_mineral_2',     chance: 0.30, qty: [1, 1] },
     ],
   },
 
@@ -361,9 +357,8 @@ const ENEMIES = {
     description: 'A colossal serpent that has coiled through the world\'s root caverns for millennia. Its scales have absorbed so much primal earth energy that they now resemble ancient stone tiles, and its passage leaves cracks in the cavern walls.',
     statMult: { hp: 5.5, atk: 5.0 },
     drops: [
-      { itemId: 'transcendent_cultivation_1', chance: 0.75, qty: [2, 6] },
-      { itemId: 'transcendent_cultivation_2', chance: 0.20, qty: [1, 1] },
-      { itemId: 'transcendent_mineral_1',     chance: 0.20, qty: [1, 1] },
+      { itemId: 'transcendent_cultivation_1', chance: 0.80, qty: [3, 8] },
+      { itemId: 'transcendent_mineral_2',     chance: 0.25, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.03 },
   },
@@ -375,8 +370,8 @@ const ENEMIES = {
     description: 'A demon that has lurked in the deepest caverns since before recorded history. Its lower body has fused with stalactite formations over the millennia, and its face is obscured by long calcite growths that ring it like a crown.',
     statMult: { hp: 5.5, atk: 6.0 },
     drops: [
-      { itemId: 'transcendent_cultivation_2', chance: 0.70, qty: [2, 5] },
-      { itemId: 'transcendent_mineral_2',     chance: 0.30, qty: [1, 1] },
+      { itemId: 'transcendent_cultivation_1', chance: 0.75, qty: [2, 6] },
+      { itemId: 'transcendent_mineral_2',     chance: 0.35, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.04 },
   },
@@ -388,9 +383,8 @@ const ENEMIES = {
     description: 'A tree-spirit that merged with the world\'s underground root network. Its upper body resembles a gnarled ancient elder; its lower body dissolves into roots that vanish into the earth, capable of attacking from any direction underground.',
     statMult: { hp: 6.0, atk: 4.5 },
     drops: [
-      { itemId: 'transcendent_cultivation_1', chance: 0.80, qty: [3, 7] },
-      { itemId: 'transcendent_cultivation_2', chance: 0.25, qty: [1, 1] },
-      { itemId: 'transcendent_mineral_1',     chance: 0.20, qty: [1, 1] },
+      { itemId: 'transcendent_cultivation_1', chance: 0.85, qty: [4, 10] },
+      { itemId: 'transcendent_mineral_2',     chance: 0.25, qty: [1, 1] },
     ],
   },
 
@@ -401,9 +395,8 @@ const ENEMIES = {
     description: 'A titan condensed from the world\'s mantle pressure — massively built and slow-moving, its body composed of compressed rock layers with glowing ore veins running through it. Each footfall triggers tremors.',
     statMult: { hp: 7.0, atk: 5.0 },
     drops: [
-      { itemId: 'transcendent_cultivation_1', chance: 0.80, qty: [3, 8] },
-      { itemId: 'transcendent_mineral_1',     chance: 0.35, qty: [1, 1] },
-      { itemId: 'transcendent_mineral_2',     chance: 0.15, qty: [1, 1] },
+      { itemId: 'transcendent_cultivation_1', chance: 0.85, qty: [4, 10] },
+      { itemId: 'transcendent_mineral_2',     chance: 0.50, qty: [1, 2] },
     ],
   },
 
@@ -414,9 +407,8 @@ const ENEMIES = {
     description: 'A primordial creature whose bloodline predates the current age of cultivation. Its hide bears natural dao patterns and its eyes carry the weight of ancient memory — it claims entire sacred sanctuaries as its territory.',
     statMult: { hp: 6.5, atk: 5.5 },
     drops: [
-      { itemId: 'transcendent_cultivation_1', chance: 0.80, qty: [4, 10] },
-      { itemId: 'transcendent_cultivation_2', chance: 0.30, qty: [1, 1] },
-      { itemId: 'transcendent_mineral_1',     chance: 0.25, qty: [1, 1] },
+      { itemId: 'transcendent_cultivation_1', chance: 0.85, qty: [5, 12] },
+      { itemId: 'transcendent_mineral_2',     chance: 0.30, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.03 },
   },
@@ -428,8 +420,8 @@ const ENEMIES = {
     description: 'The phantom of an ancient tree-guardian whose physical form dissolved into the root network. A green-black spectre with root-tendrils where its limbs should be, manifesting above ground to defend the sacred beast territories it once protected in life.',
     statMult: { hp: 5.0, atk: 6.5 },
     drops: [
-      { itemId: 'transcendent_cultivation_2', chance: 0.75, qty: [2, 6] },
-      { itemId: 'transcendent_mineral_2',     chance: 0.35, qty: [1, 1] },
+      { itemId: 'transcendent_cultivation_1', chance: 0.80, qty: [2, 6] },
+      { itemId: 'transcendent_cultivation_2', chance: 0.30, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.05 },
   },
@@ -439,13 +431,10 @@ const ENEMIES = {
     name:        'Forest Spirit',
     sprite:      'forest_spirit',
     description: 'A translucent humanoid figure woven from ancient bark and pale cave moss, its eyes twin ember-points of natural qi. It drifts through deep root hollows where ancient trees push their roots through bedrock — defending territory no surface cultivator has ever mapped.',
-    statMult: { hp: 0.8, atk: 1.5 },
-    // NOTE: statMult is W1-tier (moved from W1 for visual fit) — balance pass pending
+    statMult: { hp: 4.5, atk: 4.0 },
     drops: [
-      { itemId: 'transcendent_cultivation_1', chance: 0.30, qty: [1, 1] },
-      { itemId: 'iron_cultivation_1',         chance: 0.50, qty: [1, 3] },
-      { itemId: 'bronze_cultivation_1',       chance: 0.40, qty: [1, 2] },
-      { itemId: 'bronze_mineral_2',           chance: 0.20, qty: [1, 1] },
+      { itemId: 'transcendent_cultivation_1', chance: 0.65, qty: [1, 3] },
+      { itemId: 'bronze_mineral_2',           chance: 0.25, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.04 },
   },
@@ -474,7 +463,7 @@ const ENEMIES = {
     statMult: { hp: 8.0, atk: 7.5 },
     drops: [
       { itemId: 'transcendent_cultivation_1', chance: 0.85, qty: [6, 15] },
-      { itemId: 'transcendent_cultivation_2', chance: 0.30, qty: [1, 2] },
+      { itemId: 'transcendent_mineral_1',     chance: 0.35, qty: [1, 2] },
     ],
   },
 
@@ -483,11 +472,10 @@ const ENEMIES = {
     name:        'Qi-Sensing Beast',
     sprite:      'qi_beast',
     description: 'A sleek, near-black predator threaded with veins of pulsing violet void energy. What began as a surface qi-sensing beast has been transformed across generations in the fractured void corridors — coat darkened to near-black, its original qi-sensing ability mutated into a lethal instinct for hunting through spatial distortions.',
-    statMult: { hp: 1.1, atk: 1.2 },
+    statMult: { hp: 7.5, atk: 7.0 },
     drops: [
-      { itemId: 'iron_cultivation_1',   chance: 0.80, qty: [2, 5] },
-      { itemId: 'bronze_cultivation_1', chance: 0.30, qty: [1, 1] },
-      { itemId: 'bronze_mineral_1',     chance: 0.15, qty: [1, 1] },
+      { itemId: 'transcendent_cultivation_1', chance: 0.80, qty: [3, 8] },
+      { itemId: 'transcendent_mineral_1',     chance: 0.25, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.03 },
   },
@@ -500,8 +488,7 @@ const ENEMIES = {
     statMult: { hp: 9.0, atk: 8.0 },
     drops: [
       { itemId: 'transcendent_cultivation_1', chance: 0.85, qty: [8, 20] },
-      { itemId: 'transcendent_cultivation_2', chance: 0.35, qty: [1, 2] },
-      { itemId: 'transcendent_mineral_2',     chance: 0.20, qty: [1, 1] },
+      { itemId: 'transcendent_mineral_1',     chance: 0.40, qty: [1, 2] },
     ],
   },
 
@@ -525,7 +512,7 @@ const ENEMIES = {
     statMult: { hp: 8.5, atk: 9.5 },
     drops: [
       { itemId: 'transcendent_cultivation_2', chance: 0.80, qty: [3, 8] },
-      { itemId: 'transcendent_mineral_2',     chance: 0.30, qty: [1, 1] },
+      { itemId: 'transcendent_mineral_1',     chance: 0.25, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.04 },
   },
@@ -538,7 +525,7 @@ const ENEMIES = {
     statMult: { hp: 11.0, atk: 10.0 },
     drops: [
       { itemId: 'transcendent_cultivation_2', chance: 0.85, qty: [6, 15] },
-      { itemId: 'transcendent_mineral_2',     chance: 0.40, qty: [1, 2] },
+      { itemId: 'transcendent_mineral_1',     chance: 0.40, qty: [1, 2] },
     ],
     techniqueDrop: { chance: 0.04 },
   },
@@ -564,7 +551,7 @@ const ENEMIES = {
     statMult: { hp: 9.0, atk: 11.0 },
     drops: [
       { itemId: 'transcendent_cultivation_2', chance: 0.85, qty: [5, 12] },
-      { itemId: 'transcendent_mineral_2',     chance: 0.40, qty: [1, 2] },
+      { itemId: 'transcendent_mineral_1',     chance: 0.35, qty: [1, 2] },
     ],
     techniqueDrop: { chance: 0.05 },
   },
@@ -654,7 +641,7 @@ const ENEMIES = {
     statMult: { hp: 20.0, atk: 28.0 },
     drops: [
       { itemId: 'transcendent_cultivation_2', chance: 0.90, qty: [25, 65] },
-      { itemId: 'transcendent_mineral_2',     chance: 0.65, qty: [2, 4] },
+      { itemId: 'transcendent_mineral_1',     chance: 0.65, qty: [2, 4] },
     ],
     techniqueDrop: { chance: 0.05 },
   },
