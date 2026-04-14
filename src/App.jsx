@@ -19,6 +19,8 @@ import useTechniques  from './hooks/useTechniques';
 import useCombat      from './hooks/useCombat';
 import useArtefacts   from './hooks/useArtefacts';
 import usePills       from './hooks/usePills';
+import useAutoFarm    from './hooks/useAutoFarm';
+import WORLDS         from './data/worlds';
 import { initDebug } from './debug/gameDebug';
 import { preloadImages, PLAYER_SPRITE_SRCS } from './utils/preload';
 import './App.css';
@@ -43,9 +45,25 @@ function App() {
     cultivation.pillQiMultRef.current = pillQiMult;
   }, [pillQiMult, cultivation.pillQiMultRef]);
 
+  // Auto-farm — stat getters read live refs so the hook never triggers re-renders
+  const autoFarm = useAutoFarm({
+    worlds: WORLDS,
+    getStats: () => {
+      const qi  = cultivation.qiRef.current;
+      const law = cultivation.activeLaw;
+      return {
+        essence:    Math.floor(qi * (law.essenceMult ?? 0.34)),
+        soul:       Math.floor(qi * (law.soulMult    ?? 0.33)),
+        body:       Math.floor(qi * (law.bodyMult    ?? 0.33)),
+        lawElement: law.element ?? 'Normal',
+      };
+    },
+    getEquippedTechs: () => techniques.equippedTechniques,
+  });
+
   // Keep a live ref to all hooks so debug commands always see fresh state.
   const hooksRef = useRef({});
-  hooksRef.current = { cultivation, inventory, techniques, combat, artefacts, pills };
+  hooksRef.current = { cultivation, inventory, techniques, combat, artefacts, pills, autoFarm };
   useEffect(() => { initDebug(hooksRef); }, []);
 
   // Navigate to a screen, optionally carrying a parameter (e.g. region data).
