@@ -58,23 +58,19 @@ statMult numbers and reading the names. Three levers to achieve this:
 
 ---
 
-## Enemy Roster (54 total — 10/8/8/10/10/8 per world)
+## Enemy Roster (50 total — 6/8/8/10/10/8 per world)
 
-All variants share the same sprite as their base enemy. No new art required.
+### World 1 — The Mortal Lands (6 enemies, 3 regions)
+| ID | Name | Has Sprite |
+|----|------|-----------|
+| outer_sect_disciple | Outer Sect Disciple | ✓ |
+| training_golem | Training Golem | ✓ |
+| wolf | Pack Wolf | ✓ |
+| bandit_scout | Bandit Scout | ✓ |
+| wandering_beast | Wandering Beast | ✓ |
+| rogue_disciple | Rogue Disciple | ✓ |
 
-### World 1 — The Mortal Lands (10 enemies)
-| ID | Name | Has Sprite | Notes |
-|----|------|-----------|-------|
-| outer_sect_disciple | Outer Sect Disciple | ✓ | |
-| training_golem | Training Golem | ✓ | |
-| wolf | Pack Wolf | ✓ | |
-| bandit_scout | Bandit Scout | ✓ | |
-| wandering_beast | Wandering Beast | ✓ | |
-| rogue_disciple | Rogue Disciple | ✓ | |
-| wolf_alpha | Alpha Pack Wolf | ✓ | shares wolf sprite — harder variant, drops bronze tier |
-| wandering_beast_elder | Elder Wandering Beast | ✓ | shares wandering_beast sprite — harder variant |
-| bandit_captain | Bandit Captain | ✓ | shares bandit_scout sprite — harder variant |
-| rogue_enforcer | Rogue Enforcer | ✓ | shares rogue_disciple sprite — harder variant |
+> ⚠️ W1 capped at 3 regions until 2 new enemies with unique sprites are added. Sprite-sharing variants were tried and reverted — they caused visual repetition across regions, defeating the purpose.
 
 ### World 2 — The Ancient Frontier (8 enemies)
 | ID | Name | Has Sprite |
@@ -157,8 +153,8 @@ Every enemy appears in exactly one region. Variants (wolf_alpha, wandering_beast
 | Outer Sect Training Grounds | outer_sect_disciple, training_golem | Sect training environment |
 | Borderland Wilds | wolf, bandit_scout | Open wilderness predators + human ambushers |
 | Qi-Vein Ravines | wandering_beast, rogue_disciple | Beasts prowling ravines; rogues using the terrain for ambushes |
-| Misty Spirit Forest | wolf_alpha, wandering_beast_elder | Dominant survivors of the wilderness — the hardened beasts |
-| Thunderstorm Plateau | bandit_captain, rogue_enforcer | The most dangerous human threats before leaving the mortal lands |
+
+> Remaining 3 regions reserved — require 2 new enemies with unique sprites before expansion.
 
 ### World 2
 | Region | Pool | Rationale |

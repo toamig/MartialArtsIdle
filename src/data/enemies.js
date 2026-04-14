@@ -109,62 +109,6 @@ const ENEMIES = {
     techniqueDrop: { chance: 0.05 },
   },
 
-  wolf_alpha: {
-    id:          'wolf_alpha',
-    name:        'Alpha Pack Wolf',
-    sprite:      'wolf',
-    description: 'The dominant wolf of the pack — larger and more cunning than its kin. Its qi absorption has accelerated beyond what any ordinary pack wolf achieves, its eyes glowing with a steady, predatory light.',
-    statMult: { hp: 1.1, atk: 1.3 },
-    drops: [
-      { itemId: 'bronze_cultivation_1', chance: 0.75, qty: [1, 3] },
-      { itemId: 'iron_cultivation_1',   chance: 0.40, qty: [1, 2] },
-      { itemId: 'bronze_mineral_1',     chance: 0.25, qty: [1, 1] },
-    ],
-    techniqueDrop: { chance: 0.02 },
-  },
-
-  wandering_beast_elder: {
-    id:          'wandering_beast_elder',
-    name:        'Elder Wandering Beast',
-    sprite:      'wandering_beast',
-    description: 'An ancient wandering beast that has crossed every corner of the borderlands over decades. Its hide is layered in scar tissue from hundreds of fights, and its footsteps carry a weight that makes the ground tremble.',
-    statMult: { hp: 1.15, atk: 1.2 },
-    drops: [
-      { itemId: 'bronze_cultivation_1', chance: 0.80, qty: [2, 4] },
-      { itemId: 'iron_cultivation_1',   chance: 0.40, qty: [1, 2] },
-      { itemId: 'bronze_mineral_2',     chance: 0.20, qty: [1, 1] },
-    ],
-    techniqueDrop: { chance: 0.02 },
-  },
-
-  bandit_captain: {
-    id:          'bandit_captain',
-    name:        'Bandit Captain',
-    sprite:      'bandit_scout',
-    description: 'The leader of a bandit cell — wearing proper armour and carrying a real sword instead of a short blade. Years of commanding ambushes have made them faster and more vicious than any of their subordinates.',
-    statMult: { hp: 1.0, atk: 1.4 },
-    drops: [
-      { itemId: 'bronze_cultivation_1', chance: 0.70, qty: [1, 3] },
-      { itemId: 'iron_cultivation_1',   chance: 0.60, qty: [2, 5] },
-      { itemId: 'bronze_mineral_1',     chance: 0.25, qty: [1, 1] },
-    ],
-    techniqueDrop: { chance: 0.04 },
-  },
-
-  rogue_enforcer: {
-    id:          'rogue_enforcer',
-    name:        'Rogue Enforcer',
-    sprite:      'rogue_disciple',
-    description: 'A former senior disciple who leads the most dangerous rogue cells. They retain the sect\'s combat discipline despite their fall — their stances are clean, their strikes carry genuine cultivation force, and they teach forbidden techniques to those who follow them.',
-    statMult: { hp: 1.1, atk: 1.5 },
-    drops: [
-      { itemId: 'bronze_cultivation_1', chance: 0.80, qty: [2, 5] },
-      { itemId: 'iron_cultivation_1',   chance: 0.50, qty: [1, 3] },
-      { itemId: 'bronze_mineral_1',     chance: 0.30, qty: [1, 1] },
-    ],
-    techniqueDrop: { chance: 0.06 },
-  },
-
   // ── World 2 — The Ancient Frontier ───────────────────────────────────────
   // Theme: desert ruins, ancient beast plains, sunken immortal city, blood seas
   // statMult targets: hp 1.5–2.5, atk 1.3–2.5

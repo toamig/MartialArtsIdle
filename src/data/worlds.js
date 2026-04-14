@@ -15,6 +15,8 @@ const WORLDS = [
     realms: 'Tempered Body → True Element',
     minRealmIndex: 0,
     description: 'A misty sect compound framed by a ceremonial red-and-gold gate, stone inscription pillars, and weathered guardian statues. Bamboo groves rise beyond the training grounds and pale mountains dissolve into perpetual mist. The air carries the smell of chalk dust and residual qi from years of disciples\' practice.',
+    // ⚠️ W1 has 6 unique enemies → 3 clean regions. Two new W1 enemies with new sprites
+    // needed before more regions can be added without visual repetition.
     regions: [
       {
         name: 'Outer Sect Training Grounds',
@@ -34,7 +36,7 @@ const WORLDS = [
         minRealm: 'Tempered Body L5',
         minRealmIndex: 4,
         enemies: 'Pack wolves, bandit scouts',
-        drops: 'Mortal Qi Residue, Condensed Qi Stone, Sect Iron Shard',
+        drops: 'Mortal Qi Residue, Beast Qi Core, Sect Iron Shard, Qi Fang',
         herbs: 'Mortal Qi Grass, Qi Vein Vine',
         ores: 'Sect Iron Shard, Qi Fang',
         enemyPool: [
@@ -48,40 +50,12 @@ const WORLDS = [
         minRealm: 'Qi Transformation Early',
         minRealmIndex: 10,
         enemies: 'Wandering beasts, rogue disciples',
-        drops: 'Mortal Qi Residue, Beast Qi Core, Qi Fang, Spirit Wood Core',
+        drops: 'Mortal Qi Residue, Beast Qi Core, Corrupted Qi Shard, Qi Fang, Spirit Wood Core',
         herbs: 'Qi Vein Vine, Misty Forest Bloom',
         ores: 'Qi Fang, Spirit Wood Core',
         enemyPool: [
           { enemyId: 'wandering_beast', weight: 6 },
           { enemyId: 'rogue_disciple',  weight: 4 },
-        ],
-      },
-      {
-        // Alpha wolves and elder beasts — the hardened survivors of the wilderness, now dominant predators
-        name: 'Misty Spirit Forest',
-        minRealm: 'Qi Transformation Peak',
-        minRealmIndex: 13,
-        enemies: 'Alpha pack wolves, elder wandering beasts',
-        drops: 'Beast Qi Core, Spirit Wood Core',
-        herbs: 'Misty Forest Bloom',
-        ores: 'Qi Fang, Spirit Wood Core',
-        enemyPool: [
-          { enemyId: 'wolf_alpha',           weight: 6 },
-          { enemyId: 'wandering_beast_elder', weight: 4 },
-        ],
-      },
-      {
-        // Bandit captains and rogue enforcers — the most dangerous human threats before leaving the mortal lands
-        name: 'Thunderstorm Plateau',
-        minRealm: 'True Element Peak',
-        minRealmIndex: 17,
-        enemies: 'Bandit captains, rogue enforcers',
-        drops: 'Beast Qi Core, Corrupted Qi Shard, Spirit Wood Core',
-        herbs: 'Misty Forest Bloom',
-        ores: 'Spirit Wood Core',
-        enemyPool: [
-          { enemyId: 'bandit_captain',  weight: 5 },
-          { enemyId: 'rogue_enforcer',  weight: 5 },
         ],
       },
     ],
