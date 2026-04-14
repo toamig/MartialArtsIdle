@@ -15,7 +15,10 @@ function loadOwned() {
 function loadActive() {
   try {
     const raw = localStorage.getItem(ACTIVE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const now = Date.now();
+      return JSON.parse(raw).filter(p => p.expiresAt > now);
+    }
   } catch {}
   return [];
 }
