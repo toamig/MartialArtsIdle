@@ -31,7 +31,8 @@ const ENEMIES = {
     description: 'A young cultivator in a plain white training robe, wielding a basic wooden practice sword with clumsy but eager stances.',
     statMult: { hp: 0.7, atk: 0.6 },
     drops: [
-      { itemId: 'iron_cultivation_1', chance: 0.90, qty: [1, 4] },
+      { itemId: 'iron_cultivation_1', chance: 0.65, qty: [1, 3] },
+      { itemId: 'iron_mineral_2',     chance: 0.30, qty: [1, 2] },
       { itemId: 'iron_cultivation_2', chance: 0.20, qty: [1, 1] },
       { itemId: 'iron_mineral_1',     chance: 0.15, qty: [1, 1] },
     ],
@@ -72,7 +73,8 @@ const ENEMIES = {
     description: 'A wiry fighter in rough patchwork armour, carrying a short blade and moving with the practised stealth of someone who survives by ambush.',
     statMult: { hp: 0.8, atk: 1.1 },
     drops: [
-      { itemId: 'iron_cultivation_1', chance: 0.85, qty: [2, 6] },
+      { itemId: 'iron_cultivation_1', chance: 0.65, qty: [1, 4] },
+      { itemId: 'iron_mineral_2',     chance: 0.35, qty: [1, 2] },
       { itemId: 'iron_cultivation_2', chance: 0.30, qty: [1, 2] },
       { itemId: 'iron_mineral_1',     chance: 0.20, qty: [1, 2] },
     ],
@@ -100,9 +102,10 @@ const ENEMIES = {
     description: 'A former sect member in a tattered and stained cultivation robe, bearing the scars of forbidden qi techniques and the look of someone with nothing left to lose.',
     statMult: { hp: 1.0, atk: 1.3 },
     drops: [
-      { itemId: 'iron_cultivation_1', chance: 0.85, qty: [2, 6] },
-      { itemId: 'iron_cultivation_2', chance: 0.25, qty: [1, 1] },
-      { itemId: 'iron_mineral_1',     chance: 0.20, qty: [1, 1] },
+      { itemId: 'iron_cultivation_2', chance: 0.50, qty: [1, 3] },
+      { itemId: 'iron_cultivation_1', chance: 0.60, qty: [1, 4] },
+      { itemId: 'iron_mineral_1',     chance: 0.20, qty: [1, 2] },
+      { itemId: 'iron_mineral_2',     chance: 0.20, qty: [1, 1] },
     ],
     techniqueDrop: { chance: 0.05 },
   },
