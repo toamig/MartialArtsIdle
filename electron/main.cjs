@@ -1,6 +1,16 @@
 const { app, BrowserWindow, Tray, Menu, Notification, nativeImage, ipcMain } = require('electron');
 const path = require('path');
 
+// ─── Dev vs. shipping build ──────────────────────────────────────────────────
+// `app.isPackaged` is true when running from inside a packaged distribution
+// (electron-builder output) and false when running from source. Shipping
+// builds disable DevTools entirely — Ctrl+Shift+I, F12, right-click Inspect
+// and openDevTools() all become no-ops when devTools is false.
+//
+// Escape hatch: `MAI_DEV=1` in the environment forces dev mode even on a
+// packaged exe, so we can still debug a shipped binary if we have to.
+const isDev = !app.isPackaged || process.env.MAI_DEV === '1';
+
 // ─── State ────────────────────────────────────────────────────────────────────
 
 let win  = null;
@@ -29,15 +39,24 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.cjs'),
+      // Shipping builds: DevTools fully disabled (Ctrl+Shift+I / F12 no-op).
+      // Dev builds: DevTools available and auto-opened below.
+      devTools: isDev,
     },
-    title: 'The Long Road to Heaven',
+    title: `The Long Road to Heaven${isDev ? ' (DEV)' : ''}`,
     backgroundColor: '#1a1a2e',
   });
 
   win.loadFile(path.join(__dirname, '../dist/index.html'));
   win.setMenuBarVisibility(false);
-  // Uncomment to open DevTools for debugging:
-  // win.webContents.openDevTools();
+
+  // Strip the default application menu on shipping builds so no residual
+  // accelerators (DevTools, zoom, etc.) survive behind the hidden menu bar.
+  if (!isDev) Menu.setApplicationMenu(null);
+
+  // In dev, pop the inspector open by default so we're debugging from the
+  // first frame instead of remembering to hit a shortcut.
+  if (isDev) win.webContents.openDevTools({ mode: 'detach' });
 
   // Hide to tray instead of quitting when the user clicks X
   win.on('close', (e) => {
