@@ -4,7 +4,7 @@ gen_ui.py — Pixel art UI element generation pipeline for MartialArtsIdle.
 WORKFLOW (2 steps per element):
   1. Generate candidates:
        python gen_ui.py generate <element_id>
-       → calls generate-image-v2, saves candidate PNGs to TMP_DIR
+       → calls generate-image-v2 or generate-ui-v2, saves candidate PNGs to TMP_DIR
        → review candidates, pick the best one
 
   2. Finalize chosen candidate:
@@ -16,6 +16,7 @@ ELEMENTS:
   panel_scroll    — Parchment/stone scroll panel background
   btn_stone       — Carved stone action button
   bar_frame       — HP bar end-cap / decorative frame
+  qi_bar_half     — Left half of the cultivation QI bar (mirror in CSS for right half)
 
 DEPENDENCIES:
   pip install Pillow
@@ -178,6 +179,90 @@ ELEMENTS = {
             f"{S}"
         ),
     },
+
+    # ── Cultivation QI bar (half, mirrored in CSS to cover full width) ──────
+    "qi_bar_half": {
+        "size": (256, 48),
+        "api_path": "/generate-ui-v2",
+        "color_palette": "dark jade green and aged bronze gold",
+        "desc": (
+            "A pixel art LEFT HALF of a qi cultivation progress bar for a xianxia game. "
+            "This is a HEALTH BAR style element — thick, heavy, stone channel construction. "
+            "The bar must have substantial lips (8-10 px each), not thin rails. "
+            "This half will be mirrored horizontally in code to form the full bar: "
+            "  - LEFT SIDE: ornate decorated end-cap (dragon head). "
+            "  - RIGHT SIDE: perfectly flat vertical cut — no decoration, straight edge for mirroring. "
+            "INTERIOR CHANNEL: the horizontal strip in the centre must be fully TRANSPARENT (alpha=0). "
+            "This transparent gap is where the animated qi fill colour will show through. "
+            "The bar cross-section from top to bottom: "
+            "  [8px top lip: carved dark jade stone + bronze edge highlight] "
+            "  [10px TRANSPARENT interior channel — alpha=0, completely see-through] "
+            "  [8px bottom lip: carved dark jade stone + bronze edge highlight] "
+            "LEFT end-cap: a jade dragon head in profile, facing RIGHT, mouth open. "
+            "The dragon head protrudes 12-16 px beyond the bar's left edge. "
+            "The head is carved jade and bronze, matching the established UI palette. "
+            "Palette: dark jade green (#1a4040 range), aged bronze-gold border/accents, "
+            "charcoal (#111) outline, faint gold pixel on the very top edge. "
+            f"{S}"
+        ),
+    },
+
+    # ── Same bar but via generate-image-v2 + post-processed channel carve ─────
+    "qi_bar_half_v2": {
+        "size": (256, 44),
+        "carve_channel": True,
+        "carve_channel_kwargs": {"scan_x_pct": (0.30, 0.80), "lip_threshold": 30},
+        "desc": (
+            "A pixel art LEFT HALF of a cultivation qi progress bar for a xianxia idle game. "
+            "CRITICAL: This is a horizontal bar frame, symmetrical — only the LEFT HALF is shown. "
+            "The rightmost pixels must form a perfectly straight vertical cut (no end-cap on the right). "
+            "LEFT end-cap: ornate jade-and-bronze dragon head in profile, mouth open, facing RIGHT. "
+            "This matches the existing bar_frame style (same dragon head end-cap). "
+            "The bar body is a thick carved dark jade trough: "
+            "  - Top lip: 5 px carved dark jade with cloud-scroll engraving, bronze top-edge accent. "
+            "  - Interior channel: 8-10 px tall, fully TRANSPARENT (alpha = 0). "
+            "  - Bottom lip: 5 px carved dark jade, bronze bottom-edge accent. "
+            "The trough walls are thick stone — the bar must look heavy and ceremonial, "
+            "not thin or wireframe. This is the main cultivation meter, more prominent than an HP bar. "
+            "Palette: dark jade green (#1a4a3a range), aged bronze-gold (#8a6020 range), "
+            "charcoal outline (#1a1a1a), faint gold highlight on top lip edge. "
+            "Transparent background outside the bar element. "
+            f"{S}"
+        ),
+    },
+
+    # ── Cultivation QI bar — red lacquer & gold, matching cultivation bg ──────
+    "qi_bar_red": {
+        "size": (320, 60),
+        "carve_channel": True,
+        "carve_channel_kwargs": {"scan_x_pct": (0.65, 0.92), "lip_threshold": 35},
+        "desc": (
+            "Pixel art LEFT HALF of the main qi bar for a xianxia cultivation game. "
+            "Mirrored in code — RIGHT EDGE must be a perfectly flat vertical cut, no decoration. "
+            "PALETTE: deep crimson lacquer and bright gold only. No jade, no stone, no bronze. "
+            ""
+            "LEFT END-CAP (~25% of width): Large gold dragon head in profile facing RIGHT. "
+            "Taller than the bar body. Detailed scales, open jaws. "
+            "A circular gold dragon-pearl disc sits behind the jaw. Neck flows into bar body. "
+            ""
+            "BAR BODY CROSS-SECTION (top to bottom): "
+            "[1px bright gold edge line at very top] "
+            "[Top lip 10px: crimson lacquer with FULL-LENGTH decoration: "
+            "  continuous gold cloud-scroll relief line just below top edge; "
+            "  5 evenly-spaced gold circular boss studs (4px) across the lip; "
+            "  diamond-lattice pattern pressed into crimson between studs; "
+            "  1px lighter-crimson highlight on top face for lacquer sheen] "
+            "[1px bright gold inner border — top of channel] "
+            "[Channel 18px: solid dark crimson — carved transparent in post-processing] "
+            "[1px bright gold inner border — bottom of channel] "
+            "[Bottom lip 10px: identical to top lip — same studs, same cloud-scroll, same lattice] "
+            "[1px bright gold edge line at very bottom] "
+            ""
+            "RULES: studs and patterns run ALL THE WAY to the flat right edge, no plain sections. "
+            "Both gold inner-border lines framing the channel must be clearly visible. "
+            f"{S}"
+        ),
+    },
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -288,6 +373,69 @@ def reduce_interior_to_two_tones(img, border_pct=0.16, ink_threshold=170):
 
     return out
 
+
+def carve_bar_channel(img, scan_x_pct=(0.25, 0.75), lip_threshold=30):
+    """
+    Carve a transparent interior channel into a solid bar frame image.
+
+    Used when generate-image-v2 produces a beautifully styled bar but without
+    a transparent interior channel (because the model filled it in).
+
+    Strategy — lip-anchored carve (works regardless of interior colour):
+      1. Compute per-row average brightness in the middle x-band (avoids end-caps).
+      2. Find the LAST bright row (brightness > lip_threshold) in the top half  → top lip edge.
+      3. Find the LAST bright row from the bottom in the bottom half              → bottom lip edge.
+      4. Make every pixel strictly between those two lip edges transparent (alpha=0).
+
+    This correctly handles both dark-jade bars (dark interior) and red-lacquer bars
+    (dark-red interior) because it anchors on the bright lips rather than the dark outlines.
+
+    lip_threshold: rows with avg brightness above this are considered lip territory.
+    """
+    w, h = img.size
+    px   = img.load()
+    out  = img.copy()
+    dst  = out.load()
+
+    x0 = int(w * scan_x_pct[0])
+    x1 = int(w * scan_x_pct[1])
+
+    def row_avg_brightness(y):
+        vals = [(px[x, y][0] + px[x, y][1] + px[x, y][2]) / 3
+                for x in range(x0, x1) if px[x, y][3] > 50]
+        return sum(vals) / len(vals) if vals else 0.0
+
+    brightnesses = [row_avg_brightness(y) for y in range(h)]
+    mid = h // 2
+
+    # Last bright row in top half (bottom edge of top lip)
+    top_lip_end = None
+    for y in range(0, mid + 1):
+        if brightnesses[y] > lip_threshold:
+            top_lip_end = y
+
+    # Last bright row from bottom in bottom half (top edge of bottom lip)
+    bot_lip_start = None
+    for y in range(h - 1, mid - 1, -1):
+        if brightnesses[y] > lip_threshold:
+            bot_lip_start = y
+
+    if top_lip_end is None or bot_lip_start is None or bot_lip_start <= top_lip_end + 1:
+        print("  Warning: carve_bar_channel could not locate lip edges — skipping")
+        return out
+
+    # Erase everything strictly between the two lip edges
+    for y in range(top_lip_end + 1, bot_lip_start):
+        for x in range(w):
+            r, g, b, a = dst[x, y]
+            if a > 10:
+                dst[x, y] = (r, g, b, 0)
+
+    carved = bot_lip_start - top_lip_end - 1
+    print(f"  Carved channel: rows {top_lip_end+1}..{bot_lip_start-1} ({carved}px transparent)")
+    return out
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Pipeline steps
 # ─────────────────────────────────────────────────────────────────────────────
@@ -298,15 +446,21 @@ def run_generate(element_id):
 
     cfg = ELEMENTS[element_id]
     w, h = cfg["size"]
+    api_path = cfg.get("api_path", "/generate-image-v2")
     print(f"\n{'='*60}")
-    print(f"  Generating: {element_id}  ({w}x{h})")
+    print(f"  Generating: {element_id}  ({w}x{h})  via {api_path}")
     print(f"{'='*60}")
 
-    status, r = api_post("/generate-image-v2", {
-        "description":  cfg["desc"],
-        "image_size":   {"width": w, "height": h},
-        "no_background": True,
-    })
+    body = {
+        "description": cfg["desc"],
+        "image_size":  {"width": w, "height": h},
+    }
+    if api_path == "/generate-image-v2":
+        body["no_background"] = True
+    if cfg.get("color_palette"):
+        body["color_palette"] = cfg["color_palette"]
+
+    status, r = api_post(api_path, body)
     if status != 202:
         raise RuntimeError(f"generate-image-v2 returned {status}: {r}")
 
@@ -344,6 +498,10 @@ def run_finalize(element_id, cand_n):
     # Reduce interior to two clean parchment tones (removes calligraphy noise)
     if cfg.get("two_tone_interior"):
         img = reduce_interior_to_two_tones(img, **cfg.get("two_tone_kwargs", {}))
+
+    # Carve a transparent channel into a solid bar (when model filled in the interior)
+    if cfg.get("carve_channel"):
+        img = carve_bar_channel(img, **cfg.get("carve_channel_kwargs", {}))
 
     out_path = OUT_DIR / f"{element_id}.png"
     img.save(str(out_path))
