@@ -13,23 +13,13 @@ import { generateLaw } from '../data/affixPools';
 import { ARTEFACT_NEXT_RARITY } from '../hooks/useArtefacts';
 import { TECH_NEXT_QUALITY } from '../hooks/useTechniques';
 import { LAW_NEXT_RARITY } from '../hooks/useCultivation';
-
-// ─── Rarity bracket system ───────────────────────────────────────────────────
-// Base 3 slots at Iron/common, +2 per quality tier above that.
-// Each bracket has its own rarity color and mineral for craft costs.
-
-const SLOT_BRACKETS = [
-  { count: 3, tier: 1, color: '#9ca3af', label: 'Iron',         mineralStat: 'iron_mineral_1',         mineralMod: 'iron_mineral_2'         },
-  { count: 2, tier: 2, color: '#cd7f32', label: 'Bronze',       mineralStat: 'bronze_mineral_1',       mineralMod: 'bronze_mineral_2'       },
-  { count: 2, tier: 3, color: '#c0c0c0', label: 'Silver',       mineralStat: 'silver_mineral_1',       mineralMod: 'silver_mineral_2'       },
-  { count: 2, tier: 4, color: '#f5c842', label: 'Gold',         mineralStat: 'gold_mineral_1',         mineralMod: 'gold_mineral_2'         },
-  { count: 2, tier: 5, color: '#c084fc', label: 'Transcendent', mineralStat: 'transcendent_mineral_1', mineralMod: 'transcendent_mineral_2' },
-];
-
-function getActiveBrackets(rarity) {
-  const tier = RARITY_TIER[rarity] ?? 1;
-  return SLOT_BRACKETS.slice(0, tier);
-}
+import {
+  SLOT_BRACKETS,
+  getActiveBrackets,
+  getBracketCost as bracketCost,
+  UPGRADE_COSTS,
+  REFINE_COSTS,
+} from '../data/crafting';
 
 /**
  * Group items by their actual `tier` field into rarity brackets.
@@ -54,23 +44,8 @@ function buildBracketSlots(items, rarity) {
   });
 }
 
-// ─── Craft costs — mineral matches the bracket tier ──────────────────────────
-
-// mineralStat → hone (roll value) + add (new slot)
-// mineralMod  → replace (swap modifier type)
-function bracketCost(mineralStat, mineralMod, op) {
-  if (op === 'hone')    return [{ itemId: mineralStat, qty: 3 }];
-  if (op === 'replace') return [{ itemId: mineralMod,  qty: 5 }];
-  return [{ itemId: mineralStat, qty: 8 }]; // add
-}
-
-// Upgrade costs (quality jump) — current tier stat-mineral × N + next tier stat-mineral × M
-const UPGRADE_COST = {
-  Iron:   [ { itemId: 'iron_mineral_1',          qty: 10 }, { itemId: 'bronze_mineral_1',       qty: 3 } ],
-  Bronze: [ { itemId: 'bronze_mineral_1',        qty: 8  }, { itemId: 'silver_mineral_1',       qty: 3 } ],
-  Silver: [ { itemId: 'silver_mineral_1',        qty: 5  }, { itemId: 'gold_mineral_1',         qty: 3 } ],
-  Gold:   [ { itemId: 'gold_mineral_1',          qty: 8  }, { itemId: 'transcendent_mineral_1', qty: 2 } ],
-};
+// bracketCost, SLOT_BRACKETS, getActiveBrackets, UPGRADE_COSTS, REFINE_COSTS
+// are all imported from src/data/crafting.js — edit costs there, not here.
 
 // ─── Quality label helpers ───────────────────────────────────────────────────
 
@@ -276,7 +251,7 @@ function BracketSection({ bracket, renderFilled, renderEmpty }) {
 // ─── Upgrade section ──────────────────────────────────────────────────────────
 
 function UpgradeSection({ rarity, nextQ, inventory, onUpgrade }) {
-  const upgCost   = UPGRADE_COST[rarity];
+  const upgCost   = UPGRADE_COSTS[rarity];
   const upgAfford = upgCost?.every(c => inventory.getQuantity(c.itemId) >= c.qty) ?? false;
 
   if (!nextQ) return <p className="tx-max-quality">Already at maximum quality.</p>;
@@ -767,33 +742,6 @@ function HerbSelector({ slotIndex, selectedHerbId, onSelect, inventory }) {
 const REFINE_RARITIES = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
 
 // Per-rarity recipes — each tier uses materials of matching rarity.
-// Artefacts: minerals only.
-// Techniques: minerals + herbs.
-// Laws:       minerals + cultivation resources.
-const REFINE_COSTS = {
-  artefact: {
-    Iron:         [{ itemId: 'iron_mineral_1',          qty: 5 }],
-    Bronze:       [{ itemId: 'bronze_mineral_1',        qty: 5 }, { itemId: 'bronze_mineral_2',        qty: 3 }],
-    Silver:       [{ itemId: 'silver_mineral_1',        qty: 5 }, { itemId: 'silver_mineral_2',        qty: 3 }],
-    Gold:         [{ itemId: 'gold_mineral_1',          qty: 5 }, { itemId: 'gold_mineral_2',          qty: 3 }],
-    Transcendent: [{ itemId: 'transcendent_mineral_1',  qty: 5 }, { itemId: 'transcendent_mineral_2',  qty: 3 }],
-  },
-  technique: {
-    Iron:         [{ itemId: 'iron_mineral_1',         qty: 3 }, { itemId: 'iron_herb_1',         qty: 5 }],
-    Bronze:       [{ itemId: 'bronze_mineral_1',       qty: 3 }, { itemId: 'bronze_herb_1',       qty: 5 }],
-    Silver:       [{ itemId: 'silver_mineral_1',       qty: 3 }, { itemId: 'silver_herb_1',       qty: 5 }],
-    Gold:         [{ itemId: 'gold_mineral_1',         qty: 3 }, { itemId: 'gold_herb_1',         qty: 3 }],
-    Transcendent: [{ itemId: 'transcendent_mineral_1', qty: 3 }, { itemId: 'transcendent_herb_1', qty: 3 }],
-  },
-  law: {
-    Iron:         [{ itemId: 'iron_mineral_1',         qty: 3 }, { itemId: 'iron_cultivation_1',         qty: 10 }],
-    Bronze:       [{ itemId: 'bronze_mineral_1',       qty: 3 }, { itemId: 'bronze_cultivation_1',       qty: 5  }],
-    Silver:       [{ itemId: 'silver_mineral_1',       qty: 3 }, { itemId: 'silver_cultivation_1',       qty: 5  }],
-    Gold:         [{ itemId: 'gold_mineral_1',         qty: 3 }, { itemId: 'gold_cultivation_1',         qty: 3  }],
-    Transcendent: [{ itemId: 'transcendent_mineral_1', qty: 3 }, { itemId: 'transcendent_cultivation_1', qty: 3  }],
-  },
-};
-
 function getRefineCost(type, rarity) {
   return REFINE_COSTS[type]?.[rarity] ?? [];
 }
@@ -806,12 +754,12 @@ const REFINE_INFO = {
   },
   technique: {
     title:       'Refine Secret Technique',
-    description: 'Inscribe a random secret technique using minerals and herbs.',
+    description: 'Inscribe a random secret technique using minerals and combat essence.',
     icon:        '✦',
   },
   law: {
     title:       'Refine Cultivation Law',
-    description: 'Compile a random cultivation law using minerals and cultivation resources.',
+    description: 'Compile a random cultivation law using minerals and qi condensate.',
     icon:        '☯',
   },
 };
