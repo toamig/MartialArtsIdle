@@ -153,8 +153,9 @@ Every enemy appears in exactly one region. Variants (wolf_alpha, wandering_beast
 | Outer Sect Training Grounds | outer_sect_disciple, training_golem | Sect training environment |
 | Borderland Wilds | wolf, bandit_scout | Open wilderness predators + human ambushers |
 | Qi-Vein Ravines | wandering_beast, rogue_disciple | Beasts prowling ravines; rogues using the terrain for ambushes |
+| Thunderstorm Plateau | wolf, rogue_disciple | Storm-hardened wolves + veteran rogues — wolf and rogue_disciple repeat intentionally 17 realms later with harder scaling |
 
-> Remaining 3 regions reserved — require 2 new enemies with unique sprites before expansion.
+> wolf and rogue_disciple each appear twice. Accepted because the second appearance is at True Element Peak — a full world tier higher — where the context (storm qi, survival conditions) earns the repeat. 2 new enemies with unique sprites needed to reach 6 clean regions.
 
 ### World 2
 | Region | Pool | Rationale |

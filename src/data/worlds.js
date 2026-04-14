@@ -15,8 +15,10 @@ const WORLDS = [
     realms: 'Tempered Body → True Element',
     minRealmIndex: 0,
     description: 'A misty sect compound framed by a ceremonial red-and-gold gate, stone inscription pillars, and weathered guardian statues. Bamboo groves rise beyond the training grounds and pale mountains dissolve into perpetual mist. The air carries the smell of chalk dust and residual qi from years of disciples\' practice.',
-    // ⚠️ W1 has 6 unique enemies → 3 clean regions. Two new W1 enemies with new sprites
-    // needed before more regions can be added without visual repetition.
+    // W1 has 6 unique enemies → 4 regions. Wolf and rogue_disciple each appear twice;
+    // their second appearance is at True Element Peak — a full 17 realms later — where
+    // the context (storm qi, stronger cultivators) earns the repeat. Two new enemies
+    // with unique sprites needed to expand to 6 clean regions.
     regions: [
       {
         name: 'Outer Sect Training Grounds',
@@ -56,6 +58,21 @@ const WORLDS = [
         enemyPool: [
           { enemyId: 'wandering_beast', weight: 6 },
           { enemyId: 'rogue_disciple',  weight: 4 },
+        ],
+      },
+      {
+        // Storm-hardened wolves drawn onto the plateau by qi surges; veteran rogues who survived the True Element threshold
+        // Wolf and rogue_disciple repeat here intentionally — 17 realms higher, harder stat scaling, richer drops
+        name: 'Thunderstorm Plateau',
+        minRealm: 'True Element Peak',
+        minRealmIndex: 17,
+        enemies: 'Pack wolves, rogue disciples',
+        drops: 'Beast Qi Core, Corrupted Qi Shard, Spirit Wood Core',
+        herbs: 'Misty Forest Bloom',
+        ores: 'Spirit Wood Core',
+        enemyPool: [
+          { enemyId: 'wolf',          weight: 5 },
+          { enemyId: 'rogue_disciple', weight: 5 },
         ],
       },
     ],
