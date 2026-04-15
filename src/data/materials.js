@@ -6,7 +6,24 @@
  * Each transmutation tier has two materials:
  *   _1  — used for rolling stats  (hone + add operations)
  *   _2  — used for rolling modifiers (replace operation)
+ *
+ * Designer overrides: src/data/config/materials.override.json patches HERBS
+ * and ORES by their display name (the map key). Each record is a partial
+ * patch (e.g. { gatherCost: 25 }). HERBS and ORES are namespaced by their
+ * surrounding key, so patches go under records.HERBS[name] and
+ * records.ORES[name].
  */
+import { getRecordsPatch } from './config/loader';
+
+const matsPatch = getRecordsPatch('materials');
+
+function patchMap(map, key) {
+  const patches = matsPatch[key] || {};
+  for (const [name, p] of Object.entries(patches)) {
+    if (!p) continue;
+    map[name] = { ...(map[name] || {}), ...p };
+  }
+}
 
 export const HERBS = {
   'Mortal Qi Grass':       { rarity: 'Common',    gatherCost: 15   },
@@ -83,6 +100,12 @@ export const ALL_MATERIALS = {
   transcendent_cultivation_1: { name: 'Primal Qi Core',       rarity: 'Legendary', type: 'cultivation' },
   transcendent_cultivation_2: { name: 'Heaven Qi Crystal',    rarity: 'Legendary', type: 'cultivation' },
 };
+
+// Apply designer overrides — patches by name into HERBS and ORES.
+// Cost changes here propagate to GatheringScreen / MiningScreen / autoFarm
+// since they all read from these exports.
+patchMap(HERBS, 'HERBS');
+patchMap(ORES,  'ORES');
 
 export const RARITY_COLOR = {
   Common:    '#aaa',

@@ -10,6 +10,7 @@ import PillsEditor      from './categories/PillsEditor.jsx';
 import LawsEditor       from './categories/LawsEditor.jsx';
 import ArtefactsEditor  from './categories/ArtefactsEditor.jsx';
 import AffixPoolsEditor from './categories/AffixPoolsEditor.jsx';
+import MaterialsEditor  from './categories/MaterialsEditor.jsx';
 import './designer.css';
 
 const EDITORS = {
@@ -18,6 +19,7 @@ const EDITORS = {
   realms:     RealmsEditor,
   laws:       LawsEditor,
   items:      ItemsEditor,
+  materials:  MaterialsEditor,
   pills:      PillsEditor,
   artefacts:  ArtefactsEditor,
   crafting:   CraftingEditor,
@@ -44,6 +46,7 @@ const CATEGORIES = [
   { id: 'laws',       label: 'Laws',        section: 'Progression',         path: 'src/data/config/laws.override.json'       },
   // ── Inventory ────────────────────────────────────────────────────────────
   { id: 'items',      label: 'Items',       section: 'Inventory',           path: 'src/data/config/items.override.json'      },
+  { id: 'materials',  label: 'Materials',   section: 'Inventory',           path: 'src/data/config/materials.override.json'  },
   { id: 'pills',      label: 'Pills',       section: 'Inventory',           path: 'src/data/config/pills.override.json'      },
   { id: 'artefacts',  label: 'Artefacts',   section: 'Inventory',           path: 'src/data/config/artefacts.override.json'  },
   // ── Crafting ─────────────────────────────────────────────────────────────

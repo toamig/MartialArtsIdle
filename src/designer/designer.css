@@ -573,6 +573,52 @@
   align-self: flex-start;
 }
 
+/* ── Sub-tabs (e.g. Materials Herbs/Ores) ──────────────────────────────── */
+
+.dz-materials-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+.dz-materials-editor > .dz-record-editor {
+  flex: 1;
+  min-height: 0;
+}
+.dz-subtabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--dz-surface);
+  border: 1px solid var(--dz-border);
+  border-radius: 8px;
+  width: fit-content;
+}
+.dz-subtab {
+  padding: 6px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  color: var(--dz-text-dim);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.dz-subtab:hover {
+  background: var(--dz-surface-2);
+  color: var(--dz-text);
+}
+.dz-subtab.active {
+  background: var(--dz-accent-dim);
+  color: var(--dz-accent);
+}
+.dz-subtab-count {
+  opacity: 0.6;
+  font-size: 11px;
+}
+
 /* ── Sprite upload ─────────────────────────────────────────────────────── */
 
 .dz-enemies-editor {
