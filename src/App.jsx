@@ -61,10 +61,6 @@ function App() {
     cultivation.selectionQiMultRef.current = selections.getQiSpeedMult();
   }, [selections, cultivation.selectionQiMultRef]);
 
-  // Auto-open selection modal when new pending selections arrive — only on home screen
-  useEffect(() => {
-    if (selections.pendingCount > 0 && currentScreen === 'home') setSelectionModalOpen(true);
-  }, [selections.pendingCount, currentScreen]);
 
   // ── Centralised stat getter ─────────────────────────────────────────────
   // Builds the FULL computeAllStats bundle including modifier contributions
@@ -192,7 +188,7 @@ function App() {
       <NavBar
         currentScreen={currentScreen}
         onNavigate={(screen) => navigate(screen)}
-        badges={notifications.badges}
+        badges={{ ...notifications.badges, home: selections.pendingCount > 0 }}
         isUnlocked={featureFlags.isUnlocked}
         getHint={featureFlags.getHint}
       />
