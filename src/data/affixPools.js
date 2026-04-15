@@ -8,6 +8,7 @@
 
 import { MOD } from './stats';
 import { pickRandomUnique } from './lawUniques';
+import { mergeSingleton } from './config/loader';
 
 // ─── Slot counts ──────────────────────────────────────────────────────────────
 
@@ -107,7 +108,12 @@ const RING_POOL = [
   { id: 'ri_phys_more',name: 'Pure Power',    stat: 'physical_damage',  type: MOD.MORE,      ranges: MORE_TIER },
 ];
 
-export const AFFIX_POOL_BY_SLOT = {
+/**
+ * Designer overrides: src/data/config/affixPools.override.json wraps each
+ * slot pool under records[<slot>] (e.g. records.weapon = [...full replacement
+ * pool]). Edits replace the entire pool for that slot, not individual affixes.
+ */
+const AFFIX_POOL_BY_SLOT_RAW = {
   weapon: WEAPON_POOL,
   head:   HEAD_POOL,
   body:   BODY_POOL,
@@ -116,6 +122,16 @@ export const AFFIX_POOL_BY_SLOT = {
   feet:   FEET_POOL,
   neck:   NECK_POOL,
   ring:   RING_POOL,
+};
+export const AFFIX_POOL_BY_SLOT = {
+  weapon: mergeSingleton(WEAPON_POOL, 'affixPools', 'weapon'),
+  head:   mergeSingleton(HEAD_POOL,   'affixPools', 'head'),
+  body:   mergeSingleton(BODY_POOL,   'affixPools', 'body'),
+  hands:  mergeSingleton(HANDS_POOL,  'affixPools', 'hands'),
+  waist:  mergeSingleton(WAIST_POOL,  'affixPools', 'waist'),
+  feet:   mergeSingleton(FEET_POOL,   'affixPools', 'feet'),
+  neck:   mergeSingleton(NECK_POOL,   'affixPools', 'neck'),
+  ring:   mergeSingleton(RING_POOL,   'affixPools', 'ring'),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -1,3 +1,11 @@
+/**
+ * Designer overrides: per-item patches in src/data/config/items.override.json.
+ * Keyed by item id (flat). Patches existing items in-place wherever they live.
+ * NEW items: include `_category: 'herbs' | 'minerals' | 'pills' | 'cultivation'`
+ * in the patch and they'll be appended to that category at module-load time.
+ */
+import { getRecordsPatch } from './config/loader';
+
 const RARITY = {
   Iron:         { label: 'Iron',         color: '#9ca3af' },
   Bronze:       { label: 'Bronze',       color: '#cd7f32' },
@@ -77,7 +85,28 @@ const ITEMS = {
   ],
 };
 
-// Flat lookup by id
+// Apply designer overrides — patches are flat by id; new items declare
+// _category to choose which list they join.
+const itemPatches = getRecordsPatch('items');
+for (const [id, patch] of Object.entries(itemPatches)) {
+  if (!patch) continue;
+  const { _category, ...fields } = patch;
+  let merged = false;
+  for (const category of Object.keys(ITEMS)) {
+    const arr = ITEMS[category];
+    const idx = arr.findIndex((it) => it.id === id);
+    if (idx !== -1) {
+      arr[idx] = { ...arr[idx], ...fields };
+      merged = true;
+      break;
+    }
+  }
+  if (!merged && _category && ITEMS[_category]) {
+    ITEMS[_category].push({ id, ...fields });
+  }
+}
+
+// Flat lookup by id (rebuilt AFTER overrides so new items are included)
 const ITEMS_BY_ID = {};
 for (const category of Object.values(ITEMS)) {
   for (const item of category) {

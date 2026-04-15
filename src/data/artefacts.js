@@ -1,4 +1,5 @@
 import { MOD } from './stats';
+import { mergeRecordArray } from './config/loader';
 
 // Quality tiers — unified with Laws and Techniques naming.
 export const QUALITY = {
@@ -29,7 +30,13 @@ export function getSlotBonuses(slot, rarity) {
   }
 }
 
-export const ARTEFACTS = [
+/**
+ * Designer overrides: src/data/config/artefacts.override.json patches
+ * artefacts by `id`. Slot bonuses are formula-driven by getSlotBonuses()
+ * and are NOT editable through overrides — only the metadata (name,
+ * description, slot, rarity, weaponType) is.
+ */
+const ARTEFACTS_RAW = [
   // ── Weapons — Sword ──────────────────────────────────────────────────────
   { id: 'iron_sword',           slot: 'weapon', rarity: 'Iron',         weaponType: 'sword',   name: 'Iron Sword',           description: 'A plain iron sword forged for outer sect disciples. Reliable but unremarkable.' },
   { id: 'spirit_edge_sword',    slot: 'weapon', rarity: 'Bronze',       weaponType: 'sword',   name: 'Spirit-Edge Sword',    description: 'A sword honed with spirit energy; the blade hums faintly when qi flows through it.' },
@@ -94,4 +101,5 @@ export const ARTEFACTS = [
   { id: 'immortal_soul_ring', slot: 'ring', rarity: 'Transcendent', name: 'Immortal Soul Ring', description: "A ring said to contain a sliver of an immortal's soul; dramatically boosts all three primary stats." },
 ];
 
+export const ARTEFACTS = mergeRecordArray(ARTEFACTS_RAW, 'artefacts', 'id');
 export const ARTEFACTS_BY_ID = Object.fromEntries(ARTEFACTS.map(a => [a.id, a]));

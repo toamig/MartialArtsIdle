@@ -1,17 +1,27 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { loadPat, savePat, clearPat } from './pat.js';
 import { checkToken, getFile, putTextFile, REPO_OWNER, REPO_NAME, BRANCH } from './github.js';
-import WorldsEditor   from './categories/WorldsEditor.jsx';
-import EnemiesEditor  from './categories/EnemiesEditor.jsx';
-import RealmsEditor   from './categories/RealmsEditor.jsx';
-import CraftingEditor from './categories/CraftingEditor.jsx';
+import WorldsEditor     from './categories/WorldsEditor.jsx';
+import EnemiesEditor    from './categories/EnemiesEditor.jsx';
+import RealmsEditor     from './categories/RealmsEditor.jsx';
+import CraftingEditor   from './categories/CraftingEditor.jsx';
+import ItemsEditor      from './categories/ItemsEditor.jsx';
+import PillsEditor      from './categories/PillsEditor.jsx';
+import LawsEditor       from './categories/LawsEditor.jsx';
+import ArtefactsEditor  from './categories/ArtefactsEditor.jsx';
+import AffixPoolsEditor from './categories/AffixPoolsEditor.jsx';
 import './designer.css';
 
 const EDITORS = {
-  worlds:   WorldsEditor,
-  enemies:  EnemiesEditor,
-  realms:   RealmsEditor,
-  crafting: CraftingEditor,
+  worlds:     WorldsEditor,
+  enemies:    EnemiesEditor,
+  realms:     RealmsEditor,
+  laws:       LawsEditor,
+  items:      ItemsEditor,
+  pills:      PillsEditor,
+  artefacts:  ArtefactsEditor,
+  crafting:   CraftingEditor,
+  affixPools: AffixPoolsEditor,
 };
 
 /*
@@ -26,10 +36,19 @@ const EDITORS = {
  */
 
 const CATEGORIES = [
-  { id: 'worlds',   label: 'Worlds',   path: 'src/data/config/worlds.override.json'   },
-  { id: 'enemies',  label: 'Enemies',  path: 'src/data/config/enemies.override.json'  },
-  { id: 'realms',   label: 'Realms',   path: 'src/data/config/realms.override.json'   },
-  { id: 'crafting', label: 'Crafting', path: 'src/data/config/crafting.override.json' },
+  // ── Worlds & Encounters ──────────────────────────────────────────────────
+  { id: 'worlds',     label: 'Worlds',      section: 'Worlds & Encounters', path: 'src/data/config/worlds.override.json'     },
+  { id: 'enemies',    label: 'Enemies',     section: 'Worlds & Encounters', path: 'src/data/config/enemies.override.json'    },
+  // ── Progression ──────────────────────────────────────────────────────────
+  { id: 'realms',     label: 'Realms',      section: 'Progression',         path: 'src/data/config/realms.override.json'     },
+  { id: 'laws',       label: 'Laws',        section: 'Progression',         path: 'src/data/config/laws.override.json'       },
+  // ── Inventory ────────────────────────────────────────────────────────────
+  { id: 'items',      label: 'Items',       section: 'Inventory',           path: 'src/data/config/items.override.json'      },
+  { id: 'pills',      label: 'Pills',       section: 'Inventory',           path: 'src/data/config/pills.override.json'      },
+  { id: 'artefacts',  label: 'Artefacts',   section: 'Inventory',           path: 'src/data/config/artefacts.override.json'  },
+  // ── Crafting ─────────────────────────────────────────────────────────────
+  { id: 'crafting',   label: 'Crafting',    section: 'Crafting',            path: 'src/data/config/crafting.override.json'   },
+  { id: 'affixPools', label: 'Affix Pools', section: 'Crafting',            path: 'src/data/config/affixPools.override.json' },
 ];
 
 const EMPTY_OVERRIDE = { version: 1, updatedAt: null, records: {} };
@@ -213,18 +232,29 @@ export default function Designer() {
       {/* Body: nav + editor */}
       <div className="dz-body">
         <nav className="dz-nav">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              className={`dz-nav-item ${activeCat === c.id ? 'active' : ''}`}
-              onClick={() => setActiveCat(c.id)}
-            >
-              <span>{c.label}</span>
-              {dirtyMap.perCat[c.id] > 0 && (
-                <span className="dz-dirty-pill">{dirtyMap.perCat[c.id]}</span>
-              )}
-            </button>
-          ))}
+          {(() => {
+            const out = [];
+            let lastSection = null;
+            for (const c of CATEGORIES) {
+              if (c.section && c.section !== lastSection) {
+                out.push(<div key={`sec-${c.section}`} className="dz-nav-section">{c.section}</div>);
+                lastSection = c.section;
+              }
+              out.push(
+                <button
+                  key={c.id}
+                  className={`dz-nav-item ${activeCat === c.id ? 'active' : ''}`}
+                  onClick={() => setActiveCat(c.id)}
+                >
+                  <span>{c.label}</span>
+                  {dirtyMap.perCat[c.id] > 0 && (
+                    <span className="dz-dirty-pill">{dirtyMap.perCat[c.id]}</span>
+                  )}
+                </button>
+              );
+            }
+            return out;
+          })()}
         </nav>
 
         <main className="dz-main">

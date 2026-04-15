@@ -88,6 +88,19 @@
   background: var(--dz-surface);
   border-right: 1px solid var(--dz-border);
 }
+.dz-nav-section {
+  padding: 12px 14px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dz-text-dim);
+  opacity: 0.65;
+}
+.dz-nav-section:first-child {
+  padding-top: 4px;
+}
+
 .dz-nav-item {
   display: flex;
   align-items: center;

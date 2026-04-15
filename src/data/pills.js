@@ -8,12 +8,18 @@
 
 import { ITEMS, RARITY } from './items';
 import { RARITY_TIER } from './affixPools';
+import { mergeRecordArray } from './config/loader';
 
 export { RARITY as ITEM_RARITY };
 
 // ─── Pill definitions ────────────────────────────────────────────────────────
+//
+// Designer overrides: src/data/config/pills.override.json patches pills by
+// `id`. Unknown ids in the override are appended as new pills. Recipe map
+// (RECIPE_MAP) regenerates from ITEMS.herbs (which already respects items
+// overrides) below.
 
-const PILL_DEFS = [
+const PILL_DEFS_RAW = [
   // Iron pills (5)
   { id: 'qi_condensation_pill',  name: 'Qi Condensation Pill',  rarity: 'Iron', duration: 60,  effects: [{ stat: 'qi_speed', value: 0.5 }] },
   { id: 'body_tempering_pill',   name: 'Body Tempering Pill',   rarity: 'Iron', duration: 60,  effects: [{ stat: 'defense', type: 'flat', value: 30 }] },
@@ -94,6 +100,9 @@ export function getPillCategories(pill) {
   }
   return cats;
 }
+
+// Apply designer overrides (patches by id, append unknown ids as new pills).
+const PILL_DEFS = mergeRecordArray(PILL_DEFS_RAW, 'pills', 'id');
 
 // Attach categories to each pill up-front.
 for (const pill of PILL_DEFS) {
