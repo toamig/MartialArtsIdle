@@ -756,3 +756,245 @@
   .dz-record-editor { flex-direction: column; }
   .dz-rec-list { width: 100%; max-height: 40vh; }
 }
+
+/* ── Audio editor ──────────────────────────────────────────────────────── */
+
+.au-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.au-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.au-tab-active {
+  background: var(--dz-accent-dim);
+  border-color: var(--dz-accent);
+  color: var(--dz-accent);
+}
+
+/* Shared sound metadata */
+.au-sound-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--dz-text);
+}
+.au-sound-desc {
+  font-size: 12px;
+  color: var(--dz-text-dim);
+}
+.au-badge-dirty {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 8px;
+  background: var(--dz-accent);
+  color: #1a1511;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* Volume / loop controls */
+.au-ctrl-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dz-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+.au-vol-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.au-loop-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.au-slider {
+  width: 120px;
+  accent-color: var(--dz-accent);
+}
+.au-slider-sm {
+  width: 90px;
+}
+.au-vol-val {
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  color: var(--dz-text-dim);
+  min-width: 32px;
+}
+
+/* Source path display */
+.au-src-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.au-src-path {
+  padding: 2px 8px;
+  background: var(--dz-surface-2);
+  border: 1px solid var(--dz-border);
+  border-radius: 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--dz-text-dim);
+}
+.au-src-default {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+/* ── BGM cards ─────────────────────────────────────────────────────── */
+
+.au-bgm-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 16px;
+}
+.au-bgm-card {
+  padding: 16px;
+  background: var(--dz-surface);
+  border: 1px solid var(--dz-border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.au-bgm-card.au-dirty {
+  border-color: var(--dz-accent);
+}
+.au-bgm-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.au-bgm-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+.au-reset-btn {
+  align-self: flex-start;
+  font-size: 11px;
+  padding: 4px 10px;
+}
+
+/* ── SFX panel ─────────────────────────────────────────────────────── */
+
+.au-sfx-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.au-sfx-group {
+  background: var(--dz-surface);
+  border: 1px solid var(--dz-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.au-sfx-group-summary {
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--dz-text-dim);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  border-bottom: 1px solid var(--dz-border);
+}
+.au-sfx-group-summary::-webkit-details-marker { display: none; }
+.au-sfx-rows {
+  display: flex;
+  flex-direction: column;
+}
+.au-sfx-row {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--dz-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.au-sfx-row:last-child {
+  border-bottom: none;
+}
+.au-sfx-row.au-dirty {
+  background: var(--dz-accent-dim);
+}
+.au-sfx-row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.au-sfx-row-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+.au-sfx-row-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.au-sfx-row-extra {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+.au-upload-toggle-open {
+  border-color: var(--dz-accent);
+  color: var(--dz-accent);
+}
+
+/* ── Audio upload row ──────────────────────────────────────────────── */
+
+.au-upload-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--dz-bg);
+  border: 1px solid var(--dz-border);
+  border-radius: 6px;
+}
+.au-upload-inputs {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.au-upload-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+.au-file-name {
+  font-size: 11px;
+  color: var(--dz-success);
+  font-family: ui-monospace, monospace;
+}
+.au-upload-actions {
+  display: flex;
+  gap: 8px;
+}
+.au-upload-msg {
+  font-size: 12px;
+}

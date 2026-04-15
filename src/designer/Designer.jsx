@@ -11,6 +11,7 @@ import LawsEditor       from './categories/LawsEditor.jsx';
 import ArtefactsEditor  from './categories/ArtefactsEditor.jsx';
 import AffixPoolsEditor from './categories/AffixPoolsEditor.jsx';
 import MaterialsEditor  from './categories/MaterialsEditor.jsx';
+import AudioEditor      from './categories/AudioEditor.jsx';
 import './designer.css';
 
 const EDITORS = {
@@ -24,6 +25,7 @@ const EDITORS = {
   artefacts:  ArtefactsEditor,
   crafting:   CraftingEditor,
   affixPools: AffixPoolsEditor,
+  audio:      AudioEditor,
 };
 
 /*
@@ -52,6 +54,8 @@ const CATEGORIES = [
   // ── Crafting ─────────────────────────────────────────────────────────────
   { id: 'crafting',   label: 'Crafting',    section: 'Crafting',            path: 'src/data/config/crafting.override.json'   },
   { id: 'affixPools', label: 'Affix Pools', section: 'Crafting',            path: 'src/data/config/affixPools.override.json' },
+  // ── Audio ─────────────────────────────────────────────────────────────────
+  { id: 'audio',      label: 'Audio',       section: 'Audio',               path: 'src/data/config/audio.override.json'      },
 ];
 
 const EMPTY_OVERRIDE = { version: 1, updatedAt: null, records: {} };

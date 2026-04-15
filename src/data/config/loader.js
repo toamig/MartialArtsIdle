@@ -36,6 +36,7 @@ import lawsOverride       from './laws.override.json';
 import artefactsOverride  from './artefacts.override.json';
 import affixPoolsOverride from './affixPools.override.json';
 import materialsOverride  from './materials.override.json';
+import audioOverride      from './audio.override.json';
 
 const OVERRIDES = {
   worlds:     worldsOverride,
@@ -48,6 +49,7 @@ const OVERRIDES = {
   artefacts:  artefactsOverride,
   affixPools: affixPoolsOverride,
   materials:  materialsOverride,
+  audio:      audioOverride,
 };
 
 /** Raw access — returns the full override document for a domain. */
