@@ -146,6 +146,7 @@ function App() {
   const navigate = (screen, param = null) => {
     setCurrentScreen(screen);
     setScreenParam(param);
+    setSelectionModalOpen(false);
     notifications.clearBadge(screen);
   };
 
