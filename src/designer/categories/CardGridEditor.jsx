@@ -34,6 +34,7 @@ export default function CardGridEditor({
   allowAdd = false,
   newIdPlaceholder = 'new_id',
   initialNewRecord = {},
+  cardMinWidth = '300px',
 }) {
   const baselineList = useMemo(
     () => toBaselineList(baselineRecords, idField, isArrayIndex),
@@ -115,7 +116,7 @@ export default function CardGridEditor({
         )}
       </div>
 
-      <div className="dz-card-grid">
+      <div className="dz-card-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${cardMinWidth}, 1fr))` }}>
         {filtered.map(({ key, record }) => (
           <CardGridItem
             key={key}

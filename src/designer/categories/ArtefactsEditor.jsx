@@ -14,6 +14,7 @@ export default function ArtefactsEditor({ edited, onChangeRecords }) {
       allowAdd={true}
       newIdPlaceholder="new_artefact_id"
       initialNewRecord={{ name: 'New Artefact', slot: 'weapon', rarity: 'Iron' }}
+      cardMinWidth="400px"
     />
   );
 }

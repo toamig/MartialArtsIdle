@@ -52,7 +52,7 @@ function Field({ field, value, onChange, path, compact }) {
     case 'string':
       return (
         <label className="dz-form-row">
-          <span className="dz-form-label">{label}</span>
+          <span className="dz-form-label" title={label}>{label}</span>
           <input
             type="text"
             className="dz-input"
@@ -67,7 +67,7 @@ function Field({ field, value, onChange, path, compact }) {
     case 'textarea':
       return (
         <label className={`dz-form-row${compact ? ' dz-form-row--wide' : ''}`}>
-          <span className="dz-form-label">{label}</span>
+          <span className="dz-form-label" title={label}>{label}</span>
           <textarea
             className="dz-input dz-textarea"
             rows={field.rows ?? 3}
@@ -81,7 +81,7 @@ function Field({ field, value, onChange, path, compact }) {
     case 'number':
       return (
         <label className="dz-form-row">
-          <span className="dz-form-label">{label}</span>
+          <span className="dz-form-label" title={label}>{label}</span>
           <input
             type="number"
             className="dz-input"
@@ -107,7 +107,7 @@ function Field({ field, value, onChange, path, compact }) {
             checked={!!value}
             onChange={(e) => onChange(e.target.checked)}
           />
-          <span className="dz-form-label">{label}</span>
+          <span className="dz-form-label" title={label}>{label}</span>
           {field.help && <span className="dz-form-help">{field.help}</span>}
         </label>
       );
@@ -116,7 +116,7 @@ function Field({ field, value, onChange, path, compact }) {
       const opts = typeof field.options === 'function' ? field.options() : field.options;
       return (
         <label className="dz-form-row">
-          <span className="dz-form-label">{label}</span>
+          <span className="dz-form-label" title={label}>{label}</span>
           <select
             className="dz-input"
             value={value ?? ''}
@@ -144,7 +144,8 @@ function Field({ field, value, onChange, path, compact }) {
               <span className="dz-form-section-count">({arr.length})</span>
             </summary>
             <div className="dz-form-section-body">
-              <ArrayField field={field} value={value} onChange={onChange} path={path} compact={compact} />
+              {/* noLegend suppresses the redundant fieldset/legend inside the <details> */}
+              <ArrayField field={field} value={value} onChange={onChange} path={path} compact={compact} noLegend={true} />
             </div>
           </details>
         );
@@ -173,15 +174,16 @@ function Field({ field, value, onChange, path, compact }) {
     default:
       return (
         <div className="dz-form-row">
-          <span className="dz-form-label">{label}</span>
+          <span className="dz-form-label" title={label}>{label}</span>
           <span className="dz-form-help">unsupported field type: {field.type}</span>
         </div>
       );
   }
 }
 
-function ArrayField({ field, value, onChange, compact }) {
+function ArrayField({ field, value, onChange, compact, noLegend }) {
   const arr = Array.isArray(value) ? value : [];
+  const label = field.label || field.key;
   const update = (i, nv) => {
     const next = [...arr];
     if (nv === undefined) next.splice(i, 1);
@@ -195,23 +197,33 @@ function ArrayField({ field, value, onChange, compact }) {
     onChange([...arr, blank]);
   };
 
+  const items = arr.map((item, i) => (
+    <ArrayItem
+      key={i}
+      index={i}
+      item={item}
+      field={field}
+      onChange={(nv) => update(i, nv)}
+      onRemove={() => update(i, undefined)}
+      compact={compact}
+    />
+  ));
+  const addBtn = (
+    <button type="button" className="dz-btn dz-btn-ghost dz-add-btn" onClick={add}>
+      + Add {label}
+    </button>
+  );
+
+  // When rendered inside a compact <details>, skip the redundant fieldset wrapper.
+  if (noLegend) {
+    return <>{items}{addBtn}</>;
+  }
+
   return (
     <fieldset className="dz-form-group">
-      <legend>{field.label || field.key} <span className="dz-form-count">({arr.length})</span></legend>
-      {arr.map((item, i) => (
-        <ArrayItem
-          key={i}
-          index={i}
-          item={item}
-          field={field}
-          onChange={(nv) => update(i, nv)}
-          onRemove={() => update(i, undefined)}
-          compact={compact}
-        />
-      ))}
-      <button type="button" className="dz-btn dz-btn-ghost dz-add-btn" onClick={add}>
-        + Add {field.label || field.key}
-      </button>
+      <legend>{label} <span className="dz-form-count">({arr.length})</span></legend>
+      {items}
+      {addBtn}
     </fieldset>
   );
 }

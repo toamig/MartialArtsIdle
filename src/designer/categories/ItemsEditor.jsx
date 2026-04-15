@@ -31,6 +31,7 @@ export default function ItemsEditor({ edited, onChangeRecords }) {
       allowAdd={true}
       newIdPlaceholder="new_item_id"
       initialNewRecord={{ name: 'New Item', rarity: 'Iron', _category: 'herbs' }}
+      cardMinWidth="360px"
     />
   );
 }

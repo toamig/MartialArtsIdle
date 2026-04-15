@@ -53,6 +53,7 @@ export default function MaterialsEditor({ edited, onChangeRecords }) {
         allowAdd={true}
         newIdPlaceholder={sub.placeholder}
         initialNewRecord={sub.newRec}
+        cardMinWidth="260px"
       />
     </div>
   );
