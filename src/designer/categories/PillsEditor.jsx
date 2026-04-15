@@ -10,7 +10,8 @@ export default function PillsEditor({ edited, onChangeRecords }) {
       onChangeRecords={onChangeRecords}
       schema={pillsSchema}
       idField="id"
-      displayLabel={(rec, key) => `${rec?.rarity ?? '?'} · ${rec?.name ?? key}`}
+      groupBy={(rec) => rec?.rarity ?? 'Other'}
+      displayLabel={(rec, key) => rec?.name ?? key}
       allowAdd={true}
       newIdPlaceholder="new_pill_id"
       initialNewRecord={{ name: 'New Pill', rarity: 'Iron', duration: 60, effects: [] }}

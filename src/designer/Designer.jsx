@@ -372,7 +372,7 @@ function SettingsModal({ pat, tokenStatus, tokenBusy, onSave, onClear, onClose }
           <button className="dz-btn dz-btn-ghost" onClick={onClear}>Forget PAT</button>
           <button
             className="dz-btn dz-btn-primary"
-            onClick={() => { onSave(draft); }}
+            onClick={() => { onSave(draft); onClose(); }}
           >Save</button>
         </footer>
       </div>

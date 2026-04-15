@@ -114,7 +114,8 @@ function SpriteAnimator({
         backgroundPosition: `${bgX}px ${bgY}px`,
         backgroundSize: `${cols * displayWidth}px auto`,
         backgroundRepeat: 'no-repeat',
-        imageRendering: 'pixelated',
+        imageRendering: 'auto',
+        willChange: 'background-position',
         ...style,
       }}
     />

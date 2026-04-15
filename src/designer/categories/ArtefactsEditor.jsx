@@ -10,7 +10,8 @@ export default function ArtefactsEditor({ edited, onChangeRecords }) {
       onChangeRecords={onChangeRecords}
       schema={artefactsSchema}
       idField="id"
-      displayLabel={(rec, key) => `${rec?.slot ?? '?'} · ${rec?.rarity ?? ''} · ${rec?.name ?? key}`}
+      groupBy={(rec) => rec?.slot ?? 'Other'}
+      displayLabel={(rec, key) => `${rec?.rarity ?? '?'} · ${rec?.name ?? key}`}
       allowAdd={true}
       newIdPlaceholder="new_artefact_id"
       initialNewRecord={{ name: 'New Artefact', slot: 'weapon', rarity: 'Iron' }}

@@ -27,7 +27,8 @@ export default function ItemsEditor({ edited, onChangeRecords }) {
       editedRecords={edited.records || {}}
       onChangeRecords={onChangeRecords}
       schema={itemsSchema}
-      displayLabel={(rec, key) => `${rec?._category ?? '?'} · ${rec?.name ?? key}`}
+      groupBy={(rec) => rec?._category ?? 'Other'}
+      displayLabel={(rec, key) => rec?.name ?? key}
       allowAdd={true}
       newIdPlaceholder="new_item_id"
       initialNewRecord={{ name: 'New Item', rarity: 'Iron', _category: 'herbs' }}

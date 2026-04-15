@@ -50,7 +50,7 @@
 .nav-icon-img {
   width: 24px;
   height: 24px;
-  image-rendering: pixelated;
+  image-rendering: auto;
   opacity: 0.6;
   transition: opacity 0.2s;
 }
@@ -619,6 +619,7 @@
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
+  image-rendering: auto;
   pointer-events: none;
 }
 
@@ -657,8 +658,7 @@
   width: 100%;
   height: auto;
   margin: 0 auto 4px;
-  image-rendering: pixelated;
-  image-rendering: -moz-crisp-edges;
+  image-rendering: auto;
   pointer-events: none;
   user-select: none;
   filter:
@@ -931,7 +931,7 @@
   /* Subtle bronze underline keeps it anchored above the bar */
   border-bottom: 1px solid rgba(245, 200, 66, 0.22);
   width: fit-content;
-  image-rendering: pixelated;
+  image-rendering: auto;
 }
 @media (min-width: 768px) {
   .realm-stage-title {
@@ -967,6 +967,7 @@
   width: 100%;
   height: auto;
   position: relative;
+  image-rendering: auto;
   z-index: 2;
   pointer-events: none;
   user-select: none;
@@ -1584,7 +1585,7 @@
 .inv-icon {
   width: 40px;
   height: 40px;
-  image-rendering: pixelated;
+  image-rendering: auto;
 }
 
 .inv-qty {
@@ -1717,7 +1718,7 @@
 .modal-icon {
   width: 96px;
   height: 96px;
-  image-rendering: pixelated;
+  image-rendering: auto;
 }
 
 .modal-title {
@@ -2289,7 +2290,7 @@
   width: 100%;
   height: 100%;
   object-fit: fill;
-  image-rendering: pixelated;
+  image-rendering: auto;
   pointer-events: none;
   z-index: 10;
 }
@@ -2314,7 +2315,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  image-rendering: pixelated;
+  image-rendering: auto;
   z-index: 1;
 }
 
@@ -2756,7 +2757,7 @@
   display: block;
   width: 100%;
   height: auto;
-  image-rendering: pixelated;
+  image-rendering: auto;
   pointer-events: none;
   position: relative;
   z-index: 2;
@@ -2890,6 +2891,7 @@
   background-size: cover;
   background-position: center bottom;
   background-repeat: no-repeat;
+  image-rendering: auto;
 }
 
 @media (min-width: 431px) {
@@ -3597,13 +3599,13 @@
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border);
-  image-rendering: pixelated;
+  image-rendering: auto;
   flex-shrink: 0;
 }
 
 .enemy-chip-sprite img {
   display: block;
-  image-rendering: pixelated;
+  image-rendering: auto;
 }
 
 .enemy-chip-name {

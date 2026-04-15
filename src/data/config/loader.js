@@ -94,7 +94,7 @@ export function mergeRecordArray(baseArr, domain, idField = 'id') {
     return p ? { ...rec, ...p } : rec;
   });
 
-  const existingIds = new Set(baseArr.map((r) => r[idField]));
+  const existingIds = new Set(baseArr.map((r) => String(r[idField])));
   for (const id of keys) {
     if (!existingIds.has(id)) {
       patched.push({ [idField]: id, ...patch[id] });

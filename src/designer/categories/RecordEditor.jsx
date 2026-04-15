@@ -29,6 +29,7 @@ export default function RecordEditor({
   idField = 'id',
   isArrayIndex = false,
   displayLabel,
+  groupBy,
   allowAdd = false,
   newIdPlaceholder = 'new_id',
   initialNewRecord = {},
@@ -95,6 +96,18 @@ export default function RecordEditor({
     });
   }, [baselineList, filter, displayLabel]);
 
+  // When groupBy is provided, bucket the filtered list into ordered groups.
+  const groupedList = useMemo(() => {
+    if (!groupBy) return null;
+    const map = new Map();
+    for (const r of filtered) {
+      const g = groupBy(r.record, r.key) ?? 'Other';
+      if (!map.has(g)) map.set(g, []);
+      map.get(g).push(r);
+    }
+    return map;
+  }, [filtered, groupBy]);
+
   // Additionally include any records that only exist in the override (new ids).
   const extraKeys = Object.keys(editedRecords).filter((k) => !baselineList.some((b) => b.key === k));
 
@@ -114,10 +127,36 @@ export default function RecordEditor({
             <button className="dz-btn dz-btn-ghost dz-add-btn" onClick={addNewRecord}>+ New</button>
           )}
         </div>
-        <ul>
-          {filtered.map((r) => (
-            <li key={r.key}>
+        <div className="dz-rec-list-items">
+          {groupedList ? (
+            Array.from(groupedList.entries()).map(([groupName, items]) => {
+              const dirtyCount = items.filter(r => editedRecords[r.key]).length;
+              return (
+                <details key={groupName} className="dz-rec-group" open>
+                  <summary className="dz-rec-group-summary">
+                    <span className="dz-rec-group-name">{groupName}</span>
+                    <span className="dz-rec-group-count">{items.length}</span>
+                    {dirtyCount > 0 && <span className="dz-rec-dot" />}
+                  </summary>
+                  {items.map((r) => (
+                    <button
+                      key={r.key}
+                      className={`dz-rec-item ${selectedKey === r.key ? 'active' : ''} ${editedRecords[r.key] ? 'dirty' : ''}`}
+                      onClick={() => setSelectedKey(r.key)}
+                    >
+                      <span className="dz-rec-item-label">
+                        {displayLabel ? displayLabel(r.record, r.key) : r.key}
+                      </span>
+                      {editedRecords[r.key] && <span className="dz-rec-dot" />}
+                    </button>
+                  ))}
+                </details>
+              );
+            })
+          ) : (
+            filtered.map((r) => (
               <button
+                key={r.key}
                 className={`dz-rec-item ${selectedKey === r.key ? 'active' : ''} ${editedRecords[r.key] ? 'dirty' : ''}`}
                 onClick={() => setSelectedKey(r.key)}
               >
@@ -126,25 +165,24 @@ export default function RecordEditor({
                 </span>
                 {editedRecords[r.key] && <span className="dz-rec-dot" />}
               </button>
-            </li>
-          ))}
+            ))
+          )}
           {extraKeys.length > 0 && (
             <>
-              <li className="dz-rec-list-sep">New records</li>
+              <div className="dz-rec-list-sep">New records</div>
               {extraKeys.map((k) => (
-                <li key={k}>
-                  <button
-                    className={`dz-rec-item ${selectedKey === k ? 'active' : ''} dirty`}
-                    onClick={() => setSelectedKey(k)}
-                  >
-                    <span className="dz-rec-item-label">{k}</span>
-                    <span className="dz-rec-dot" />
-                  </button>
-                </li>
+                <button
+                  key={k}
+                  className={`dz-rec-item ${selectedKey === k ? 'active' : ''} dirty`}
+                  onClick={() => setSelectedKey(k)}
+                >
+                  <span className="dz-rec-item-label">{k}</span>
+                  <span className="dz-rec-dot" />
+                </button>
               ))}
             </>
           )}
-        </ul>
+        </div>
       </aside>
 
       <section className="dz-rec-detail">

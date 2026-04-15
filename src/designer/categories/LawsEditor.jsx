@@ -9,6 +9,7 @@ export default function LawsEditor({ edited, onChangeRecords }) {
       editedRecords={edited.records || {}}
       onChangeRecords={onChangeRecords}
       schema={lawsSchema}
+      groupBy={(rec) => rec?.element ?? 'Other'}
       displayLabel={(rec, key) => `${rec?.rarity ?? '?'} · ${rec?.name ?? key}`}
       allowAdd={true}
       newIdPlaceholder="new_law_id"
