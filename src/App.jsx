@@ -204,7 +204,7 @@ function App() {
         onDismiss={notifications.dismissToast}
         onNavigate={navigate}
       />
-      {selectionModalOpen && selections.pending[0] && (
+      {selectionModalOpen && selections.pending[0] && currentScreen === 'home' && (
         <SelectionModal
           selection={selections.pending[0]}
           jadeBalance={selections.jadeBalance}
