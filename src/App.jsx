@@ -55,6 +55,15 @@ function App() {
     cultivation.pillQiMultRef.current = pillQiMult;
   }, [pillQiMult, cultivation.pillQiMultRef]);
 
+  // Open selection modal on level-up only when already on home screen.
+  // currentScreen is intentionally excluded from deps — we want this to fire
+  // only when pendingCount increases, not when the player navigates to home.
+  useEffect(() => {
+    if (selections.pendingCount > 0 && currentScreen === 'home') {
+      setSelectionModalOpen(true);
+    }
+  }, [selections.pendingCount]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Keep selection qi speed mult in sync with cultivation game loop
   useEffect(() => {
     if (!cultivation.selectionQiMultRef) return;
