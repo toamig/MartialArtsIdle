@@ -10,16 +10,7 @@
  * to the source-file pool.
  */
 
-const STAT_OPTIONS = [
-  'physical_damage',
-  'elemental_damage',
-  'defense',
-  'elemental_defense',
-  'health',
-  'soul_toughness',
-  'essence',
-  'qi_speed',
-];
+import { statOptions } from '../enumSources.js';
 
 const MOD_TYPE_OPTIONS = [
   { value: 'FLAT',      label: 'FLAT (additive raw)' },
@@ -38,7 +29,7 @@ const rangeArr = { type: 'array', itemType: 'number', label: '[min, max]' };
 const affixRow = [
   { key: 'id',     type: 'string', label: 'Affix id' },
   { key: 'name',   type: 'string', label: 'Display name' },
-  { key: 'stat',   type: 'enum',   label: 'Stat', options: STAT_OPTIONS },
+  { key: 'stat',   type: 'enum',   label: 'Stat', options: statOptions },
   { key: 'type',   type: 'enum',   label: 'Modifier type', options: MOD_TYPE_OPTIONS },
   {
     key: 'ranges',
