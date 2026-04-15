@@ -7,6 +7,7 @@ import PillDrawer from '../components/PillDrawer';
 import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
 import { PILLS_BY_ID, ITEM_RARITY } from '../data/pills';
+import WORLDS from '../data/worlds';
 
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
@@ -115,7 +116,25 @@ function HeavenlyQiButton({ ad, adBoostActive, adBoostRemaining, maxed }) {
 const HOLD_HINT_SEEN_KEY = 'mai_home_hold_hint_seen';
 const HOLD_HINT_IDLE_MS  = 60 * 1000; // re-show hint after this long without holding
 
-function HomeScreen({ cultivation, pills, inventory, selections, onOpenSelections }) {
+const ACTIVITY_ICON  = { combat: '⚔', gathering: '🌿', mining: '⛏' };
+const ACTIVITY_LABEL = { combat: 'Fighting', gathering: 'Gathering', mining: 'Mining' };
+
+function IdleChip({ idleAssignment }) {
+  const { t: tGame } = useTranslation('game');
+  if (!idleAssignment) return null;
+  const { activity, worldIndex, regionIndex } = idleAssignment;
+  const region = WORLDS[worldIndex]?.regions?.[regionIndex];
+  if (!region) return null;
+  const regionName = tGame(`regions.${region.name}.name`, { defaultValue: region.name });
+  return (
+    <div className="home-idle-chip">
+      <span className="home-idle-icon">{ACTIVITY_ICON[activity]}</span>
+      <span className="home-idle-label">{ACTIVITY_LABEL[activity]}: {regionName}</span>
+    </div>
+  );
+}
+
+function HomeScreen({ cultivation, pills, inventory, selections, onOpenSelections, idleAssignment }) {
   const { t } = useTranslation('ui');
   const {
     realmName,
@@ -241,6 +260,9 @@ function HomeScreen({ cultivation, pills, inventory, selections, onOpenSelection
 
       {/* ── Bottom stack (top-to-bottom): qi/s → hint → character → realm name → bar ── */}
       <div className="home-hud-bottom">
+
+        {/* Active idle assignment — shows what's being farmed in the background */}
+        <IdleChip idleAssignment={idleAssignment} />
 
         {/* Qi/s readout — above the player's head, just above hold hint */}
         <QiRateReadout

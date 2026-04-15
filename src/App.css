@@ -1070,6 +1070,25 @@
 }
 
 /* Pills: floating bottom-right above the nav bar */
+/* Idle assignment chip — floats above the bottom HUD */
+.home-idle-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-secondary));
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+  margin-bottom: 4px;
+}
+
+.home-idle-icon { font-size: 14px; }
+.home-idle-label { opacity: 0.9; }
+
 .home-pill-float {
   position: fixed;
   bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);
@@ -3907,6 +3926,37 @@
 
 .region-row.region-locked {
   opacity: 0.45;
+}
+
+.region-row.region-row-idling {
+  border-left: 3px solid var(--accent);
+}
+
+/* Idle toggle button inside a region row */
+.region-idle-btn {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1.5px solid var(--text-muted);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.region-idle-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.region-idle-btn.region-idle-btn-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
 }
 
 .region-row:not(.region-locked) {

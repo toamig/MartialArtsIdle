@@ -36,7 +36,11 @@ function EnemyChip({ enemyId }) {
   );
 }
 
-function RegionRow({ region, tab, locked, lockHint, onNavigate, worldId }) {
+const TAB_ACTIVITY = { world: 'combat', gather: 'gathering', mine: 'mining' };
+const ACTIVITY_ICON = { combat: '⚔', gathering: '🌿', mining: '⛏' };
+
+function RegionRow({ region, tab, locked, lockHint, onNavigate, worldId,
+                     canIdle, isIdling, onSetIdle, onClearIdle }) {
   const { t } = useTranslation('ui');
   const { t: tGame }  = useTranslation('game');
 
@@ -52,15 +56,13 @@ function RegionRow({ region, tab, locked, lockHint, onNavigate, worldId }) {
     ? [...new Set((region.enemyPool ?? []).map(e => e.enemyId))]
     : [];
 
-  const regionName  = locked ? '???' : tGame(`regions.${region.name}.name`, { defaultValue: region.name });
+  const regionName    = locked ? '???' : tGame(`regions.${region.name}.name`, { defaultValue: region.name });
   const minRealmLabel = tGame(`stages.${region.minRealm}.name`, { defaultValue: region.minRealm });
 
   const SCREEN_MAP = { world: 'combat-arena', gather: 'gathering', mine: 'mining' };
 
   function handleClick() {
     if (isWorld) {
-      // Preload all 3 animation sets for this region's enemies right before
-      // entering combat — they'll be in cache by the time the first hit lands.
       const sprites = [...new Set(
         (region.enemyPool ?? []).map(e => ENEMIES[e.enemyId]?.sprite).filter(Boolean)
       )];
@@ -69,9 +71,15 @@ function RegionRow({ region, tab, locked, lockHint, onNavigate, worldId }) {
     onNavigate(SCREEN_MAP[tab], { region, worldId, fromTab: tab });
   }
 
+  function handleIdleClick(e) {
+    e.stopPropagation();
+    if (isIdling) onClearIdle();
+    else onSetIdle();
+  }
+
   return (
     <div
-      className={`region-row${locked ? ' region-locked' : ''}${isWorld && !locked ? ' region-row-world' : ''}`}
+      className={`region-row${locked ? ' region-locked' : ''}${isWorld && !locked ? ' region-row-world' : ''}${isIdling ? ' region-row-idling' : ''}`}
       onClick={!locked ? handleClick : undefined}
       role={!locked ? 'button' : undefined}
       title={locked && lockHint ? lockHint : undefined}
@@ -98,11 +106,21 @@ function RegionRow({ region, tab, locked, lockHint, onNavigate, worldId }) {
           {enemyIds.map(id => <EnemyChip key={id} enemyId={id} />)}
         </div>
       )}
+
+      {(canIdle || isIdling) && !locked && (
+        <button
+          className={`region-idle-btn${isIdling ? ' region-idle-btn-active' : ''}`}
+          onClick={handleIdleClick}
+          title={isIdling ? 'Stop idling here' : 'Idle here automatically'}
+        >
+          {isIdling ? '◉ Idling' : '◎ Idle'}
+        </button>
+      )}
     </div>
   );
 }
 
-function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavigate, expandWorldId }) {
+function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavigate, expandWorldId, idleAssignment, onSetIdle }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
 
@@ -159,15 +177,17 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
 
       {open && !worldLocked && (
         <div className="region-list">
-          {world.regions.map(region => {
+          {world.regions.map((region, regionIndex) => {
             const realmLocked    = realmIndex < region.minRealmIndex;
-            // For gather/mine tabs, also require the region's combat to be cleared.
             const activityLocked = !realmLocked && tab !== 'world'
               && !clearedRegions.has(region.name);
-            const isLocked = realmLocked || activityLocked;
-            const lockHint = activityLocked
-              ? 'Clear this region in combat first'
-              : undefined;
+            const isLocked   = realmLocked || activityLocked;
+            const lockHint   = activityLocked ? 'Clear this region in combat first' : undefined;
+            const activity   = TAB_ACTIVITY[tab];
+            const canIdle    = !realmLocked && clearedRegions.has(region.name);
+            const isIdling   = idleAssignment?.activity === activity
+                            && idleAssignment?.worldIndex === worldIndex
+                            && idleAssignment?.regionIndex === regionIndex;
             return (
               <RegionRow
                 key={region.name}
@@ -177,6 +197,10 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
                 lockHint={lockHint}
                 onNavigate={onNavigate}
                 worldId={world.id}
+                canIdle={canIdle}
+                isIdling={isIdling}
+                onSetIdle={() => onSetIdle(activity, worldIndex, regionIndex)}
+                onClearIdle={() => onSetIdle(null)}
               />
             );
           })}
@@ -186,7 +210,7 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
   );
 }
 
-function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clearedRegions }) {
+function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clearedRegions, idleAssignment, onSetIdle }) {
   const { t } = useTranslation('ui');
   const [tab, setTab] = useState(activeTab ?? 'world');
   const realmIndex = cultivation.realmIndex;
@@ -226,6 +250,8 @@ function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clear
             clearedRegions={cleared}
             onNavigate={onNavigate}
             expandWorldId={expandWorldId}
+            idleAssignment={idleAssignment}
+            onSetIdle={onSetIdle ?? (() => {})}
           />
         ))}
       </div>

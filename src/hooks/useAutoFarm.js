@@ -237,6 +237,18 @@ export default function useAutoFarm({ worlds, getStats, getEquippedTechs }) {
   }, []);
 
   /**
+   * Set exactly one idle activity (mutex — clears all others in one update).
+   * Call with activity=null to stop all auto-farming.
+   */
+  const setIdleActivity = useCallback((activity, worldIndex = 0, regionIndex = 0) => {
+    setConfigRaw(() => {
+      const base = getDefaultConfig();
+      if (!activity) return base;
+      return { ...base, [activity]: { enabled: true, worldIndex, regionIndex } };
+    });
+  }, []);
+
+  /**
    * Apply all pending gains via a caller-provided callback, then clear them.
    * The callback receives: { items: { [itemId]: qty }, techniques: [...] }
    *
@@ -260,6 +272,8 @@ export default function useAutoFarm({ worlds, getStats, getEquippedTechs }) {
     autoFarmConfig: config,
     /** Enable/disable an activity and point it at a region. */
     setAutoFarm,
+    /** Set exactly one idle region (mutex). Pass null activity to stop all. */
+    setIdleActivity,
     /** Accumulated gains not yet applied (offline + background ticks). */
     pendingGains,
     /** Apply gains via callback and clear them. */

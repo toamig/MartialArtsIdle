@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import NavBar from './components/NavBar';
 import HomeScreen from './screens/HomeScreen';
 import { initAds } from './ads/adService';
@@ -133,6 +133,32 @@ function App() {
     getEquippedTechs: () => techniques.equippedTechniques,
   });
 
+  // Flush auto-farm gains into inventory every 5 seconds
+  useEffect(() => {
+    const id = setInterval(() => {
+      autoFarm.collectGains(gains => {
+        Object.entries(gains.items ?? {}).forEach(([itemId, qty]) => inventory.addItem(itemId, qty));
+        gains.techniques?.forEach(t => techniques.addOwnedTechnique(t));
+      });
+    }, 5000);
+    return () => clearInterval(id);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Derive the single active idle assignment from the config
+  const idleAssignment = useMemo(() => {
+    const cfg = autoFarm.autoFarmConfig;
+    for (const activity of ['combat', 'gathering', 'mining']) {
+      if (cfg[activity]?.enabled) {
+        return {
+          activity,
+          worldIndex:  cfg[activity].worldIndex,
+          regionIndex: cfg[activity].regionIndex,
+        };
+      }
+    }
+    return null;
+  }, [autoFarm.autoFarmConfig]);
+
   const notifications = useNotifications({ cultivation, inventory });
 
   const featureFlags = useFeatureFlags({
@@ -165,10 +191,10 @@ function App() {
   });
 
   const screens = {
-    home:      <HomeScreen cultivation={cultivation} pills={pills} inventory={inventory} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} />,
+    home:      <HomeScreen cultivation={cultivation} pills={pills} inventory={inventory} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} idleAssignment={idleAssignment} />,
     training:  <TrainingScreen />,
     // Worlds hub — the NavBar "Worlds" tab always lands here
-    combat:    <WorldsScreen cultivation={cultivation} onNavigate={navigate} expandWorldId={screenParam?.expandWorldId ?? null} activeTab={screenParam?.activeTab ?? null} clearedRegions={clearedRegions} />,
+    combat:    <WorldsScreen cultivation={cultivation} onNavigate={navigate} expandWorldId={screenParam?.expandWorldId ?? null} activeTab={screenParam?.activeTab ?? null} clearedRegions={clearedRegions} idleAssignment={idleAssignment} onSetIdle={autoFarm.setIdleActivity} />,
     // Sub-screens launched from the Worlds hub
     'combat-arena': <CombatScreen
                       cultivation={cultivation}
