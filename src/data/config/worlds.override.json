@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-15T00:30:26.018Z",
+  "updatedAt": "2026-04-15T00:35:23.313Z",
   "records": {
     "1": {
       "regions": [
@@ -79,7 +79,7 @@
           "enemyPool": [
             {
               "enemyId": "rogue_disciple",
-              "weight": 11
+              "weight": 12
             }
           ]
         }
