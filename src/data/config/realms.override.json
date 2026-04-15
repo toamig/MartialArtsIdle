@@ -1,5 +1,12 @@
 {
   "version": 1,
-  "updatedAt": null,
-  "records": {}
+  "updatedAt": "2026-04-15T00:36:44.679Z",
+  "records": {
+    "0": {
+      "cost": 200
+    },
+    "1": {
+      "cost": 250
+    }
+  }
 }
