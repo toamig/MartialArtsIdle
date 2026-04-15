@@ -22,6 +22,7 @@
 - [[Enemies]] — Enemy types, stat profiles, technique pools, region assignments
 - [[Reincarnation]] — Prestige system
 - [[Implementation Notes]] — Tech stack, file structure, what's built vs stubbed
+- [[Ideation]] — Brainstorms, open questions, scratchpad
 
 ## Core Pillars
 

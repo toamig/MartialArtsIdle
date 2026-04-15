@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Implementation Notes.md",
+                "file": "Stats.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Implementation Notes"
+              "title": "Stats"
             }
           }
         ]
@@ -185,12 +185,14 @@
   },
   "active": "c3aa73ef4da1bbd1",
   "lastOpenFiles": [
+    "Unique Modifiers - Review.md",
+    "Ideation.md",
+    "Implementation Notes.md",
     "Implementation Notes.md.tmp.32808.1775778390583",
     "Realm Progression.md",
     "Realm Progression.md.tmp.32808.1775778308370",
     "Items.md",
     "Home.md.tmp.32808.1775778034735",
-    "Implementation Notes.md",
     "Implementation Notes.md.tmp.32808.1775778031323",
     "Cultivation System.md",
     "Combat.md",
@@ -204,7 +206,6 @@
     "Game Vision.md",
     "Home.md",
     "Roadmap.md",
-    "Reincarnation.md",
-    "Reincarnation.md.tmp.32808.1775776917910"
+    "Reincarnation.md"
   ]
 }
