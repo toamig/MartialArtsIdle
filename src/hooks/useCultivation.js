@@ -28,7 +28,7 @@ function loadOwnedLaws() {
 }
 
 const BASE_RATE       = 5; // qi per second at 1x
-const BOOST_MULTIPLIER = 3;
+const BOOST_MULTIPLIER = 3; // legacy fallback when focusMult ref isn't wired
 const AD_BOOST_MULT   = 2; // rewarded-ad cultivation boost
 const MIN_OFFLINE_SEC = 5 * 60; // only show offline popup after 5 min away
 
@@ -180,6 +180,10 @@ export default function useCultivation() {
   useEffect(() => { activeLawRef.current = activeLaw; }, [activeLaw]);
 
   const pillQiMultRef = useRef(1);
+  // Hold-to-cultivate boost multiplier (qi_focus_mult stat, expressed as %).
+  // Default 300% = the legacy 3× behavior; App.jsx writes the player's actual
+  // focus mult into this ref each second.
+  const focusMultRef = useRef(300);
   const boostRef    = useRef(false);
   const adBoostRef  = useRef(
     (saved?.adBoostEndsAt ?? 0) > Date.now() ? AD_BOOST_MULT : 1
@@ -226,8 +230,12 @@ export default function useCultivation() {
           const qiMods = bundle.statMods.qi_speed ?? [];
           qiUniqueMult = computeStat(1, qiMods);
         }
+        // Boost multiplier: focusMult is in %, fall back to legacy 3× if unset.
+        const boostMult = boostRef.current
+          ? Math.max(1, (focusMultRef.current ?? 300) / 100)
+          : 1;
         const rate = BASE_RATE * lawMult * qiUniqueMult *
-          (boostRef.current ? BOOST_MULTIPLIER : 1) *
+          boostMult *
           adBoostRef.current * pillQiMultRef.current;
         rateRef.current = rate;
         qiRef.current += rate * dt;
@@ -318,6 +326,8 @@ export default function useCultivation() {
     honeLawUnique,
     // Pill qi multiplier ref — updated by App.jsx
     pillQiMultRef,
+    // Focus multiplier ref (qi_focus_mult, in %) — updated by App.jsx every second
+    focusMultRef,
     // Ads
     activateAdBoost,
     adBoostActive:  adBoostEndsAt > Date.now(),

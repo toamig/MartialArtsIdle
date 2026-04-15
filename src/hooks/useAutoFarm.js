@@ -145,9 +145,12 @@ export default function useAutoFarm({ worlds, getStats, getEquippedTechs }) {
       let gained = emptyGains();
 
       if (activity === 'gathering') {
-        gained.items = simulateGathering(awaySeconds, region);
+        // Offline gathering uses base speed/luck only — we don't have full
+        // computed stats here without the live game loop. That's a fair
+        // tradeoff for offline simulation; live ticks below get the bonuses.
+        gained.items = simulateGathering(awaySeconds, region, null);
       } else if (activity === 'mining') {
-        gained.items = simulateMining(awaySeconds, region);
+        gained.items = simulateMining(awaySeconds, region, null);
       } else if (activity === 'combat' && offlineStats) {
         gained = simulateCombat(awaySeconds, region, offlineStats, offlineTechs);
       }
@@ -181,9 +184,9 @@ export default function useAutoFarm({ worlds, getStats, getEquippedTechs }) {
         let gained = emptyGains();
 
         if (activity === 'gathering') {
-          gained.items = simulateGathering(TICK_INTERVAL_MS / 1000, region);
+          gained.items = simulateGathering(TICK_INTERVAL_MS / 1000, region, stats);
         } else if (activity === 'mining') {
-          gained.items = simulateMining(TICK_INTERVAL_MS / 1000, region);
+          gained.items = simulateMining(TICK_INTERVAL_MS / 1000, region, stats);
         } else if (activity === 'combat' && stats) {
           gained = simulateCombat(TICK_INTERVAL_MS / 1000, region, stats, equippedTechs);
         }

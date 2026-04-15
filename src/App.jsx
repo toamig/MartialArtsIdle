@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import NavBar from './components/NavBar';
 import HomeScreen from './screens/HomeScreen';
 import { initAds } from './ads/adService';
@@ -21,6 +21,8 @@ import useArtefacts   from './hooks/useArtefacts';
 import usePills       from './hooks/usePills';
 import useAutoFarm    from './hooks/useAutoFarm';
 import WORLDS         from './data/worlds';
+import { computeAllStats, mergeModifiers } from './data/stats';
+import { evaluateLawUniques, buildContext } from './systems/lawEngine';
 import { initDebug } from './debug/gameDebug';
 import { preloadImages, PLAYER_SPRITE_SRCS } from './utils/preload';
 import './App.css';
@@ -45,19 +47,64 @@ function App() {
     cultivation.pillQiMultRef.current = pillQiMult;
   }, [pillQiMult, cultivation.pillQiMultRef]);
 
-  // Auto-farm — stat getters read live refs so the hook never triggers re-renders
+  // ── Centralised stat getter ─────────────────────────────────────────────
+  // Builds the FULL computeAllStats bundle including modifier contributions
+  // from artefacts, pills, and law uniques. Used by autoFarm (gather/mine
+  // speed + luck), combat (exploit chance/mult), and cultivation (focus mult).
+  // Called per-tick from autoFarm and per-fight from CombatScreen — kept
+  // pure / read-only so it never triggers React renders.
+  const getFullStats = useCallback(() => {
+    const qi         = cultivation.qiRef.current;
+    const law        = cultivation.activeLaw;
+    const realmIndex = cultivation.indexRef.current;
+
+    const lawCtx    = buildContext({
+      inCombat: false,
+      realmIndex,
+      lawElement: law?.element,
+      isAtPeak: realmIndex >= 46,
+    });
+    const lawBundle = evaluateLawUniques(law, lawCtx);
+
+    const mergedMods = mergeModifiers(
+      artefacts?.getStatModifiers?.(),
+      pills?.getStatModifiers?.(),
+      lawBundle.statMods,
+    );
+
+    const bundle = computeAllStats(qi, law, realmIndex, mergedMods);
+    return {
+      // Combat-shaped (existing fields)
+      essence:    bundle.primary.essence,
+      soul:       bundle.primary.soul,
+      body:       bundle.primary.body,
+      lawElement: law?.element ?? 'Normal',
+      // Activity stats — needed by autoFarm + Gathering/Mining screens
+      harvestSpeed: bundle.activity.harvestSpeed,
+      harvestLuck:  bundle.activity.harvestLuck,
+      miningSpeed:  bundle.activity.miningSpeed,
+      miningLuck:   bundle.activity.miningLuck,
+      focusMult:    bundle.activity.focusMult,
+      // Combat-only
+      exploitChance: bundle.combat.exploitChance,
+      exploitMult:   bundle.combat.exploitMult,
+    };
+  }, [cultivation, artefacts, pills]);
+
+  // Mirror focusMult into a ref the cultivation tick reads directly so
+  // boost speed reflects equipment / pill modifiers.
+  useEffect(() => {
+    if (!cultivation.focusMultRef) return;
+    const id = setInterval(() => {
+      cultivation.focusMultRef.current = getFullStats().focusMult;
+    }, 1000);
+    return () => clearInterval(id);
+  }, [cultivation.focusMultRef, getFullStats]);
+
+  // Auto-farm — stat getter reads live refs so the hook never triggers re-renders
   const autoFarm = useAutoFarm({
     worlds: WORLDS,
-    getStats: () => {
-      const qi  = cultivation.qiRef.current;
-      const law = cultivation.activeLaw;
-      return {
-        essence:    Math.floor(qi * (law.essenceMult ?? 0.34)),
-        soul:       Math.floor(qi * (law.soulMult    ?? 0.33)),
-        body:       Math.floor(qi * (law.bodyMult    ?? 0.33)),
-        lawElement: law.element ?? 'Normal',
-      };
-    },
+    getStats: getFullStats,
     getEquippedTechs: () => techniques.equippedTechniques,
   });
 
@@ -87,12 +134,13 @@ function App() {
                       inventory={inventory}
                       region={screenParam?.region ?? null}
                       onBack={goBack}
+                      getFullStats={getFullStats}
                     />,
     gathering: screenParam?.region
-                 ? <GatheringScreen region={screenParam.region} inventory={inventory} onBack={goBack} />
+                 ? <GatheringScreen region={screenParam.region} inventory={inventory} onBack={goBack} getFullStats={getFullStats} />
                  : null,
     mining:    screenParam?.region
-                 ? <MiningScreen    region={screenParam.region} inventory={inventory} onBack={goBack} />
+                 ? <MiningScreen    region={screenParam.region} inventory={inventory} onBack={goBack} getFullStats={getFullStats} />
                  : null,
     build:     <BuildScreen  cultivation={cultivation} techniques={techniques} artefacts={artefacts} />,
     shop:      <ShopScreen />,

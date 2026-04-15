@@ -25,7 +25,7 @@ const LOG_COLOR = {
   system:         'var(--text-muted)',
 };
 
-function CombatScreen({ cultivation, techniques, combat, inventory, region = null, onBack = null }) {
+function CombatScreen({ cultivation, techniques, combat, inventory, region = null, onBack = null, getFullStats }) {
   const { phase, enemy, log, startFight } = combat;
   const { equippedTechniques } = techniques;
 
@@ -49,13 +49,28 @@ function CombatScreen({ cultivation, techniques, combat, inventory, region = nul
       ? (REALMS[region.minRealmIndex]?.cost ?? qi)
       : qi;
 
+    // Pull the full stat bundle if the caller provided one (so artefact /
+    // pill / law modifiers contribute to exploit_chance + exploit_attack_mult).
+    // Falls back to the simple law-derived stats if getFullStats is missing.
+    const full = getFullStats?.();
+    const playerStats = full
+      ? {
+          essence:       full.essence,
+          soul:          full.soul,
+          body:          full.body,
+          lawElement:    full.lawElement,
+          exploitChance: full.exploitChance,
+          exploitMult:   full.exploitMult,
+        }
+      : {
+          essence:    Math.floor(qi * law.essenceMult),
+          soul:       Math.floor(qi * law.soulMult),
+          body:       Math.floor(qi * law.bodyMult),
+          lawElement: law.element,
+        };
+
     startFight(
-      {
-        essence:    Math.floor(qi * law.essenceMult),
-        soul:       Math.floor(qi * law.soulMult),
-        body:       Math.floor(qi * law.bodyMult),
-        lawElement: law.element,
-      },
+      playerStats,
       equippedTechniques,
       enemyDef,
       inventory   ? (drops) => drops.forEach(d => inventory.addItem(d.itemId, d.qty)) : null,

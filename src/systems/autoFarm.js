@@ -139,13 +139,24 @@ function estimateDps(stats, equippedTechs) {
 
 /**
  * Simulate auto-gathering for `seconds` in the given region.
+ *
+ * Player stats applied (formerly hardcoded):
+ *   - harvestSpeed: ADDED to BASE_GATHER_SPEED (pts/sec). Stat values come
+ *     from soul × 0.1 + modifier stack (see stats.js computeAllStats).
+ *   - harvestLuck:  treated as a percent (0–100) chance per item to roll a
+ *     bonus duplicate. Capped at 100.
+ *
  * @param {number} seconds
  * @param {object} region  — world region with a `herbs` string field
+ * @param {object} [stats] — { harvestSpeed?, harvestLuck? }; defaults to base
  * @returns {{ [itemId]: qty }}
  */
-export function simulateGathering(seconds, region) {
+export function simulateGathering(seconds, region, stats = null) {
   const herbList = parseList(region?.herbs);
   if (!herbList.length) return {};
+
+  const speed = BASE_GATHER_SPEED + Math.max(0, stats?.harvestSpeed ?? 0);
+  const luckPct = Math.min(100, Math.max(0, stats?.harvestLuck ?? 0));
 
   const result   = {};
   let remaining  = Math.min(seconds, MAX_OFFLINE_HOURS * 3600);
@@ -153,13 +164,14 @@ export function simulateGathering(seconds, region) {
   while (remaining > 0) {
     const name  = herbList[Math.floor(Math.random() * herbList.length)];
     const data  = HERBS[name] ?? { gatherCost: 30 };
-    const tCost = data.gatherCost / BASE_GATHER_SPEED;
+    const tCost = data.gatherCost / speed;
 
     if (tCost > remaining) break;
     remaining -= tCost;
 
-    const id       = nameToId(name);
-    result[id]     = (result[id] ?? 0) + 1;
+    const id   = nameToId(name);
+    const qty  = 1 + (luckPct > 0 && Math.random() * 100 < luckPct ? 1 : 0);
+    result[id] = (result[id] ?? 0) + qty;
   }
 
   return result;
@@ -169,13 +181,19 @@ export function simulateGathering(seconds, region) {
 
 /**
  * Simulate auto-mining for `seconds` in the given region.
+ * Same stat semantics as simulateGathering but reads miningSpeed/miningLuck.
+ *
  * @param {number} seconds
  * @param {object} region  — world region with an `ores` string field
+ * @param {object} [stats] — { miningSpeed?, miningLuck? }; defaults to base
  * @returns {{ [itemId]: qty }}
  */
-export function simulateMining(seconds, region) {
+export function simulateMining(seconds, region, stats = null) {
   const oreList  = parseList(region?.ores);
   if (!oreList.length) return {};
+
+  const speed   = BASE_MINE_SPEED + Math.max(0, stats?.miningSpeed ?? 0);
+  const luckPct = Math.min(100, Math.max(0, stats?.miningLuck ?? 0));
 
   const result   = {};
   let remaining  = Math.min(seconds, MAX_OFFLINE_HOURS * 3600);
@@ -183,13 +201,14 @@ export function simulateMining(seconds, region) {
   while (remaining > 0) {
     const name  = oreList[Math.floor(Math.random() * oreList.length)];
     const data  = ORES[name] ?? { mineCost: 30 };
-    const tCost = data.mineCost / BASE_MINE_SPEED;
+    const tCost = data.mineCost / speed;
 
     if (tCost > remaining) break;
     remaining -= tCost;
 
     const id   = nameToId(name);
-    result[id] = (result[id] ?? 0) + 1;
+    const qty  = 1 + (luckPct > 0 && Math.random() * 100 < luckPct ? 1 : 0);
+    result[id] = (result[id] ?? 0) + qty;
   }
 
   return result;

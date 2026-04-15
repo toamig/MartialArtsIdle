@@ -204,9 +204,20 @@ export default function useCombat() {
           s.cds[i]   = s.maxCds[i];
 
           if (tech.type === 'Attack') {
-            const dmg = calcDamage(tech, s.stats.essence, s.stats.soul, s.stats.body, s.stats.lawElement);
+            let dmg = calcDamage(tech, s.stats.essence, s.stats.soul, s.stats.body, s.stats.lawElement);
+            // Exploit: roll exploitChance % per attack; on success multiply
+            // damage by exploitMult % (default 150%).
+            const exChance = s.stats.exploitChance ?? 0;
+            const exMult   = s.stats.exploitMult   ?? 150;
+            const exploited = exChance > 0 && Math.random() * 100 < exChance;
+            if (exploited) dmg = Math.floor(dmg * (exMult / 100));
             s.eHp = Math.max(0, s.eHp - dmg);
-            logs.push({ msg: `${tech.name} → ${dmg.toLocaleString()} dmg`, kind: 'damage' });
+            logs.push({
+              msg: exploited
+                ? `${tech.name} → EXPLOIT! ${dmg.toLocaleString()} dmg`
+                : `${tech.name} → ${dmg.toLocaleString()} dmg`,
+              kind: 'damage',
+            });
             spawnDamageNumberRef.current?.(dmg, 'enemy', s.eMaxHp);
           } else if (tech.type === 'Heal') {
             const heal = Math.floor(s.pMaxHp * (tech.healPercent ?? 0.25));
@@ -224,9 +235,19 @@ export default function useCombat() {
 
         // Basic attack if no technique fired
         if (!techFired) {
-          const dmg = Math.max(5, Math.floor(s.stats.essence + s.stats.body));
+          let dmg = Math.max(5, Math.floor(s.stats.essence + s.stats.body));
+          // Exploit also applies to basic attacks.
+          const exChance = s.stats.exploitChance ?? 0;
+          const exMult   = s.stats.exploitMult   ?? 150;
+          const exploited = exChance > 0 && Math.random() * 100 < exChance;
+          if (exploited) dmg = Math.floor(dmg * (exMult / 100));
           s.eHp = Math.max(0, s.eHp - dmg);
-          logs.push({ msg: `Basic attack → ${dmg.toLocaleString()} dmg`, kind: 'damage' });
+          logs.push({
+            msg: exploited
+              ? `Basic attack → EXPLOIT! ${dmg.toLocaleString()} dmg`
+              : `Basic attack → ${dmg.toLocaleString()} dmg`,
+            kind: 'damage',
+          });
           spawnDamageNumberRef.current?.(dmg, 'enemy', s.eMaxHp);
         }
 

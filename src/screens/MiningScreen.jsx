@@ -19,7 +19,7 @@ function pickItem(list, lookup) {
   return { name, ...data };
 }
 
-function MiningScreen({ region, inventory, onBack }) {
+function MiningScreen({ region, inventory, onBack, getFullStats }) {
   const oreList = parseList(region.ores);
 
   const [current, setCurrent]    = useState(() => pickItem(oreList, ORES));
@@ -44,7 +44,10 @@ function MiningScreen({ region, inventory, onBack }) {
       const dt = Math.min((now - lastTRef.current) / 1000, 0.1);
       lastTRef.current = now;
 
-      progressVal.current += BASE_MINE_SPEED * dt;
+      // Apply mining_speed (additive to BASE_MINE_SPEED) per tick.
+      const stats = getFullStats?.();
+      const speed = BASE_MINE_SPEED + Math.max(0, stats?.miningSpeed ?? 0);
+      progressVal.current += speed * dt;
       const cost = currentRef.current.mineCost;
       const pct  = Math.min(progressVal.current / cost, 1);
 
@@ -56,9 +59,13 @@ function MiningScreen({ region, inventory, onBack }) {
         const mined = { ...currentRef.current };
         progressVal.current = 0;
 
+        // Apply mining_luck: % chance per mine to receive a bonus duplicate.
+        const luckPct = Math.min(100, Math.max(0, stats?.miningLuck ?? 0));
+        const qty     = 1 + (luckPct > 0 && Math.random() * 100 < luckPct ? 1 : 0);
+
         // Add to inventory using snake_case id
         if (inventory) {
-          inventory.addItem(nameToId(mined.name), 1);
+          inventory.addItem(nameToId(mined.name), qty);
         }
 
         const next = pickItem(oreList, ORES);
@@ -101,7 +108,10 @@ function MiningScreen({ region, inventory, onBack }) {
           </span>
         </div>
         <div className="harvest-cost-label">
-          Cost: {current.mineCost} &nbsp;·&nbsp; Speed: {BASE_MINE_SPEED}/s
+          Cost: {current.mineCost} &nbsp;·&nbsp; Speed: {BASE_MINE_SPEED + Math.max(0, getFullStats?.()?.miningSpeed ?? 0)}/s
+          {(getFullStats?.()?.miningLuck ?? 0) > 0 && (
+            <> &nbsp;·&nbsp; Luck: {getFullStats?.()?.miningLuck}%</>
+          )}
         </div>
         <div className="harvest-bar-track">
           <div ref={progressBarRef} className="harvest-bar-fill mine-fill" />

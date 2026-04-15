@@ -19,7 +19,7 @@ function pickItem(list, lookup) {
   return { name, ...data };
 }
 
-function GatheringScreen({ region, inventory, onBack }) {
+function GatheringScreen({ region, inventory, onBack, getFullStats }) {
   const herbList = parseList(region.herbs);
 
   const [current, setCurrent]   = useState(() => pickItem(herbList, HERBS));
@@ -45,7 +45,10 @@ function GatheringScreen({ region, inventory, onBack }) {
       const dt = Math.min((now - lastTRef.current) / 1000, 0.1);
       lastTRef.current = now;
 
-      progressVal.current += BASE_GATHER_SPEED * dt;
+      // Apply harvest_speed (additive to BASE_GATHER_SPEED) per tick.
+      const stats = getFullStats?.();
+      const speed = BASE_GATHER_SPEED + Math.max(0, stats?.harvestSpeed ?? 0);
+      progressVal.current += speed * dt;
       const cost = currentRef.current.gatherCost;
       const pct  = Math.min(progressVal.current / cost, 1);
 
@@ -57,9 +60,13 @@ function GatheringScreen({ region, inventory, onBack }) {
         const gathered = { ...currentRef.current };
         progressVal.current = 0;
 
+        // Apply harvest_luck: % chance per gather to receive a bonus duplicate.
+        const luckPct = Math.min(100, Math.max(0, stats?.harvestLuck ?? 0));
+        const qty     = 1 + (luckPct > 0 && Math.random() * 100 < luckPct ? 1 : 0);
+
         // Add to inventory using snake_case id
         if (inventory) {
-          inventory.addItem(nameToId(gathered.name), 1);
+          inventory.addItem(nameToId(gathered.name), qty);
         }
 
         // Pick next herb (may be same one again — that's fine)
@@ -103,7 +110,10 @@ function GatheringScreen({ region, inventory, onBack }) {
           </span>
         </div>
         <div className="harvest-cost-label">
-          Cost: {current.gatherCost} &nbsp;·&nbsp; Speed: {BASE_GATHER_SPEED}/s
+          Cost: {current.gatherCost} &nbsp;·&nbsp; Speed: {BASE_GATHER_SPEED + Math.max(0, getFullStats?.()?.harvestSpeed ?? 0)}/s
+          {(getFullStats?.()?.harvestLuck ?? 0) > 0 && (
+            <> &nbsp;·&nbsp; Luck: {getFullStats?.()?.harvestLuck}%</>
+          )}
         </div>
         <div className="harvest-bar-track">
           <div ref={progressBarRef} className="harvest-bar-fill gather-fill" />
