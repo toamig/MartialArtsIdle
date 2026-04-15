@@ -18,7 +18,9 @@
  * See docs/enemy-design.md for distribution rules and thematic guidelines.
  */
 
-const ENEMIES = {
+import { mergeRecords } from './config/loader';
+
+const ENEMIES_RAW = {
 
   // ── World 1 — The Mortal Lands ────────────────────────────────────────────
   // Theme: mortal sect → wilderness → qi forests → storm peaks
@@ -663,6 +665,10 @@ const ENEMIES = {
   },
 };
 
+// Apply designer overrides — src/data/config/enemies.override.json, keyed
+// by enemy id. Unknown ids in the override are added as brand-new enemies.
+const ENEMIES = mergeRecords(ENEMIES_RAW, 'enemies');
+
 /**
  * Weighted random pick from an enemy pool.
  * pool: [{ enemyId: string, weight: number }]
@@ -677,4 +683,5 @@ export function pickEnemy(pool) {
   return ENEMIES[pool[pool.length - 1].enemyId] ?? null;
 }
 
+export { ENEMIES };
 export default ENEMIES;

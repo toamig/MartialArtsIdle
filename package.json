@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "dev:native": "vite --mode native",
+    "dev:designer": "vite --mode designer",
     "build": "vite build --mode browser",
     "build:browser": "vite build --mode browser",
     "build:native": "vite build --mode native",
@@ -15,6 +16,7 @@
     "build:steam": "vite build --mode steam",
     "build:demo": "vite build --mode demo",
     "build:desktop": "vite build --mode steam && electron-builder",
+    "build:designer": "vite build --mode designer",
     "preview:demo": "npm run build:demo && vite preview --host",
     "lint": "eslint .",
     "preview": "vite preview"

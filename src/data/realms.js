@@ -1,8 +1,14 @@
 /**
  * Cultivation realms based on Martial Peak, with sub-stages.
  * Each entry is one breakthrough step. Costs are in qi.
+ *
+ * Designer overrides: per-index patches live in src/data/config/realms.override.json.
+ * Realm identity is its position in this array (indices are save-file state), so
+ * the designer panel only edits existing entries — no insert/remove/reorder.
  */
-const REALMS = [
+import { mergeArrayByIndex } from './config/loader';
+
+const REALMS_RAW = [
   // ── Tempered Body (10 Layers) ──────────────────────────────────────────────
   { name: 'Tempered Body',    stage: 'Layer 1',      cost: 100 },
   { name: 'Tempered Body',    stage: 'Layer 2',      cost: 200 },
@@ -83,5 +89,7 @@ const REALMS = [
   { name: 'Open Heaven',        stage: 'Layer 5',     cost: 35_000_000_000_000 }, // Mid-Rank
   { name: 'Open Heaven',        stage: 'Layer 6',     cost: 60_000_000_000_000 }, // High-Rank
 ];
+
+const REALMS = mergeArrayByIndex(REALMS_RAW, 'realms');
 
 export default REALMS;

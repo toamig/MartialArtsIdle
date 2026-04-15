@@ -7,7 +7,13 @@
  *   enemyId references ENEMIES in data/enemies.js.
  *   weight is relative; higher = more likely to appear.
  *   Max 2 enemy types per region. See docs/enemy-design.md.
+ *
+ * Designer overrides: src/data/config/worlds.override.json applies per-world
+ * patches keyed by world `id` (top-level). Region edits go through full
+ * world-record replacement since regions are nested arrays.
  */
+import { mergeRecordArray } from './config/loader';
+
 const WORLDS = [
   {
     id: 1,
@@ -431,8 +437,12 @@ const WORLDS = [
   },
 ];
 
+// Apply designer overrides (keyed by world id) BEFORE denormalizing regions,
+// so region edits shipped via the override flow through to the runtime shape.
+const WORLDS_PATCHED = mergeRecordArray(WORLDS, 'worlds', 'id');
+
 // Denormalize worldId into each region so regions carry their world context.
-const WORLDS_WITH_ID = WORLDS.map(w => ({
+const WORLDS_WITH_ID = WORLDS_PATCHED.map(w => ({
   ...w,
   regions: w.regions.map(r => ({ ...r, worldId: w.id })),
 }));

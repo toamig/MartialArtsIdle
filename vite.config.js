@@ -3,19 +3,21 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig(({ command, mode }) => {
-  const isNative = mode === 'native';
-  const isSteam  = mode === 'steam';
-  const isDemo  = mode === 'demo';
-  const isProd   = command === 'build';
+  const isNative   = mode === 'native';
+  const isSteam    = mode === 'steam';
+  const isDemo     = mode === 'demo';
+  const isDesigner = mode === 'designer';
+  const isProd     = command === 'build';
 
   // Capacitor and Steam load from file:// or a local server — base must be '/'.
   // GitHub Pages browser build needs the repo sub-path.
-  // Local dev/preview always uses '/' so it works without a prefix.
-  const base = (isNative || isDemo) ? '/' : isSteam ? './' : (isProd ? '/MartialArtsIdle/' : '/');
+  // Local dev/preview and designer mode always use '/' so they work without a prefix.
+  const base = (isNative || isDemo || isDesigner) ? '/' : isSteam ? './' : (isProd ? '/MartialArtsIdle/' : '/');
 
   // PWA service worker is only useful in browser/local builds.
   // Inside a Capacitor WebView or Electron/Tauri it can conflict with the native bridge.
-  const enablePWA = !isNative && !isSteam;
+  // Designer mode skips the PWA too — it's strictly a dev-time tool.
+  const enablePWA = !isNative && !isSteam && !isDesigner;
 
   return {
     base,
