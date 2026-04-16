@@ -33,6 +33,7 @@ import craftingOverride     from './crafting.override.json';
 import pillsOverride        from './pills.override.json';
 import lawsOverride         from './laws.override.json';
 import artefactsOverride    from './artefacts.override.json';
+import artefactNamesOverride from './artefactNames.override.json';
 import affixPoolsOverride   from './affixPools.override.json';
 import materialsOverride    from './materials.override.json';
 import audioOverride        from './audio.override.json';
@@ -45,8 +46,9 @@ const OVERRIDES = {
   crafting:     craftingOverride,
   pills:        pillsOverride,
   laws:         lawsOverride,
-  artefacts:    artefactsOverride,
-  affixPools:   affixPoolsOverride,
+  artefacts:     artefactsOverride,
+  artefactNames: artefactNamesOverride,
+  affixPools:    affixPoolsOverride,
   materials:    materialsOverride,
   audio:        audioOverride,
   featureGates: featureGatesOverride,

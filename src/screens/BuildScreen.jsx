@@ -4,7 +4,7 @@ import TechniqueSlotModal from '../components/TechniqueSlotModal';
 import { LAW_RARITY } from '../data/laws';
 import { formatUniqueDescription } from '../data/lawUniques';
 import { TECHNIQUE_QUALITY, TYPE_COLOR, getCooldown } from '../data/techniques';
-import { QUALITY, getSlotBonuses, ARTEFACTS_BY_ID } from '../data/artefacts';
+import { QUALITY, getSlotBonuses } from '../data/artefacts';
 import { MOD } from '../data/stats';
 
 // ── Stat label map for tooltips ──────────────────────────────────────────────
@@ -53,7 +53,7 @@ function ArtefactTooltip({ artefact, affixes, style }) {
   if (!artefact) return null;
   const quality = QUALITY[artefact.rarity];
   const baseBonuses = getSlotBonuses(artefact.slot, artefact.rarity);
-  const artName = tGame(`artefacts.${artefact.id}.name`, { defaultValue: artefact.name });
+  const artName = artefact.name;
 
   return (
     <div className="art-tooltip" style={style}>
@@ -121,8 +121,7 @@ function useTooltipPos() {
 // ── Inline Artefact Picker ───────────────────────────────────────────────────
 
 function InlineArtefactPicker({ slot, artefacts, onClose }) {
-  const { t }        = useTranslation('ui');
-  const { t: tGame } = useTranslation('game');
+  const { t } = useTranslation('ui');
   const available = artefacts.getOwnedForSlot(slot.type);
   const equipped  = artefacts.getEquipped(slot.id);
   const tooltip   = useTooltipPos();
@@ -146,10 +145,7 @@ function InlineArtefactPicker({ slot, artefacts, onClose }) {
       ) : (
         <div className="art-inline-picker-grid">
           {available.map(a => {
-            const artDef = ARTEFACTS_BY_ID[a.catalogueId ?? a.id];
-            const artName = artDef
-              ? tGame(`artefacts.${artDef.id}.name`, { defaultValue: a.name })
-              : a.name;
+            const artName = a.name;
             const quality = QUALITY[a.rarity];
             const isEquipped = equipped?.uid === a.uid;
             return (
@@ -401,9 +397,7 @@ function BuildContent({ cultivation, techniques, artefacts }) {
               const art     = artefacts.getEquipped(slot.id);
               const quality = art ? QUALITY[art.rarity] : null;
               const slotLabel = t(`build.slots.${slot.type}`, { defaultValue: slot.type });
-              const artName = art
-                ? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name })
-                : null;
+              const artName = art ? art.name : null;
               return (
                 <button
                   key={slot.id}

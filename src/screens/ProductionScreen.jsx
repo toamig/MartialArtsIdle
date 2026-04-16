@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QUALITY, ARTEFACTS_BY_ID } from '../data/artefacts';
+import { formatArtefactName } from '../data/artefactNames';
 import { LAW_RARITY } from '../data/laws';
 import { TECHNIQUE_QUALITY } from '../data/techniques';
 import { HERB_ITEMS, ALL_MATERIALS, RARITY } from '../data/materials';
@@ -309,8 +310,8 @@ function ArtefactDetail({ inst, artefacts, inventory }) {
     <div className="tx-detail-panel">
       <div className="tx-detail-header">
         <div>
-          <span className="tx-item-name">{art ? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name }) : inst.catalogueId}</span>
-          <span className="tx-item-sub">{art?.slot ? t(`build.slots.${art.slot}`, { defaultValue: art.slot }) : ''}{art?.weaponType ? ` · ${art.weaponType}` : ''}</span>
+          <span className="tx-item-name">{art ? (formatArtefactName(inst) ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name })) : inst.catalogueId}</span>
+          <span className="tx-item-sub">{art?.slot ? t(`build.slots.${art.slot}`, { defaultValue: art.slot }) : ''}</span>
         </div>
         <span className="tx-quality-badge" style={{ color: q.color, borderColor: q.color }}>{t(`quality.${rarity}`, { defaultValue: q.label })}</span>
       </div>
@@ -620,7 +621,7 @@ function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
               onClick={() => setSelected(inst.uid === selected ? null : inst.uid)}
             >
               <span className="inv-quality-gem" style={{ color: q.color }}>◆</span>
-              <span className="inv-name" style={{ color: q.color }}>{art ? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name }) : inst.catalogueId}</span>
+              <span className="inv-name" style={{ color: q.color }}>{art ? (formatArtefactName(inst) ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name })) : inst.catalogueId}</span>
               <span className="inv-slot-label">{art?.slot ? t(`build.slots.${art.slot}`, { defaultValue: art.slot }) : ''}</span>
             </button>
           );

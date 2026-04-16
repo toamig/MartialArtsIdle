@@ -8,6 +8,7 @@ const MATERIAL_ITEMS = {
   cultivation: CULTIVATION_ITEMS,
 };
 import { QUALITY, ARTEFACTS_BY_ID, getSlotBonuses } from '../data/artefacts';
+import { formatArtefactName } from '../data/artefactNames';
 import { LAW_RARITY } from '../data/laws';
 import { formatUniqueDescription } from '../data/lawUniques';
 import { TECHNIQUE_QUALITY, TYPE_COLOR, getCooldown, getK } from '../data/techniques';
@@ -93,8 +94,10 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
             {artefacts.owned.map((instance) => {
               const art = ARTEFACTS_BY_ID[instance.catalogueId];
               if (!art) return null;
-              const q = QUALITY[art.rarity];
-              const artName = tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
+              const rarity = instance.rarity ?? art.rarity;
+              const q = QUALITY[rarity];
+              const artName = formatArtefactName(instance)
+                ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
               return (
                 <button
                   key={instance.uid}
@@ -177,9 +180,11 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
 
       {selectedArtefact && (() => {
         const art    = ARTEFACTS_BY_ID[selectedArtefact.catalogueId];
-        const q      = QUALITY[art.rarity];
-        const bonuses = getSlotBonuses(art.slot, art.rarity);
-        const artName = tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
+        const rarity = selectedArtefact.rarity ?? art.rarity;
+        const q      = QUALITY[rarity];
+        const bonuses = getSlotBonuses(art.slot, rarity);
+        const artName = formatArtefactName(selectedArtefact)
+          ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
         const artDesc = tGame(`artefacts.${art.id}.desc`, { defaultValue: art.description });
         return (
           <div className="modal-overlay" onClick={() => setSelectedArtefact(null)}>
@@ -187,7 +192,7 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
               <button className="modal-close" onClick={() => setSelectedArtefact(null)}>x</button>
               <h2 className="modal-title">{artName}</h2>
               <span className="modal-rarity" style={{ color: q.color }}>
-                {t(`quality.${art.rarity}`, { defaultValue: q.label })} · {t(`build.slots.${art.slot}`, { defaultValue: art.slot })}
+                {t(`quality.${rarity}`, { defaultValue: q.label })} · {t(`build.slots.${art.slot}`, { defaultValue: art.slot })}
               </span>
               <p className="modal-desc">{artDesc}</p>
               <div className="item-stat-block">

@@ -8,8 +8,7 @@ function bonusSummary(slot, rarity) {
 }
 
 function ArtefactCard({ artefact, equipped, currentSlot, onEquip, onUnequip }) {
-  const { t }        = useTranslation('ui');
-  const { t: tGame } = useTranslation('game');
+  const { t } = useTranslation('ui');
 
   const quality        = QUALITY[artefact.rarity];
   const isEquippedHere = equipped === artefact.uid;
@@ -24,7 +23,7 @@ function ArtefactCard({ artefact, equipped, currentSlot, onEquip, onUnequip }) {
     >
       <div className="art-pick-header">
         <span className="art-pick-name" style={{ color: quality.color }}>
-          {tGame(`artefacts.${artefact.id}.name`, { defaultValue: artefact.name })}
+          {artefact.name}
         </span>
         <span className="art-pick-quality" style={{ color: quality.color }}>
           {t(`quality.${artefact.rarity}`, { defaultValue: quality.label })}

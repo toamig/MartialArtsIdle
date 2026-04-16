@@ -4,6 +4,7 @@ import {
   generateAffixes, rollAffix, pickRandomAffix,
   AFFIX_POOL_BY_SLOT, TIER_SLOT_COUNT,
 } from '../data/affixPools';
+import { generateArtefactName, formatArtefactName } from '../data/artefactNames';
 
 const SAVE_KEY = 'mai_artefacts';
 export const MAX_ARTEFACTS = 100;
@@ -19,7 +20,23 @@ export const ARTEFACT_NEXT_RARITY = {
 function resolveInstance(o) {
   const cat = ARTEFACTS_BY_ID[o.catalogueId];
   if (!cat) return null;
-  return { ...cat, uid: o.uid, ...(o.rarity ? { rarity: o.rarity } : {}) };
+  const displayName = formatArtefactName({
+    firstName:  o.firstName,
+    secondName: o.secondName,
+    upgraded:   o.upgraded,
+  });
+  return {
+    ...cat,
+    uid:        o.uid,
+    ...(o.rarity ? { rarity: o.rarity } : {}),
+    // Preserve name parts + flag for downstream UI/tooling
+    firstName:  o.firstName,
+    secondName: o.secondName,
+    upgraded:   Boolean(o.upgraded),
+    // Generated name overrides the catalog name when present; fall back
+    // to the catalog name for legacy instances without rolled parts.
+    name:       displayName ?? cat.name,
+  };
 }
 
 // One common artefact per slot type, auto-equipped at game start.
@@ -50,12 +67,22 @@ const STARTER_EQUIPPED = {
 function ensureAffixes(owned) {
   let changed = false;
   const result = owned.map(o => {
-    if (o.affixes) return o;
     const art = ARTEFACTS_BY_ID[o.catalogueId];
     if (!art) return o;
-    const rarity = o.rarity ?? art.rarity ?? 'Iron';
-    changed = true;
-    return { ...o, affixes: generateAffixes(art.slot, rarity) };
+    let next = o;
+    if (!next.affixes) {
+      const rarity = next.rarity ?? art.rarity ?? 'Iron';
+      next = { ...next, affixes: generateAffixes(art.slot, rarity) };
+      changed = true;
+    }
+    // Back-fill generated names for instances from older saves or starters.
+    if (!next.firstName || !next.secondName) {
+      const rarity = next.rarity ?? art.rarity ?? 'Iron';
+      const { firstName, secondName } = generateArtefactName(rarity);
+      next = { ...next, firstName, secondName };
+      changed = true;
+    }
+    return next;
   });
   return { result, changed };
 }
@@ -87,11 +114,13 @@ export default function useArtefacts() {
   const addArtefact = useCallback((catalogueId) => {
     setState(prev => {
       if (prev.owned.length >= MAX_ARTEFACTS) return prev;
-      const uid    = `art_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-      const art    = ARTEFACTS_BY_ID[catalogueId];
-      const rarity = art?.rarity ?? 'Iron';
+      const uid     = `art_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const art     = ARTEFACTS_BY_ID[catalogueId];
+      const rarity  = art?.rarity ?? 'Iron';
       const affixes = generateAffixes(art?.slot ?? 'weapon', rarity);
-      const next = { ...prev, owned: [...prev.owned, { uid, catalogueId, affixes }] };
+      const { firstName, secondName } = generateArtefactName(rarity);
+      const instance = { uid, catalogueId, affixes, firstName, secondName, upgraded: false };
+      const next = { ...prev, owned: [...prev.owned, instance] };
       save(next);
       return next;
     });
@@ -149,6 +178,8 @@ export default function useArtefacts() {
   }, [state]);
 
   // Upgrade an owned artefact's quality by one tier.
+  // Keeps the original rolled name and marks the instance as upgraded so the
+  // display layer appends an "(upgraded)" suffix.
   const upgradeArtefact = useCallback((uid) => {
     setState(prev => {
       const owned = prev.owned.map(o => {
@@ -156,7 +187,7 @@ export default function useArtefacts() {
         const currentRarity = o.rarity ?? ARTEFACTS_BY_ID[o.catalogueId]?.rarity ?? 'Iron';
         const nextRarity = ARTEFACT_NEXT_RARITY[currentRarity];
         if (!nextRarity) return o;
-        return { ...o, rarity: nextRarity };
+        return { ...o, rarity: nextRarity, upgraded: true };
       });
       const next = { ...prev, owned };
       save(next);

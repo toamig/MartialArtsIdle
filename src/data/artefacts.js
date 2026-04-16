@@ -34,22 +34,20 @@ export function getSlotBonuses(slot, rarity) {
  * Designer overrides: src/data/config/artefacts.override.json patches
  * artefacts by `id`. Slot bonuses are formula-driven by getSlotBonuses()
  * and are NOT editable through overrides — only the metadata (name,
- * description, slot, rarity, weaponType) is.
+ * description, slot, rarity) is.
  */
 const ARTEFACTS_RAW = [
-  // ── Weapons — Sword ──────────────────────────────────────────────────────
-  { id: 'iron_sword',           slot: 'weapon', rarity: 'Iron',         weaponType: 'sword',   name: 'Iron Sword',           description: 'A plain iron sword forged for outer sect disciples. Reliable but unremarkable.' },
-  { id: 'spirit_edge_sword',    slot: 'weapon', rarity: 'Bronze',       weaponType: 'sword',   name: 'Spirit-Edge Sword',    description: 'A sword honed with spirit energy; the blade hums faintly when qi flows through it.' },
-  { id: 'void_cleaver',         slot: 'weapon', rarity: 'Silver',       weaponType: 'sword',   name: 'Void Cleaver',         description: 'Forged from void stone; each strike tears a hairline crack in the local spatial fabric.' },
-  { id: 'dragon_fang_sword',    slot: 'weapon', rarity: 'Gold',         weaponType: 'sword',   name: 'Dragon Fang Sword',    description: 'Crafted from a dragon beast fang; channels raw draconic pressure into every blow.' },
-  { id: 'heaven_slaying_sword', slot: 'weapon', rarity: 'Transcendent', weaponType: 'sword',   name: 'Heaven-Slaying Sword', description: 'A legendary blade said to have cut through the barrier between realms. The edge never dulls.' },
-
-  // ── Weapons — Polearm ────────────────────────────────────────────────────
-  { id: 'iron_polearm',         slot: 'weapon', rarity: 'Iron',         weaponType: 'polearm', name: 'Iron Polearm',         description: 'A heavy iron polearm favoured by body-cultivators for its reach and stopping power.' },
-  { id: 'serpent_spear',        slot: 'weapon', rarity: 'Bronze',       weaponType: 'polearm', name: 'Serpent Spear',        description: 'A flexible spear with a serpent-tooth tip that injects a mild spiritual venom on penetration.' },
-  { id: 'mountain_breaker',     slot: 'weapon', rarity: 'Silver',       weaponType: 'polearm', name: 'Mountain Breaker',     description: 'A broad-headed halberd said to have felled a small spirit mountain. Pulverises physical defence.' },
-  { id: 'thunder_lance',        slot: 'weapon', rarity: 'Gold',         weaponType: 'polearm', name: 'Thunder Lance',        description: 'A lance coated in compressed lightning ore; strikes detonate with a thunderclap.' },
-  { id: 'divine_pillar_spear',  slot: 'weapon', rarity: 'Transcendent', weaponType: 'polearm', name: 'Divine Pillar Spear',  description: 'Once a pillar of a heavenly palace, reshaped into a spear. A full-power thrust tears space.' },
+  // ── Weapons ──────────────────────────────────────────────────────────────
+  { id: 'iron_sword',           slot: 'weapon', rarity: 'Iron',         name: 'Iron Sword',           description: 'A plain iron sword forged for outer sect disciples. Reliable but unremarkable.' },
+  { id: 'spirit_edge_sword',    slot: 'weapon', rarity: 'Bronze',       name: 'Spirit-Edge Sword',    description: 'A sword honed with spirit energy; the blade hums faintly when qi flows through it.' },
+  { id: 'void_cleaver',         slot: 'weapon', rarity: 'Silver',       name: 'Void Cleaver',         description: 'Forged from void stone; each strike tears a hairline crack in the local spatial fabric.' },
+  { id: 'dragon_fang_sword',    slot: 'weapon', rarity: 'Gold',         name: 'Dragon Fang Sword',    description: 'Crafted from a dragon beast fang; channels raw draconic pressure into every blow.' },
+  { id: 'heaven_slaying_sword', slot: 'weapon', rarity: 'Transcendent', name: 'Heaven-Slaying Sword', description: 'A legendary blade said to have cut through the barrier between realms. The edge never dulls.' },
+  { id: 'iron_polearm',         slot: 'weapon', rarity: 'Iron',         name: 'Iron Polearm',         description: 'A heavy iron polearm favoured by body-cultivators for its reach and stopping power.' },
+  { id: 'serpent_spear',        slot: 'weapon', rarity: 'Bronze',       name: 'Serpent Spear',        description: 'A flexible spear with a serpent-tooth tip that injects a mild spiritual venom on penetration.' },
+  { id: 'mountain_breaker',     slot: 'weapon', rarity: 'Silver',       name: 'Mountain Breaker',     description: 'A broad-headed halberd said to have felled a small spirit mountain. Pulverises physical defence.' },
+  { id: 'thunder_lance',        slot: 'weapon', rarity: 'Gold',         name: 'Thunder Lance',        description: 'A lance coated in compressed lightning ore; strikes detonate with a thunderclap.' },
+  { id: 'divine_pillar_spear',  slot: 'weapon', rarity: 'Transcendent', name: 'Divine Pillar Spear',  description: 'Once a pillar of a heavenly palace, reshaped into a spear. A full-power thrust tears space.' },
 
   // ── Head ─────────────────────────────────────────────────────────────────
   { id: 'spirit_headband',         slot: 'head', rarity: 'Iron',         name: 'Spirit Headband',          description: 'A simple cloth band imbued with basic spiritual energy, aiding focus during cultivation.' },
