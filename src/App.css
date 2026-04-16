@@ -4106,10 +4106,6 @@
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
 
-  /* Give screens a comfortable reading max-width on ultra-wide monitors */
-  .screen {
-    max-width: 1100px;
-  }
 
   /* ── Combat screen: slightly roomier on ultra-wide ────────────────────── */
   .combat-screen {
