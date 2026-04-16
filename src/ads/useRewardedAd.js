@@ -26,6 +26,8 @@ export function useRewardedAd(onReward, cooldownMs = 30 * 60 * 1000, storageKey 
   const [cooldownRemaining, setCooldownRemaining] = useState(restoredRemaining);
 
   const cooldownInterval = useRef(null);
+  const retryTimer       = useRef(null);
+  const retryCount       = useRef(0);
   const cooldownEnd      = useRef(restoredRemaining > 0 ? savedCooldownEnd : 0);
   const onRewardRef      = useRef(onReward);
   onRewardRef.current    = onReward;
@@ -33,7 +35,18 @@ export function useRewardedAd(onReward, cooldownMs = 30 * 60 * 1000, storageKey 
   const load = useCallback(async () => {
     setStatus('loading');
     const ok = await loadRewardedAd();
-    setStatus(ok ? 'ready' : 'unavailable');
+    if (ok) {
+      retryCount.current = 0;
+      setStatus('ready');
+    } else {
+      setStatus('unavailable');
+      // Retry with exponential backoff: 1 min, 2 min, 4 min … capped at 10 min.
+      // This handles transient failures (slow SDK load, brief network blip) without
+      // spamming requests when an ad blocker is active.
+      const delay = Math.min(60_000 * Math.pow(2, retryCount.current), 10 * 60 * 1000);
+      retryCount.current++;
+      retryTimer.current = setTimeout(load, delay);
+    }
   }, []);
 
   // Restore cooldown interval if we resumed mid-cooldown
@@ -54,8 +67,11 @@ export function useRewardedAd(onReward, cooldownMs = 30 * 60 * 1000, storageKey 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Cleanup cooldown timer on unmount
-  useEffect(() => () => clearInterval(cooldownInterval.current), []);
+  // Cleanup timers on unmount
+  useEffect(() => () => {
+    clearInterval(cooldownInterval.current);
+    clearTimeout(retryTimer.current);
+  }, []);
 
   const show = useCallback(async () => {
     if (status !== 'ready') return;
