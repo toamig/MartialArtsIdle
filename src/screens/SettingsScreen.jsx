@@ -3,6 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { exportSave, importSave, wipeSave } from '../systems/save';
 import { setLanguage, SUPPORTED_LANGUAGES } from '../i18n';
 
+const RESOLUTIONS = [
+  { mode: 'mobile',       label: 'Mobile',        sub: '420 × 860' },
+  { mode: 'windowed720p', label: 'Windowed 720p',  sub: '1280 × 720' },
+  { mode: 'fullscreen',   label: 'Fullscreen',     sub: 'native' },
+];
+
 function SettingsScreen() {
   const { t, i18n } = useTranslation('ui');
 
@@ -10,6 +16,17 @@ function SettingsScreen() {
   const [importText,  setImportText]  = useState('');
   const [message,     setMessage]     = useState(null);
   const [confirmWipe, setConfirmWipe] = useState(false);
+
+  const isDesktop = !!window.electronBridge?.setResolution;
+  const [resolution, setResolutionState] = useState(
+    () => localStorage.getItem('resolution') ?? 'mobile'
+  );
+
+  const applyResolution = (mode) => {
+    localStorage.setItem('resolution', mode);
+    setResolutionState(mode);
+    window.electronBridge.setResolution(mode);
+  };
 
   const flash = (text, isError) => {
     setMessage({ text, isError });
@@ -48,6 +65,25 @@ function SettingsScreen() {
     <div className="screen">
       <h1>{t('settings.title')}</h1>
       <p className="subtitle">{t('settings.subtitle')}</p>
+
+      {isDesktop && (
+        <div className="save-section">
+          <h2>Graphics</h2>
+          <p className="subtitle">Window resolution — takes effect immediately.</p>
+          <div className="save-buttons">
+            {RESOLUTIONS.map(({ mode, label, sub }) => (
+              <button
+                key={mode}
+                className={`save-btn${resolution === mode ? ' save-btn-active' : ''}`}
+                onClick={() => applyResolution(mode)}
+              >
+                <span>{label}</span>
+                <span className="res-sub">{sub}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="save-section">
         <h2>{t('settings.language')}</h2>

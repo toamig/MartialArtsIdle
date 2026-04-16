@@ -25,4 +25,10 @@ contextBridge.exposeInMainWorld('electronBridge', {
    * @param {{ combat: boolean, gathering: boolean, mining: boolean, itemCount: number }} summary
    */
   notifyGainsReady: (summary) => ipcRenderer.send('gains-ready', summary),
+
+  /**
+   * Apply a window resolution preset.
+   * @param {'mobile'|'windowed720p'|'fullscreen'} mode
+   */
+  setResolution: (mode) => ipcRenderer.send('set-resolution', mode),
 });

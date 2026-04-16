@@ -150,6 +150,24 @@ function fireNotification(summary) {
 
 // ─── IPC ──────────────────────────────────────────────────────────────────────
 
+ipcMain.on('set-resolution', (_, mode) => {
+  if (!win) return;
+  if (mode === 'fullscreen') {
+    win.setResizable(true);
+    win.setFullScreen(true);
+  } else if (mode === 'windowed720p') {
+    win.setFullScreen(false);
+    win.setResizable(false);
+    win.setSize(1280, 720);
+    win.center();
+  } else if (mode === 'mobile') {
+    win.setFullScreen(false);
+    win.setResizable(false);
+    win.setSize(420, 860);
+    win.center();
+  }
+});
+
 // Renderer tells us auto-farm enabled state changed
 ipcMain.on('auto-farm-active', (_, active) => {
   autoFarmActive = active;

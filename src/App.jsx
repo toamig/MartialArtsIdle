@@ -42,6 +42,13 @@ function App() {
   useEffect(() => { initAds(); }, []);
   useEffect(() => { preloadImages(PLAYER_SPRITE_SRCS); }, []);
 
+  // Apply saved resolution preset on desktop startup
+  useEffect(() => {
+    if (!window.electronBridge?.setResolution) return;
+    const saved = localStorage.getItem('resolution') ?? 'mobile';
+    window.electronBridge.setResolution(saved);
+  }, []);
+
   const cultivation     = useCultivation();
   const inventory       = useInventory();
   const techniques      = useTechniques();
