@@ -3,7 +3,7 @@
  *
  * Provider selection (build-time + runtime):
  *   DEV mode (any platform)  →  mock    (fake countdown, tests both reward paths)
- *   browser / demo mode      →  mock    (until real IMA ad unit IDs are configured)
+ *   browser / demo / designer →  mock    (until real IMA ad unit IDs are configured)
  *   Native iOS / Android     →  admob   (AdMob via Capacitor)
  *   Browser / Steam (prod)   →  ima     (Google IMA HTML5 SDK — enable once IDs are set)
  *
@@ -20,9 +20,9 @@ async function provider() {
 
   const mode = import.meta.env.MODE; // 'development' | 'browser' | 'demo' | 'native' | 'steam' | 'production'
 
-  if (import.meta.env.DEV || mode === 'browser' || mode === 'demo') {
+  if (import.meta.env.DEV || mode === 'browser' || mode === 'demo' || mode === 'designer') {
     // Mock until real IMA ad unit IDs are obtained from Google Ad Manager.
-    // To switch to live IMA ads: remove 'browser' and 'demo' from this condition.
+    // To switch to live IMA ads: remove 'browser', 'demo', and 'designer' from this condition.
     _provider = await import('./providers/mock.js');
   } else if (Platform.isNative) {
     _provider = await import('./providers/admob.js');
