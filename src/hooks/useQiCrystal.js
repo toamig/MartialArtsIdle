@@ -1,95 +1,109 @@
 /**
- * useQiCrystal.js — QI Crystal hook (no UI).
+ * useQiCrystal.js — Key Crystal hook (refined QI accumulation).
  *
- * The QI Crystal is a permanent upgrade that adds flat qi/sec to cultivation.
- * Upgrading costs QI stones (cultivation materials) drawn from the inventory.
+ * The Key Crystal is a permanent upgrade that adds flat qi/sec to cultivation.
+ * Players feed QI stones (cultivation materials) to accumulate refined QI.
+ * When the accumulated refined QI reaches the threshold, the crystal levels up.
  *
  * Bonus formula: level × 2 qi/sec (flat addition to BASE_RATE).
- *
- * Cost per upgrade:
- *   Levels 1–2:  iron_cultivation_1         × ceil(10 × within^1.5)
- *   Levels 3–4:  bronze_cultivation_1       × ceil(10 × within^1.5)
- *   Levels 5–6:  silver_cultivation_1       × ceil(10 × within^1.5)
- *   Levels 7–8:  gold_cultivation_1         × ceil(10 × within^1.5)
- *   Levels 9–10: transcendent_cultivation_1 × ceil(10 × within^1.5)
- * where `within` = position within the two-level tier (1 or 2).
+ * No level cap — cost scales infinitely.
  *
  * Debug commands are exposed on window.__debug.qiCrystal.
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { getRefinedQi } from '../data/items';
 
 const SAVE_KEY = 'mai_qi_crystal';
-const MAX_LEVEL = 10;
 
-const LEVEL_TIERS = [
-  { levels: [1, 2],   itemId: 'iron_cultivation_1'         },
-  { levels: [3, 4],   itemId: 'bronze_cultivation_1'       },
-  { levels: [5, 6],   itemId: 'silver_cultivation_1'       },
-  { levels: [7, 8],   itemId: 'gold_cultivation_1'         },
-  { levels: [9, 10],  itemId: 'transcendent_cultivation_1' },
-];
+/**
+ * Refined QI required to reach the given level.
+ * Uses a smooth curve that produces clean-ish numbers at low levels
+ * and scales infinitely: 50, 150, 350, 600, 900, 1200, 1600, 2000, ...
+ */
+export function getRequiredRefinedQi(targetLevel) {
+  if (targetLevel < 1) return 0;
+  const raw = 50 * Math.pow(targetLevel, 1.55);
+  // Round to a clean step that scales with magnitude (keeps ~2 significant digits)
+  const step = Math.pow(10, Math.max(1, Math.floor(Math.log10(raw)) - 1));
+  return Math.round(raw / step) * step;
+}
 
-function loadLevel() {
+function loadState() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) return JSON.parse(raw).level ?? 0;
-  } catch {}
-  return 0;
-}
-
-function saveLevel(level) {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ level })); } catch {}
-}
-
-/** Cost to upgrade from current level to `targetLevel`. Returns null if maxed. */
-export function getCrystalUpgradeCost(targetLevel) {
-  if (targetLevel < 1 || targetLevel > MAX_LEVEL) return null;
-  for (const tier of LEVEL_TIERS) {
-    const idx = tier.levels.indexOf(targetLevel);
-    if (idx !== -1) {
-      const within = idx + 1; // 1 or 2
-      return { itemId: tier.itemId, qty: Math.ceil(10 * Math.pow(within, 1.5)) };
+    if (raw) {
+      const data = JSON.parse(raw);
+      return {
+        level: data.level ?? 0,
+        refinedQi: data.refinedQi ?? 0,
+      };
     }
-  }
-  return null;
+  } catch {}
+  return { level: 0, refinedQi: 0 };
+}
+
+function saveState({ level, refinedQi }) {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ level, refinedQi })); } catch {}
 }
 
 /**
  * @param {{ getQuantity: (id: string) => number, removeItem: (id: string, qty: number) => void }} param
  */
 export default function useQiCrystal({ getQuantity, removeItem } = {}) {
-  const [level, setLevelState] = useState(loadLevel);
+  const [state, setState] = useState(loadState);
 
-  // Ref that useCultivation reads in its game loop.
-  // Updated immediately on every level change so the rate is always current.
-  const crystalQiBonusRef = useRef(level * 2);
+  const crystalQiBonusRef = useRef(state.level * 2);
 
   useEffect(() => {
-    crystalQiBonusRef.current = level * 2;
-  }, [level]);
+    crystalQiBonusRef.current = state.level * 2;
+  }, [state.level]);
 
-  /** Internal helper — set level, update ref, persist. */
-  const applyLevel = useCallback((n) => {
-    const clamped = Math.max(0, Math.min(MAX_LEVEL, n));
-    setLevelState(clamped);
-    crystalQiBonusRef.current = clamped * 2;
-    saveLevel(clamped);
+  /** Internal helper — set state, update ref, persist. */
+  const applyState = useCallback((newState) => {
+    const next = {
+      level: Math.max(0, newState.level),
+      refinedQi: Math.max(0, newState.refinedQi),
+    };
+    setState(next);
+    crystalQiBonusRef.current = next.level * 2;
+    saveState(next);
   }, []);
 
-  /** Upgrade one level if the player has the required QI stones. */
-  const upgrade = useCallback(() => {
-    setLevelState(prev => {
-      const nextLevel = prev + 1;
-      if (nextLevel > MAX_LEVEL) return prev;
-      const cost = getCrystalUpgradeCost(nextLevel);
-      if (!cost) return prev;
-      const owned = getQuantity?.(cost.itemId) ?? 0;
-      if (owned < cost.qty) return prev;
-      removeItem?.(cost.itemId, cost.qty);
-      crystalQiBonusRef.current = nextLevel * 2;
-      saveLevel(nextLevel);
-      return nextLevel;
+  /**
+   * Feed QI stones to the crystal.
+   * @param {string} itemId - cultivation stone item ID
+   * @param {number} qty - number of stones to consume
+   */
+  const feed = useCallback((itemId, qty) => {
+    const rqi = getRefinedQi(itemId);
+    if (rqi <= 0 || qty <= 0) return;
+
+    const owned = getQuantity?.(itemId) ?? 0;
+    const actualQty = Math.min(qty, owned);
+    if (actualQty <= 0) return;
+
+    removeItem?.(itemId, actualQty);
+
+    setState(prev => {
+      let { level, refinedQi } = prev;
+      refinedQi += actualQty * rqi;
+
+      // Auto-level when threshold crossed (no cap)
+      while (true) {
+        const needed = getRequiredRefinedQi(level + 1);
+        if (refinedQi >= needed) {
+          refinedQi -= needed;
+          level += 1;
+        } else {
+          break;
+        }
+      }
+
+      const next = { level, refinedQi };
+      crystalQiBonusRef.current = level * 2;
+      saveState(next);
+      return next;
     });
   }, [getQuantity, removeItem]);
 
@@ -98,22 +112,22 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     if (typeof window === 'undefined') return;
     window.__debug = window.__debug || {};
     window.__debug.qiCrystal = {
-      getLevel:  () => level,
-      setLevel:  (n) => applyLevel(n),
-      upgrade:   () => upgrade(),
-      getCost:   (n) => getCrystalUpgradeCost(n ?? (level + 1)),
-      getBonus:  () => crystalQiBonusRef.current,
+      getState:    () => state,
+      setLevel:    (n) => applyState({ level: n, refinedQi: 0 }),
+      feed:        (itemId, qty) => feed(itemId, qty),
+      getBonus:    () => crystalQiBonusRef.current,
+      getCostAt:   (n) => getRequiredRefinedQi(n),
     };
-  }); // no dep array — always fresh so getLevel reflects current state
+  }); // no dep array — always fresh
 
-  const upgradeCost = getCrystalUpgradeCost(level + 1);
+  const requiredForNext = getRequiredRefinedQi(state.level + 1);
 
   return {
-    level,
-    crystalQiBonus:    level * 2,
+    level:            state.level,
+    refinedQi:        state.refinedQi,
+    requiredForNext,
+    crystalQiBonus:   state.level * 2,
     crystalQiBonusRef,
-    upgrade,
-    upgradeCost,
-    maxLevel: MAX_LEVEL,
+    feed,
   };
 }

@@ -1491,7 +1491,7 @@
   letter-spacing: 0.01em;
 }
 
-/* ── Crystal placeholder ─────────────────────────────────────────────────── */
+/* ── Key Crystal ────────────────────────────────────────────────────────── */
 
 /* Anchored at ~46% of cultivation-zone height — aligns with the archway gap
    in home.png when background-position is center bottom. */
@@ -1504,26 +1504,56 @@
   pointer-events: none;
 }
 
-.home-crystal-locked {
+.home-crystal-unlocked {
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: home-crystal-float 3.2s ease-in-out infinite;
+}
+
+.home-crystal-ring {
+  position: relative;
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: radial-gradient(circle at 38% 32%,
-    rgba(140, 200, 255, 0.14),
-    rgba(40,  80,  180, 0.07));
-  border: 1px solid rgba(160, 210, 255, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: home-crystal-float 3.2s ease-in-out infinite,
-             home-crystal-glow  3.2s ease-in-out infinite;
+  background: conic-gradient(
+    from -90deg,
+    #7c3aed calc(var(--progress) * 360deg),
+    rgba(60, 60, 100, 0.3) calc(var(--progress) * 360deg)
+  );
+  animation: home-crystal-glow 3.2s ease-in-out infinite;
 }
 
-.home-crystal-icon {
-  font-size: 22px;
-  opacity: 0.30;
-  color: #90c4ff;
-  filter: blur(0.4px);
+.home-crystal-ring::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%,
+    rgba(100, 140, 220, 0.25),
+    rgba(20, 30, 60, 0.6));
+}
+
+.home-crystal-sprite {
+  position: relative;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 6px rgba(124, 58, 237, 0.5));
+}
+
+.home-crystal-level {
+  font-size: 10px;
+  color: #c4b5fd;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  font-weight: 600;
 }
 
 @keyframes home-crystal-float {
@@ -1533,13 +1563,194 @@
 
 @keyframes home-crystal-glow {
   0%, 100% {
-    box-shadow: 0 0 10px rgba(100, 180, 255, 0.10),
-                0 0 22px rgba( 80, 140, 255, 0.06);
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.15),
+                0 0 22px rgba(100, 140, 255, 0.08);
   }
   50% {
-    box-shadow: 0 0 18px rgba(100, 180, 255, 0.24),
-                0 0 36px rgba( 80, 140, 255, 0.14);
+    box-shadow: 0 0 18px rgba(124, 58, 237, 0.35),
+                0 0 36px rgba(100, 140, 255, 0.18);
   }
+}
+
+/* ── Crystal Feed Modal ─────────────────────────────────────────────────── */
+
+.crystal-feed-modal {
+  max-width: 340px;
+  width: 90%;
+}
+
+.crystal-feed-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.crystal-feed-level {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.crystal-feed-bonus {
+  font-size: 0.9rem;
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.crystal-feed-bar-wrap {
+  margin-bottom: 14px;
+}
+
+.crystal-feed-bar {
+  height: 14px;
+  background: rgba(60, 60, 100, 0.3);
+  border-radius: 7px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.crystal-feed-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7c3aed, #a78bfa);
+  border-radius: 7px;
+  transition: width 0.3s ease;
+}
+
+.crystal-feed-bar-label {
+  display: block;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.crystal-feed-maxed {
+  text-align: center;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 12px 0;
+}
+
+.crystal-feed-stones {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.crystal-feed-stone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.crystal-feed-stone:hover {
+  border-color: rgba(124, 58, 237, 0.4);
+}
+
+.crystal-feed-stone-selected {
+  border-color: #7c3aed;
+  background: rgba(124, 58, 237, 0.08);
+}
+
+.crystal-feed-stone-name {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.crystal-feed-stone-qty {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  min-width: 32px;
+  text-align: right;
+}
+
+.crystal-feed-stone-val {
+  font-size: 0.75rem;
+  color: #a78bfa;
+  min-width: 36px;
+  text-align: right;
+}
+
+.crystal-feed-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.crystal-feed-qty-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.crystal-feed-qty-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crystal-feed-qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.crystal-feed-max-btn {
+  width: auto;
+  padding: 0 10px;
+  font-size: 0.8rem;
+}
+
+.crystal-feed-qty-value {
+  min-width: 28px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.crystal-feed-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.crystal-feed-btn:hover {
+  opacity: 0.9;
+}
+
+.crystal-feed-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 16px 0;
 }
 
 /* ── Qi-particle stream between crystal and character ───────────────────── */

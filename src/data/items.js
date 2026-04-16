@@ -87,16 +87,16 @@ const ITEMS = {
     { id: 'eternal_vigor_pill',    name: 'Eternal Vigor Pill',    rarity: 'Transcendent', description: 'A cultivated pill that permanently improves base stats.' },
   ],
   cultivation: [
-    { id: 'iron_cultivation_1',         name: 'Iron QI Stone 1',         rarity: 'Iron',         description: 'A naturally formed stone that accumulates ambient qi over time in mortal-realm training grounds.' },
-    { id: 'iron_cultivation_2',         name: 'Iron QI Stone 2',         rarity: 'Iron',         description: 'Residual qi that coalesces above a defeated mortal cultivator or beast, briefly visible before dispersing.' },
-    { id: 'bronze_cultivation_1',       name: 'Bronze QI Stone 1',       rarity: 'Bronze',       description: 'The dense qi nucleus found at the center of a beast that has fed on spiritual energy for years — still pulsing faintly after death.' },
-    { id: 'bronze_cultivation_2',       name: 'Bronze QI Stone 2',       rarity: 'Bronze',       description: 'A crystallised shard of qi torn from a fallen cultivator or construct whose energy pathways had been corrupted or shattered.' },
-    { id: 'silver_cultivation_1',       name: 'Silver QI Stone 1',       rarity: 'Silver',       description: 'The marrow-like qi condensate found deep within ancient frontier creatures, saturated after centuries of qi absorption.' },
-    { id: 'silver_cultivation_2',       name: 'Silver QI Stone 2',       rarity: 'Silver',       description: 'A fragment of soul-force that persists after the death of an immortal-grade entity, still carrying echoes of its cultivation.' },
-    { id: 'gold_cultivation_1',         name: 'Gold QI Stone 1',         rarity: 'Gold',         description: 'A calcified relic of saint-realm qi, recovered from burial grounds and war altars.' },
-    { id: 'gold_cultivation_2',         name: 'Gold QI Stone 2',         rarity: 'Gold',         description: 'A small pearl formed inside void-touched predators and shades, containing compressed void-attribute energy.' },
-    { id: 'transcendent_cultivation_1', name: 'Transcendent QI Stone 1', rarity: 'Transcendent', description: 'The crystallised qi core of a primordial entity — condensed from millions of years of unbroken cultivation.' },
-    { id: 'transcendent_cultivation_2', name: 'Transcendent QI Stone 2', rarity: 'Transcendent', description: 'A crystal of pure heaven-grade qi extracted from entities that have ascended beyond mortal limitations.' },
+    { id: 'iron_cultivation_1',         name: 'Iron QI Stone 1',         rarity: 'Iron',         refinedQi: 5,    description: 'A naturally formed stone that accumulates ambient qi over time in mortal-realm training grounds.' },
+    { id: 'iron_cultivation_2',         name: 'Iron QI Stone 2',         rarity: 'Iron',         refinedQi: 8,    description: 'Residual qi that coalesces above a defeated mortal cultivator or beast, briefly visible before dispersing.' },
+    { id: 'bronze_cultivation_1',       name: 'Bronze QI Stone 1',       rarity: 'Bronze',       refinedQi: 20,   description: 'The dense qi nucleus found at the center of a beast that has fed on spiritual energy for years — still pulsing faintly after death.' },
+    { id: 'bronze_cultivation_2',       name: 'Bronze QI Stone 2',       rarity: 'Bronze',       refinedQi: 30,   description: 'A crystallised shard of qi torn from a fallen cultivator or construct whose energy pathways had been corrupted or shattered.' },
+    { id: 'silver_cultivation_1',       name: 'Silver QI Stone 1',       rarity: 'Silver',       refinedQi: 80,   description: 'The marrow-like qi condensate found deep within ancient frontier creatures, saturated after centuries of qi absorption.' },
+    { id: 'silver_cultivation_2',       name: 'Silver QI Stone 2',       rarity: 'Silver',       refinedQi: 120,  description: 'A fragment of soul-force that persists after the death of an immortal-grade entity, still carrying echoes of its cultivation.' },
+    { id: 'gold_cultivation_1',         name: 'Gold QI Stone 1',         rarity: 'Gold',         refinedQi: 300,  description: 'A calcified relic of saint-realm qi, recovered from burial grounds and war altars.' },
+    { id: 'gold_cultivation_2',         name: 'Gold QI Stone 2',         rarity: 'Gold',         refinedQi: 450,  description: 'A small pearl formed inside void-touched predators and shades, containing compressed void-attribute energy.' },
+    { id: 'transcendent_cultivation_1', name: 'Transcendent QI Stone 1', rarity: 'Transcendent', refinedQi: 1000, description: 'The crystallised qi core of a primordial entity — condensed from millions of years of unbroken cultivation.' },
+    { id: 'transcendent_cultivation_2', name: 'Transcendent QI Stone 2', rarity: 'Transcendent', refinedQi: 1500, description: 'A crystal of pure heaven-grade qi extracted from entities that have ascended beyond mortal limitations.' },
   ],
 };
 
@@ -127,6 +127,11 @@ for (const category of Object.values(ITEMS)) {
   for (const item of category) {
     ITEMS_BY_ID[item.id] = item;
   }
+}
+
+/** Look up the refined QI value of a cultivation stone by item id. */
+export function getRefinedQi(itemId) {
+  return ITEMS_BY_ID[itemId]?.refinedQi ?? 0;
 }
 
 export { RARITY, ITEMS, ITEMS_BY_ID };

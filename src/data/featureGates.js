@@ -67,6 +67,11 @@ const BASELINE = {
     hint: null,
     unlockMsg: null,
   },
+  qi_crystal: {
+    gate: { type: 'realm', minRealmIndex: 3 },
+    hint: 'Reach Tempered Body Layer 4',
+    unlockMsg: 'The Key Crystal awakens. Feed it QI stones to boost your cultivation.',
+  },
 };
 
 export const FEATURE_GATES = mergeRecords(BASELINE, 'featureGates');

@@ -6,6 +6,7 @@ import OfflineEarningsModal from '../components/OfflineEarningsModal';
 import PillDrawer from '../components/PillDrawer';
 import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
+import CrystalFeedModal from '../components/CrystalFeedModal';
 import { PILLS_BY_ID } from '../data/pills';
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
@@ -122,13 +123,24 @@ function HeavenlyQiButton({ ad, adBoostActive, adBoostRemaining, maxed }) {
 const HOLD_HINT_SEEN_KEY = 'mai_home_hold_hint_seen';
 const HOLD_HINT_IDLE_MS  = 60 * 1000;
 
-/** Crystal placeholder — sits in the archway gap. Locked until the feature ships. */
-function CrystalPlaceholder() {
+/** Key Crystal — hidden when locked, interactive when unlocked. */
+function KeyCrystal({ crystal, isUnlocked, onOpen }) {
+  if (!isUnlocked) return null;
+
+  const { level, refinedQi, requiredForNext } = crystal;
+  const progress = requiredForNext > 0 ? refinedQi / requiredForNext : 0;
+
   return (
-    <div className="home-crystal-anchor">
-      <div className="home-crystal-locked">
-        <span className="home-crystal-icon">◈</span>
+    <div className="home-crystal-anchor home-crystal-unlocked" onClick={onOpen}>
+      <div className="home-crystal-ring" style={{ '--progress': progress }}>
+        <img
+          src={`${BASE}sprites/items/origin_crystal.png`}
+          className="home-crystal-sprite"
+          alt="Key Crystal"
+          draggable="false"
+        />
       </div>
+      <span className="home-crystal-level">Lv.{level}</span>
     </div>
   );
 }
@@ -194,6 +206,7 @@ function HomeScreen({
   cultivation, pills, inventory,
   selections, onOpenSelections,
   onNavigate,
+  crystal, isCrystalUnlocked,
 }) {
   const { t } = useTranslation('ui');
   const {
@@ -243,6 +256,9 @@ function HomeScreen({
   const [showHoldHint, setShowHoldHint] = useState(() => {
     try { return !localStorage.getItem(HOLD_HINT_SEEN_KEY); } catch { return true; }
   });
+
+  // ── Crystal feed modal ───────────────────────────────────────────────────
+  const [crystalModalOpen, setCrystalModalOpen] = useState(false);
 
   // ── Pill drawer ──────────────────────────────────────────────────────────
   const [pillDrawerOpen, setPillDrawerOpen] = useState(false);
@@ -344,8 +360,12 @@ function HomeScreen({
             maxed={maxed}
           />
 
-          {/* Crystal placeholder — floats in the archway gap */}
-          <CrystalPlaceholder />
+          {/* Key Crystal — floats in the archway gap */}
+          <KeyCrystal
+            crystal={crystal}
+            isUnlocked={isCrystalUnlocked}
+            onOpen={() => setCrystalModalOpen(true)}
+          />
 
           {/* Qi particles drifting from crystal toward character */}
           <QiParticles />
@@ -435,6 +455,15 @@ function HomeScreen({
         defaultTab="cultivation"
         pills={pills}
       />
+
+      {/* Crystal feed modal */}
+      {crystalModalOpen && isCrystalUnlocked && (
+        <CrystalFeedModal
+          crystal={crystal}
+          inventory={inventory}
+          onClose={() => setCrystalModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
