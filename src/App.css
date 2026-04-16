@@ -1000,6 +1000,10 @@
   /* zero top/sides so HUD starts at y=0 (covers Dynamic Island / notch) */
   padding: 0 0 calc(var(--nav-h) + env(safe-area-inset-bottom));
   max-width: 100%;
+  /* Flex column so .home-screen's flex:1 resolves to the remaining height.
+     Without this, .home-screen has no defined height and the scene collapses. */
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Top HUD bar — jade balance (left) + settings (right) ────────────────── */
@@ -1068,10 +1072,10 @@
   text-align: center;
   display: flex;
   flex-direction: column;
-  /* height: 100% fills exactly the screen-container content box, which now
-     has padding-bottom = navbar height, so the scene never runs behind the
-     fixed nav bar. */
-  height: 100%;
+  /* flex:1 fills exactly the screen-container content box, which now has
+     padding-bottom = navbar height, so the scene never runs behind the
+     fixed nav bar. min-height:0 lets the scene shrink below intrinsic size. */
+  flex: 1;
   min-height: 0;
   overflow: hidden;
   padding: 0;
