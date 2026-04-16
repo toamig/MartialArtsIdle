@@ -6,7 +6,7 @@ import OfflineEarningsModal from '../components/OfflineEarningsModal';
 import PillDrawer from '../components/PillDrawer';
 import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
-import { PILLS_BY_ID, ITEM_RARITY } from '../data/pills';
+import { PILLS_BY_ID } from '../data/pills';
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -47,21 +47,6 @@ function HomeTopHud({ jadeBalance, onNavigate }) {
   );
 }
 
-// ── Active pill badge ────────────────────────────────────────────────────────
-function ActivePillBadge({ active }) {
-  const { t: tGame } = useTranslation('game');
-  const pill = PILLS_BY_ID[active.pillId];
-  if (!pill) return null;
-  const remaining = Math.max(0, Math.ceil((active.expiresAt - Date.now()) / 1000));
-  const color = ITEM_RARITY[pill.rarity]?.color ?? '#aaa';
-  const pillName = tGame(`items.${pill.id}.name`, { defaultValue: pill.name });
-  return (
-    <div className="active-pill-badge" style={{ borderColor: color }}>
-      <span style={{ color }}>{pillName}</span>
-      <span className="active-pill-time">{remaining}s</span>
-    </div>
-  );
-}
 
 /** Qi/s readout — updated via rAF so it tracks every modifier without re-renders. */
 function QiRateReadout({ rateRef, boosting, adBoostActive, maxed }) {

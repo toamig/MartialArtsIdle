@@ -199,7 +199,7 @@ function App() {
   });
 
   const screens = {
-    home:      <HomeScreen cultivation={cultivation} pills={pills} inventory={inventory} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} idleAssignment={idleAssignment} onNavigate={navigate} />,
+    home:      <HomeScreen cultivation={cultivation} pills={pills} inventory={inventory} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} onNavigate={navigate} />,
     training:  <TrainingScreen />,
     // Worlds hub — the NavBar "Worlds" tab always lands here
     combat:    <WorldsScreen cultivation={cultivation} onNavigate={navigate} expandWorldId={screenParam?.expandWorldId ?? null} activeTab={screenParam?.activeTab ?? null} clearedRegions={clearedRegions} idleAssignment={idleAssignment} onSetIdle={autoFarm.setIdleActivity} />,
