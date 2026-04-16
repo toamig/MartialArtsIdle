@@ -182,9 +182,7 @@
   flex: 1;
   padding: 20px 16px;
   padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);
-  max-width: 600px;
   width: 100%;
-  margin: 0 auto;
 }
 
 /* ── Perks list (CharacterScreen) ──────────────────────────────────────────── */
