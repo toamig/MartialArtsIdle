@@ -21,8 +21,9 @@ export default defineConfig(({ command, mode }) => {
 
   // PWA service worker is only useful in browser/local builds.
   // Inside a Capacitor WebView or Electron/Tauri it can conflict with the native bridge.
-  // Designer mode skips the PWA too — it's strictly a dev-time tool.
-  const enablePWA = !isNative && !isSteam && !isDesigner;
+  // Designer mode DOES include the PWA — the designer panel is PAT-gated so regular
+  // visitors are unaffected, and the SW is required for Android install + iOS cache busting.
+  const enablePWA = !isNative && !isSteam;
 
   return {
     base,
