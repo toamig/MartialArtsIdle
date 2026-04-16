@@ -1,5 +1,120 @@
 {
   "version": 1,
-  "updatedAt": null,
-  "records": {}
+  "updatedAt": "2026-04-16T22:40:49.600Z",
+  "records": {
+    "ORES": {
+      "bronze_mineral_1": {
+        "name": "Reinforced Steel Thread",
+        "description": "- TBD -"
+      },
+      "bronze_mineral_2": {
+        "name": "Ancient Quartz",
+        "description": "- TBD -"
+      },
+      "silver_mineral_1": {
+        "name": "Corrupted Silver Ore",
+        "description": "- TBD -"
+      },
+      "silver_mineral_2": {
+        "name": "Ghost Jade",
+        "description": "- TBD -"
+      },
+      "gold_mineral_1": {
+        "name": "Sun-forged Iron",
+        "description": "- TBD -"
+      },
+      "gold_mineral_2": {
+        "name": "Void Crystal",
+        "description": "A crystal grown inside rift tears, its structure formed entirely by compressed void energy."
+      },
+      "transcendent_mineral_1": {
+        "name": "Divine Netherstone",
+        "description": "- TBD -"
+      }
+    },
+    "BLOOD_CORES": {
+      "iron_blood_core_1": {
+        "name": "Weak Blood Core",
+        "description": "- TBD -"
+      },
+      "iron_blood_core_2": {
+        "name": "Mortal Beast Core",
+        "description": "- TBD -"
+      },
+      "bronze_blood_core_1": {
+        "name": "Elemental Beast Core",
+        "description": "- TBD -"
+      },
+      "bronze_blood_core_2": {
+        "name": "Pure Elemental Core",
+        "description": "- TBD -"
+      },
+      "silver_blood_core_1": {
+        "name": "Void Beast Core",
+        "description": "- TBD -"
+      },
+      "silver_blood_core_2": {
+        "name": "Spirit Core",
+        "description": "- TBD -"
+      },
+      "gold_blood_core_1": {
+        "name": "Ancient Beast Core",
+        "description": "- TBD -"
+      },
+      "gold_blood_core_2": {
+        "name": "Void-forged Core",
+        "description": "- TBD -"
+      },
+      "transcendent_blood_core_1": {
+        "name": "Dao-inscribed Core",
+        "description": "- TBD -"
+      },
+      "transcendent_blood_core_2": {
+        "name": "Heavenly Dao Core",
+        "description": "- TBD -"
+      }
+    },
+    "QI_STONES": {
+      "iron_cultivation_1": {
+        "name": "Qi Stone",
+        "description": "- TBD -"
+      },
+      "iron_cultivation_2": {
+        "name": "Stray Qi Stone",
+        "description": "- TBD -"
+      },
+      "bronze_cultivation_1": {
+        "name": "Pulse Qi Stone",
+        "description": "- TBD -"
+      },
+      "bronze_cultivation_2": {
+        "name": "Demonheart Qi Stone",
+        "description": "- TBD -"
+      },
+      "silver_cultivation_1": {
+        "name": "Saint QI Stone",
+        "description": "- TBD -"
+      },
+      "silver_cultivation_2": {
+        "name": "Condensed QI Stone",
+        "description": "- TBD -"
+      },
+      "gold_cultivation_1": {
+        "name": "Dragonpulse Qi Stone",
+        "description": "- TBD -"
+      },
+      "gold_cultivation_2": {
+        "name": "Void-forged QI Stone",
+        "description": "- TBD -"
+      },
+      "transcendent_cultivation_2": {
+        "name": "Heavenscribed Qi Stone",
+        "description": "- TBD -"
+      },
+      "transcendent_cultivation_1": {
+        "name": "Primordial Qi Stone ",
+        "description": "- TBD -"
+      }
+    }
+  }
 }
