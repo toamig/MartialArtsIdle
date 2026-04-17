@@ -19,6 +19,10 @@ const LOCALIZER_ENABLED =
   import.meta.env.MODE === 'localizer' ||
   (import.meta.env.DEV && import.meta.env.MODE !== 'native')
 
+document.addEventListener('contextmenu', e => {
+  if (e.target.tagName === 'IMG') e.preventDefault();
+});
+
 const rootEl = document.getElementById('root')
 
 class ErrorBoundary extends Component {

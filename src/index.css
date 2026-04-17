@@ -40,6 +40,13 @@ body {
   padding: env(safe-area-inset-top) 0 0 0;
 }
 
+/* Prevent saving/copying game images */
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+}
+
 /* Allow text selection in specific places if needed */
 input, textarea {
   -webkit-user-select: auto;
