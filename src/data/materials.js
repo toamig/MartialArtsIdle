@@ -47,16 +47,16 @@ export const RARITY_TIER_COST = {
 
 // ── Herbs (ID-keyed) ──────────────────────────────────────────────────────────
 export const HERBS = {
-  iron_herb_1:          { name: 'Mortal Qi Grass',     rarity: 'Iron',         gatherCost: 15,   description: 'A weed that grows wherever mortal cultivators train, soaking up residual qi from their exercises.' },
-  iron_herb_2:          { name: 'Wild Spirit Root',    rarity: 'Iron',         gatherCost: 15,   description: 'A gnarled root found in borderland wilderness, drawn to faint spiritual energy in the soil.' },
+  iron_herb_1:          { name: 'Sect Grounds Grass',  rarity: 'Iron',         gatherCost: 15,   description: 'A weed that grows wherever mortal cultivators train, soaking up residual qi from sect grounds.' },
+  iron_herb_2:          { name: 'Borderland Root',     rarity: 'Iron',         gatherCost: 15,   description: 'A gnarled root found in borderland wilderness, drawn to faint spiritual energy in the soil.' },
   bronze_herb_1:        { name: 'Qi Vein Vine',        rarity: 'Bronze',       gatherCost: 60,   description: 'A creeping vine that grows along underground qi veins, its leaves faintly luminescent.' },
-  bronze_herb_2:        { name: 'Misty Forest Bloom',  rarity: 'Bronze',       gatherCost: 60,   description: 'A pale flower that blooms only in spirit-mist forests, pollinated by forest spirits.' },
-  silver_herb_1:        { name: 'Desert Silver Lotus', rarity: 'Silver',       gatherCost: 180,  description: 'A silver lotus that survives in scorched desert ruins, drawing water from deep ley lines.' },
-  silver_herb_2:        { name: 'Blood Reed',          rarity: 'Silver',       gatherCost: 180,  description: 'A blood-red reed that grows at the edges of the blood sea, its sap thick with corrupted vitality.' },
-  gold_herb_1:          { name: 'Burial Ground Lotus', rarity: 'Gold',         gatherCost: 600,  description: 'A dark lotus that blooms only above saint-grade burial sites, feeding on centuries of death qi.' },
+  bronze_herb_2:        { name: 'Spirit Forest Bloom', rarity: 'Bronze',       gatherCost: 60,   description: 'A pale flower that blooms only in the Misty Spirit Forest, pollinated by forest spirits.' },
+  silver_herb_1:        { name: 'Shattered Sky Lotus', rarity: 'Silver',       gatherCost: 180,  description: 'A silver lotus that survives in the Shattered Sky Desert ruins, drawing water from deep ley lines.' },
+  silver_herb_2:        { name: 'Blood Sea Reed',      rarity: 'Silver',       gatherCost: 180,  description: 'A blood-red reed that grows at the edges of the blood sea, its sap thick with corrupted vitality.' },
+  gold_herb_1:          { name: 'Saint Burial Lotus',  rarity: 'Gold',         gatherCost: 600,  description: 'A dark lotus that blooms only above saint-grade burial sites, feeding on centuries of death qi.' },
   gold_herb_2:          { name: 'Void Thorn Vine',     rarity: 'Gold',         gatherCost: 600,  description: 'A thorned vine that grows through rift cracks, its barbs sharp enough to pierce saint-grade defenses.' },
   transcendent_herb_1:  { name: 'Origin Spring Petal', rarity: 'Transcendent', gatherCost: 1800, description: "A petal shed by flowers growing at the world's origin qi springs, saturated with primordial energy." },
-  transcendent_herb_2:  { name: 'Heaven Root Vine',    rarity: 'Transcendent', gatherCost: 1800, description: 'A legendary vine whose roots reach through bedrock to the world core, channeling heaven-grade energy.' },
+  transcendent_herb_2:  { name: 'Open Heaven Vine',    rarity: 'Transcendent', gatherCost: 1800, description: 'A legendary vine whose roots reach up into the Open Heaven realm itself, channeling heaven-grade energy.' },
 };
 
 // ── Ores (ID-keyed) ───────────────────────────────────────────────────────────

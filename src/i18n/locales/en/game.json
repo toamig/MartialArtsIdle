@@ -291,11 +291,11 @@
   },
   "items": {
     "iron_herb_1": {
-      "name": "Mortal Qi Grass",
-      "desc": "A weed that grows wherever mortal cultivators train, soaking up residual qi from their exercises."
+      "name": "Sect Grounds Grass",
+      "desc": "A weed that grows wherever mortal cultivators train, soaking up residual qi from sect grounds."
     },
     "iron_herb_2": {
-      "name": "Wild Spirit Root",
+      "name": "Borderland Root",
       "desc": "A gnarled root found in borderland wilderness, drawn to faint spiritual energy in the soil."
     },
     "bronze_herb_1": {
@@ -303,19 +303,19 @@
       "desc": "A creeping vine that grows along underground qi veins, its leaves faintly luminescent."
     },
     "bronze_herb_2": {
-      "name": "Misty Forest Bloom",
-      "desc": "A pale flower that blooms only in spirit-mist forests, pollinated by forest spirits."
+      "name": "Spirit Forest Bloom",
+      "desc": "A pale flower that blooms only in the Misty Spirit Forest, pollinated by forest spirits."
     },
     "silver_herb_1": {
-      "name": "Desert Silver Lotus",
-      "desc": "A silver lotus that survives in scorched desert ruins, drawing water from deep ley lines."
+      "name": "Shattered Sky Lotus",
+      "desc": "A silver lotus that survives in the Shattered Sky Desert ruins, drawing water from deep ley lines."
     },
     "silver_herb_2": {
-      "name": "Blood Reed",
+      "name": "Blood Sea Reed",
       "desc": "A blood-red reed that grows at the edges of the blood sea, its sap thick with corrupted vitality."
     },
     "gold_herb_1": {
-      "name": "Burial Ground Lotus",
+      "name": "Saint Burial Lotus",
       "desc": "A dark lotus that blooms only above saint-grade burial sites, feeding on centuries of death qi."
     },
     "gold_herb_2": {
@@ -327,8 +327,8 @@
       "desc": "A petal shed by flowers growing at the world's origin qi springs, saturated with primordial energy."
     },
     "transcendent_herb_2": {
-      "name": "Heaven Root Vine",
-      "desc": "A legendary vine whose roots reach through bedrock to the world core, channeling heaven-grade energy."
+      "name": "Open Heaven Vine",
+      "desc": "A legendary vine whose roots reach up into the Open Heaven realm itself, channeling heaven-grade energy."
     },
     "iron_mineral_1": {
       "name": "Sect Iron Shard",
@@ -410,126 +410,52 @@
       "name": "Transcendent QI Stone 2",
       "desc": "A crystal of pure heaven-grade qi extracted from entities that have ascended beyond mortal limitations."
     },
-    "qi_condensation_pill": {
-      "name": "Qi Condensation Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "body_tempering_pill": {
-      "name": "Body Tempering Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "spirit_calming_pill": {
-      "name": "Spirit Calming Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "fortification_pill": {
-      "name": "Fortification Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "miners_focus_pill": {
-      "name": "Miner's Focus Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "qi_gathering_pill": {
-      "name": "Qi Gathering Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "meridian_opening_pill": {
-      "name": "Meridian Opening Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "flame_body_pill": {
-      "name": "Flame Body Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "iron_skin_pill": {
-      "name": "Iron Skin Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "earth_pulse_pill": {
-      "name": "Earth Pulse Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "spirit_sight_pill": {
-      "name": "Spirit Sight Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "qi_flow_pill": {
-      "name": "Qi Flow Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "profound_qi_pill": {
-      "name": "Profound Qi Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "dragon_blood_pill": {
-      "name": "Dragon Blood Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "soul_stabilizing_pill": {
-      "name": "Soul Stabilizing Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "vitality_pill": {
-      "name": "Vitality Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "heavenly_root_pill": {
-      "name": "Heavenly Root Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "deep_vein_pill": {
-      "name": "Deep Vein Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "qi_surge_pill": {
-      "name": "Qi Surge Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "combat_pill": {
-      "name": "Combat Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "qi_ascension_pill": {
-      "name": "Qi Ascension Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "true_element_pill": {
-      "name": "True Element Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "heaven_marrow_pill": {
-      "name": "Heaven Marrow Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "origin_gathering_pill": {
-      "name": "Origin Gathering Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "qi_breakthrough_pill": {
-      "name": "Qi Breakthrough Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "dao_heart_pill": {
-      "name": "Dao Heart Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "immortal_qi_pill": {
-      "name": "Immortal Qi Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "heaven_defying_pill": {
-      "name": "Heaven Defying Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "dao_foundation_pill": {
-      "name": "Dao Foundation Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
-    "eternal_vigor_pill": {
-      "name": "Eternal Vigor Pill",
-      "desc": "A cultivated pill that provides temporary buffs."
-    },
+    "iron_essence_pill":          { "name": "Iron Essence Pill",          "desc": "A cultivated pill that permanently improves base stats." },
+    "iron_soul_pill":             { "name": "Iron Soul Pill",             "desc": "A cultivated pill that permanently improves base stats." },
+    "iron_body_pill":             { "name": "Iron Body Pill",             "desc": "A cultivated pill that permanently improves base stats." },
+    "iron_fist_pill":             { "name": "Iron Fist Pill",             "desc": "A cultivated pill that permanently improves base stats." },
+    "iron_ember_pill":            { "name": "Iron Ember Pill",            "desc": "A cultivated pill that permanently improves base stats." },
+    "iron_mind_pill":             { "name": "Iron Mind Pill",             "desc": "A cultivated pill that permanently improves base stats." },
+    "iron_skin_pill":             { "name": "Iron Skin Pill",             "desc": "A cultivated pill that permanently improves base stats." },
+    "iron_ward_pill":             { "name": "Iron Ward Pill",             "desc": "A cultivated pill that permanently improves base stats." },
+    "iron_anchor_pill":           { "name": "Iron Anchor Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "iron_vigor_pill":            { "name": "Iron Vigor Pill",            "desc": "A cultivated pill that permanently improves base stats." },
+    "bronze_essence_pill":        { "name": "Bronze Essence Pill",        "desc": "A cultivated pill that permanently improves base stats." },
+    "bronze_soul_pill":           { "name": "Bronze Soul Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "bronze_body_pill":           { "name": "Bronze Body Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "bronze_fist_pill":           { "name": "Bronze Fist Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "bronze_ember_pill":          { "name": "Bronze Ember Pill",          "desc": "A cultivated pill that permanently improves base stats." },
+    "bronze_mind_pill":           { "name": "Bronze Mind Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "bronze_skin_pill":           { "name": "Bronze Skin Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "bronze_ward_pill":           { "name": "Bronze Ward Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "bronze_anchor_pill":         { "name": "Bronze Anchor Pill",         "desc": "A cultivated pill that permanently improves base stats." },
+    "bronze_vigor_pill":          { "name": "Bronze Vigor Pill",          "desc": "A cultivated pill that permanently improves base stats." },
+    "silver_essence_pill":        { "name": "Silver Essence Pill",        "desc": "A cultivated pill that permanently improves base stats." },
+    "silver_soul_pill":           { "name": "Silver Soul Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "silver_body_pill":           { "name": "Silver Body Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "silver_fist_pill":           { "name": "Silver Fist Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "silver_ember_pill":          { "name": "Silver Ember Pill",          "desc": "A cultivated pill that permanently improves base stats." },
+    "silver_mind_pill":           { "name": "Silver Mind Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "silver_skin_pill":           { "name": "Silver Skin Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "silver_ward_pill":           { "name": "Silver Ward Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "silver_anchor_pill":         { "name": "Silver Anchor Pill",         "desc": "A cultivated pill that permanently improves base stats." },
+    "silver_vigor_pill":          { "name": "Silver Vigor Pill",          "desc": "A cultivated pill that permanently improves base stats." },
+    "gold_essence_pill":          { "name": "Gold Essence Pill",          "desc": "A cultivated pill that permanently improves base stats." },
+    "gold_soul_pill":             { "name": "Gold Soul Pill",             "desc": "A cultivated pill that permanently improves base stats." },
+    "gold_body_pill":             { "name": "Gold Body Pill",             "desc": "A cultivated pill that permanently improves base stats." },
+    "gold_fist_pill":             { "name": "Gold Fist Pill",             "desc": "A cultivated pill that permanently improves base stats." },
+    "gold_ember_pill":            { "name": "Gold Ember Pill",            "desc": "A cultivated pill that permanently improves base stats." },
+    "gold_mind_pill":             { "name": "Gold Mind Pill",             "desc": "A cultivated pill that permanently improves base stats." },
+    "gold_skin_pill":             { "name": "Gold Skin Pill",             "desc": "A cultivated pill that permanently improves base stats." },
+    "gold_ward_pill":             { "name": "Gold Ward Pill",             "desc": "A cultivated pill that permanently improves base stats." },
+    "gold_anchor_pill":           { "name": "Gold Anchor Pill",           "desc": "A cultivated pill that permanently improves base stats." },
+    "gold_vigor_pill":            { "name": "Gold Vigor Pill",            "desc": "A cultivated pill that permanently improves base stats." },
+    "transcendent_essence_pill":  { "name": "Transcendent Essence Pill",  "desc": "A cultivated pill that permanently improves all three primary stats." },
+    "exploit_mastery_pill":       { "name": "Exploit Mastery Pill",       "desc": "A cultivated pill that permanently improves exploit chance and damage." },
+    "world_harvest_pill":         { "name": "World Harvest Pill",         "desc": "A cultivated pill that permanently improves gathering and mining speed and luck." },
+    "cataclysm_pill":             { "name": "Cataclysm Pill",             "desc": "A cultivated pill that permanently improves all damage types." },
+    "dao_bulwark_pill":           { "name": "Dao Bulwark Pill",           "desc": "A cultivated pill that permanently improves all defense types." },
+    "eternal_vigor_pill":         { "name": "Eternal Vigor Pill",         "desc": "A cultivated pill that permanently grants a massive amount of health." },
     "iron_blood_core_1": {
       "name": "Iron Blood Core 1",
       "desc": "Placeholder — a dense iron-grade blood core extracted from a fallen enemy."

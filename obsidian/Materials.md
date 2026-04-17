@@ -25,16 +25,16 @@ Botanical materials gathered from world regions. Used in alchemy (pill crafting)
 
 | ID | Name | Rarity |
 |---|---|---|
-| iron_herb_1 | Mortal Qi Grass | Iron |
-| iron_herb_2 | Wild Spirit Root | Iron |
+| iron_herb_1 | Sect Grounds Grass | Iron |
+| iron_herb_2 | Borderland Root | Iron |
 | bronze_herb_1 | Qi Vein Vine | Bronze |
-| bronze_herb_2 | Misty Forest Bloom | Bronze |
-| silver_herb_1 | Desert Silver Lotus | Silver |
-| silver_herb_2 | Blood Reed | Silver |
-| gold_herb_1 | Burial Ground Lotus | Gold |
+| bronze_herb_2 | Spirit Forest Bloom | Bronze |
+| silver_herb_1 | Shattered Sky Lotus | Silver |
+| silver_herb_2 | Blood Sea Reed | Silver |
+| gold_herb_1 | Saint Burial Lotus | Gold |
 | gold_herb_2 | Void Thorn Vine | Gold |
 | transcendent_herb_1 | Origin Spring Petal | Transcendent |
-| transcendent_herb_2 | Heaven Root Vine | Transcendent |
+| transcendent_herb_2 | Open Heaven Vine | Transcendent |
 
 ---
 

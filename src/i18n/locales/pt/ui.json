@@ -258,15 +258,14 @@
   },
 
   "pillDrawer": {
-    "title":          "Pílulas",
-    "catCultivation": "Cultivo",
-    "catCombat":      "Combate",
-    "catHarvest":     "Coleta",
-    "catMining":      "Mineração",
-    "empty":          "Nenhuma pílula de {{category}} ainda. Prepare algumas na tela de Produção.",
-    "use":            "Usar",
-    "effectPct":      "+{{pct}}% {{stat}} ({{dur}}s)",
-    "effectFlat":     "+{{val}} {{stat}} ({{dur}}s)"
+    "title":      "Pílulas",
+    "catCombat":  "Combate",
+    "catHarvest": "Coleta",
+    "catMining":  "Mineração",
+    "empty":      "Nenhuma pílula de {{category}} ainda. Prepare algumas na tela de Produção.",
+    "use":        "Consumir (Permanente)",
+    "effectPct":  "+{{pct}}% {{stat}}",
+    "effectFlat": "+{{val}} {{stat}}"
   },
 
   "itemModal": {

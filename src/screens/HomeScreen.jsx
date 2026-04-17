@@ -495,7 +495,7 @@ function HomeScreen({
       <PillDrawer
         open={pillDrawerOpen}
         onClose={() => setPillDrawerOpen(false)}
-        defaultTab="cultivation"
+        defaultTab="combat"
         pills={pills}
       />
 

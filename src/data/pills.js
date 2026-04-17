@@ -1,9 +1,12 @@
 /**
  * pills.js — Pill definitions + recipe system.
  *
+ * Pills grant PERMANENT stat bonuses on consumption. See src/hooks/usePills.js
+ * for the accumulator that stores permanentStats in localStorage.
+ *
  * Recipes are 3-herb combos (with repetition) generated at module load.
  * Constraint: max rarity tier - min rarity tier <= 2 in any recipe.
- * There are exactly 92 valid combinations, each mapped to one of 30 pills.
+ * There are exactly 92 valid combinations, each mapped to one of 46 pills.
  */
 
 import { HERB_ITEMS, RARITY } from './materials';
@@ -18,79 +21,128 @@ export { RARITY as ITEM_RARITY };
 // `id`. Unknown ids in the override are appended as new pills. Recipe map
 // (RECIPE_MAP) regenerates from HERB_ITEMS (which already respects materials
 // overrides) below.
-
-const PILL_DESC = 'A cultivated pill that permanently improves base stats.';
+//
+// Each pill entry: { id, name, rarity, effects: [{ stat, type?, value }] }
+// Effect stat ids must exist in the stats system. `type: 'increased'` causes
+// the value to be displayed as a percentage and applied as an INCREASED
+// modifier; omit it (or use 'flat') for raw additive bonuses.
 
 const PILL_DEFS_RAW = [
-  // Iron pills (5)
-  { id: 'qi_condensation_pill',  name: 'Qi Condensation Pill',  rarity: 'Iron', duration: 60,  description: PILL_DESC, effects: [{ stat: 'qi_speed', value: 0.5 }] },
-  { id: 'body_tempering_pill',   name: 'Body Tempering Pill',   rarity: 'Iron', duration: 60,  description: PILL_DESC, effects: [{ stat: 'defense', type: 'flat', value: 30 }] },
-  { id: 'spirit_calming_pill',   name: 'Spirit Calming Pill',   rarity: 'Iron', duration: 60,  description: PILL_DESC, effects: [{ stat: 'harvest_speed', type: 'increased', value: 0.2 }] },
-  { id: 'fortification_pill',    name: 'Fortification Pill',    rarity: 'Iron', duration: 60,  description: PILL_DESC, effects: [{ stat: 'health', type: 'flat', value: 50 }] },
-  { id: 'miners_focus_pill',     name: "Miner's Focus Pill",    rarity: 'Iron', duration: 60,  description: PILL_DESC, effects: [{ stat: 'mining_speed', type: 'increased', value: 0.2 }] },
+  // ── Iron (+3 primary, +5 damage, +5 defense, +40 health) ──────────────────
+  { id: 'iron_essence_pill', name: 'Iron Essence Pill', rarity: 'Iron', effects: [{ stat: 'essence', type: 'flat', value: 3 }] },
+  { id: 'iron_soul_pill',    name: 'Iron Soul Pill',    rarity: 'Iron', effects: [{ stat: 'soul',    type: 'flat', value: 3 }] },
+  { id: 'iron_body_pill',    name: 'Iron Body Pill',    rarity: 'Iron', effects: [{ stat: 'body',    type: 'flat', value: 3 }] },
+  { id: 'iron_fist_pill',    name: 'Iron Fist Pill',    rarity: 'Iron', effects: [{ stat: 'physical_damage',  type: 'flat', value: 5 }] },
+  { id: 'iron_ember_pill',   name: 'Iron Ember Pill',   rarity: 'Iron', effects: [{ stat: 'elemental_damage', type: 'flat', value: 5 }] },
+  { id: 'iron_mind_pill',    name: 'Iron Mind Pill',    rarity: 'Iron', effects: [{ stat: 'psychic_damage',   type: 'flat', value: 5 }] },
+  { id: 'iron_skin_pill',    name: 'Iron Skin Pill',    rarity: 'Iron', effects: [{ stat: 'defense',           type: 'flat', value: 5 }] },
+  { id: 'iron_ward_pill',    name: 'Iron Ward Pill',    rarity: 'Iron', effects: [{ stat: 'elemental_defense', type: 'flat', value: 5 }] },
+  { id: 'iron_anchor_pill',  name: 'Iron Anchor Pill',  rarity: 'Iron', effects: [{ stat: 'soul_toughness',    type: 'flat', value: 5 }] },
+  { id: 'iron_vigor_pill',   name: 'Iron Vigor Pill',   rarity: 'Iron', effects: [{ stat: 'health',            type: 'flat', value: 40 }] },
 
-  // Bronze pills (7)
-  { id: 'qi_gathering_pill',     name: 'Qi Gathering Pill',     rarity: 'Bronze', duration: 60,  description: PILL_DESC, effects: [{ stat: 'qi_speed', value: 1.0 }] },
-  { id: 'meridian_opening_pill', name: 'Meridian Opening Pill', rarity: 'Bronze', duration: 90,  description: PILL_DESC, effects: [{ stat: 'qi_speed', value: 0.8 }] },
-  { id: 'flame_body_pill',       name: 'Flame Body Pill',       rarity: 'Bronze', duration: 60,  description: PILL_DESC, effects: [{ stat: 'physical_damage', type: 'flat', value: 15 }, { stat: 'elemental_damage', type: 'flat', value: 15 }] },
-  { id: 'iron_skin_pill',        name: 'Iron Skin Pill',        rarity: 'Bronze', duration: 60,  description: PILL_DESC, effects: [{ stat: 'defense', type: 'flat', value: 60 }, { stat: 'health', type: 'flat', value: 100 }] },
-  { id: 'earth_pulse_pill',      name: 'Earth Pulse Pill',      rarity: 'Bronze', duration: 90,  description: PILL_DESC, effects: [{ stat: 'mining_speed', type: 'increased', value: 0.4 }] },
-  { id: 'spirit_sight_pill',     name: 'Spirit Sight Pill',     rarity: 'Bronze', duration: 90,  description: PILL_DESC, effects: [{ stat: 'harvest_speed', type: 'increased', value: 0.4 }] },
-  { id: 'qi_flow_pill',          name: 'Qi Flow Pill',          rarity: 'Bronze', duration: 45,  description: PILL_DESC, effects: [{ stat: 'qi_speed', value: 1.2 }] },
+  // ── Bronze (+6 primary, +10 damage, +10 defense, +100 health) ─────────────
+  { id: 'bronze_essence_pill', name: 'Bronze Essence Pill', rarity: 'Bronze', effects: [{ stat: 'essence', type: 'flat', value: 6 }] },
+  { id: 'bronze_soul_pill',    name: 'Bronze Soul Pill',    rarity: 'Bronze', effects: [{ stat: 'soul',    type: 'flat', value: 6 }] },
+  { id: 'bronze_body_pill',    name: 'Bronze Body Pill',    rarity: 'Bronze', effects: [{ stat: 'body',    type: 'flat', value: 6 }] },
+  { id: 'bronze_fist_pill',    name: 'Bronze Fist Pill',    rarity: 'Bronze', effects: [{ stat: 'physical_damage',  type: 'flat', value: 10 }] },
+  { id: 'bronze_ember_pill',   name: 'Bronze Ember Pill',   rarity: 'Bronze', effects: [{ stat: 'elemental_damage', type: 'flat', value: 10 }] },
+  { id: 'bronze_mind_pill',    name: 'Bronze Mind Pill',    rarity: 'Bronze', effects: [{ stat: 'psychic_damage',   type: 'flat', value: 10 }] },
+  { id: 'bronze_skin_pill',    name: 'Bronze Skin Pill',    rarity: 'Bronze', effects: [{ stat: 'defense',           type: 'flat', value: 10 }] },
+  { id: 'bronze_ward_pill',    name: 'Bronze Ward Pill',    rarity: 'Bronze', effects: [{ stat: 'elemental_defense', type: 'flat', value: 10 }] },
+  { id: 'bronze_anchor_pill',  name: 'Bronze Anchor Pill',  rarity: 'Bronze', effects: [{ stat: 'soul_toughness',    type: 'flat', value: 10 }] },
+  { id: 'bronze_vigor_pill',   name: 'Bronze Vigor Pill',   rarity: 'Bronze', effects: [{ stat: 'health',            type: 'flat', value: 100 }] },
 
-  // Silver pills (8)
-  { id: 'profound_qi_pill',      name: 'Profound Qi Pill',      rarity: 'Silver', duration: 60,  description: PILL_DESC, effects: [{ stat: 'qi_speed', value: 2.0 }] },
-  { id: 'dragon_blood_pill',     name: 'Dragon Blood Pill',     rarity: 'Silver', duration: 90,  description: PILL_DESC, effects: [{ stat: 'physical_damage', type: 'flat', value: 40 }, { stat: 'health', type: 'flat', value: 120 }] },
-  { id: 'soul_stabilizing_pill', name: 'Soul Stabilizing Pill', rarity: 'Silver', duration: 60,  description: PILL_DESC, effects: [{ stat: 'soul_toughness', type: 'flat', value: 50 }, { stat: 'elemental_defense', type: 'flat', value: 30 }] },
-  { id: 'vitality_pill',         name: 'Vitality Pill',         rarity: 'Silver', duration: 120, description: PILL_DESC, effects: [{ stat: 'health', type: 'flat', value: 300 }] },
-  { id: 'heavenly_root_pill',    name: 'Heavenly Root Pill',    rarity: 'Silver', duration: 90,  description: PILL_DESC, effects: [{ stat: 'harvest_speed', type: 'increased', value: 0.6 }, { stat: 'harvest_luck', type: 'flat', value: 30 }] },
-  { id: 'deep_vein_pill',        name: 'Deep Vein Pill',        rarity: 'Silver', duration: 90,  description: PILL_DESC, effects: [{ stat: 'mining_speed', type: 'increased', value: 0.6 }, { stat: 'mining_luck', type: 'flat', value: 30 }] },
-  { id: 'qi_surge_pill',         name: 'Qi Surge Pill',         rarity: 'Silver', duration: 45,  description: PILL_DESC, effects: [{ stat: 'qi_speed', value: 2.5 }] },
-  { id: 'combat_pill',           name: 'Combat Pill',           rarity: 'Silver', duration: 60,  description: PILL_DESC, effects: [{ stat: 'physical_damage', type: 'flat', value: 30 }, { stat: 'elemental_damage', type: 'flat', value: 20 }, { stat: 'defense', type: 'flat', value: 80 }] },
+  // ── Silver (+12 primary, +20 damage, +20 defense, +250 health) ────────────
+  { id: 'silver_essence_pill', name: 'Silver Essence Pill', rarity: 'Silver', effects: [{ stat: 'essence', type: 'flat', value: 12 }] },
+  { id: 'silver_soul_pill',    name: 'Silver Soul Pill',    rarity: 'Silver', effects: [{ stat: 'soul',    type: 'flat', value: 12 }] },
+  { id: 'silver_body_pill',    name: 'Silver Body Pill',    rarity: 'Silver', effects: [{ stat: 'body',    type: 'flat', value: 12 }] },
+  { id: 'silver_fist_pill',    name: 'Silver Fist Pill',    rarity: 'Silver', effects: [{ stat: 'physical_damage',  type: 'flat', value: 20 }] },
+  { id: 'silver_ember_pill',   name: 'Silver Ember Pill',   rarity: 'Silver', effects: [{ stat: 'elemental_damage', type: 'flat', value: 20 }] },
+  { id: 'silver_mind_pill',    name: 'Silver Mind Pill',    rarity: 'Silver', effects: [{ stat: 'psychic_damage',   type: 'flat', value: 20 }] },
+  { id: 'silver_skin_pill',    name: 'Silver Skin Pill',    rarity: 'Silver', effects: [{ stat: 'defense',           type: 'flat', value: 20 }] },
+  { id: 'silver_ward_pill',    name: 'Silver Ward Pill',    rarity: 'Silver', effects: [{ stat: 'elemental_defense', type: 'flat', value: 20 }] },
+  { id: 'silver_anchor_pill',  name: 'Silver Anchor Pill',  rarity: 'Silver', effects: [{ stat: 'soul_toughness',    type: 'flat', value: 20 }] },
+  { id: 'silver_vigor_pill',   name: 'Silver Vigor Pill',   rarity: 'Silver', effects: [{ stat: 'health',            type: 'flat', value: 250 }] },
 
-  // Gold pills (6)
-  { id: 'qi_ascension_pill',     name: 'Qi Ascension Pill',     rarity: 'Gold', duration: 60,  description: PILL_DESC, effects: [{ stat: 'qi_speed', value: 5.0 }] },
-  { id: 'true_element_pill',     name: 'True Element Pill',     rarity: 'Gold', duration: 90,  description: PILL_DESC, effects: [{ stat: 'physical_damage', type: 'flat', value: 80 }, { stat: 'elemental_damage', type: 'flat', value: 60 }, { stat: 'health', type: 'flat', value: 200 }] },
-  { id: 'heaven_marrow_pill',    name: 'Heaven Marrow Pill',    rarity: 'Gold', duration: 90,  description: PILL_DESC, effects: [{ stat: 'defense', type: 'flat', value: 150 }, { stat: 'elemental_defense', type: 'flat', value: 50 }, { stat: 'health', type: 'flat', value: 400 }] },
-  { id: 'origin_gathering_pill', name: 'Origin Gathering Pill', rarity: 'Gold', duration: 120, description: PILL_DESC, effects: [{ stat: 'harvest_speed', type: 'increased', value: 0.8 }, { stat: 'mining_speed', type: 'increased', value: 0.8 }] },
-  { id: 'qi_breakthrough_pill',  name: 'Qi Breakthrough Pill',  rarity: 'Gold', duration: 120, description: PILL_DESC, effects: [{ stat: 'qi_speed', value: 4.0 }] },
-  { id: 'dao_heart_pill',        name: 'Dao Heart Pill',        rarity: 'Gold', duration: 90,  description: PILL_DESC, effects: [{ stat: 'soul_toughness', type: 'flat', value: 100 }, { stat: 'essence', type: 'flat', value: 60 }] },
+  // ── Gold (+25 primary, +40 damage, +40 defense, +600 health) ──────────────
+  { id: 'gold_essence_pill', name: 'Gold Essence Pill', rarity: 'Gold', effects: [{ stat: 'essence', type: 'flat', value: 25 }] },
+  { id: 'gold_soul_pill',    name: 'Gold Soul Pill',    rarity: 'Gold', effects: [{ stat: 'soul',    type: 'flat', value: 25 }] },
+  { id: 'gold_body_pill',    name: 'Gold Body Pill',    rarity: 'Gold', effects: [{ stat: 'body',    type: 'flat', value: 25 }] },
+  { id: 'gold_fist_pill',    name: 'Gold Fist Pill',    rarity: 'Gold', effects: [{ stat: 'physical_damage',  type: 'flat', value: 40 }] },
+  { id: 'gold_ember_pill',   name: 'Gold Ember Pill',   rarity: 'Gold', effects: [{ stat: 'elemental_damage', type: 'flat', value: 40 }] },
+  { id: 'gold_mind_pill',    name: 'Gold Mind Pill',    rarity: 'Gold', effects: [{ stat: 'psychic_damage',   type: 'flat', value: 40 }] },
+  { id: 'gold_skin_pill',    name: 'Gold Skin Pill',    rarity: 'Gold', effects: [{ stat: 'defense',           type: 'flat', value: 40 }] },
+  { id: 'gold_ward_pill',    name: 'Gold Ward Pill',    rarity: 'Gold', effects: [{ stat: 'elemental_defense', type: 'flat', value: 40 }] },
+  { id: 'gold_anchor_pill',  name: 'Gold Anchor Pill',  rarity: 'Gold', effects: [{ stat: 'soul_toughness',    type: 'flat', value: 40 }] },
+  { id: 'gold_vigor_pill',   name: 'Gold Vigor Pill',   rarity: 'Gold', effects: [{ stat: 'health',            type: 'flat', value: 600 }] },
 
-  // Transcendent pills (4)
-  { id: 'immortal_qi_pill',      name: 'Immortal Qi Pill',      rarity: 'Transcendent', duration: 60,  description: PILL_DESC, effects: [{ stat: 'qi_speed', value: 10.0 }] },
-  { id: 'heaven_defying_pill',   name: 'Heaven Defying Pill',   rarity: 'Transcendent', duration: 120, description: PILL_DESC, effects: [{ stat: 'physical_damage', type: 'flat', value: 200 }, { stat: 'elemental_damage', type: 'flat', value: 150 }, { stat: 'health', type: 'flat', value: 800 }] },
-  { id: 'dao_foundation_pill',   name: 'Dao Foundation Pill',   rarity: 'Transcendent', duration: 120, description: PILL_DESC, effects: [{ stat: 'qi_speed', value: 5.0 }, { stat: 'defense', type: 'flat', value: 200 }] },
-  { id: 'eternal_vigor_pill',    name: 'Eternal Vigor Pill',    rarity: 'Transcendent', duration: 120, description: PILL_DESC, effects: [{ stat: 'harvest_speed', type: 'increased', value: 1.0 }, { stat: 'mining_speed', type: 'increased', value: 1.0 }, { stat: 'mining_luck', type: 'flat', value: 100 }] },
+  // ── Transcendent (premium: all-primary, utility, big bundles) ─────────────
+  { id: 'transcendent_essence_pill', name: 'Transcendent Essence Pill', rarity: 'Transcendent', effects: [
+    { stat: 'essence', type: 'flat', value: 50 },
+    { stat: 'soul',    type: 'flat', value: 50 },
+    { stat: 'body',    type: 'flat', value: 50 },
+  ]},
+  { id: 'exploit_mastery_pill', name: 'Exploit Mastery Pill', rarity: 'Transcendent', effects: [
+    { stat: 'exploit_chance',       type: 'flat', value: 5 },
+    { stat: 'exploit_attack_mult',  type: 'flat', value: 10 },
+  ]},
+  { id: 'world_harvest_pill', name: 'World Harvest Pill', rarity: 'Transcendent', effects: [
+    { stat: 'harvest_speed', type: 'increased', value: 0.5 },
+    { stat: 'mining_speed',  type: 'increased', value: 0.5 },
+    { stat: 'harvest_luck',  type: 'flat',      value: 30 },
+    { stat: 'mining_luck',   type: 'flat',      value: 30 },
+  ]},
+  { id: 'cataclysm_pill', name: 'Cataclysm Pill', rarity: 'Transcendent', effects: [
+    { stat: 'physical_damage',  type: 'flat', value: 75 },
+    { stat: 'elemental_damage', type: 'flat', value: 75 },
+    { stat: 'psychic_damage',   type: 'flat', value: 75 },
+  ]},
+  { id: 'dao_bulwark_pill', name: 'Dao Bulwark Pill', rarity: 'Transcendent', effects: [
+    { stat: 'defense',           type: 'flat', value: 75 },
+    { stat: 'elemental_defense', type: 'flat', value: 75 },
+    { stat: 'soul_toughness',    type: 'flat', value: 75 },
+  ]},
+  { id: 'eternal_vigor_pill', name: 'Eternal Vigor Pill', rarity: 'Transcendent', effects: [
+    { stat: 'health', type: 'flat', value: 2000 },
+  ]},
 ];
 
 // ─── Pill categorization ─────────────────────────────────────────────────────
 //
 // Classify each pill by its dominant effect type so the UI can group them.
 // A pill can belong to more than one category when its effects span roles
-// (e.g. Origin Gathering → harvest + mining).
+// (e.g. World Harvest → harvest + mining).
 
-export const PILL_CATEGORIES = ['cultivation', 'combat', 'harvest', 'mining'];
+export const PILL_CATEGORIES = ['combat', 'harvest', 'mining'];
 
 export const PILL_CATEGORY_LABEL = {
-  cultivation: 'Cultivation',
-  combat:      'Combat',
-  harvest:     'Harvest',
-  mining:      'Mining',
+  combat:  'Combat',
+  harvest: 'Harvest',
+  mining:  'Mining',
 };
 
 const STAT_TO_CATEGORY = {
-  qi_speed:          'cultivation',
-  essence:           'cultivation',
-  physical_damage:   'combat',
-  elemental_damage:  'combat',
-  defense:           'combat',
-  elemental_defense: 'combat',
-  health:            'combat',
-  soul_toughness:    'combat',
-  harvest_speed:     'harvest',
-  harvest_luck:      'harvest',
-  mining_speed:      'mining',
-  mining_luck:       'mining',
+  // Primary stats — drive combat output.
+  essence:              'combat',
+  soul:                 'combat',
+  body:                 'combat',
+  // Damage
+  physical_damage:      'combat',
+  elemental_damage:     'combat',
+  psychic_damage:       'combat',
+  // Defense
+  defense:              'combat',
+  elemental_defense:    'combat',
+  soul_toughness:       'combat',
+  health:               'combat',
+  // Exploit / crit-style
+  exploit_chance:       'combat',
+  exploit_attack_mult:  'combat',
+  // Gathering utility
+  harvest_speed:        'harvest',
+  harvest_luck:         'harvest',
+  mining_speed:         'mining',
+  mining_luck:          'mining',
 };
 
 /** Returns the set of categories a pill belongs to (1..4). */
@@ -148,13 +200,14 @@ for (let i = 0; i < herbIds.length; i++) {
 // Sort by tier sum ascending, then by key string
 allCombos.sort((a, b) => a.tierSum - b.tierSum || a.key.localeCompare(b.key));
 
-// Assign combos to pills by tier sum ranges (round-robin within each band)
+// Assign combos to pills by tier sum ranges (round-robin within each band).
+// Band pill counts: 10 / 10 / 10 / 10 / 6 — matches PILL_DEFS_RAW above.
 const BAND_CONFIG = [
-  { sumRange: [3, 5],   pillCount: 5,  offset: 0  },  // Iron: pills 0-4
-  { sumRange: [6, 7],   pillCount: 7,  offset: 5  },  // Bronze: pills 5-11
-  { sumRange: [8, 9],   pillCount: 8,  offset: 12 },  // Silver: pills 12-19
-  { sumRange: [10, 11], pillCount: 6,  offset: 20 },  // Gold: pills 20-25
-  { sumRange: [12, 15], pillCount: 4,  offset: 26 },  // Transcendent: pills 26-29
+  { sumRange: [3, 5],   pillCount: 10, offset: 0  },  // Iron: pills 0-9
+  { sumRange: [6, 7],   pillCount: 10, offset: 10 },  // Bronze: pills 10-19
+  { sumRange: [8, 9],   pillCount: 10, offset: 20 },  // Silver: pills 20-29
+  { sumRange: [10, 11], pillCount: 10, offset: 30 },  // Gold: pills 30-39
+  { sumRange: [12, 15], pillCount: 6,  offset: 40 },  // Transcendent: pills 40-45
 ];
 
 export const RECIPE_MAP = {};

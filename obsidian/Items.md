@@ -13,37 +13,31 @@ Pills provide **permanent, irreversible** base stat improvements when consumed. 
 - Crafted at the **Production** screen using 3 herbs (recipe system)
 - Consuming a pill instantly and permanently adds its stat bonuses to the character
 - A floating animation shows the gained stats on the pill card on consume
-- Pills are categorised: **Cultivation**, **Combat**, **Harvest**, **Mining**
+- Pills are categorised: **Combat**, **Harvest**, **Mining** (a pill shows in every tab its effects touch)
 
 ### Rarity Tiers
 
 Pills follow the Iron / Bronze / Silver / Gold / Transcendent rarity system, matching the herb tiers used to craft them.
 
-### Cultivation Pills (examples)
-
-| ID | Name | Rarity | Permanent Effect |
-|---|---|---|---|
-| qi_condensation_pill | Qi Condensation Pill | Iron | +50% Qi Speed |
-| qi_gathering_pill | Qi Gathering Pill | Bronze | +100% Qi Speed |
-| profound_qi_pill | Profound Qi Pill | Silver | +200% Qi Speed |
-| qi_ascension_pill | Qi Ascension Pill | Gold | +500% Qi Speed |
-| immortal_qi_pill | Immortal Qi Pill | Transcendent | +1000% Qi Speed |
+Iron through Gold each hold a fixed **10-pill template**: 3 primary-stat pills (Essence / Soul / Body), 3 damage pills (Physical / Elemental / Psychic), 3 defense pills (Defense / Elemental Defense / Soul Toughness), 1 health pill. Transcendent is 6 premium utility pills. Full roster and numbers live in [[Alchemy#Pill Catalogue 46 pills]].
 
 ### Combat Pills (examples)
 
 | ID | Name | Rarity | Permanent Effect |
 |---|---|---|---|
-| body_tempering_pill | Body Tempering Pill | Iron | +30 Defense |
-| iron_skin_pill | Iron Skin Pill | Bronze | +60 Defense, +100 Health |
-| combat_pill | Combat Pill | Silver | +30 Phys Dmg, +20 Elem Dmg, +80 Defense |
+| iron_essence_pill | Iron Essence Pill | Iron | +3 Essence |
+| bronze_fist_pill | Bronze Fist Pill | Bronze | +10 Physical Damage |
+| silver_ward_pill | Silver Ward Pill | Silver | +20 Elemental Defense |
+| gold_vigor_pill | Gold Vigor Pill | Gold | +600 Health |
+| cataclysm_pill | Cataclysm Pill | Transcendent | +75 Phys Dmg, +75 Elem Dmg, +75 Psy Dmg |
+| dao_bulwark_pill | Dao Bulwark Pill | Transcendent | +75 Def, +75 Elem Def, +75 Soul Tough. |
+| transcendent_essence_pill | Transcendent Essence Pill | Transcendent | +50 Essence, +50 Soul, +50 Body |
 
 ### Harvest / Mining Pills (examples)
 
 | ID | Name | Rarity | Permanent Effect |
 |---|---|---|---|
-| spirit_calming_pill | Spirit Calming Pill | Iron | +20% Harvest Speed |
-| miners_focus_pill | Miner's Focus Pill | Iron | +20% Mining Speed |
-| heavenly_root_pill | Heavenly Root Pill | Silver | +60% Harvest Speed, +30 Harvest Luck |
+| world_harvest_pill | World Harvest Pill | Transcendent | +50% Harvest Speed, +50% Mining Speed, +30 Harvest Luck, +30 Mining Luck |
 
 ### Implementation Notes
 

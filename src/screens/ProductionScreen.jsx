@@ -660,29 +660,31 @@ function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
 // ─── AlchemyPanel ────────────────────────────────────────────────────────────
 
 const STAT_DISPLAY = {
-  qi_speed:          'Qi Speed',
-  defense:           'Defense',
-  health:            'Health',
-  physical_damage:   'Phys. Dmg',
-  elemental_damage:  'Elem. Dmg',
-  harvest_speed:     'Harvest Speed',
-  mining_speed:      'Mining Speed',
-  harvest_luck:      'Harvest Luck',
-  mining_luck:       'Mining Luck',
-  soul_toughness:    'Soul Tough.',
-  elemental_defense: 'Elem. Def',
-  essence:           'Essence',
+  qi_speed:             'Qi Speed',
+  defense:              'Defense',
+  health:               'Health',
+  physical_damage:      'Phys. Dmg',
+  elemental_damage:     'Elem. Dmg',
+  psychic_damage:       'Psy. Dmg',
+  harvest_speed:        'Harvest Speed',
+  mining_speed:         'Mining Speed',
+  harvest_luck:         'Harvest Luck',
+  mining_luck:          'Mining Luck',
+  soul_toughness:       'Soul Tough.',
+  elemental_defense:    'Elem. Def',
+  essence:              'Essence',
+  soul:                 'Soul',
+  body:                 'Body',
+  exploit_chance:       'Exploit Chance',
+  exploit_attack_mult:  'Exploit Mult',
 };
 
-function formatEffect(eff, duration) {
+function formatEffect(eff) {
   const label = STAT_DISPLAY[eff.stat] ?? eff.stat;
-  if (eff.stat === 'qi_speed') {
-    return `+${Math.round(eff.value * 100)}% ${label} (${duration}s)`;
-  }
   if (eff.type === 'increased') {
-    return `+${Math.round(eff.value * 100)}% ${label} (${duration}s)`;
+    return `+${Math.round(eff.value * 100)}% ${label}`;
   }
-  return `+${eff.value} ${label} (${duration}s)`;
+  return `+${eff.value} ${label}`;
 }
 
 function HerbSelector({ slotIndex, selectedHerbId, onSelect, inventory }) {
@@ -928,7 +930,7 @@ function CraftableRecipes({ inventory, onFillSlots }) {
                 <span className="recipe-pill-name" style={{ color }}>{tGame(`items.${pill.id}.name`, { defaultValue: pill.name })}</span>
                 <span className="recipe-pill-effects-inline">
                   {pill.effects.map((eff, i) => (
-                    <span key={i} className="recipe-pill-effect">{formatEffect(eff, pill.duration)}</span>
+                    <span key={i} className="recipe-pill-effect">{formatEffect(eff)}</span>
                   ))}
                 </span>
               </div>
@@ -1035,7 +1037,7 @@ function AlchemyPanel({ inventory, pills }) {
             <span className="alchemy-result-rarity" style={{ color: rarityColor }}>({t(`rarity.${resultPill.rarity}`, { defaultValue: resultPill.rarity })})</span>
             <div className="alchemy-result-effects">
               {resultPill.effects.map((eff, i) => (
-                <span key={i} className="alchemy-result-effect">{formatEffect(eff, resultPill.duration)}</span>
+                <span key={i} className="alchemy-result-effect">{formatEffect(eff)}</span>
               ))}
             </div>
           </div>

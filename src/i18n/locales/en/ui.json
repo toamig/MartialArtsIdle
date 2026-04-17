@@ -254,7 +254,6 @@
   },
   "pillDrawer": {
     "title": "Pills",
-    "catCultivation": "Cultivation",
     "catCombat": "Combat",
     "catHarvest": "Harvest",
     "catMining": "Mining",

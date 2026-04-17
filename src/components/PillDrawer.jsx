@@ -7,10 +7,9 @@ import {
 
 // Category key → i18n key
 const CAT_T_KEY = {
-  cultivation: 'pillDrawer.catCultivation',
-  combat:      'pillDrawer.catCombat',
-  harvest:     'pillDrawer.catHarvest',
-  mining:      'pillDrawer.catMining',
+  combat:  'pillDrawer.catCombat',
+  harvest: 'pillDrawer.catHarvest',
+  mining:  'pillDrawer.catMining',
 };
 
 function DrawerPillCard({ pill, qty, onUse }) {
@@ -80,15 +79,15 @@ function DrawerPillCard({ pill, qty, onUse }) {
  * Props:
  *   open          - boolean, show/hide
  *   onClose       - () => void
- *   defaultTab    - initial category (cultivation | combat | harvest | mining)
+ *   defaultTab    - initial category (combat | harvest | mining)
  *   pills         - usePills() API (needs getOwnedCount, usePill)
  */
-function PillDrawer({ open, onClose, defaultTab = 'cultivation', pills }) {
+function PillDrawer({ open, onClose, defaultTab = 'combat', pills }) {
   const { t } = useTranslation('ui');
   const [tab, setTab] = useState(defaultTab);
 
   const byCategory = useMemo(() => {
-    const map = { cultivation: [], combat: [], harvest: [], mining: [] };
+    const map = { combat: [], harvest: [], mining: [] };
     for (const p of PILLS) {
       const owned = pills?.getOwnedCount?.(p.id) ?? 0;
       if (owned <= 0) continue;
