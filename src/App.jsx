@@ -26,6 +26,7 @@ import { evaluateLawUniques, buildContext } from './systems/lawEngine';
 import { initDebug } from './debug/gameDebug';
 const DEV = import.meta.env.DEV;
 import { preloadImages, PLAYER_SPRITE_SRCS } from './utils/preload';
+import { loadGraphics, applyGraphics } from './systems/graphics';
 import useNotifications from './hooks/useNotifications';
 import useSelections from './hooks/useSelections';
 import useClearedRegions from './hooks/useClearedRegions';
@@ -41,6 +42,7 @@ function App() {
 
   useEffect(() => { initAds(); }, []);
   useEffect(() => { preloadImages(PLAYER_SPRITE_SRCS); }, []);
+  useEffect(() => { applyGraphics(loadGraphics()); }, []);
 
   // Apply saved resolution preset on desktop startup
   useEffect(() => {

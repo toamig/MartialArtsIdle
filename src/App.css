@@ -1,3 +1,20 @@
+/* ─── Graphics settings ──────────────────────────────────────────────────── */
+
+.vfx-disabled .home-qi-particles,
+.vfx-disabled .vfx-layer {
+  display: none !important;
+}
+
+.vfx-disabled .home-crystal-float {
+  animation: none !important;
+}
+
+.rendering-pixelated img {
+  image-rendering: pixelated !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+
 :root {
   /* Nav bar height without env(safe-area-inset-bottom):
      2px border + 6px pad-top + 24px icon + 10px label + 6px pad-bottom = 48px.
@@ -18,8 +35,8 @@
   gap: 2px;
   padding: 6px 8px;
   padding-bottom: calc(6px + env(safe-area-inset-bottom));
-  background: var(--bg-secondary);
-  border-top: 2px solid var(--accent);
+  background: rgba(5, 2, 14, 0.92);
+  border-top: 1px solid rgba(30, 18, 48, 0.85);
   justify-content: space-around;
   position: fixed;
   bottom: 0;
@@ -37,11 +54,11 @@
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--text-muted);
+  color: rgba(180, 160, 220, 0.5);
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s, opacity 0.2s;
   flex: 1;
   max-width: 80px;
   -webkit-tap-highlight-color: transparent;
@@ -51,12 +68,13 @@
   width: 24px;
   height: 24px;
   image-rendering: auto;
-  opacity: 0.6;
+  opacity: 0.5;
   transition: opacity 0.2s;
 }
 
 .nav-btn.active .nav-icon-img {
   opacity: 1;
+  filter: drop-shadow(0 0 4px rgba(245, 175, 20, 0.6));
 }
 
 .nav-icon-emoji {
@@ -66,7 +84,7 @@
   line-height: 24px;
   text-align: center;
   display: block;
-  opacity: 0.6;
+  opacity: 0.5;
   transition: opacity 0.2s;
 }
 
@@ -80,11 +98,12 @@
 }
 
 .nav-btn:hover {
-  color: var(--text-primary);
+  color: rgba(220, 200, 255, 0.85);
 }
 
 .nav-btn.active {
-  color: var(--accent);
+  color: #f5c842;
+  text-shadow: 0 0 8px rgba(245, 175, 20, 0.5);
 }
 
 .nav-btn.active .nav-label {
@@ -109,14 +128,14 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--accent);
-  border: 1.5px solid var(--bg-secondary);
+  background: #f5c842;
+  border: 1.5px solid rgba(5, 2, 14, 0.92);
   pointer-events: none;
 }
 
 /* Locked nav tab */
 .nav-btn-locked {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
   filter: grayscale(1);
 }
@@ -1010,7 +1029,7 @@
      padding-top = safe area (covers Dynamic Island / notch fully) + 2px gap.
      On phones with no notch: safe area = 0 → bar is ~38px total.
      On iPhone 15 Pro (safe area 59px): bar is ~99px total. */
-  padding: calc(env(safe-area-inset-top) + 2px) 14px 8px;
+  padding: calc(env(safe-area-inset-top) + 8px) 14px 8px;
   background: rgba(5, 2, 14, 0.92);
   border-bottom: 1px solid rgba(30, 18, 48, 0.85);
   display: flex;
@@ -1042,6 +1061,47 @@
 }
 
 .home-hud-spacer { flex: 1; }
+
+.home-realm-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 4;
+  pointer-events: none;
+  white-space: nowrap;
+  padding: 18px 24px 32px;
+  background: linear-gradient(to bottom,
+    rgba(2, 1, 8, 0.72) 0%,
+    rgba(2, 1, 8, 0.45) 70%,
+    rgba(2, 1, 8, 0)    100%);
+}
+.home-realm-overlay-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #f5c842;
+  letter-spacing: 0.05em;
+  text-shadow:
+    0 0 18px rgba(245, 175, 20, 0.9),
+    0 2px 8px rgba(0, 0, 0, 1);
+}
+.home-realm-overlay-stage {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 210, 100, 0.92);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 10px rgba(220, 150, 20, 0.7),
+    0 1px 5px rgba(0, 0, 0, 1);
+}
+@media (min-width: 900px) {
+  .home-realm-overlay { display: none; }
+}
 
 .home-hud-settings {
   width: 34px;
@@ -1377,6 +1437,18 @@
   flex-direction: column;
   min-height: 0;
   position: relative;
+  padding-bottom: 10px;
+}
+.home-scene::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.70) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+  z-index: 6;
 }
 
 /* Cultivation zone: the open-sky area between top HUD and bar.
@@ -1386,7 +1458,7 @@
   flex: 1;
   position: relative;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Bottom section: overlay row + qi bar. Dark backing for legibility. */
@@ -1397,15 +1469,21 @@
     rgba(0,0,0,0.45) 65%,
     rgba(0,0,0,0)    100%);
   padding-bottom: 4px;
+  position: relative;
+  z-index: 7;
 }
 
-/* Realm name (left) and Qi/s rate (right) — sit in one row above the bar */
+/* Qi progress + qi/s chips — each owns half the row */
 .home-scene-overlay-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 6px 16px 2px;
-  gap: 8px;
+  padding: 6px 16px 4px;
+}
+.home-overlay-half {
+  width: 50%;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
 }
 
 /* ── PC / wide-screen layout (≥ 900 px) ─────────────────────────────────── */
@@ -1435,9 +1513,7 @@
     width: 230px;
     flex-shrink: 0;
     padding: 20px 18px;
-    background: linear-gradient(90deg,
-      rgba(4, 2, 12, 0.90) 72%,
-      transparent          100%);
+    background: linear-gradient(90deg, rgba(4, 2, 12, 0.90) 72%, rgba(4, 2, 12, 0) 100%);
     z-index: 5;
   }
 
@@ -1446,9 +1522,7 @@
     display: block;
     width: 230px;
     flex-shrink: 0;
-    background: linear-gradient(270deg,
-      rgba(4, 2, 12, 0.90) 72%,
-      transparent          100%);
+    background: linear-gradient(270deg, rgba(4, 2, 12, 0.90) 72%, rgba(4, 2, 12, 0) 100%);
     z-index: 5;
   }
 
@@ -1456,7 +1530,7 @@
   .home-scene-overlay-row { display: none; }
 
   /* Constrain the dragon bar width on wide screens */
-  .home-bar-wrap { max-width: 420px; }
+  .home-bar-wrap { max-width: 462px; }
 
   /* NavBar — condense to centred pill cluster instead of full-width stretch */
   .navbar { justify-content: center; gap: 80px; }
@@ -1475,20 +1549,26 @@
 }
 
 .home-pc-realm-name {
-  font-family: 'Press Start 2P', 'Courier New', monospace;
-  font-size: 10px;
-  color: var(--gold, #f5c842);
-  line-height: 1.5;
-  letter-spacing: 0.03em;
-  text-shadow: 0 0 10px rgba(245, 200, 66, 0.30);
+  font-size: 17px;
+  font-weight: 800;
+  color: #f5c842;
+  letter-spacing: 0.05em;
+  text-shadow:
+    0 0 18px rgba(245, 175, 20, 0.9),
+    0 2px 8px rgba(0, 0, 0, 1);
 }
 
-/* rAF-updated qi progress text ("68K / 100K Qi") */
-.home-pc-qi-text {
+.home-pc-realm-stage {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
-  letter-spacing: 0.01em;
+  font-weight: 600;
+  color: rgba(255, 210, 100, 0.92);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 10px rgba(220, 150, 20, 0.7),
+    0 1px 5px rgba(0, 0, 0, 1);
 }
+
 
 /* Hold-to-cultivate badge in left panel */
 .home-pc-hold-badge {
@@ -1517,6 +1597,11 @@
   cursor: pointer;
 }
 
+/* Wider layouts (720p windowed, fullscreen) — drop crystal lower */
+@media (min-width: 900px) {
+  .home-crystal-anchor { top: 52%; }
+}
+
 /* Float wrapper — gentle bob. Slower (7 s) when locked. */
 .home-crystal-float {
   display: flex;
@@ -1542,27 +1627,32 @@
   animation: none;
 }
 
-/* Tag below crystal ("Qi Crystal") */
+/* Tag above crystal ("Qi Crystal") */
 .home-crystal-tag {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
-  color: #e2d9ff;
+  color: var(--cg-a, #e2d9ff);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: rgba(0, 0, 0, 0.75);
-  border: 1px solid rgba(167, 139, 250, 0.6);
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid var(--cg-a, rgba(167,139,250,0.6));
   border-radius: 8px;
-  padding: 1px 7px;
+  padding: 2px 8px;
+  text-shadow: 0 0 8px var(--cg-a, transparent);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 12px rgba(0,0,0,0.4);
 }
-.home-crystal-tag-locked { color: #888; border-color: #444; }
+.home-crystal-tag-locked { color: #888; border-color: #444; text-shadow: none; }
 
 /* Secondary text ("Lv 2 · Tap to evolve") */
 .home-crystal-evolve {
-  font-size: 9px;
-  color: rgba(220, 210, 255, 0.95);
-  background: rgba(0, 0, 0, 0.65);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--cg-a, rgba(220,210,255,0.95));
+  background: rgba(0, 0, 0, 0.75);
   border-radius: 5px;
-  padding: 0 5px;
+  padding: 1px 6px;
+  text-shadow: 0 0 6px var(--cg-a, transparent);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.55), 0 0 10px rgba(0,0,0,0.35);
 }
 
 @keyframes home-crystal-float {
@@ -1830,7 +1920,11 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  width: 100%;
+  width: 95%;
+  margin: 0 auto;
+}
+@media (min-width: 900px) {
+  .realm-bar { width: 100%; margin: 0; }
 }
 
 .realm-bar-row {
@@ -1905,11 +1999,11 @@
    QI-Progress-Bar.png: left border ends at 6.5%, right border starts at 5.5% from right. */
 .realm-channel {
   position: absolute;
-  top: 50%;
+  top: 48%;
   transform: translateY(-50%);
-  height: 22%;
-  left: 10.5%;
-  right: 10.5%;
+  height: 30%;
+  left: 9.5%;
+  right: 9.5%;
   z-index: 1;
   overflow: hidden;
 }
@@ -1929,35 +2023,25 @@
   box-shadow: 0 0 10px rgba(255, 200, 0, 0.6);
 }
 
-.realm-qi-label {
+.realm-center-badge {
   position: absolute;
-  top: 50%;
+  top: 47.5%;
   left: 50%;
   transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1.1;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.realm-qi-current,
-.realm-qi-cost {
-  white-space: nowrap;
-  font-weight: 700;
-  color: #fff;
+  z-index: 4;
+  font-size: 18px;
+  font-weight: 900;
+  color: #ffffff;
   text-shadow:
-    0 0 4px rgba(0,0,0,1),
-    0 1px 6px rgba(0,0,0,0.9),
-    -1px 0 3px rgba(0,0,0,0.8),
-    1px 0 3px rgba(0,0,0,0.8);
+    1px 1px 0 #000, -1px -1px 0 #000,
+    1px -1px 0 #000, -1px 1px 0 #000,
+    0 0 8px rgba(0, 0, 0, 1),
+    0 0 20px rgba(0, 0, 0, 0.9);
+  filter: drop-shadow(0 0 6px rgba(245, 175, 20, 0.95)) drop-shadow(0 0 14px rgba(245, 175, 20, 0.6));
+  pointer-events: none;
+  line-height: 1;
 }
 
-/* Current qi — bright white, prominent */
-.realm-qi-current { font-size: 0.8rem;  color: #ffffff; }
-/* Max qi (cost) — cool muted tone, clearly secondary without being hard to read */
-.realm-qi-cost    { font-size: 0.75rem; color: #9ab8cc; }
 
 /* Fighter Stage */
 .fighter-stage {
@@ -4094,6 +4178,15 @@
 
 /* ── Wide screens (1200px+) ───────────────────────────────────────────────── */
 @media (min-width: 1200px) {
+
+  .home-pc-left {
+    width: 300px;
+    background: linear-gradient(90deg, rgba(4, 2, 12, 0.90) 80%, rgba(4, 2, 12, 0) 100%);
+  }
+  .home-pc-right {
+    width: 300px;
+    background: linear-gradient(270deg, rgba(4, 2, 12, 0.90) 80%, rgba(4, 2, 12, 0) 100%);
+  }
 
   .screen-container {
     padding: 44px 64px;

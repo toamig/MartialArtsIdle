@@ -14,7 +14,7 @@ function formatQi(n) {
   return String(n);
 }
 
-function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting, maxed }) {
+function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting, maxed, realmIndex }) {
   const fillRef        = useRef(null);
   const qiCurrentRef   = useRef(null);
   const qiCostRef      = useRef(null);
@@ -58,9 +58,6 @@ function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting, m
       {/* Frame: complete bar image, no mirroring needed */}
       <div className="realm-track">
         <img className="qi-frame" src={frameSrc} alt="" draggable="false" />
-
-        {/* Channel wrapper — inset to match the frame's inner rectangle (6.5% / 5.5%).
-            Fill width% is relative to this constrained area, not the full image. */}
         <div className="realm-channel">
           <div
             ref={fillRef}
@@ -68,10 +65,7 @@ function RealmProgressBar({ qiRef, costRef, currentRealm, nextRealm, boosting, m
             style={{ width: maxed ? '100%' : `${Math.min((qiRef.current / costRef.current) * 100, 100)}%` }}
           />
         </div>
-        <div className="realm-qi-label">
-          <span ref={qiCurrentRef} className="realm-qi-current" />
-          <span ref={qiCostRef}    className="realm-qi-cost" />
-        </div>
+        <div className="realm-center-badge">{realmIndex + 1}</div>
       </div>
     </div>
   );

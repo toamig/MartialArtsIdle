@@ -2,6 +2,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { exportSave, importSave, wipeSave } from '../systems/save';
 import { setLanguage, SUPPORTED_LANGUAGES } from '../i18n';
+import { loadGraphics, applyGraphics, saveGraphics } from '../systems/graphics';
+
+const RENDERING_MODES = [
+  { mode: 'auto',       label: 'Auto',       sub: 'smooth' },
+  { mode: 'pixelated',  label: 'Pixelated',  sub: 'crisp' },
+];
 
 const RESOLUTIONS = [
   { mode: 'mobile',       label: 'Mobile',        sub: '420 × 860' },
@@ -26,6 +32,14 @@ function SettingsScreen() {
     localStorage.setItem('resolution', mode);
     setResolutionState(mode);
     window.electronBridge.setResolution(mode);
+  };
+
+  const [graphics, setGraphicsState] = useState(loadGraphics);
+
+  const setGraphics = (next) => {
+    setGraphicsState(next);
+    saveGraphics(next);
+    applyGraphics(next);
   };
 
   const flash = (text, isError) => {
@@ -84,6 +98,42 @@ function SettingsScreen() {
           </div>
         </div>
       )}
+
+      <div className="save-section">
+        <h2>Visual Effects</h2>
+        <p className="subtitle">Particle effects and animations.</p>
+        <div className="save-buttons">
+          <button
+            className={`save-btn${graphics.vfxEnabled ? ' save-btn-active' : ''}`}
+            onClick={() => setGraphics({ ...graphics, vfxEnabled: true })}
+          >
+            <span>On</span>
+          </button>
+          <button
+            className={`save-btn${!graphics.vfxEnabled ? ' save-btn-active' : ''}`}
+            onClick={() => setGraphics({ ...graphics, vfxEnabled: false })}
+          >
+            <span>Off</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="save-section">
+        <h2>Rendering Mode</h2>
+        <p className="subtitle">How images are scaled.</p>
+        <div className="save-buttons">
+          {RENDERING_MODES.map(({ mode, label, sub }) => (
+            <button
+              key={mode}
+              className={`save-btn${graphics.renderingMode === mode ? ' save-btn-active' : ''}`}
+              onClick={() => setGraphics({ ...graphics, renderingMode: mode })}
+            >
+              <span>{label}</span>
+              <span className="res-sub">{sub}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="save-section">
         <h2>{t('settings.language')}</h2>

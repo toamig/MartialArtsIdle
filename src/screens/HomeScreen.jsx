@@ -50,9 +50,10 @@ function HomeTopHud({ jadeBalance, onNavigate }) {
 
 
 /** Qi/s readout — updated via rAF so it tracks every modifier without re-renders. */
-function QiRateReadout({ rateRef, boosting, adBoostActive, maxed }) {
+function QiRateReadout({ rateRef, focusMultRef, boosting, adBoostActive, maxed }) {
   const { t } = useTranslation('ui');
-  const textRef = useRef(null);
+  const textRef  = useRef(null);
+  const boostRef = useRef(null);
   useEffect(() => {
     if (maxed) {
       if (textRef.current) textRef.current.textContent = t('home.peakQi');
@@ -66,18 +67,51 @@ function QiRateReadout({ rateRef, boosting, adBoostActive, maxed }) {
           ? `+${(r / 1000).toFixed(1)}K Qi/s`
           : `+${r.toFixed(1)} Qi/s`;
       }
+      if (boostRef.current && focusMultRef) {
+        const mult = (focusMultRef.current ?? 300) / 100;
+        boostRef.current.textContent = `×${mult % 1 === 0 ? mult.toFixed(0) : mult.toFixed(1)}`;
+      }
       raf = requestAnimationFrame(update);
     };
     raf = requestAnimationFrame(update);
     return () => cancelAnimationFrame(raf);
-  }, [rateRef, maxed, t]);
+  }, [rateRef, focusMultRef, maxed, t]);
 
   const cls = `qi-rate${boosting ? ' qi-rate-boosted' : ''}${adBoostActive ? ' qi-rate-ad' : ''}`;
   return (
     <div className={cls}>
       <span ref={textRef} className="qi-rate-value">—</span>
-      {boosting       && <span className="qi-rate-badge">×3</span>}
-      {adBoostActive  && <span className="qi-rate-badge qi-rate-badge-ad">×2</span>}
+      {boosting      && <span ref={boostRef} className="qi-rate-badge">×3</span>}
+      {adBoostActive && <span className="qi-rate-badge qi-rate-badge-ad">×2</span>}
+    </div>
+  );
+}
+
+/** Current / target qi — single chip updated via rAF. */
+function QiProgressChip({ qiRef, costRef, maxed }) {
+  const textRef = useRef(null);
+  useEffect(() => {
+    const fmt = (n) => {
+      if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+      if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return String(Math.floor(n));
+    };
+    let raf;
+    const update = () => {
+      if (textRef.current) {
+        textRef.current.textContent = maxed
+          ? 'Peak Qi'
+          : `${fmt(qiRef.current)} / ${fmt(costRef.current)}`;
+      }
+      raf = requestAnimationFrame(update);
+    };
+    raf = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(raf);
+  }, [qiRef, costRef, maxed]);
+  return (
+    <div className="qi-rate">
+      <span ref={textRef}>—</span>
     </div>
   );
 }
@@ -155,13 +189,13 @@ function KeyCrystal({ crystal, isUnlocked, onOpen }) {
     return (
       <div className="home-crystal-anchor">
         <div className="home-crystal-float home-crystal-float-slow">
+          <span className="home-crystal-tag home-crystal-tag-locked">🔒 Qi Crystal</span>
           <img
             src={`${BASE}crystals/crystal_locked.png`}
             className="home-crystal-img home-crystal-locked"
             alt="Qi Crystal"
             draggable="false"
           />
-          <span className="home-crystal-tag home-crystal-tag-locked">🔒 Qi Crystal</span>
         </div>
       </div>
     );
@@ -172,13 +206,12 @@ function KeyCrystal({ crystal, isUnlocked, onOpen }) {
   const { glowA, glowB } = CRYSTAL_COLORS[tier];
   return (
     <div className="home-crystal-anchor" onClick={onOpen}>
-      <div className="home-crystal-float">
+      <div className="home-crystal-float" style={{ '--cg-a': glowA, '--cg-b': glowB }}>
         <span className="home-crystal-tag">Qi Crystal</span>
-        <span className="home-crystal-evolve">Lv {level} · Tap to evolve</span>
+        <span className="home-crystal-evolve">Lv {level}</span>
         <img
           src={`${BASE}crystals/crystal_${tier}.png`}
           className="home-crystal-img"
-          style={{ '--cg-a': glowA, '--cg-b': glowB }}
           alt="Qi Crystal"
           draggable="false"
         />
@@ -212,22 +245,20 @@ function PCQiProgressText({ qiRef, costRef, maxed }) {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [qiRef, costRef, maxed]);
-  return <span ref={ref} className="home-pc-qi-text">—</span>;
+  return <div className="qi-rate"><span ref={ref}>—</span></div>;
 }
 
 /** Left panel — visible only at wide (≥ 900 px) breakpoints.
  *  Shows cultivation stats so the player doesn't have to look at the bar. */
-function HomePCLeftPanel({ realmName, qiRef, costRef, rateRef, boosting, adBoostActive, maxed }) {
+function HomePCLeftPanel({ realmName, realmStage, qiRef, costRef, rateRef, focusMultRef, boosting, adBoostActive, maxed }) {
   const { t } = useTranslation('ui');
   return (
     <div className="home-pc-left">
       <div className="home-pc-section-label">Cultivation</div>
-      <div className="home-pc-realm-name">{realmName}</div>
+      <div className="home-pc-realm-name">{realmName.split(' - ')[0]}</div>
+      {realmStage && <div className="home-pc-realm-stage">{realmStage}</div>}
       <PCQiProgressText qiRef={qiRef} costRef={costRef} maxed={maxed} />
-      <QiRateReadout rateRef={rateRef} boosting={boosting} adBoostActive={adBoostActive} maxed={maxed} />
-      {!maxed && (
-        <div className="home-pc-hold-badge">{t('home.holdToCultivate')}</div>
-      )}
+      <QiRateReadout rateRef={rateRef} focusMultRef={focusMultRef} boosting={boosting} adBoostActive={adBoostActive} maxed={maxed} />
     </div>
   );
 }
@@ -254,10 +285,12 @@ function HomeScreen({
   const { t } = useTranslation('ui');
   const {
     realmName,
+    realmStage,
     nextRealmName,
     qiRef,
     costRef,
     rateRef,
+    focusMultRef,
     boosting,
     maxed,
     startBoost,
@@ -369,7 +402,9 @@ function HomeScreen({
         {/* Left info panel — only visible at PC widths (≥ 900 px) */}
         <HomePCLeftPanel
           realmName={realmName}
+          realmStage={realmStage}
           qiRef={qiRef}
+          focusMultRef={focusMultRef}
           costRef={costRef}
           rateRef={rateRef}
           boosting={boosting}
@@ -382,6 +417,12 @@ function HomeScreen({
 
         {/* ── Cultivation zone: absolutely-positioned scene elements ─── */}
         <div className="home-cultivation-zone">
+
+          {/* Realm title overlay — top center of scene, mobile only */}
+          <div className="home-realm-overlay">
+            <span className="home-realm-overlay-name">{realmName.split(' - ')[0]}</span>
+            {realmStage && <span className="home-realm-overlay-stage">{realmStage}</span>}
+          </div>
 
           {/* Rewards badge — scene chip, top-left */}
           {selections?.pendingCount > 0 && (
@@ -448,13 +489,18 @@ function HomeScreen({
 
           {/* Overlay row — hidden on PC (info lives in left panel instead) */}
           <div className="home-scene-overlay-row">
-            <div className="home-realm-name">{realmName}</div>
-            <QiRateReadout
-              rateRef={rateRef}
-              boosting={boosting}
-              adBoostActive={adBoostActive}
-              maxed={maxed}
-            />
+            <div className="home-overlay-half">
+              <QiProgressChip qiRef={qiRef} costRef={costRef} maxed={maxed} />
+            </div>
+            <div className="home-overlay-half">
+              <QiRateReadout
+                rateRef={rateRef}
+                focusMultRef={focusMultRef}
+                boosting={boosting}
+                adBoostActive={adBoostActive}
+                maxed={maxed}
+              />
+            </div>
           </div>
 
           <div className="home-bar-wrap">
@@ -465,6 +511,7 @@ function HomeScreen({
               nextRealm={nextRealmName}
               boosting={boosting}
               maxed={maxed}
+              realmIndex={cultivation.realmIndex}
             />
           </div>
 
