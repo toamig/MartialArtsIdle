@@ -16,6 +16,8 @@ Pill crafting system accessed via the **Production > Alchemy** tab. Combine thre
 
 The **Craftable Recipes** panel below the furnace only lists pills the player has already brewed at least once. Undiscovered pills are hidden entirely — the first craft of a given pill ID reveals its recipes in the list. Discovered state persists under the localStorage key `mai_discovered_pills`; legacy saves seed this set from existing owned-pill counts so no recipes are re-locked on upgrade.
 
+Filling all three herb slots with a valid but **undiscovered** combination displays a generic `??? — craft to discover` placeholder instead of the pill's name, rarity and effects — the player has to actually brew the pill once to learn what it makes.
+
 Pills have **no duration**. Every bonus applied by a pill is added once and persists indefinitely across sessions, stored in `permanentStats` (see [[Items#Implementation Notes]]).
 
 ---

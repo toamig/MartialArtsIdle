@@ -1049,7 +1049,7 @@ function AlchemyPanel({ inventory, pills }) {
       </div>
 
       <div className="alchemy-result">
-        {allFilled && resultPill && (
+        {allFilled && resultPill && pills.isDiscovered(resultPill.id) && (
           <div className="alchemy-result-pill">
             <span className="alchemy-result-name" style={{ color: rarityColor }}>{tGame(`items.${resultPill.id}.name`, { defaultValue: resultPill.name })}</span>
             <span className="alchemy-result-rarity" style={{ color: rarityColor }}>({t(`rarity.${resultPill.rarity}`, { defaultValue: resultPill.rarity })})</span>
@@ -1059,6 +1059,9 @@ function AlchemyPanel({ inventory, pills }) {
               ))}
             </div>
           </div>
+        )}
+        {allFilled && resultPill && !pills.isDiscovered(resultPill.id) && (
+          <div className="alchemy-result-unknown">{t('production.unknownRecipe')}</div>
         )}
         {allFilled && !resultPill && (
           <div className="alchemy-result-invalid">{t('production.invalidCombination')}</div>

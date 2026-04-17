@@ -4992,6 +4992,14 @@
   font-size: 0.85rem;
 }
 
+.alchemy-result-unknown {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  font-style: italic;
+}
+
 .alchemy-craft-row {
   display: flex;
   align-items: center;

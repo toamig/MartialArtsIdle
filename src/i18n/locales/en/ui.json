@@ -188,7 +188,8 @@
     "craftableRecipes": "Craftable Recipes",
     "noRecipes": "No recipes available with current herbs",
     "select3Herbs": "Select 3 herbs to see the result",
-    "invalidCombination": "Invalid combination"
+    "invalidCombination": "Invalid combination",
+    "unknownRecipe": "??? — craft to discover"
   },
   "stats": {
     "title": "Character Stats",

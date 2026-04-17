@@ -189,7 +189,8 @@
     "craftableRecipes":  "Receitas Disponíveis",
     "noRecipes":         "Nenhuma receita disponível com as ervas atuais",
     "select3Herbs":      "Selecione 3 ervas para ver o resultado",
-    "invalidCombination":"Combinação inválida"
+    "invalidCombination":"Combinação inválida",
+    "unknownRecipe":     "??? — crie para descobrir"
   },
 
   "stats": {
