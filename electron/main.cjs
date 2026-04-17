@@ -1,6 +1,24 @@
-const { app, BrowserWindow, Tray, Menu, Notification, nativeImage, ipcMain, protocol, net } = require('electron');
+const { app, BrowserWindow, Tray, Menu, Notification, nativeImage, ipcMain, protocol } = require('electron');
 const path = require('path');
-const { pathToFileURL } = require('url');
+const fs   = require('fs');
+
+const MIME = {
+  '.html': 'text/html',
+  '.js':   'application/javascript',
+  '.mjs':  'application/javascript',
+  '.css':  'text/css',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif':  'image/gif',
+  '.svg':  'image/svg+xml',
+  '.ico':  'image/x-icon',
+  '.json': 'application/json',
+  '.webmanifest': 'application/manifest+json',
+  '.woff':  'font/woff',
+  '.woff2': 'font/woff2',
+};
 
 // Register app:// as a privileged scheme BEFORE the app is ready.
 // Serves the dist folder without hitting file:// sandbox restrictions that
@@ -128,19 +146,33 @@ function fireNotification(summary) {
 
 ipcMain.on('set-resolution', (_, mode) => {
   if (!win) return;
+
+  const applySize = (w, h) => {
+    // Must be resizable before setSize — on Windows setSize silently fails
+    // on a non-resizable window.
+    win.setResizable(true);
+    win.setSize(w, h);
+    win.setResizable(false);
+    win.center();
+  };
+
   if (mode === 'fullscreen') {
     win.setResizable(true);
     win.setFullScreen(true);
   } else if (mode === 'windowed720p') {
-    win.setFullScreen(false);
-    win.setResizable(false);
-    win.setSize(1280, 720);
-    win.center();
+    if (win.isFullScreen()) {
+      win.once('leave-full-screen', () => setTimeout(() => applySize(1280, 720), 150));
+      win.setFullScreen(false);
+    } else {
+      applySize(1280, 720);
+    }
   } else if (mode === 'mobile') {
-    win.setFullScreen(false);
-    win.setResizable(false);
-    win.setSize(420, 860);
-    win.center();
+    if (win.isFullScreen()) {
+      win.once('leave-full-screen', () => setTimeout(() => applySize(420, 860), 150));
+      win.setFullScreen(false);
+    } else {
+      applySize(420, 860);
+    }
   }
 });
 
@@ -176,11 +208,21 @@ if (!gotLock) {
   });
 
   app.whenReady().then(() => {
-    // Register protocol handler — must be done after app is ready
+    // Serve dist files via app://localhost/ — reads directly from disk with
+    // explicit MIME types so images, fonts, and JS all load correctly.
     const distPath = path.join(__dirname, '../dist');
     protocol.handle('app', (request) => {
-      const filePath = path.join(distPath, new URL(request.url).pathname);
-      return net.fetch(pathToFileURL(filePath).href);
+      let pathname = new URL(request.url).pathname;
+      if (pathname === '/' || pathname === '') pathname = '/index.html';
+      const filePath = path.join(distPath, pathname);
+      const ext      = path.extname(filePath).toLowerCase();
+      const mime     = MIME[ext] || 'application/octet-stream';
+      try {
+        const data = fs.readFileSync(filePath);
+        return new Response(data, { headers: { 'content-type': mime } });
+      } catch {
+        return new Response('Not found', { status: 404 });
+      }
     });
 
     createWindow();
