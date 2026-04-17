@@ -36,7 +36,8 @@
     "win": {
       "target": "portable",
       "icon": "public/app-icon.ico"
-    }
+    },
+    "asar": false
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.0.0",
