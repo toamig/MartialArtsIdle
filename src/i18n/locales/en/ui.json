@@ -162,6 +162,7 @@
     "refineBtn": "Refine {{rarity}}",
     "refinedFlash": "Refined {{rarity}}: {{name}}",
     "craftedFlash": "Crafted {{name}}!",
+    "craftedFloat": "+{{count}} {{name}}",
     "modifiers": "Modifiers ({{filled}}/{{capacity}})",
     "upgradeQuality": "Upgrade Quality",
     "stats": "Stats",

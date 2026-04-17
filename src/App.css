@@ -4847,10 +4847,31 @@
 }
 
 .alchemy-furnace {
+  position: relative;
   font-size: 2.5rem;
   text-align: center;
   line-height: 1;
   filter: drop-shadow(0 0 8px rgba(255, 120, 0, 0.6));
+}
+
+.alchemy-float-msg {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  animation: alchemyFloatUp 1.3s ease-out forwards;
+  z-index: 5;
+}
+
+@keyframes alchemyFloatUp {
+  0%   { opacity: 0; transform: translate(-50%, 0) scale(0.9); }
+  15%  { opacity: 1; transform: translate(-50%, -8px) scale(1.05); }
+  100% { opacity: 0; transform: translate(-50%, -60px) scale(1); }
 }
 
 .alchemy-slot {
@@ -4971,16 +4992,47 @@
   font-size: 0.85rem;
 }
 
-.alchemy-flash {
-  color: #22c55e;
-  font-size: 0.9rem;
-  font-weight: 600;
-  animation: alchemyFlash 1.5s ease-out;
+.alchemy-craft-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-@keyframes alchemyFlash {
-  0%   { opacity: 1; transform: scale(1.1); }
-  100% { opacity: 0; transform: scale(1); }
+.alchemy-qty-selector {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.alchemy-qty-btn {
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.alchemy-qty-btn + .alchemy-qty-btn {
+  border-left: 1px solid var(--border);
+}
+
+.alchemy-qty-btn:hover {
+  color: var(--text);
+}
+
+.alchemy-qty-btn-active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.alchemy-qty-btn-active:hover {
+  color: #fff;
 }
 
 .alchemy-craft-btn {

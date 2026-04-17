@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QUALITY, ARTEFACTS_BY_ID } from '../data/artefacts';
 import { formatArtefactName } from '../data/artefactNames';
@@ -888,7 +888,7 @@ function canAffordRecipe(key, inventory) {
   return true;
 }
 
-function CraftableRecipes({ inventory, onFillSlots }) {
+function CraftableRecipes({ inventory, pills, onFillSlots }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
   const [expanded, setExpanded] = useState(null); // pill id or null
@@ -896,6 +896,7 @@ function CraftableRecipes({ inventory, onFillSlots }) {
   const craftable = useMemo(() => {
     const result = [];
     for (const pill of PILLS) {
+      if (!pills.isDiscovered(pill.id)) continue;
       const recipes = RECIPES_BY_PILL[pill.id] ?? [];
       const affordable = recipes.filter(key => canAffordRecipe(key, inventory));
       if (affordable.length > 0) {
@@ -903,7 +904,7 @@ function CraftableRecipes({ inventory, onFillSlots }) {
       }
     }
     return result;
-  }, [inventory]);
+  }, [inventory, pills]);
 
   if (craftable.length === 0) {
     return (
@@ -967,11 +968,15 @@ function CraftableRecipes({ inventory, onFillSlots }) {
   );
 }
 
+const CRAFT_QTY_OPTIONS = [1, 5, 10];
+
 function AlchemyPanel({ inventory, pills }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
   const [slots, setSlots] = useState([null, null, null]);
-  const [flashMsg, setFlashMsg] = useState(null);
+  const [craftQty, setCraftQty] = useState(1);
+  const [floatMsgs, setFloatMsgs] = useState([]);
+  const floatIdRef = useRef(0);
 
   const setSlot = (index, herbId) => {
     setSlots(prev => {
@@ -984,35 +989,41 @@ function AlchemyPanel({ inventory, pills }) {
   const allFilled = slots[0] && slots[1] && slots[2];
   const resultPill = allFilled ? findPill(slots[0], slots[1], slots[2]) : null;
 
-  // Check if player has herbs (accounting for duplicates in slots)
-  const hasHerbs = useMemo(() => {
-    if (!allFilled) return false;
+  // Max number of copies the player can afford given current slot contents.
+  const maxAffordable = useMemo(() => {
+    if (!allFilled) return 0;
     const needed = {};
-    for (const id of slots) {
-      needed[id] = (needed[id] || 0) + 1;
-    }
+    for (const id of slots) needed[id] = (needed[id] || 0) + 1;
+    let max = Infinity;
     for (const [id, qty] of Object.entries(needed)) {
-      if (inventory.getQuantity(id) < qty) return false;
+      max = Math.min(max, Math.floor(inventory.getQuantity(id) / qty));
     }
-    return true;
+    return Number.isFinite(max) ? max : 0;
   }, [slots, allFilled, inventory]);
 
-  const canCraft = allFilled && resultPill && hasHerbs;
+  const effectiveQty = Math.min(craftQty, maxAffordable);
+  const canCraft = allFilled && resultPill && effectiveQty >= 1;
 
   const handleCraft = () => {
     if (!canCraft) return;
-    // Remove herbs
+    const n = effectiveQty;
     const needed = {};
-    for (const id of slots) {
-      needed[id] = (needed[id] || 0) + 1;
-    }
+    for (const id of slots) needed[id] = (needed[id] || 0) + 1;
     for (const [id, qty] of Object.entries(needed)) {
-      inventory.removeItem(id, qty);
+      inventory.removeItem(id, qty * n);
     }
-    // Craft pill
-    pills.craftPill(resultPill.id);
-    setFlashMsg(t('production.craftedFlash', { name: tGame(`items.${resultPill.id}.name`, { defaultValue: resultPill.name }) }));
-    setTimeout(() => setFlashMsg(null), 1500);
+    pills.craftPill(resultPill.id, n);
+
+    const msgId = ++floatIdRef.current;
+    const text = t('production.craftedFloat', {
+      count: n,
+      name: tGame(`items.${resultPill.id}.name`, { defaultValue: resultPill.name }),
+    });
+    const color = RARITY[resultPill.rarity]?.color ?? '#aaa';
+    setFloatMsgs(prev => [...prev, { id: msgId, text, color }]);
+    setTimeout(() => {
+      setFloatMsgs(prev => prev.filter(m => m.id !== msgId));
+    }, 1300);
   };
 
   const rarityColor = resultPill ? (RARITY[resultPill.rarity]?.color ?? '#aaa') : null;
@@ -1023,7 +1034,14 @@ function AlchemyPanel({ inventory, pills }) {
         <div className="alchemy-triangle-top">
           <HerbSelector slotIndex={0} selectedHerbId={slots[0]} onSelect={(id) => setSlot(0, id)} inventory={inventory} />
         </div>
-        <div className="alchemy-furnace">🔥</div>
+        <div className="alchemy-furnace">
+          🔥
+          {floatMsgs.map(m => (
+            <span key={m.id} className="alchemy-float-msg" style={{ color: m.color }}>
+              {m.text}
+            </span>
+          ))}
+        </div>
         <div className="alchemy-triangle-bottom">
           <HerbSelector slotIndex={1} selectedHerbId={slots[1]} onSelect={(id) => setSlot(1, id)} inventory={inventory} />
           <HerbSelector slotIndex={2} selectedHerbId={slots[2]} onSelect={(id) => setSlot(2, id)} inventory={inventory} />
@@ -1050,17 +1068,29 @@ function AlchemyPanel({ inventory, pills }) {
         )}
       </div>
 
-      {flashMsg && <div className="alchemy-flash">{flashMsg}</div>}
+      <div className="alchemy-craft-row">
+        <div className="alchemy-qty-selector" role="group">
+          {CRAFT_QTY_OPTIONS.map(opt => (
+            <button
+              key={opt}
+              className={`alchemy-qty-btn ${craftQty === opt ? 'alchemy-qty-btn-active' : ''}`}
+              onClick={() => setCraftQty(opt)}
+              type="button"
+            >
+              ×{opt}
+            </button>
+          ))}
+        </div>
+        <button
+          className={`alchemy-craft-btn ${canCraft ? '' : 'alchemy-craft-btn-disabled'}`}
+          onClick={handleCraft}
+          disabled={!canCraft}
+        >
+          {t('common.craft')}{canCraft && effectiveQty > 1 ? ` ×${effectiveQty}` : ''}
+        </button>
+      </div>
 
-      <button
-        className={`alchemy-craft-btn ${canCraft ? '' : 'alchemy-craft-btn-disabled'}`}
-        onClick={handleCraft}
-        disabled={!canCraft}
-      >
-        {t('common.craft')}
-      </button>
-
-      <CraftableRecipes inventory={inventory} onFillSlots={(herbs) => setSlots(herbs)} />
+      <CraftableRecipes inventory={inventory} pills={pills} onFillSlots={(herbs) => setSlots(herbs)} />
     </div>
   );
 }

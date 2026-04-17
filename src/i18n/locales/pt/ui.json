@@ -163,6 +163,7 @@
     "refineBtn":           "Refinar {{rarity}}",
     "refinedFlash":        "Refinado {{rarity}}: {{name}}",
     "craftedFlash":        "Criado {{name}}!",
+    "craftedFloat":        "+{{count}} {{name}}",
     "modifiers":         "Modificadores ({{filled}}/{{capacity}})",
     "upgradeQuality":    "Melhorar Qualidade",
     "stats":             "Atributos",

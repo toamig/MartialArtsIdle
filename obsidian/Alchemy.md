@@ -8,8 +8,13 @@ Pill crafting system accessed via the **Production > Alchemy** tab. Combine thre
 
 1. Select **three herbs** (slots arranged in a triangle around the furnace)
 2. The combination determines which pill is produced — every valid combination maps to exactly one pill
-3. Click **Craft** to consume the herbs and receive the pill
-4. Consume pills from the **Pill Drawer** on the Home screen — each consumption permanently adds its stat bonus to the character
+3. Pick a **craft quantity** (×1 / ×5 / ×10) and click **Craft** to consume that many sets of herbs at once. The button label clamps to what you can actually afford (e.g. `Craft ×3` when you picked ×10 but only have ingredients for 3)
+4. A `+N PillName` message rises above the furnace to confirm each craft
+5. Consume pills from the **Pill Drawer** on the Home screen — each consumption permanently adds its stat bonus to the character
+
+### Recipe Discovery
+
+The **Craftable Recipes** panel below the furnace only lists pills the player has already brewed at least once. Undiscovered pills are hidden entirely — the first craft of a given pill ID reveals its recipes in the list. Discovered state persists under the localStorage key `mai_discovered_pills`; legacy saves seed this set from existing owned-pill counts so no recipes are re-locked on upgrade.
 
 Pills have **no duration**. Every bonus applied by a pill is added once and persists indefinitely across sessions, stored in `permanentStats` (see [[Items#Implementation Notes]]).
 

@@ -21,6 +21,7 @@ import { PILLS_BY_ID } from '../data/pills';
 
 const SAVE_KEY = 'mai_pills';
 const PERM_KEY = 'mai_permanent_pill_stats';
+const DISC_KEY = 'mai_discovered_pills';
 
 // Stats that contribute as INCREASED (percentage) type mods.
 // All other stats contribute as FLAT.
@@ -42,9 +43,29 @@ function loadPermanentStats() {
   return {};
 }
 
+function loadDiscovered() {
+  try {
+    const raw = localStorage.getItem(DISC_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  // Legacy save: if the player already owns pills from before this feature,
+  // treat those as discovered so the recipe list isn't regressed.
+  try {
+    const ownedRaw = localStorage.getItem(SAVE_KEY);
+    if (ownedRaw) {
+      const owned = JSON.parse(ownedRaw);
+      const seeded = {};
+      for (const id of Object.keys(owned)) seeded[id] = true;
+      return seeded;
+    }
+  } catch {}
+  return {};
+}
+
 export default function usePills() {
   const [ownedPills,      setOwnedPills]      = useState(loadOwned);
   const [permanentStats,  setPermanentStats]   = useState(loadPermanentStats);
+  const [discoveredPills, setDiscoveredPills]  = useState(loadDiscovered);
 
   // Persist owned pills
   useEffect(() => {
@@ -56,12 +77,21 @@ export default function usePills() {
     try { localStorage.setItem(PERM_KEY, JSON.stringify(permanentStats)); } catch {}
   }, [permanentStats]);
 
-  const craftPill = useCallback((pillId) => {
+  // Persist discovered pills
+  useEffect(() => {
+    try { localStorage.setItem(DISC_KEY, JSON.stringify(discoveredPills)); } catch {}
+  }, [discoveredPills]);
+
+  const craftPill = useCallback((pillId, n = 1) => {
+    if (n <= 0) return;
     setOwnedPills(prev => ({
       ...prev,
-      [pillId]: (prev[pillId] || 0) + 1,
+      [pillId]: (prev[pillId] || 0) + n,
     }));
+    setDiscoveredPills(prev => (prev[pillId] ? prev : { ...prev, [pillId]: true }));
   }, []);
+
+  const isDiscovered = useCallback((pillId) => !!discoveredPills[pillId], [discoveredPills]);
 
   /**
    * Consume one pill permanently.
@@ -124,9 +154,11 @@ export default function usePills() {
   return {
     ownedPills,
     permanentStats,
+    discoveredPills,
     craftPill,
     usePill,
     getOwnedCount,
+    isDiscovered,
     getStatModifiers,
     getQiMult,
   };
