@@ -184,7 +184,7 @@ const CRYSTAL_COLORS = {
 };
 
 /** Key Crystal — locked (dim, greyscale) or unlocked (glowing, tappable). */
-function KeyCrystal({ crystal, isUnlocked, onOpen }) {
+function KeyCrystal({ crystal, isUnlocked, onOpen, particleColors }) {
   if (!isUnlocked) {
     return (
       <div className="home-crystal-anchor">
@@ -197,6 +197,7 @@ function KeyCrystal({ crystal, isUnlocked, onOpen }) {
             draggable="false"
           />
         </div>
+        <QiParticles colors={particleColors} />
       </div>
     );
   }
@@ -216,6 +217,7 @@ function KeyCrystal({ crystal, isUnlocked, onOpen }) {
           draggable="false"
         />
       </div>
+      <QiParticles colors={particleColors} />
     </div>
   );
 }
@@ -444,15 +446,14 @@ function HomeScreen({
             maxed={maxed}
           />
 
-          {/* Key Crystal — floats in the archway gap */}
+          {/* Key Crystal — floats in the archway gap; particles nested inside so
+              they anchor to crystal bottom on all aspect ratios */}
           <KeyCrystal
             crystal={crystal}
             isUnlocked={isCrystalUnlocked}
             onOpen={() => setCrystalModalOpen(true)}
+            particleColors={isCrystalUnlocked && crystal ? CRYSTAL_COLORS[getCrystalTier(crystal.level)] : CRYSTAL_COLORS[1]}
           />
-
-          {/* Qi particles drifting from crystal toward character */}
-          <QiParticles colors={isCrystalUnlocked && crystal ? CRYSTAL_COLORS[getCrystalTier(crystal.level)] : CRYSTAL_COLORS[1]} />
 
           {/* Character + hold-hint group — grounded at scene bottom */}
           <div className="home-char-group">

@@ -1597,9 +1597,9 @@
   cursor: pointer;
 }
 
-/* Wider layouts (720p windowed, fullscreen) — drop crystal lower */
+/* Wider layouts (720p windowed, fullscreen) */
 @media (min-width: 900px) {
-  .home-crystal-anchor { top: 52%; }
+  .home-crystal-anchor { top: 50%; }
 }
 
 /* Float wrapper — gentle bob. Slower (7 s) when locked. */
@@ -1858,9 +1858,9 @@
 
 .home-qi-particles {
   position: absolute;
-  top: calc(46% + 102px);   /* starts just below crystal float-wrap */
+  top: 100%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-35px);
   width: 70px;
   height: 110px;
   z-index: 1;
