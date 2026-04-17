@@ -1459,6 +1459,7 @@
   position: relative;
   min-height: 0;
   overflow: visible;
+  --qi-particles-h: 110px;
 }
 
 /* Bottom section: overlay row + qi bar. Dark backing for legibility. */
@@ -1586,20 +1587,24 @@
 
 /* Anchored at ~38% of cultivation-zone — aligns with archway opening. */
 .home-crystal-anchor {
-  position: absolute;
-  top: 42%;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
 }
 
-/* Wider layouts (720p windowed, fullscreen) */
-@media (min-width: 900px) {
-  .home-crystal-anchor { top: 50%; }
+/* Crystal + character stack — bottom-anchored, gap = particles height */
+.home-crystal-char-stack {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--qi-particles-h);
+  z-index: 3;
 }
 
 /* Float wrapper — gentle bob. Slower (7 s) when locked. */
@@ -1862,7 +1867,7 @@
   left: 50%;
   transform: translateX(-35px);
   width: 70px;
-  height: 110px;
+  height: var(--qi-particles-h);
   z-index: 1;
   pointer-events: none;
   overflow: visible;
@@ -1896,15 +1901,10 @@
 
 /* Flex column so the hold-hint sits naturally above the fighter-stage. */
 .home-char-group {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  z-index: 3;
 }
 
 /* ── Cultivation Layout: fighter stage on top, progress bar below */

@@ -446,8 +446,8 @@ function HomeScreen({
             maxed={maxed}
           />
 
-          {/* Key Crystal — floats in the archway gap; particles nested inside so
-              they anchor to crystal bottom on all aspect ratios */}
+          {/* Crystal + particles + character — stacked so gap always equals particles height */}
+          <div className="home-crystal-char-stack">
           <KeyCrystal
             crystal={crystal}
             isUnlocked={isCrystalUnlocked}
@@ -482,6 +482,7 @@ function HomeScreen({
               />
             </div>
           </div>
+          </div>{/* end home-crystal-char-stack */}
 
         </div>{/* end home-cultivation-zone */}
 
