@@ -18,12 +18,13 @@ const SAVE_KEY = 'mai_qi_crystal';
 
 /**
  * Refined QI required to reach the given level.
- * Uses a smooth curve that produces clean-ish numbers at low levels
- * and scales infinitely: 50, 150, 350, 600, 900, 1200, 1600, 2000, ...
+ * Gentle growth curve — exponent dropped from 1.55 → 1.30 so high-level
+ * costs stay reachable without grinding indefinitely.
+ * Sample progression: 50, 120, 210, 310, 420, 540, 660, 790, 930, 1100, …
  */
 export function getRequiredRefinedQi(targetLevel) {
   if (targetLevel < 1) return 0;
-  const raw = 50 * Math.pow(targetLevel, 1.55);
+  const raw = 50 * Math.pow(targetLevel, 1.30);
   // Round to a clean step that scales with magnitude (keeps ~2 significant digits)
   const step = Math.pow(10, Math.max(1, Math.floor(Math.log10(raw)) - 1));
   return Math.round(raw / step) * step;
