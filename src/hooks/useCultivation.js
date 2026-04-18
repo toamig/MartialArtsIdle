@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import REALMS, { getMajorBreakthroughRate } from '../data/realms';
+import REALMS, { getMajorBreakthroughRate, isMajorTransition } from '../data/realms';
+import AudioManager from '../audio/AudioManager';
 import { DEFAULT_LAW, THREE_HARMONY_MANUAL, LAW_RARITY } from '../data/laws';
 import { saveGame, loadGame } from '../systems/save';
 import { rollLawMult } from '../data/affixPools';
@@ -37,6 +38,9 @@ export default function useCultivation() {
   const saved = loadGame();
   const [realmIndex, setRealmIndex] = useState(saved?.realmIndex ?? 0);
   const [boosting, setBoosting] = useState(false);
+  // Transient event set whenever a MAJOR realm transition fires — the home
+  // screen renders a celebratory banner keyed on this id. Null otherwise.
+  const [majorBreakthrough, setMajorBreakthrough] = useState(null);
   const [adBoostEndsAt, setAdBoostEndsAt] = useState(() => {
     const endsAt = saved?.adBoostEndsAt ?? 0;
     return endsAt > Date.now() ? endsAt : 0;
@@ -242,12 +246,18 @@ export default function useCultivation() {
             gateRef.current = { required: requiredRate, current: rate };
           } else {
             qiRef.current -= costRef.current;
-            const nextIndex = indexRef.current + 1;
+            const fromIndex = indexRef.current;
+            const nextIndex = fromIndex + 1;
+            const isMajor = isMajorTransition(fromIndex);
             indexRef.current  = nextIndex;
             costRef.current   = REALMS[nextIndex].cost;
             maxedRef.current  = !REALMS[nextIndex + 1];
             gateRef.current = null;
             setRealmIndex(nextIndex);
+            if (isMajor) {
+              try { AudioManager.playSfx('cult_breakthrough'); } catch {}
+              setMajorBreakthrough({ id: Date.now(), label: REALMS[nextIndex].name });
+            }
           }
         } else if (gateRef.current) {
           gateRef.current = null;
@@ -320,6 +330,8 @@ export default function useCultivation() {
     indexRef,
     rateRef,
     gateRef,
+    majorBreakthrough,
+    clearMajorBreakthrough: () => setMajorBreakthrough(null),
     setRealmIndex,
     activeLaw,
     setActiveLaw,

@@ -32,7 +32,8 @@
     "cooldown":         "Recarga",
     "channeling":       "Canalizando",
     "channelTitle":     "Canalizar Qi Celestial — 2× por 30 min",
-    "pills":            "Pílulas"
+    "pills":            "Pílulas",
+    "breakthroughKicker":"Avanço"
   },
 
   "offlineModal": {

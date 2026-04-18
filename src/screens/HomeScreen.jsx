@@ -155,6 +155,33 @@ function HeavenlyQiButton({ ad, adBoostActive, adBoostRemaining, maxed }) {
   );
 }
 
+/**
+ * Transient celebration overlay shown when a MAJOR realm transition fires.
+ * Auto-dismisses itself after the animation finishes. The component is
+ * keyed on the event id in HomeScreen so each breakthrough remounts and
+ * replays the animation.
+ */
+function BreakthroughBanner({ event, onDone }) {
+  const { t } = useTranslation('ui');
+  useEffect(() => {
+    if (!event) return undefined;
+    const id = setTimeout(onDone, 2600);
+    return () => clearTimeout(id);
+  }, [event, onDone]);
+  if (!event) return null;
+  return (
+    <div className="home-breakthrough-overlay" aria-live="assertive">
+      <div className="home-breakthrough-flash" />
+      <div className="home-breakthrough-card">
+        <div className="home-breakthrough-kicker">
+          {t('home.breakthroughKicker', { defaultValue: 'Breakthrough' })}
+        </div>
+        <div className="home-breakthrough-name">{event.label}</div>
+      </div>
+    </div>
+  );
+}
+
 const HOLD_HINT_SEEN_KEY = 'mai_home_hold_hint_seen';
 const HOLD_HINT_IDLE_MS  = 60 * 1000;
 
@@ -304,6 +331,8 @@ function HomeScreen({
     adBoostEndsAt,
     offlineEarnings,
     collectOfflineEarnings,
+    majorBreakthrough,
+    clearMajorBreakthrough,
   } = cultivation;
 
   const { vfxLayer, spawnVFX } = useVFX();
@@ -424,6 +453,13 @@ function HomeScreen({
 
         {/* ── Cultivation zone: absolutely-positioned scene elements ─── */}
         <div className="home-cultivation-zone">
+
+          {/* Major-realm breakthrough celebration — keyed so every event remounts. */}
+          <BreakthroughBanner
+            key={majorBreakthrough?.id ?? 'none'}
+            event={majorBreakthrough}
+            onDone={clearMajorBreakthrough}
+          />
 
           {/* Realm title overlay — top center of scene, mobile only */}
           <div className="home-realm-overlay">

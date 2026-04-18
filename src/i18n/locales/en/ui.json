@@ -40,7 +40,8 @@
     "cooldown": "Cooldown",
     "channeling": "Channeling",
     "channelTitle": "Channel Heavenly Qi — 2× for 30 min",
-    "pills": "Pills"
+    "pills": "Pills",
+    "breakthroughKicker": "Breakthrough"
   },
   "offlineModal": {
     "title": "Welcome Back",
