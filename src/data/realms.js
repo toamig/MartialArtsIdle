@@ -92,4 +92,47 @@ const REALMS_RAW = [
 
 const REALMS = mergeArrayByIndex(REALMS_RAW, 'realms');
 
+// ── Major breakthrough qi/s gate ─────────────────────────────────────────────
+// Ascending between major realms (i.e. `realm.name` changes) requires a
+// minimum sustained qi/s. The threshold is expressed as a percentage of the
+// NEXT realm's qi cost and decays with each successive major transition — the
+// early gates squeeze hardest, late realms soften because the cost is already
+// enormous.
+export const MAJOR_BREAKTHROUGH_BASE_PCT = 0.01;   // 1% at the first gate
+export const MAJOR_BREAKTHROUGH_DECAY    = 0.85;   // multiplicative per major gate
+
+/** Is the transition `fromIndex → fromIndex+1` a major-realm change? */
+export function isMajorTransition(fromIndex) {
+  const a = REALMS[fromIndex];
+  const b = REALMS[fromIndex + 1];
+  return !!a && !!b && a.name !== b.name;
+}
+
+/**
+ * Returns the 0-based ordinal of the major transition starting from `fromIndex`
+ * (i.e. how many major transitions precede this one), or -1 if the transition
+ * is not a major one.
+ */
+export function majorTransitionOrdinal(fromIndex) {
+  if (!isMajorTransition(fromIndex)) return -1;
+  let ord = 0;
+  for (let i = 0; i < fromIndex; i++) {
+    if (isMajorTransition(i)) ord++;
+  }
+  return ord;
+}
+
+/**
+ * Required qi/s to ascend from `fromIndex` to `fromIndex+1`. Returns 0 when
+ * the transition is a sub-stage (non-major) — no gating applies.
+ */
+export function getMajorBreakthroughRate(fromIndex) {
+  const ord = majorTransitionOrdinal(fromIndex);
+  if (ord < 0) return 0;
+  const next = REALMS[fromIndex + 1];
+  if (!next) return 0;
+  const pct = MAJOR_BREAKTHROUGH_BASE_PCT * Math.pow(MAJOR_BREAKTHROUGH_DECAY, ord);
+  return next.cost * pct;
+}
+
 export default REALMS;

@@ -293,6 +293,7 @@ function HomeScreen({
     qiRef,
     costRef,
     rateRef,
+    gateRef,
     focusMultRef,
     boosting,
     maxed,
@@ -513,6 +514,8 @@ function HomeScreen({
             <RealmProgressBar
               qiRef={qiRef}
               costRef={costRef}
+              rateRef={rateRef}
+              gateRef={gateRef}
               currentRealm={realmName}
               nextRealm={nextRealmName}
               boosting={boosting}

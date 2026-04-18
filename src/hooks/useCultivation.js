@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import REALMS from '../data/realms';
+import REALMS, { getMajorBreakthroughRate } from '../data/realms';
 import { DEFAULT_LAW, THREE_HARMONY_MANUAL, LAW_RARITY } from '../data/laws';
 import { saveGame, loadGame } from '../systems/save';
 import { rollLawMult } from '../data/affixPools';
@@ -187,6 +187,10 @@ export default function useCultivation() {
   const indexRef   = useRef(saved?.realmIndex ?? 0);
   // Live cultivation rate (qi/s) — updated every tick for the HUD readout.
   const rateRef    = useRef(0);
+  // When the player is qi-capped waiting for enough qi/s to ascend between
+  // MAJOR realms, this holds { required, current }. Null otherwise. Read by
+  // the UI via rAF to render the gate indicator without React re-renders.
+  const gateRef    = useRef(null);
 
   // Keep cost/maxed refs in sync whenever realmIndex state changes
   useEffect(() => {
@@ -231,15 +235,26 @@ export default function useCultivation() {
         qiRef.current += rate * dt;
 
         if (qiRef.current >= costRef.current) {
-          qiRef.current -= costRef.current;
-          const nextIndex = indexRef.current + 1;
-          indexRef.current  = nextIndex;
-          costRef.current   = REALMS[nextIndex].cost;
-          maxedRef.current  = !REALMS[nextIndex + 1];
-          setRealmIndex(nextIndex);
+          const requiredRate = getMajorBreakthroughRate(indexRef.current);
+          if (requiredRate > 0 && rate < requiredRate) {
+            // Major-realm gate: hold qi at cost until sustained qi/s is enough.
+            qiRef.current = costRef.current;
+            gateRef.current = { required: requiredRate, current: rate };
+          } else {
+            qiRef.current -= costRef.current;
+            const nextIndex = indexRef.current + 1;
+            indexRef.current  = nextIndex;
+            costRef.current   = REALMS[nextIndex].cost;
+            maxedRef.current  = !REALMS[nextIndex + 1];
+            gateRef.current = null;
+            setRealmIndex(nextIndex);
+          }
+        } else if (gateRef.current) {
+          gateRef.current = null;
         }
       } else {
         rateRef.current = 0;
+        gateRef.current = null;
       }
 
       raf = requestAnimationFrame(tick);
@@ -304,6 +319,7 @@ export default function useCultivation() {
     costRef,
     indexRef,
     rateRef,
+    gateRef,
     setRealmIndex,
     activeLaw,
     setActiveLaw,

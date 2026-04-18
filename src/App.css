@@ -2117,6 +2117,48 @@
   line-height: 1;
 }
 
+/* Major-realm breakthrough gate — only shown when .realm-track is .realm-track-gated */
+.realm-gate-label {
+  position: absolute;
+  left: 50%;
+  top: calc(47.5% + 22px);
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  padding: 3px 10px;
+  border-radius: 10px;
+  background: rgba(120, 0, 0, 0.78);
+  color: #ffe4b8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease-out;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 10px rgba(255, 60, 60, 0.45);
+}
+
+.realm-track-gated .realm-gate-label {
+  opacity: 1;
+  animation: realmGatePulse 1.4s ease-in-out infinite;
+}
+
+.realm-track-gated .realm-fill {
+  filter: hue-rotate(-30deg) saturate(1.1);
+  animation: realmGateFillPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes realmGatePulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 60, 60, 0.40); }
+  50%      { box-shadow: 0 0 16px rgba(255, 90, 90, 0.75); }
+}
+
+@keyframes realmGateFillPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.75; }
+}
+
 
 /* Fighter Stage */
 .fighter-stage {

@@ -153,6 +153,24 @@ Total sub-stages: **47**
 
 ---
 
+## Major-Realm Breakthrough Gate (Qi/s Requirement)
+
+Ascending **between major realms** (i.e. whenever `realm.name` changes — e.g. Tempered Body → Qi Transformation, Peak Qi Transformation → Early True Element) requires the player to sustain a minimum **qi/s** rate. Sub-stage transitions within the same major realm have no gate.
+
+- **Rule:** required qi/s = `nextRealm.cost × base × decay^ord`
+  - `base = 1%` (0.01)
+  - `decay = 0.85` multiplicatively per successive major gate
+  - `ord = 0, 1, 2, …` — the 0-based ordinal of the major transition
+- **Intent:** early gates squeeze hardest (force investment in qi-rate sources before the first realm wall); later gates soften automatically because costs already dwarf what players can realistically accumulate per second.
+- **Behaviour when gated:**
+  - Qi accumulation is **clamped at 100%** of the current realm cost.
+  - The Home-screen progress bar sits full, pulses red, and shows an inline `⛔ Qi/s <current> / <required>` chip embedded in the existing track — no new UI block.
+  - As soon as the rolling qi/s meets the requirement, the breakthrough fires on the next tick.
+- **Implementation:** `getMajorBreakthroughRate(fromIndex)` in `src/data/realms.js`; gate check in `useCultivation.js`'s tick loop; `gateRef` exposed to `RealmProgressBar.jsx` for the inline indicator.
+- **Note:** the rate compared is the **live** qi/s including boost/pill/selection multipliers, so players can temporarily hold boost to push through a gate.
+
+---
+
 ## Feature Unlocks by Major Realm
 
 | Major Realm | Features Unlocked |
