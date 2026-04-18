@@ -1,1 +1,22 @@
-{ "version": 1, "updatedAt": null, "records": {} }
+{
+  "version": 1,
+  "updatedAt": "2026-04-18T12:52:57.762Z",
+  "records": {
+    "collection": {
+      "gate": {
+        "type": "realm",
+        "minRealmIndex": 3
+      },
+      "hint": "Reach Tempered Body Layer 4",
+      "unlockMsg": "Collection unlocked. Browse your acquired items."
+    },
+    "gathering": {
+      "gate": {
+        "type": "realm",
+        "minRealmIndex": 8
+      },
+      "hint": "Reach Qi Transformation Early",
+      "unlockMsg": "Gathering unlocked. Forage herbs in cleared regions."
+    }
+  }
+}
