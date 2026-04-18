@@ -263,9 +263,8 @@
 }
 
 .sel-modal {
-  background: #0e0d1e;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 18px;
+  background: transparent;
+  border: none;
   padding: 18px 14px 14px;
   width: min(520px, calc(100vw - 24px));
   max-height: calc(100dvh - 80px);

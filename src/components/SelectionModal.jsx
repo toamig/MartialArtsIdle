@@ -62,10 +62,10 @@ function SelectionModal({ selection, jadeBalance, onPick, onRerollOne, onClose }
   if (!selection) return null;
 
   const { id, realmLabel, tier, options, freeRerolls, rerollsUsed } = selection;
-  const hasFreeReroll = rerollsUsed < freeRerolls;
-  const rerollCost    = hasFreeReroll ? 0
+  const hasFreeReroll   = rerollsUsed < freeRerolls;
+  const rerollCost      = hasFreeReroll ? 0
     : tier === 'breakthrough' ? JADE_COSTS.reroll_extra : JADE_COSTS.reroll_minor;
-  const canAffordReroll = hasFreeReroll || jadeBalance >= rerollCost;
+  const canAffordReroll = hasFreeReroll || (jadeBalance ?? 0) >= rerollCost;
   const isBreakthrough  = tier === 'breakthrough';
 
   return (
@@ -99,11 +99,6 @@ function SelectionModal({ selection, jadeBalance, onPick, onRerollOne, onClose }
           ))}
         </div>
 
-        {/* Footer — just skip + jade balance */}
-        <div className="sel-footer">
-          <span className="sel-jade-balance">🪨 {jadeBalance}</span>
-          <button className="sel-skip-btn" onClick={onClose}>Decide Later</button>
-        </div>
       </div>
     </div>
   );
