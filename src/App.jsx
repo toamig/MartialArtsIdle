@@ -253,7 +253,7 @@ function App() {
           selection={selections.pending[0]}
           jadeBalance={selections.jadeBalance}
           onPick={selections.pickOption}
-          onReroll={selections.rerollOptions}
+          onRerollOne={selections.rerollOne}
           onClose={() => setSelectionModalOpen(false)}
         />
       )}

@@ -1,69 +1,91 @@
 import { SELECTION_BY_ID, SELECTION_RARITY } from '../data/selections';
 import { JADE_COSTS } from '../systems/jade';
 
-function EffectLine({ effect }) {
-  if (effect.type === 'stat_mod') {
-    const prefix = effect.mod === 'more' ? '×' : '+';
-    const val    = effect.mod === 'increased'
-      ? `${Math.round(effect.value * 100)}%`
-      : effect.mod === 'more'
-      ? effect.value.toFixed(2)
-      : effect.value;
-    const label  = effect.stat.replace(/_/g, ' ');
-    return <span className="sel-card-effect">{prefix}{val} {label}</span>;
-  }
-  // special — show description text from parent instead
-  return null;
+// ── Category config ───────────────────────────────────────────────────────────
+
+const CATEGORY = {
+  cultivation: { icon: '☯', color: '#a78bfa' },
+  combat:      { icon: '⚔', color: '#f87171' },
+  gathering:   { icon: '✿', color: '#4ade80' },
+  mining:      { icon: '⛏', color: '#fb923c' },
+  economy:     { icon: '◈', color: '#fbbf24' },
+  special:     { icon: '✦', color: '#22d3ee' },
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtEffect(effect) {
+  if (effect.type !== 'stat_mod') return null;
+  const prefix = effect.mod === 'more' ? '×' : '+';
+  const val    = effect.mod === 'increased'
+    ? `${Math.round(effect.value * 100)}%`
+    : effect.mod === 'more'
+    ? effect.value.toFixed(2)
+    : effect.value;
+  return `${prefix}${val} ${effect.stat.replace(/_/g, ' ')}`;
 }
 
-function SelectionCard({ optionId, onPick, disabled }) {
-  const opt = SELECTION_BY_ID[optionId];
+// ── Card ─────────────────────────────────────────────────────────────────────
+
+function AugmentCard({ optionId, index, onPick, onRerollOne, rerollCost, hasFreeReroll, canAffordReroll }) {
+  const opt      = SELECTION_BY_ID[optionId];
   if (!opt) return null;
 
-  const rarity = SELECTION_RARITY[opt.rarity];
+  const rarity   = SELECTION_RARITY[opt.rarity];
+  const cat      = CATEGORY[opt.category] ?? { icon: '◆', color: '#9ca3af' };
+  const effects  = opt.effects.map(fmtEffect).filter(Boolean);
 
   return (
     <div
-      className={`sel-card sel-card-${opt.rarity}${disabled ? ' sel-card-disabled' : ''}`}
-      style={{ '--rarity-color': rarity.color }}
+      className={`augment-card augment-card-${opt.rarity}`}
+      style={{ '--cat-color': cat.color, '--rarity-color': rarity.color }}
+      onClick={() => onPick(optionId)}
     >
-      <div className="sel-card-header">
-        <span className="sel-card-rarity" style={{ color: rarity.color }}>{rarity.label}</span>
-        <span className="sel-card-category">{opt.category}</span>
+      {/* Category strip */}
+      <div className="augment-cat-strip">
+        <span className="augment-cat-icon">{cat.icon}</span>
+        <span className="augment-cat-label">{opt.category}</span>
+        <span className="augment-rarity-dot" style={{ background: rarity.color }} title={rarity.label} />
       </div>
 
-      <p className="sel-card-name">{opt.name}</p>
-      <p className="sel-card-desc">{opt.description}</p>
-
-      <div className="sel-card-effects">
-        {opt.effects.map((eff, i) => <EffectLine key={i} effect={eff} />)}
+      {/* Body */}
+      <div className="augment-body">
+        <p className="augment-name">{opt.name}</p>
+        <p className="augment-desc">{opt.description}</p>
+        {effects.length > 0 && (
+          <div className="augment-effects">
+            {effects.map((e, i) => <span key={i} className="augment-effect-chip">{e}</span>)}
+          </div>
+        )}
+        {opt.maxStacks > 1 && (
+          <span className="augment-stacks">Max ×{opt.maxStacks}</span>
+        )}
       </div>
 
-      {opt.maxStacks > 1 && (
-        <span className="sel-card-stacks">Max {opt.maxStacks} stacks</span>
-      )}
-
+      {/* Per-card reroll */}
       <button
-        className="sel-card-pick-btn"
-        onClick={() => onPick(optionId)}
-        disabled={disabled}
+        className={`augment-reroll${!canAffordReroll ? ' augment-reroll-disabled' : ''}`}
+        onClick={e => { e.stopPropagation(); canAffordReroll && onRerollOne(index); }}
+        disabled={!canAffordReroll}
+        title={hasFreeReroll ? 'Reroll (free)' : `Reroll (${rerollCost} Jade)`}
       >
-        Choose
+        ↺{hasFreeReroll ? '' : ` ${rerollCost}`}
       </button>
     </div>
   );
 }
 
-function SelectionModal({ selection, jadeBalance, onPick, onReroll, onClose }) {
+// ── Modal ─────────────────────────────────────────────────────────────────────
+
+function SelectionModal({ selection, jadeBalance, onPick, onRerollOne, onClose }) {
   if (!selection) return null;
 
   const { id, realmLabel, tier, options, freeRerolls, rerollsUsed } = selection;
-  const hasFreeReroll    = rerollsUsed < freeRerolls;
-  const rerollCost       = hasFreeReroll
-    ? 0
-    : (tier === 'breakthrough' ? JADE_COSTS.reroll_extra : JADE_COSTS.reroll_minor);
-  const canAffordReroll  = hasFreeReroll || jadeBalance >= rerollCost;
-  const isBreakthrough   = tier === 'breakthrough';
+  const hasFreeReroll = rerollsUsed < freeRerolls;
+  const rerollCost    = hasFreeReroll ? 0
+    : tier === 'breakthrough' ? JADE_COSTS.reroll_extra : JADE_COSTS.reroll_minor;
+  const canAffordReroll = hasFreeReroll || jadeBalance >= rerollCost;
+  const isBreakthrough  = tier === 'breakthrough';
 
   return (
     <div className="modal-overlay sel-overlay" onClick={onClose}>
@@ -73,45 +95,33 @@ function SelectionModal({ selection, jadeBalance, onPick, onReroll, onClose }) {
       >
         {/* Header */}
         <div className="sel-header">
-          {isBreakthrough && (
-            <span className="sel-breakthrough-badge">⚡ Breakthrough</span>
-          )}
+          {isBreakthrough && <span className="sel-breakthrough-badge">⚡ Breakthrough</span>}
           <h2 className="sel-title">
-            {isBreakthrough ? 'Realm Breakthrough Reward' : 'Level-Up Reward'}
+            {isBreakthrough ? 'Breakthrough Reward' : 'Level-Up Reward'}
           </h2>
           <p className="sel-realm">{realmLabel}</p>
-          <p className="sel-instruction">Choose one perk to keep permanently</p>
         </div>
 
-        {/* Cards */}
-        <div className="sel-cards-row">
-          {options.map(optId => (
-            <SelectionCard
+        {/* Augment cards */}
+        <div className="augment-row">
+          {options.map((optId, i) => (
+            <AugmentCard
               key={optId}
               optionId={optId}
-              onPick={(optId) => onPick(id, optId)}
+              index={i}
+              onPick={(oId) => onPick(id, oId)}
+              onRerollOne={(idx) => onRerollOne(id, idx)}
+              hasFreeReroll={hasFreeReroll}
+              rerollCost={rerollCost}
+              canAffordReroll={canAffordReroll}
             />
           ))}
         </div>
 
-        {/* Footer */}
+        {/* Footer — just skip + jade balance */}
         <div className="sel-footer">
-          <button
-            className={`sel-reroll-btn${!canAffordReroll ? ' sel-reroll-disabled' : ''}`}
-            onClick={() => canAffordReroll && onReroll(id)}
-            disabled={!canAffordReroll}
-            title={hasFreeReroll ? 'Free reroll' : `Costs ${rerollCost} Jade`}
-          >
-            {hasFreeReroll
-              ? '↺ Reroll (Free)'
-              : `↺ Reroll (${rerollCost} 🪨)`}
-          </button>
-
-          <span className="sel-jade-balance">🪨 {jadeBalance} Jade</span>
-
-          <button className="sel-skip-btn" onClick={onClose}>
-            Decide Later
-          </button>
+          <span className="sel-jade-balance">🪨 {jadeBalance}</span>
+          <button className="sel-skip-btn" onClick={onClose}>Decide Later</button>
         </div>
       </div>
     </div>

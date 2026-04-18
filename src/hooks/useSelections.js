@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import REALMS from '../data/realms';
 import {
   SELECTION_BY_ID,
+  SELECTION_POOL,
+  MINOR_WEIGHTS,
+  BREAKTHROUGH_WEIGHTS,
   rollOptions,
 } from '../data/selections';
 import { MOD } from '../data/stats';
@@ -210,6 +213,46 @@ export default function useSelections({ cultivation }) {
     return mult;
   }, [active]);
 
+  /** Reroll a single card at optionIndex, keeping the other two. */
+  const rerollOne = useCallback((selectionId, optionIndex) => {
+    setPending(prev => prev.map(sel => {
+      if (sel.id !== selectionId) return sel;
+
+      const hasFree = sel.rerollsUsed < sel.freeRerolls;
+      if (!hasFree) {
+        const cost = sel.tier === 'breakthrough' ? JADE_COSTS.reroll_extra : JADE_COSTS.reroll_minor;
+        if (!spendJade(cost)) return sel;
+        refreshJade();
+      }
+
+      const weights = sel.tier === 'breakthrough' ? BREAKTHROUGH_WEIGHTS : MINOR_WEIGHTS;
+      const keep    = sel.options.filter((_, i) => i !== optionIndex);
+      const eligible = SELECTION_POOL.filter(opt => {
+        const stacks = active[opt.id] ?? 0;
+        return (
+          cultivation.realmIndex >= opt.minRealmIndex &&
+          stacks < opt.maxStacks &&
+          !keep.includes(opt.id)
+        );
+      });
+
+      let replacement = keep[0]; // fallback
+      if (eligible.length > 0) {
+        const total = eligible.reduce((s, o) => s + (weights[o.rarity] ?? 10), 0);
+        let r = Math.random() * total;
+        for (const opt of eligible) {
+          r -= weights[opt.rarity] ?? 10;
+          if (r <= 0) { replacement = opt.id; break; }
+        }
+        if (replacement === keep[0]) replacement = eligible[eligible.length - 1].id;
+      }
+
+      const newOptions = [...sel.options];
+      newOptions[optionIndex] = replacement;
+      return { ...sel, options: newOptions, rerollsUsed: sel.rerollsUsed + 1 };
+    }));
+  }, [cultivation.realmIndex, active, refreshJade]);
+
   return {
     pending,
     active,
@@ -217,6 +260,7 @@ export default function useSelections({ cultivation }) {
     jadeBalance,
     pickOption,
     rerollOptions,
+    rerollOne,
     getStatModifiers,
     getQiSpeedMult,
     getOfflineQiMult,

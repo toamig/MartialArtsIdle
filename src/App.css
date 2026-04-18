@@ -251,28 +251,28 @@
 }
 
 .sel-modal {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px 16px 16px;
+  background: #0e0d1e;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 18px 14px 14px;
   width: min(520px, calc(100vw - 24px));
   max-height: calc(100dvh - 80px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .sel-modal-breakthrough {
-  border-color: #c084fc;
-  box-shadow: 0 0 24px rgba(192, 132, 252, 0.2);
+  border-color: rgba(192, 132, 252, 0.4);
+  box-shadow: 0 0 32px rgba(192, 132, 252, 0.15);
 }
 
 .sel-breakthrough-badge {
   display: inline-block;
   background: rgba(192, 132, 252, 0.15);
   color: #c084fc;
-  border: 1px solid #c084fc;
+  border: 1px solid rgba(192, 132, 252, 0.5);
   border-radius: 20px;
   padding: 2px 10px;
   font-size: 11px;
@@ -280,120 +280,152 @@
   margin-bottom: 6px;
 }
 
-.sel-header {
-  text-align: center;
-}
+.sel-header { text-align: center; }
 
 .sel-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .sel-realm {
-  font-size: 0.85rem;
-  color: var(--accent);
-  margin-bottom: 4px;
-}
-
-.sel-instruction {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: var(--accent);
 }
 
-/* ── Cards row ─────────────────────────────────────────────────────────────── */
-.sel-cards-row {
+/* ── Augment cards row ──────────────────────────────────────────────────────── */
+.augment-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
-@media (max-width: 420px) {
-  .sel-cards-row {
-    flex-direction: column;
-  }
+@media (max-width: 440px) {
+  .augment-row { flex-direction: column; }
 }
 
-.sel-card {
+/* Card — entire surface is clickable to pick */
+.augment-card {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 10px;
-  background: var(--bg-card);
-  border: 1px solid var(--rarity-color, var(--border));
-  border-radius: 12px;
   min-width: 0;
-}
-
-.sel-card-common      { border-color: #4b5563; }
-.sel-card-rare        { border-color: #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.15); }
-.sel-card-epic        { border-color: #a855f7; box-shadow: 0 0 10px rgba(168,85,247,0.2); }
-.sel-card-disabled    { opacity: 0.5; pointer-events: none; }
-
-.sel-card-header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+}
+.augment-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--cat-color);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.5), 0 0 12px color-mix(in srgb, var(--cat-color) 30%, transparent);
+}
+.augment-card:active { transform: translateY(0); }
+
+/* Rarity border glow */
+.augment-card-common { border-color: rgba(156,163,175,0.25); }
+.augment-card-rare   { border-color: rgba(96,165,250,0.35); box-shadow: 0 0 10px rgba(96,165,250,0.1); }
+.augment-card-epic   { border-color: rgba(192,132,252,0.45); box-shadow: 0 0 14px rgba(192,132,252,0.15); }
+
+/* Category strip at top */
+.augment-cat-strip {
+  display: flex;
   align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  background: color-mix(in srgb, var(--cat-color) 18%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--cat-color) 30%, transparent);
 }
 
-.sel-card-rarity {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.sel-card-category {
-  font-size: 10px;
-  color: var(--text-muted);
-  text-transform: capitalize;
-}
-
-.sel-card-name {
+.augment-cat-icon {
   font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.3;
+  line-height: 1;
 }
 
-.sel-card-desc {
-  font-size: 11px;
-  color: var(--text-secondary);
-  line-height: 1.4;
+.augment-cat-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--cat-color);
+  text-transform: capitalize;
+  letter-spacing: 0.04em;
   flex: 1;
 }
 
-.sel-card-effects {
+.augment-rarity-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+/* Card body */
+.augment-body {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 5px;
+  padding: 10px 10px 6px;
 }
 
-.sel-card-effect {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.sel-card-stacks {
-  font-size: 10px;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-.sel-card-pick-btn {
-  margin-top: 6px;
-  padding: 8px 0;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
+.augment-name {
   font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
 }
 
-.sel-card-pick-btn:hover { opacity: 0.85; }
+.augment-desc {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.4;
+}
+
+.augment-effects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.augment-effect-chip {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--cat-color);
+  background: color-mix(in srgb, var(--cat-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cat-color) 25%, transparent);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+.augment-stacks {
+  font-size: 9px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 2px;
+}
+
+/* Per-card reroll button — bottom right */
+.augment-reroll {
+  align-self: flex-end;
+  margin: 0 8px 8px;
+  padding: 3px 9px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  color: rgba(255,255,255,0.45);
+  font-size: 11px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+.augment-reroll:hover:not(:disabled) {
+  color: #fff;
+  border-color: rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.1);
+}
+.augment-reroll-disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* ── Footer ─────────────────────────────────────────────────────────────────── */
 .sel-footer {
@@ -401,22 +433,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  flex-wrap: wrap;
 }
-
-.sel-reroll-btn {
-  padding: 8px 14px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.sel-reroll-btn:hover { border-color: var(--accent); color: var(--accent); }
-.sel-reroll-disabled  { opacity: 0.4; cursor: not-allowed; }
 
 .sel-jade-balance {
   font-size: 12px;
@@ -424,13 +441,16 @@
 }
 
 .sel-skip-btn {
-  padding: 8px 14px;
+  padding: 6px 14px;
   background: transparent;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
   color: var(--text-muted);
   font-size: 12px;
   cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
 }
+.sel-skip-btn:hover { border-color: rgba(255,255,255,0.25); color: #fff; }
 
 /* ── HomeScreen selection badge ─────────────────────────────────────────────── */
 
