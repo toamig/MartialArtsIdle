@@ -121,7 +121,7 @@ function rollDrops(drops) {
  *   - Heal/Defend/Dodge techniques contribute 0 damage but consume a turn.
  */
 function estimateDps(stats, equippedTechs) {
-  const { essence = 0, soul = 0, body = 0, lawElement = 'Normal' } = stats;
+  const { essence = 0, soul = 0, body = 0, lawElement = 'Normal', law = null, damageStats = null } = stats;
   const basicDmg = Math.max(5, Math.floor(essence + body));
   const basicDps = basicDmg / TURN_TIME_SEC;
 
@@ -131,7 +131,7 @@ function estimateDps(stats, equippedTechs) {
 
   for (const tech of (equippedTechs ?? [])) {
     if (!tech || tech.type !== 'Attack') continue;
-    const dmg = calcDamage(tech, essence, soul, body, lawElement);
+    const dmg = calcDamage(tech, essence, soul, body, law ?? lawElement, 0, damageStats);
     const cd  = getCooldown(tech.type, tech.quality);
     techDps      += dmg / cd;
     techTimeShare += TURN_TIME_SEC / cd;

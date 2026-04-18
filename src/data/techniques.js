@@ -1,3 +1,5 @@
+import { TYPE_TO_DAMAGE_CATEGORY } from './lawUniques';
+
 // ─── Quality tiers ────────────────────────────────────────────────────────────
 export const TECHNIQUE_QUALITY = {
   Iron:         { label: 'Iron',         color: '#9ca3af', cdMult: 1.00 },
@@ -74,21 +76,62 @@ export function getK(rank, quality) {
 }
 
 /**
- * Attack damage formula from the DD:
+ * Attack damage formula:
  *   K * (Essence + Soul + Body + artefactFlat) * arteMult * elemBonus + bonus
+ *   + damage-category flat bonus (split across the law's types)
  *
  * elemBonus only applies when the active Law's element matches the technique's.
+ *
+ * Category-flat bonus: each law type maps to one of the three damage
+ * categories (physical / elemental / psychic) via damageCategoryForType().
+ * The attack is treated as dealing an even share across the UNIQUE categories
+ * covered by law.types, and each category contributes its flat damage stat
+ * proportionally. Example: a law with types [fire, sword] splits 50/50, so
+ * half of stats.elemental_damage plus half of stats.physical_damage is added.
+ * A law with types [fire, water, earth] collapses to one category (elemental)
+ * and gets the full elemental_damage flat bonus.
+ *
+ * @param {object} tech
+ * @param {number} essence
+ * @param {number} soul
+ * @param {number} body
+ * @param {object|string|null} lawOrElement  — full law object, or legacy
+ *                                             lawElement string for backcompat.
+ * @param {number} artefactFlat
+ * @param {{physical:number, elemental:number, psychic:number}|null} damageStats
  */
-export function calcDamage(tech, essence, soul, body, lawElement = 'Normal', artefactFlat = 0) {
+export function calcDamage(tech, essence, soul, body, lawOrElement = 'Normal', artefactFlat = 0, damageStats = null) {
+  const law = (lawOrElement && typeof lawOrElement === 'object') ? lawOrElement : null;
+  const lawElement = law?.element ?? (typeof lawOrElement === 'string' ? lawOrElement : 'Normal');
+
   const K = getK(tech.rank, tech.quality);
   const elemMatch = tech.element !== 'Normal' && tech.element === lawElement;
   const elemBonus = elemMatch ? (tech.elemBonus ?? 1.0) : 1.0;
-  return Math.floor(
-    K * (essence + soul + body + artefactFlat)
-    * (tech.arteMult ?? 1.0)
-    * elemBonus
-    + (tech.bonus ?? 0)
-  );
+  let dmg = K * (essence + soul + body + artefactFlat)
+          * (tech.arteMult ?? 1.0)
+          * elemBonus
+          + (tech.bonus ?? 0);
+
+  // Damage-category flat bonus — only when we have a law object and stats.
+  if (law && damageStats && Array.isArray(law.types) && law.types.length > 0) {
+    const catCounts = new Map();
+    for (const t of law.types) {
+      const cat = TYPE_TO_DAMAGE_CATEGORY[t];
+      if (!cat) continue;
+      catCounts.set(cat, (catCounts.get(cat) ?? 0) + 1);
+    }
+    const totalTypes = law.types.length;
+    if (catCounts.size > 0) {
+      let bonus = 0;
+      for (const [cat, count] of catCounts) {
+        const share = count / totalTypes;
+        bonus += (damageStats[cat] ?? 0) * share;
+      }
+      dmg += bonus;
+    }
+  }
+
+  return Math.floor(dmg);
 }
 
 /** Whether the player's realmIndex meets the technique's rank requirement. */

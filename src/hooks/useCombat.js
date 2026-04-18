@@ -205,7 +205,16 @@ export default function useCombat() {
           s.cds[i]   = s.maxCds[i];
 
           if (tech.type === 'Attack') {
-            let dmg = calcDamage(tech, s.stats.essence, s.stats.soul, s.stats.body, s.stats.lawElement);
+            // Prefer the full law object so calcDamage can apply the
+            // damage-category flat bonus (physical / elemental / psychic)
+            // derived from law.types. Falls back to lawElement string.
+            let dmg = calcDamage(
+              tech,
+              s.stats.essence, s.stats.soul, s.stats.body,
+              s.stats.law ?? s.stats.lawElement,
+              0,
+              s.stats.damageStats ?? null,
+            );
             // Exploit: roll exploitChance % per attack; on success multiply
             // damage by exploitMult % (default 150%).
             const exChance = s.stats.exploitChance ?? 0;

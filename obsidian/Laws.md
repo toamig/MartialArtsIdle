@@ -50,6 +50,23 @@ Every law additionally draws from the implicit **`general`** pool regardless of 
 
 The designer panel now exposes a read-only **Law Uniques** viewer (Progression section) that lists every unique grouped by its pool so designers can audit coverage.
 
+### Types Are Damage Types
+
+The same 9 types also classify **damage**: each type folds into exactly one of the three base damage buckets, mirroring its primary-stat anchor.
+
+| Anchor | Types | Damage bucket |
+|---|---|---|
+| Body | physical, sword, fist | `physical_damage` |
+| Essence | fire, water, earth | `elemental_damage` |
+| Soul | spirit, void, dao | `psychic_damage` |
+
+When an attack resolves, its damage category is derived from the active law's `types` array via `TYPE_TO_DAMAGE_CATEGORY` (in `src/data/lawUniques.js`):
+
+- **Single category law** (e.g. `['fire']` or `['fire', 'water', 'earth']`) — the full flat bonus from the bucket's `*_damage` stat is applied.
+- **Multi-category law** (e.g. `['fire', 'sword']`) — the attack is considered to be split evenly across the UNIQUE categories, and each category contributes its flat bonus proportionally. A `[fire, sword]` attack adds `0.5 × elemental_damage + 0.5 × physical_damage`.
+
+This is applied inside `calcDamage()` in `src/data/techniques.js`. Previously the three `*_damage` stats were only displayed; they now actually modify attack output.
+
 ---
 
 ## Cultivation Speed

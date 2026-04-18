@@ -158,6 +158,28 @@ export const LAW_UNIQUE_POOLS = [
   'general',
 ];
 
+// ─── Damage categories ───────────────────────────────────────────────────────
+// The 9 typed pools double as damage types. Each type folds into exactly one
+// of the three base damage categories, mirroring its primary-stat anchor:
+//   Body anchors    → physical_damage
+//   Essence anchors → elemental_damage
+//   Soul anchors    → psychic_damage
+// A law's damage bucket(s) are derived from its `types` array — see
+// calcDamage() in src/data/techniques.js for how the split is applied.
+export const TYPE_TO_DAMAGE_CATEGORY = {
+  physical: 'physical', sword: 'physical', fist: 'physical',
+  fire:     'elemental', water: 'elemental', earth: 'elemental',
+  spirit:   'psychic',   void:  'psychic',   dao:   'psychic',
+};
+
+/**
+ * Map a single law-type/damage-type to one of 'physical' | 'elemental' |
+ * 'psychic'. Returns null for unknown / non-typed values (e.g. 'general').
+ */
+export function damageCategoryForType(type) {
+  return TYPE_TO_DAMAGE_CATEGORY[type] ?? null;
+}
+
 // ─── Unique modifier pool ────────────────────────────────────────────────────
 
 export const LAW_UNIQUES = [

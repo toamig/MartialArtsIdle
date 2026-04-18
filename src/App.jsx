@@ -119,6 +119,15 @@ function App() {
       soul:       bundle.primary.soul,
       body:       bundle.primary.body,
       lawElement: law?.element ?? 'Normal',
+      // Full active law — calcDamage reads law.types to split damage
+      // between categories (physical / elemental / psychic).
+      law,
+      // Flat damage bonuses keyed by category, consumed by calcDamage.
+      damageStats: {
+        physical:  bundle.combat.physDmg,
+        elemental: bundle.combat.elemDmg,
+        psychic:   bundle.combat.psychDmg,
+      },
       // Activity stats — needed by autoFarm + Gathering/Mining screens
       harvestSpeed: bundle.activity.harvestSpeed,
       harvestLuck:  bundle.activity.harvestLuck,
