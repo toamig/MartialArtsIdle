@@ -46,7 +46,7 @@ const TABS = [
   { id: 'perks', tKey: 'character.tabPerks',  defaultLabel: 'Perks'  },
 ];
 
-function CharacterScreen({ cultivation, techniques, artefacts, selections }) {
+function CharacterScreen({ cultivation, techniques, artefacts, selections, pills }) {
   const { t } = useTranslation('ui');
   const [tab, setTab] = useState('equip');
 
@@ -79,6 +79,8 @@ function CharacterScreen({ cultivation, techniques, artefacts, selections }) {
           <StatsContent
             cultivation={cultivation}
             artefacts={artefacts}
+            pills={pills}
+            selections={selections}
           />
         )}
         {tab === 'perks' && <PerksTab selections={selections} />}

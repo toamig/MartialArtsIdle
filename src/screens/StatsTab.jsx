@@ -195,7 +195,7 @@ function StatRow({ label, hint, value, unit = '', locked = false }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-function StatsContent({ cultivation, artefacts }) {
+function StatsContent({ cultivation, artefacts, pills, selections }) {
   const { t } = useTranslation('ui');
   const { qiRef, costRef, activeLaw, realmName, realmIndex } = cultivation;
 
@@ -215,7 +215,15 @@ function StatsContent({ cultivation, artefacts }) {
     equippedArtefactCount: artefacts?.owned.filter(o => Object.values(artefacts.equipped ?? {}).includes(o.uid)).length ?? 0,
   });
   const lawBundle = evaluateLawUniques(activeLaw, lawCtx);
-  const mergedMods = mergeModifiers(artefacts?.getStatModifiers(), lawBundle.statMods);
+  // Merge every modifier source the central getFullStats already uses, so
+  // the Stats tab reflects pill-consumption bonuses and perk picks in
+  // addition to artefacts + law uniques.
+  const mergedMods = mergeModifiers(
+    artefacts?.getStatModifiers?.(),
+    pills?.getStatModifiers?.(),
+    lawBundle.statMods,
+    selections?.getStatModifiers?.(),
+  );
   const { meta, primary, combat, activity } = computeAllStats(qi, activeLaw, realmIndex, mergedMods);
   const { soulUnlocked } = meta;
 

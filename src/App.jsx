@@ -223,7 +223,7 @@ function App() {
     mining:    screenParam?.region
                  ? <MiningScreen    region={screenParam.region} inventory={inventory} onBack={goBack} getFullStats={getFullStats} />
                  : null,
-    character:  <CharacterScreen cultivation={cultivation} techniques={techniques} artefacts={artefacts} selections={selections} />,
+    character:  <CharacterScreen cultivation={cultivation} techniques={techniques} artefacts={artefacts} selections={selections} pills={pills} />,
     collection: <CollectionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} />,
     production: <ProductionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} pills={pills} isUnlocked={featureFlags.isUnlocked} getHint={featureFlags.getHint} />,
     settings:   <SettingsScreen />,
