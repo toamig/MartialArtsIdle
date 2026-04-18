@@ -69,6 +69,51 @@ This is applied inside `calcDamage()` in `src/data/techniques.js`. Previously th
 
 ---
 
+## Default Attack Multipliers (`typeMults`)
+
+The **basic attack** (fires when no secret technique is ready) is scaled by a new `typeMults: { essence, body, soul }` field on every law. Each slot is **0 by default** — only categories the law actually covers via its `types` get a non-zero value.
+
+Mapping (same as damage categories, just expressed as primary stats):
+
+| Anchor | Types | Primary stat slot |
+|---|---|---|
+| Body | physical, sword, fist | `typeMults.body` |
+| Essence | fire, water, earth | `typeMults.essence` |
+| Soul | spirit, void, dao | `typeMults.soul` |
+
+Formula (in `src/hooks/useCombat.js` and `src/systems/autoFarm.js`):
+```
+basicDmg = max(5, floor(E * typeMults.essence + B * typeMults.body + S * typeMults.soul))
+```
+
+### Roll ranges per rarity
+
+The total multiplier rolls **once per covered category**. Adding a second type in the same category (e.g. `['fire', 'water']` → both Essence) does NOT stack — it just means more pool options for the shared slot.
+
+| Rarity | Roll range (per covered category) |
+|---|---|
+| Iron | 1.10 … 1.30 |
+| Bronze | 1.20 … 1.60 |
+| Silver | 1.40 … 2.00 |
+| Gold | 1.70 … 2.60 |
+| Transcendent | 2.20 … 3.50 |
+
+Authoritative: `LAW_TYPE_MULT_RANGES` + `rollLawTypeMults()` in `src/data/affixPools.js`.
+
+### Soul-type generation gate
+
+Soul-anchored types (`spirit`, `void`, `dao`) cannot appear on a law generated before the player has reached Saint realm (`realmIndex >= SAINT_INDEX = 24`). `generateLaw` strips them from the rolled `types` array and falls back to `['general']` if nothing remains. Secret techniques and the starter law are unaffected.
+
+### Starter law
+
+**Unyielding Fist Manual** (id `three_harmony_manual`, kept for save-compat):
+- `types: ['fist']`
+- `typeMults: { essence: 0, body: 1.20, soul: 0 }`
+
+Its basic attack is `floor(Body × 1.20)` — Essence and Soul contribute nothing. Any future law the player earns via refining will follow the rolled ranges above.
+
+---
+
 ## Cultivation Speed
 
 Each law has a **base cultivation speed multiplier** applied on top of the global rate:

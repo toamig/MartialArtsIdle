@@ -15,18 +15,22 @@ export const LAW_RARITY = {
 };
 
 const LAWS_RAW = {
+  // id kept stable across the rebrand so existing saves keep their active law.
   three_harmony_manual: {
     id:                   'three_harmony_manual',
-    name:                 'Three Harmony Manual',
+    name:                 'Unyielding Fist Manual',
     element:              'Normal',
-    // Law types control which unique pools this law can roll from. Every
-    // law also implicitly draws from the `general` pool.
-    types:                ['physical'],
+    // Law types drive both the unique-pool filter and the per-primary-stat
+    // default-attack multipliers (see typeMults below). Fist anchors to Body.
+    types:                ['fist'],
+    // Per-category default-attack multipliers. Only Body is covered here,
+    // so the default attack becomes floor(B * 1.20).
+    typeMults:            { essence: 0, body: 1.20, soul: 0 },
     rarity:               'Iron',
     // realmIndex 0 = Tempered Body - Layer 1 (available from the start)
     realmRequirement:     0,
     realmRequirementLabel:'Tempered Body',
-    flavour:              'The ancient text speaks of no fire, no storm, no mountain — only the even breath between all things.',
+    flavour:              "A drill-book of Tempered Body strikes — the disciple's first hundred blows, repeated until the bones remember them.",
     cultivationSpeedMult: 1.0,
     // One unique modifier per tier, up to the law's rarity (Iron = 1 unique).
     uniques: {

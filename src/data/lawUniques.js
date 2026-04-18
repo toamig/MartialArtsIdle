@@ -180,6 +180,23 @@ export function damageCategoryForType(type) {
   return TYPE_TO_DAMAGE_CATEGORY[type] ?? null;
 }
 
+// Damage category → primary stat. Used by the default-attack multiplier.
+// Physical damage scales with Body, elemental with Essence, psychic with Soul.
+export const DAMAGE_CATEGORY_TO_PRIMARY_STAT = {
+  physical:  'body',
+  elemental: 'essence',
+  psychic:   'soul',
+};
+
+/**
+ * Primary stat key ('body' | 'essence' | 'soul') anchoring a law type, or
+ * null for types not tied to a specific primary (e.g. 'general').
+ */
+export function primaryStatForType(type) {
+  const cat = TYPE_TO_DAMAGE_CATEGORY[type];
+  return cat ? DAMAGE_CATEGORY_TO_PRIMARY_STAT[cat] : null;
+}
+
 // ─── Unique modifier pool ────────────────────────────────────────────────────
 
 export const LAW_UNIQUES = [

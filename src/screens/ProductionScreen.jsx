@@ -872,7 +872,9 @@ function RefiningPanel({ inventory, artefacts, techniques, cultivation }) {
       techniques.addOwnedTechnique(tech);
       resultName = tech.name;
     } else if (type === 'law') {
-      const law = generateLaw(rarity);
+      // Pass the player's current realm so soul-anchored types are gated
+      // out pre-Saint.
+      const law = generateLaw(rarity, cultivation.realmIndex);
       cultivation.addOwnedLaw(law);
       resultName = law.name;
     }

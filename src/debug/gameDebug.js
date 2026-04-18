@@ -206,10 +206,11 @@ export function initDebug(hooksRef) {
      */
     giveLaws(count = 10) {
       const cult = g().cultivation;
+      const realmIndex = cult.indexRef?.current ?? cult.realmIndex ?? 0;
       for (let i = 0; i < count; i++) {
-        cult.addOwnedLaw(generateLaw());
+        cult.addOwnedLaw(generateLaw(undefined, realmIndex));
       }
-      console.log(`[debug] +${count} random laws`);
+      console.log(`[debug] +${count} random laws (realm ${realmIndex})`);
     },
 
     // ── Qi Crystal ────────────────────────────────────────────────────────

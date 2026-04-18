@@ -245,7 +245,18 @@ export default function useCombat() {
 
         // Basic attack if no technique fired
         if (!techFired) {
-          let dmg = Math.max(5, Math.floor(s.stats.essence + s.stats.body));
+          // Law typeMults scale each primary stat individually. Uncovered
+          // categories are 0 so stats the law doesn't anchor contribute
+          // nothing to the basic attack.
+          const tm = s.stats.law?.typeMults ?? { essence: 0, body: 0, soul: 0 };
+          let dmg = Math.max(
+            5,
+            Math.floor(
+              s.stats.essence * (tm.essence ?? 0)
+              + s.stats.body    * (tm.body    ?? 0)
+              + s.stats.soul    * (tm.soul    ?? 0)
+            )
+          );
           // Exploit also applies to basic attacks.
           const exChance = s.stats.exploitChance ?? 0;
           const exMult   = s.stats.exploitMult   ?? 150;

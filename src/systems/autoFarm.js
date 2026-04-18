@@ -122,7 +122,17 @@ function rollDrops(drops) {
  */
 function estimateDps(stats, equippedTechs) {
   const { essence = 0, soul = 0, body = 0, lawElement = 'Normal', law = null, damageStats = null } = stats;
-  const basicDmg = Math.max(5, Math.floor(essence + body));
+  // Basic attack follows the law's per-stat typeMults; uncovered categories
+  // are 0 so stats without a matching law type drop out.
+  const tm = law?.typeMults ?? { essence: 0, body: 0, soul: 0 };
+  const basicDmg = Math.max(
+    5,
+    Math.floor(
+      essence * (tm.essence ?? 0)
+      + body    * (tm.body    ?? 0)
+      + soul    * (tm.soul    ?? 0)
+    )
+  );
   const basicDps = basicDmg / TURN_TIME_SEC;
 
   // Sum DPS contribution from each equipped attack technique

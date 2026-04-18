@@ -14,9 +14,14 @@
  */
 
 import { MOD } from './stats';
-import { pickRandomUnique } from './lawUniques';
+import { pickRandomUnique, primaryStatForType } from './lawUniques';
 import { rollArtefactUnique, ARTEFACT_UNIQUES } from './uniqueModifiers';
 import { mergeSingleton } from './config/loader';
+
+// Realm index at which Soul unlocks — mirrors SAINT_INDEX in src/data/stats.js.
+// Soul-anchored law types (spirit/void/dao) may not roll before this realm.
+const SAINT_INDEX = 24;
+const SOUL_ANCHORED_TYPES = new Set(['spirit', 'void', 'dao']);
 
 // ─── Slot counts ──────────────────────────────────────────────────────────────
 
@@ -355,10 +360,50 @@ const ELEMENT_TO_TYPES = {
   // general-only. Designer can edit law records to override.
 };
 
-export function generateLaw(forcedRarity) {
+// Per-category default-attack multiplier roll ranges, by law rarity.
+// The roll is the TOTAL multiplier for a primary stat the law covers, not a
+// per-type increment. A law with `types: ['fire']` rolls once in the Essence
+// slot; a law with `types: ['fire', 'water']` also rolls just once (both
+// types anchor to Essence, so they share the slot). Categories the law
+// doesn't cover default to 0.
+export const LAW_TYPE_MULT_RANGES = {
+  Iron:         [1.10, 1.30],
+  Bronze:       [1.20, 1.60],
+  Silver:       [1.40, 2.00],
+  Gold:         [1.70, 2.60],
+  Transcendent: [2.20, 3.50],
+};
+
+/**
+ * Roll per-primary-stat multipliers for a law given its `types` and rarity.
+ * Each covered category gets one roll in the rarity's range; uncovered
+ * categories are 0 so the default-attack formula collapses their term.
+ */
+export function rollLawTypeMults(types, rarity) {
+  const [min, max] = LAW_TYPE_MULT_RANGES[rarity] ?? LAW_TYPE_MULT_RANGES.Iron;
+  const covered = new Set();
+  for (const t of types ?? []) {
+    const stat = primaryStatForType(t);
+    if (stat) covered.add(stat);
+  }
+  const roll = () => Math.round((min + Math.random() * (max - min)) * 100) / 100;
+  return {
+    essence: covered.has('essence') ? roll() : 0,
+    body:    covered.has('body')    ? roll() : 0,
+    soul:    covered.has('soul')    ? roll() : 0,
+  };
+}
+
+export function generateLaw(forcedRarity, realmIndex = Infinity) {
   const rarity  = forcedRarity ?? pick(LAW_RARITIES);
   const element = pick(LAW_ELEMENTS);
-  const types   = ELEMENT_TO_TYPES[element] ?? ['general'];
+  let types     = ELEMENT_TO_TYPES[element] ?? ['general'];
+
+  // Soul-anchored types only drop once Soul is unlocked.
+  if (realmIndex < SAINT_INDEX) {
+    const filtered = types.filter(t => !SOUL_ANCHORED_TYPES.has(t));
+    types = filtered.length ? filtered : ['general'];
+  }
 
   const rarityTiers = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
   const rarityIdx = rarityTiers.indexOf(rarity);
@@ -380,6 +425,7 @@ export function generateLaw(forcedRarity) {
     name:                  genLawName(),
     element,
     types,
+    typeMults:             rollLawTypeMults(types, rarity),
     rarity,
     realmRequirement:      0,
     realmRequirementLabel: LAW_REALM_LABELS[rarity] ?? 'Tempered Body',
