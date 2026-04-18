@@ -149,10 +149,10 @@
   pointer-events: none;
 }
 
-/* Toast stack — sits above navbar */
+/* Toast stack — top center, below safe area */
 .toast-stack {
   position: fixed;
-  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);
+  top: calc(env(safe-area-inset-top) + 8px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -192,7 +192,7 @@
 }
 
 @keyframes toast-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
