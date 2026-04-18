@@ -42,9 +42,7 @@ const GEAR_SLOTS = [
   { id: 'body',   type: 'body',   col: 2, row: 3 },
   { id: 'hands',  type: 'hands',  col: 3, row: 3 },
   { id: 'waist',  type: 'waist',  col: 2, row: 4 },
-  { id: 'ring_3', type: 'ring',   col: 1, row: 5 },
   { id: 'feet',   type: 'feet',   col: 2, row: 5 },
-  { id: 'ring_4', type: 'ring',   col: 3, row: 5 },
 ];
 
 const SLOT_LABELS = ['I', 'II', 'III'];
