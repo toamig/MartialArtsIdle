@@ -79,16 +79,41 @@ function RegionRow({ region, tab, locked, lockHint, onNavigate, worldId,
   const { t: tGame }  = useTranslation('game');
 
   const isWorld = tab === 'world';
-  const content = isWorld
-    ? { secondary: `${t('worlds.drops')} ${region.drops}` }
-    : tab === 'gather'
-    ? { primary: region.herbs }
-    : { primary: region.ores };
 
   // Deduplicate enemy IDs (a pool may have the same enemy at different weights).
   const enemyIds = isWorld
     ? [...new Set((region.enemyPool ?? []).map(e => e.enemyId))]
     : [];
+
+  // Combat drops are per-enemy (enemies.js). Aggregate the unique item IDs
+  // that can drop across all enemies in this region's pool.
+  const combatDropNames = isWorld
+    ? (() => {
+        const seen = new Set();
+        const names = [];
+        for (const id of enemyIds) {
+          const def = ENEMIES[id];
+          for (const d of (def?.drops ?? [])) {
+            if (seen.has(d.itemId)) continue;
+            seen.add(d.itemId);
+            const mat = ALL_MATERIALS[d.itemId];
+            const name = mat
+              ? tGame(`items.${d.itemId}.name`, { defaultValue: mat.name })
+              : d.itemId;
+            names.push(name);
+          }
+        }
+        return names;
+      })()
+    : [];
+
+  const content = isWorld
+    ? { secondary: combatDropNames.length
+          ? `${t('worlds.drops')} ${combatDropNames.join(', ')}`
+          : null }
+    : tab === 'gather'
+    ? { primary: region.herbs }
+    : { primary: region.ores };
 
   const regionName    = locked ? '???' : tGame(`regions.${region.name}.name`, { defaultValue: region.name });
   const minRealmLabel = tGame(`stages.${region.minRealm}.name`, { defaultValue: region.minRealm });
