@@ -5663,19 +5663,31 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Jade Shop Modal ─────────────────────────────────────────────────────── */
+/* ── Jade Shop Card ──────────────────────────────────────────────────────── */
 
-.jade-shop-modal {
-  background: #12112a;
-  border: 1px solid rgba(245, 200, 66, 0.3);
+/* Floating card — anchored below the HUD, no overlay */
+.jade-shop-card {
+  position: fixed;
+  top: 52px; /* just below the top HUD bar */
+  left: 8px;
+  z-index: 200;
+  background: rgba(14, 12, 30, 0.97);
+  border: 1px solid rgba(245, 200, 66, 0.35);
   border-radius: 16px;
-  width: min(420px, 92vw);
-  max-height: 88svh;
+  width: min(380px, calc(100vw - 16px));
+  max-height: calc(100svh - 70px);
   overflow-y: auto;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  animation: jade-shop-in 0.18s ease-out;
+}
+
+@keyframes jade-shop-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .jade-shop-header {
