@@ -2,12 +2,20 @@
  * affixPools.js — per-slot affix definitions for artefact transmutation.
  *
  * Each entry: { id, name, stat, type, ranges: { Iron: [min,max], ... } }
- * Slot counts: base 3 at Iron, +2 per quality tier above that.
- * Items are generated with 1 affix; the rest must be filled via Add.
+ * Artefact slot layout: 2 Iron + 1 Bronze + 1 Silver + 1 Gold + 1 Transcendent
+ * (capped at the item's rarity). Artefacts spawn with all visible tier slots
+ * already filled; affix ids never repeat within the same item.
+ *
+ * Uniqueness:
+ *   - On creation, 2% chance that one Iron slot rolls an artefact-unique.
+ *   - Transcendent slots merge the normal pool with artefact uniques
+ *     (uniform weighting) for picks at creation and on Add.
+ *   - Hone and Replace never roll a unique; unique affixes are locked.
  */
 
 import { MOD } from './stats';
 import { pickRandomUnique } from './lawUniques';
+import { rollArtefactUnique, ARTEFACT_UNIQUES } from './uniqueModifiers';
 import { mergeSingleton } from './config/loader';
 
 // ─── Slot counts ──────────────────────────────────────────────────────────────
@@ -16,10 +24,36 @@ export const AFFIX_SLOT_COUNT = {
   Iron: 3, Bronze: 5, Silver: 7, Gold: 9, Transcendent: 11,
 };
 
-// Per-tier slot limits (Iron has 3 slots, all higher tiers have 2 each).
+// Per-tier slot limits — applies to techniques (which share this shape).
+// Artefacts have their own, tighter schedule below.
 export const TIER_SLOT_COUNT = {
   Iron: 3, Bronze: 2, Silver: 2, Gold: 2, Transcendent: 2,
 };
+
+// Per-tier slot limits for ARTEFACTS ONLY.
+// An artefact has 2 Iron slots + 1 per higher rarity = 6 total at Transcendent.
+export const ARTEFACT_TIER_SLOTS = {
+  Iron: 2, Bronze: 1, Silver: 1, Gold: 1, Transcendent: 1,
+};
+
+// The rarities an artefact of this rarity has unlocked, lowest to highest.
+const RARITY_ORDER = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
+export function artefactTierSlotSchedule(rarity) {
+  const cap = RARITY_TIER[rarity] ?? 1;
+  return RARITY_ORDER.slice(0, cap).map(tier => ({
+    tier,
+    count: ARTEFACT_TIER_SLOTS[tier] ?? 0,
+  }));
+}
+
+/** Total affix-slot capacity for an artefact of the given rarity. */
+export function artefactTotalSlots(rarity) {
+  return artefactTierSlotSchedule(rarity).reduce((s, t) => s + t.count, 0);
+}
+
+// Probability that a freshly generated artefact rolls one of its Iron slots
+// as an artefact-unique affix instead of a normal one.
+export const UNIQUE_ON_CREATION_CHANCE = 0.02;
 
 // ─── Rarity tiers (for cost calculation) ────────────────────────────────────
 
@@ -146,7 +180,8 @@ export function rollAffix(entry, rarity) {
   return { id: entry.id, name: entry.name, stat: entry.stat, type: entry.type, value, tier: rarity };
 }
 
-/** Pick a random affix from the slot pool, avoiding already-used ids. */
+/** Pick a random NORMAL affix (never unique) from the slot pool, avoiding
+ *  already-used ids. Use for Hone/Replace and for non-Transcendent Add. */
 export function pickRandomAffix(slot, rarity, excludeIds = []) {
   const pool = (AFFIX_POOL_BY_SLOT[slot] ?? []).filter(e => !excludeIds.includes(e.id));
   if (!pool.length) return null;
@@ -154,13 +189,84 @@ export function pickRandomAffix(slot, rarity, excludeIds = []) {
   return rollAffix(entry, rarity);
 }
 
-/** Generate the initial set of affixes for a newly acquired item.
- *  Items start with just 1 affix — the rest must be added via transmutation. */
+/**
+ * Pick an affix for an artefact tier slot, honouring item-wide uniqueness
+ * (no id can repeat anywhere on the item).
+ *
+ * On the Transcendent tier the candidate pool is merged with the artefact
+ * unique pool so unique picks are possible with uniform weighting.
+ * On non-Transcendent tiers only normal affixes are rolled.
+ *
+ * @param {string} slot         Artefact slot (weapon, head, body, ...).
+ * @param {string} tier         The rarity label for the slot being filled.
+ * @param {string[]} excludeIds Affix ids already used anywhere on the item.
+ * @returns {object|null}
+ */
+export function pickArtefactAffix(slot, tier, excludeIds = []) {
+  const normals = (AFFIX_POOL_BY_SLOT[slot] ?? []).filter(e => !excludeIds.includes(e.id));
+  if (tier === 'Transcendent') {
+    const totalNormals = normals.length;
+    // Uniques share the same pool (uniform weighting) at Transcendent.
+    // We pick uniformly across the merged candidates so that the chance of
+    // rolling a unique is `uniquesAvailable / (normals + uniques)`.
+    // Defer the unique lookup to rollArtefactUnique which handles filtering.
+    // Simulate merged uniform draw: decide slot among normals+uniques.
+    const uniquesAvailable = ARTEFACT_UNIQUES.filter(
+      u => u.slot === slot && !excludeIds.includes(u.id)
+    ).length;
+    const total = totalNormals + uniquesAvailable;
+    if (total === 0) return null;
+    const idx = Math.floor(Math.random() * total);
+    if (idx < totalNormals) {
+      return rollAffix(normals[idx], tier);
+    }
+    return rollArtefactUnique(slot, tier, excludeIds);
+  }
+  if (!normals.length) return null;
+  const entry = normals[Math.floor(Math.random() * normals.length)];
+  return rollAffix(entry, tier);
+}
+
+/**
+ * Generate the full affix array for a freshly acquired artefact of the given
+ * rarity. All visible tier slots are filled (no empties). Affix ids are
+ * unique across the whole item. There is a flat UNIQUE_ON_CREATION_CHANCE
+ * probability that one of the two Iron slots rolls an artefact-unique
+ * instead of a normal affix.
+ */
 export function generateAffixes(slot, rarity) {
-  const pool = AFFIX_POOL_BY_SLOT[slot] ?? [];
-  if (!pool.length) return [];
-  const entry = pool[Math.floor(Math.random() * pool.length)];
-  return [rollAffix(entry, rarity)];
+  const schedule = artefactTierSlotSchedule(rarity);
+  const used = [];
+  const affixes = [];
+
+  // Optionally upgrade one Iron slot to a unique up-front so we reserve its id
+  // and don't risk picking the same unique twice in other slots.
+  let ironUniqueSlot = -1;
+  if (Math.random() < UNIQUE_ON_CREATION_CHANCE) {
+    const ironSlots = schedule.find(s => s.tier === 'Iron')?.count ?? 0;
+    if (ironSlots > 0) {
+      ironUniqueSlot = Math.floor(Math.random() * ironSlots);
+    }
+  }
+
+  let ironSeen = 0;
+  for (const { tier, count } of schedule) {
+    for (let i = 0; i < count; i++) {
+      let affix = null;
+      if (tier === 'Iron' && ironSeen === ironUniqueSlot) {
+        affix = rollArtefactUnique(slot, 'Iron', used);
+      }
+      if (!affix) {
+        affix = pickArtefactAffix(slot, tier, used);
+      }
+      if (affix) {
+        used.push(affix.id);
+        affixes.push(affix);
+      }
+      if (tier === 'Iron') ironSeen++;
+    }
+  }
+  return affixes;
 }
 
 // ─── Law multiplier ranges ────────────────────────────────────────────────────

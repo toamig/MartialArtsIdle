@@ -47,6 +47,18 @@ export function getActiveBrackets(rarity) {
   return SLOT_BRACKETS.slice(0, tier);
 }
 
+// ── Artefact-only bracket view ────────────────────────────────────────────────
+// Artefacts have 2 Iron slots + 1 per higher rarity. Techniques / laws still
+// use the original SLOT_BRACKETS counts via getActiveBrackets() above.
+const ARTEFACT_BRACKET_COUNTS = { Iron: 2, Bronze: 1, Silver: 1, Gold: 1, Transcendent: 1 };
+
+export function getActiveArtefactBrackets(rarity) {
+  return getActiveBrackets(rarity).map(b => ({
+    ...b,
+    count: ARTEFACT_BRACKET_COUNTS[b.label] ?? b.count,
+  }));
+}
+
 // ── Transmutation operation quantities ───────────────────────────────────────
 // Number of minerals consumed per operation type.
 // Dev panel: expose and edit these to tune transmutation economy.

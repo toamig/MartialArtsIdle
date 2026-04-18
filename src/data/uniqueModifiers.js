@@ -556,6 +556,39 @@ export function artefactUniquesBySlot(slot) {
   return ARTEFACT_UNIQUES.filter(u => u.slot === slot);
 }
 
+/**
+ * Roll a fresh artefact-unique affix for a given slot. Returns an affix-shaped
+ * object tagged `unique: true` so the equipment / transmutation UI can render
+ * it distinctly. Unique affixes carry a pre-formatted description instead of
+ * the usual (stat, type, value) triple — the value still rolls inside the
+ * unique's declared range for display.
+ *
+ * @param {string} slot          Artefact slot id (weapon, head, body, ...).
+ * @param {string} tier          Rarity tier to stamp on the affix (Iron/Transcendent/...).
+ * @param {string[]} excludeIds  Affix ids already used on the item (prevents dupes).
+ * @returns {object|null}        Affix-shaped object or null if no candidates left.
+ */
+export function rollArtefactUnique(slot, tier = 'Iron', excludeIds = []) {
+  const candidates = ARTEFACT_UNIQUES.filter(
+    u => u.slot === slot && !excludeIds.includes(u.id)
+  );
+  if (!candidates.length) return null;
+  const u = candidates[Math.floor(Math.random() * candidates.length)];
+  const { min, max } = u.range;
+  const value = Math.floor(min + Math.random() * (max - min + 1));
+  const description = (u.description ?? '').replace(/\{value\}/g, value);
+  return {
+    id:          u.id,
+    name:        u.name,
+    stat:        null,
+    type:        null,
+    value,
+    tier,
+    unique:      true,
+    description,
+  };
+}
+
 /** Get technique uniques for a type. */
 export function techniqueUniquesByType(type) {
   return TECHNIQUE_UNIQUES[type] ?? [];

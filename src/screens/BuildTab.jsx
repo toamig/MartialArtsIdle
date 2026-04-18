@@ -21,7 +21,11 @@ const STAT_KEYS = {
   exploit_chance:   'statNames.exploit_chance',
 };
 
+// Unique-affix accent — mirrors ProductionScreen's UNIQUE_COLOR.
+const ARTEFACT_UNIQUE_COLOR = '#ff7ae6';
+
 function formatBonus(b, t) {
+  if (b.unique) return b.description ?? b.name ?? '';
   const label = t(STAT_KEYS[b.stat] ?? 'statNames.defense', { defaultValue: b.stat.replace(/_/g, ' ') });
   if (b.type === MOD.INCREASED) return `+${Math.round(b.value * 100)}% ${label}`;
   if (b.type === MOD.MORE)      return `×${b.value.toFixed(2)} ${label}`;
@@ -69,7 +73,13 @@ function ArtefactTooltip({ artefact, affixes, style }) {
       {affixes && affixes.length > 0 && (
         <div className="art-tooltip-section art-tooltip-affixes">
           {affixes.map((a, i) => (
-            <span key={i} className="art-tooltip-line art-tooltip-affix">{formatBonus(a, t)}</span>
+            <span
+              key={i}
+              className={`art-tooltip-line art-tooltip-affix${a.unique ? ' art-tooltip-affix-unique' : ''}`}
+              style={a.unique ? { color: ARTEFACT_UNIQUE_COLOR } : undefined}
+            >
+              {a.unique && '★ '}{formatBonus(a, t)}
+            </span>
           ))}
         </div>
       )}

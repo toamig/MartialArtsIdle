@@ -20,6 +20,7 @@ import { LAW_NEXT_RARITY } from '../hooks/useCultivation';
 import {
   SLOT_BRACKETS,
   getActiveBrackets,
+  getActiveArtefactBrackets,
   getBracketCost as bracketCost,
   UPGRADE_COSTS,
   REFINE_COSTS,
@@ -31,8 +32,8 @@ import {
  * when the tier is below its limit. The same affix ID can repeat across
  * different tiers (e.g. Iron Sharpness + Bronze Sharpness).
  */
-function buildBracketSlots(items, rarity) {
-  const brackets = getActiveBrackets(rarity);
+function buildBracketSlots(items, rarity, bracketsProvider = getActiveBrackets) {
+  const brackets = bracketsProvider(rarity);
   return brackets.map(b => {
     const slots = [];
     items.forEach((item, gIdx) => {
@@ -73,7 +74,12 @@ const STAT_LABELS = {
   exploit_chance:    'Exploit %',
 };
 
+// Artefact-unique affix accent — distinct from any rarity colour so uniques
+// are instantly recognisable on an item card.
+const UNIQUE_COLOR = '#ff7ae6';
+
 function formatAffixValue(affix) {
+  if (affix.unique) return affix.description ?? affix.name;
   const label = STAT_LABELS[affix.stat] ?? affix.stat;
   if (affix.type === MOD.INCREASED) {
     return `+${Math.round(affix.value * 100)}% ${label}`;
@@ -137,31 +143,39 @@ function CostRow({ itemId, needed, owned }) {
 // ─── Modifier rows ────────────────────────────────────────────────────────────
 
 function AffixRow({ affix, gIdx, color, mineralStat, mineralMod, craftCount = 0, inventory, onHone, onReplace }) {
+  const isUnique = !!affix.unique;
+  const rowColor = isUnique ? UNIQUE_COLOR : color;
   const honeCosts    = bracketCost(mineralStat, mineralMod, 'hone',    craftCount);
   const replaceCosts = bracketCost(mineralStat, mineralMod, 'replace', craftCount);
   return (
-    <div className="tx-mod-row" style={{ borderLeft: `3px solid ${color}` }}>
+    <div
+      className={`tx-mod-row${isUnique ? ' tx-mod-row-unique' : ''}`}
+      style={{ borderLeft: `3px solid ${rowColor}` }}
+    >
       <div className="tx-mod-left">
-        <span className="tx-mod-value" style={{ color }}>{formatAffixValue(affix)}</span>
+        {isUnique && <span className="tx-mod-unique-tag" style={{ color: rowColor }}>★ {affix.name}</span>}
+        <span className="tx-mod-value" style={{ color: rowColor }}>{formatAffixValue(affix)}</span>
       </div>
-      <div className="tx-mod-actions">
-        <button
-          className={`tx-craft-btn ${canAfford(honeCosts, inventory) ? '' : 'tx-craft-btn-disabled'}`}
-          onClick={() => { if (canAfford(honeCosts, inventory)) { spend(honeCosts, inventory); onHone(gIdx); } }}
-          title="Hone — randomize value"
-        >
-          ⟳
-          <CostBadge costs={honeCosts} inventory={inventory} />
-        </button>
-        <button
-          className={`tx-craft-btn ${canAfford(replaceCosts, inventory) ? '' : 'tx-craft-btn-disabled'}`}
-          onClick={() => { if (canAfford(replaceCosts, inventory)) { spend(replaceCosts, inventory); onReplace(gIdx); } }}
-          title="Replace — swap for a different modifier"
-        >
-          ↺
-          <CostBadge costs={replaceCosts} inventory={inventory} />
-        </button>
-      </div>
+      {!isUnique && (
+        <div className="tx-mod-actions">
+          <button
+            className={`tx-craft-btn ${canAfford(honeCosts, inventory) ? '' : 'tx-craft-btn-disabled'}`}
+            onClick={() => { if (canAfford(honeCosts, inventory)) { spend(honeCosts, inventory); onHone(gIdx); } }}
+            title="Hone — randomize value"
+          >
+            ⟳
+            <CostBadge costs={honeCosts} inventory={inventory} />
+          </button>
+          <button
+            className={`tx-craft-btn ${canAfford(replaceCosts, inventory) ? '' : 'tx-craft-btn-disabled'}`}
+            onClick={() => { if (canAfford(replaceCosts, inventory)) { spend(replaceCosts, inventory); onReplace(gIdx); } }}
+            title="Replace — swap for a different modifier"
+          >
+            ↺
+            <CostBadge costs={replaceCosts} inventory={inventory} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -296,10 +310,10 @@ function ArtefactDetail({ inst, artefacts, inventory }) {
   const rarity = inst.rarity ?? art?.rarity ?? 'Iron';
   const q      = artQuality(rarity);
   const affixes  = inst.affixes ?? [];
-  const brackets = buildBracketSlots(affixes, rarity);
+  const brackets = buildBracketSlots(affixes, rarity, getActiveArtefactBrackets);
 
   const totalFilled = affixes.length;
-  const totalCapacity = getActiveBrackets(rarity).reduce((s, b) => s + b.count, 0);
+  const totalCapacity = getActiveArtefactBrackets(rarity).reduce((s, b) => s + b.count, 0);
   const nextRar     = ARTEFACT_NEXT_RARITY[rarity];
   const nextQ       = nextRar ? artQuality(nextRar) : null;
 

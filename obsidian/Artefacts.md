@@ -23,15 +23,28 @@ Eight equipment slots total: one **Weapon** and seven **Armour** slots.
 
 ## Quality & Affix Count
 
-Quality determines how many affixes an artefact can roll. Same scale as Laws and Secret Techniques.
+Every artefact has the same fixed slot layout: **2 Iron slots + 1 per higher quality** (so a Transcendent artefact has 6 total slots). Quality gates which slots are unlocked — an Iron item only has its 2 Iron slots, a Silver item has 2 Iron + 1 Bronze + 1 Silver, etc.
 
-| Quality | Affixes |
-|---|---|
-| Iron | 1 |
-| Bronze | 2 |
-| Silver | 3 |
-| Gold | 4 |
-| Transcendent | 5 |
+| Quality | Total slots | Iron | Bronze | Silver | Gold | Transcendent |
+|---|---|---|---|---|---|---|
+| Iron | 2 | 2 | — | — | — | — |
+| Bronze | 3 | 2 | 1 | — | — | — |
+| Silver | 4 | 2 | 1 | 1 | — | — |
+| Gold | 5 | 2 | 1 | 1 | 1 | — |
+| Transcendent | 6 | 2 | 1 | 1 | 1 | 1 |
+
+Authoritative constant: `ARTEFACT_TIER_SLOTS` in `src/data/affixPools.js`.
+
+### Item-wide uniqueness
+
+No affix id may repeat anywhere on the same item. This is stricter than the previous "per-tier" rule — rolling Iron Sharpness on one slot means no other slot on that item (any tier) can roll Sharpness.
+
+### Unique modifiers
+
+- **On creation:** 2% chance (global constant `UNIQUE_ON_CREATION_CHANCE`) that one of the two Iron slots rolls an **artefact-unique** instead of a normal affix. Uniques are drawn from `ARTEFACT_UNIQUES` (see `src/data/uniqueModifiers.js`) filtered by the item's slot type.
+- **Transcendent slot:** the candidate pool is the normal Transcendent affixes merged with slot-matching uniques at uniform weighting — Add transmutations on a Transcendent slot can therefore roll a unique.
+- **Locked:** unique affixes cannot be honed or replaced. Replace (reroll) can never produce a unique either.
+- **UI:** uniques render with the magenta accent `#ff7ae6` and a ★ tag so they're distinguishable from any rarity colour.
 
 ---
 
@@ -42,9 +55,12 @@ When an artefact is generated (dropped, found, or crafted):
 1. **Slot** is determined by the source (drop table, boss, etc.)
 2. **Quality** is rolled (weighted by zone tier — higher zones bias toward better quality)
 3. **Base stat** is applied (fixed per slot, scales with realm tier of the zone it drops in)
-4. For each **affix slot** (count per quality above):
-   - Pick one modifier from the slot's affix pool using **weighted random** (no duplicates)
-   - Roll a value within that modifier's range for the item's quality tier
+4. **All visible tier slots** are filled immediately (no empty slots on new items):
+   - For each tier slot up to the item's quality: pick a modifier the item doesn't already carry and roll a value within the modifier's range for that tier
+   - With `UNIQUE_ON_CREATION_CHANCE` (2%) probability, one of the two Iron slots is replaced with a slot-matching unique
+   - Transcendent slot's candidate pool includes uniques (uniform weighting)
+
+Players **start with no artefacts** — inventory and equipped loadout are both empty. Gear is acquired through refining or drops.
 
 ---
 
