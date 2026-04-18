@@ -47,14 +47,18 @@ export const JADE_PACKAGES = [
   { id: 'jade_6480', jade: 6480, price: '$99.99', label: 'Heaven\'s Fortune' },
 ];
 
-/** Stub — wire to Capacitor IAP / Google Play / App Store plugin later. */
 export async function purchaseJade(packageId) {
+  const { purchaseProduct } = await import('../iap/iapService');
   const pkg = JADE_PACKAGES.find(p => p.id === packageId);
   if (!pkg) return { ok: false, error: 'Unknown package' };
-  // TODO: trigger platform IAP flow, verify receipt server-side, then:
-  // addJade(pkg.jade);
-  console.warn('[jade] IAP not yet wired — package:', packageId);
-  return { ok: false, error: 'IAP not implemented' };
+  try {
+    await purchaseProduct(packageId);
+    addJade(pkg.jade);
+    return { ok: true, jade: pkg.jade };
+  } catch (err) {
+    if (err?.message?.includes('cancel')) return { ok: false, cancelled: true };
+    return { ok: false, error: err?.message ?? 'Purchase failed' };
+  }
 }
 
 // ── Jade costs ────────────────────────────────────────────────────────────────

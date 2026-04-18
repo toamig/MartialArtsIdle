@@ -7,6 +7,7 @@ import PillDrawer from '../components/PillDrawer';
 import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
 import CrystalFeedModal from '../components/CrystalFeedModal';
+import JadeShopModal from '../components/JadeShopModal';
 import { PILLS_BY_ID } from '../data/pills';
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
@@ -24,10 +25,10 @@ function getSpriteState(boosting, adBoostActive) {
 }
 
 // ── Top HUD bar ─────────────────────────────────────────────────────────────
-function HomeTopHud({ jadeBalance, onNavigate }) {
+function HomeTopHud({ jadeBalance, onNavigate, onOpenShop }) {
   return (
     <div className="home-top-hud">
-      <div className="home-hud-jade">
+      <button className="home-hud-jade" onClick={onOpenShop} aria-label="Blood Lotus Shop">
         <img
           src={`${BASE}sprites/items/blood_lotus.png`}
           className="home-hud-jade-icon"
@@ -35,7 +36,7 @@ function HomeTopHud({ jadeBalance, onNavigate }) {
           draggable="false"
         />
         <span className="home-hud-jade-amount">{jadeBalance ?? 0}</span>
-      </div>
+      </button>
       <div className="home-hud-spacer" />
       <button
         className="home-hud-settings"
@@ -335,6 +336,9 @@ function HomeScreen({
     try { return !localStorage.getItem(HOLD_HINT_SEEN_KEY); } catch { return true; }
   });
 
+  // ── Jade shop modal ──────────────────────────────────────────────────────
+  const [shopOpen, setShopOpen] = useState(false);
+
   // ── Crystal feed modal ───────────────────────────────────────────────────
   const [crystalModalOpen, setCrystalModalOpen] = useState(false);
 
@@ -396,7 +400,7 @@ function HomeScreen({
       )}
 
       {/* ── Top HUD bar: jade balance + settings ─────────────────────── */}
-      <HomeTopHud jadeBalance={jadeBalance} onNavigate={onNavigate} />
+      <HomeTopHud jadeBalance={jadeBalance} onNavigate={onNavigate} onOpenShop={() => setShopOpen(true)} />
 
       {/* ── Scene: fills all space between HUD and nav bar ───────────── */}
       <div className="home-scene">
@@ -547,6 +551,14 @@ function HomeScreen({
         defaultTab="combat"
         pills={pills}
       />
+
+      {/* Jade shop modal */}
+      {shopOpen && (
+        <JadeShopModal
+          onClose={() => setShopOpen(false)}
+          onBalanceChange={() => {}}
+        />
+      )}
 
       {/* Crystal feed modal */}
       {crystalModalOpen && isCrystalUnlocked && (

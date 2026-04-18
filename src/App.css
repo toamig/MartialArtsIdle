@@ -1050,7 +1050,10 @@
   font-size: 13px;
   font-weight: 700;
   color: #f5c842;
+  cursor: pointer;
+  transition: background 0.15s;
 }
+.home-hud-jade:hover { background: rgba(245, 200, 66, 0.20); }
 
 .home-hud-jade-icon {
   width: 22px;
@@ -5659,3 +5662,146 @@
   font-size: 0.68rem;
   font-variant-numeric: tabular-nums;
 }
+
+/* ── Jade Shop Modal ─────────────────────────────────────────────────────── */
+
+.jade-shop-modal {
+  background: #12112a;
+  border: 1px solid rgba(245, 200, 66, 0.3);
+  border-radius: 16px;
+  width: min(420px, 92vw);
+  max-height: 88svh;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.jade-shop-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jade-shop-icon {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  filter: brightness(1.3);
+}
+
+.jade-shop-title {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 700;
+  color: #f5c842;
+}
+
+.jade-shop-close {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.jade-shop-close:hover { color: #fff; }
+
+.jade-shop-success {
+  background: rgba(80, 200, 120, 0.15);
+  border: 1px solid rgba(80, 200, 120, 0.4);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #6ee7a0;
+  text-align: center;
+}
+
+.jade-shop-error {
+  background: rgba(220, 80, 80, 0.15);
+  border: 1px solid rgba(220, 80, 80, 0.4);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #f08080;
+  text-align: center;
+}
+
+.jade-shop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.jade-shop-item {
+  position: relative;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(245, 200, 66, 0.2);
+  border-radius: 12px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.jade-shop-item:hover:not(:disabled) {
+  background: rgba(245, 200, 66, 0.08);
+  border-color: rgba(245, 200, 66, 0.5);
+}
+.jade-shop-item:disabled { opacity: 0.5; cursor: default; }
+.jade-shop-item-pending { opacity: 0.7; }
+
+.jade-shop-badge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f5c842;
+  color: #12112a;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.jade-shop-item-icon {
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+  filter: brightness(1.3);
+}
+
+.jade-shop-item-amount {
+  font-size: 20px;
+  font-weight: 800;
+  color: #f5c842;
+}
+
+.jade-shop-item-label {
+  font-size: 11px;
+  color: #aaa;
+  text-align: center;
+}
+
+.jade-shop-item-price {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.jade-shop-restore {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  color: #888;
+  font-size: 12px;
+  padding: 8px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.jade-shop-restore:hover { color: #ccc; }
