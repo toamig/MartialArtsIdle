@@ -217,6 +217,15 @@ export default function EternalTreeScreen({
                 <feGaussianBlur stdDeviation="3" result="blur"/>
                 <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
               </filter>
+              <filter id="et-glow-soft" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              {/* Arrow marker — uses context-stroke so it inherits the line colour */}
+              <marker id="et-arrow" viewBox="0 0 10 10" refX="8" refY="5"
+                markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="context-stroke" />
+              </marker>
             </defs>
 
             {EDGES.map(([srcId, tgtId]) => {
@@ -226,21 +235,33 @@ export default function EternalTreeScreen({
               const tgt = NODES.find(n => n.id === tgtId);
               const st  = edgeStateOf(srcId, tgtId);
               const rgb = branchColorOf(tgt?.branch ?? 'cross');
-              // Sealed YY edges always dimmed
               const isYY = tgt?.branch === 'yinyang';
               const effectiveSt = (isYY && !yyUnlocked) ? 'dim' : st;
+
+              // Stop the line at the edge of the target node so the arrow
+              // tip sits just outside the box rather than at the centre.
+              const STOP = tgt?.keystone ? 64 : 58;
+              const dx = p2.x - p1.x, dy = p2.y - p1.y;
+              const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+              const ex = p2.x - (dx / dist) * STOP;
+              const ey = p2.y - (dy / dist) * STOP;
+
               const stroke =
-                effectiveSt === 'active' ? `rgba(${rgb},0.8)` :
-                effectiveSt === 'lit'    ? `rgba(${rgb},0.45)` :
-                                           `rgba(${rgb},0.14)`;
-              const sw    = effectiveSt === 'active' ? 3 : 2;
-              const dash  = effectiveSt === 'dim' ? '5 5' : undefined;
+                effectiveSt === 'active' ? `rgba(${rgb},0.9)` :
+                effectiveSt === 'lit'    ? `rgba(${rgb},0.6)` :
+                                           `rgba(${rgb},0.18)`;
+              const sw   = effectiveSt === 'active' ? 3.5 : effectiveSt === 'lit' ? 2.5 : 1.5;
+              const dash = effectiveSt === 'dim' ? '6 5' : undefined;
+              const filter =
+                effectiveSt === 'active' ? 'url(#et-glow-f)' :
+                effectiveSt === 'lit'    ? 'url(#et-glow-soft)' : undefined;
               return (
                 <line key={`${srcId}-${tgtId}`}
-                  x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+                  x1={p1.x} y1={p1.y} x2={ex} y2={ey}
                   stroke={stroke} strokeWidth={sw}
                   strokeDasharray={dash} strokeLinecap="round"
-                  filter={effectiveSt === 'active' ? 'url(#et-glow-f)' : undefined}
+                  markerEnd="url(#et-arrow)"
+                  filter={filter}
                 />
               );
             })}
