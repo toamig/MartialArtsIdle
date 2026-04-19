@@ -1,29 +1,74 @@
 import { useState } from 'react';
 import { CULTIVATION_ITEMS, RARITY, getRefinedQi } from '../data/materials';
 
+const BASE = import.meta.env.BASE_URL;
+
+const TIER_THRESHOLDS = [1000, 750, 500, 350, 200, 100, 50, 25, 10, 1];
+const TIER_VALUES     = [  10,   9,   8,   7,   6,   5,  4,  3,  2, 1];
+
+function getCrystalTier(level) {
+  if (level <= 0) return null;
+  for (let i = 0; i < TIER_THRESHOLDS.length; i++) {
+    if (level >= TIER_THRESHOLDS[i]) return TIER_VALUES[i];
+  }
+  return 1;
+}
+
+function fmtRqi(n) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+  if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K';
+  return String(n);
+}
+
+function StoneCard({ stone, selected, onSelect }) {
+  const color = RARITY[stone.rarity]?.color ?? '#9ca3af';
+  return (
+    <button
+      className={`cfm-stone${selected ? ' cfm-stone-sel' : ''}`}
+      style={{ '--rarity-color': color }}
+      onClick={onSelect}
+    >
+      <span className="cfm-stone-rqi">+{fmtRqi(stone.refinedQiValue)}</span>
+      <span className="cfm-stone-name">{stone.name}</span>
+      <span className="cfm-stone-count">×{stone.qty}</span>
+    </button>
+  );
+}
+
 function CrystalFeedModal({ crystal, inventory, onClose }) {
   const [selectedItem, setSelectedItem] = useState(null);
-  const [feedQty, setFeedQty] = useState(1);
+  const [feedQty, setFeedQty]           = useState(1);
 
   const { level, refinedQi, requiredForNext, crystalQiBonus, feed } = crystal;
 
   const availableStones = CULTIVATION_ITEMS
     .map(item => ({
       ...item,
-      qty: inventory.getQuantity(item.id),
-      refinedQiValue: getRefinedQi(item.id),
+      qty:             inventory.getQuantity(item.id),
+      refinedQiValue:  getRefinedQi(item.id),
     }))
     .filter(s => s.qty > 0);
 
-  // Clear selection if the selected stone is no longer available
   const selectedStillAvailable = selectedItem && availableStones.some(s => s.id === selectedItem);
-  const effectiveSelected = selectedStillAvailable ? selectedItem : null;
-  const selectedOwned = effectiveSelected ? inventory.getQuantity(effectiveSelected) : 0;
+  const effectiveSelected      = selectedStillAvailable ? selectedItem : null;
+  const selectedStone          = effectiveSelected ? availableStones.find(s => s.id === effectiveSelected) : null;
+  const selectedOwned          = selectedStone?.qty ?? 0;
+  const rqiPerUnit             = selectedStone ? getRefinedQi(effectiveSelected) : 0;
+  const totalGain              = feedQty * rqiPerUnit;
+  const willLevelUp            = effectiveSelected && (refinedQi + totalGain) >= requiredForNext;
+
+  const pct      = requiredForNext > 0 ? Math.min(100, (refinedQi / requiredForNext) * 100) : 100;
+  const tier     = getCrystalTier(level);
+  const crystalSrc = tier
+    ? `${BASE}crystals/crystal_${tier}.png`
+    : `${BASE}crystals/crystal_locked.png`;
+
+  const clampQty = (next) => Math.max(1, Math.min(next, selectedOwned));
 
   const handleFeed = () => {
     if (!effectiveSelected || feedQty <= 0) return;
     feed(effectiveSelected, feedQty);
-    const remaining = inventory.getQuantity(effectiveSelected);
+    const remaining = inventory.getQuantity(effectiveSelected) - feedQty;
     if (remaining <= 0) {
       setSelectedItem(null);
       setFeedQty(1);
@@ -32,71 +77,87 @@ function CrystalFeedModal({ crystal, inventory, onClose }) {
     }
   };
 
+  const handleSelect = (id) => {
+    setSelectedItem(id);
+    setFeedQty(1);
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content crystal-feed-modal" onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>x</button>
+      <div className="cfm-modal" onClick={e => e.stopPropagation()}>
 
-        <h2 className="modal-title">Key Crystal</h2>
-
-        <div className="crystal-feed-info">
-          <span className="crystal-feed-level">Level {level}</span>
-          <span className="crystal-feed-bonus">+{crystalQiBonus} Qi/s</span>
-        </div>
-
-        <div className="crystal-feed-bar-wrap">
-          <div className="crystal-feed-bar">
-            <div
-              className="crystal-feed-bar-fill"
-              style={{ width: `${(refinedQi / requiredForNext) * 100}%` }}
-            />
+        {/* ── Header ── */}
+        <div className="cfm-header">
+          <img src={crystalSrc} className="cfm-crystal-img" alt="" draggable="false" />
+          <div className="cfm-header-text">
+            <div className="cfm-title">Key Crystal</div>
+            <div className="cfm-subtitle">Level {level}</div>
           </div>
-          <span className="crystal-feed-bar-label">
-            {refinedQi} / {requiredForNext} Refined QI
-          </span>
+          <div className="cfm-bonus-badge">
+            <span className="cfm-bonus-gem">◆</span>
+            +{crystalQiBonus} Qi/s
+          </div>
+          <button className="journey-close" onClick={onClose} aria-label="Close">✕</button>
         </div>
 
-        <div className="crystal-feed-stones">
-          {availableStones.length === 0 && (
-            <p className="crystal-feed-empty">No QI stones available</p>
-          )}
-          {availableStones.map(stone => (
-            <div
-              key={stone.id}
-              className={`crystal-feed-stone${effectiveSelected === stone.id ? ' crystal-feed-stone-selected' : ''}`}
-              onClick={() => { setSelectedItem(stone.id); setFeedQty(1); }}
-              role="button"
-            >
-              <span className="crystal-feed-stone-name" style={{ color: RARITY[stone.rarity]?.color }}>
-                {stone.name}
-              </span>
-              <span className="crystal-feed-stone-qty">x{stone.qty}</span>
-              <span className="crystal-feed-stone-val">+{stone.refinedQiValue}</span>
-            </div>
-          ))}
+        {/* ── Refinement progress ── */}
+        <div className="cfm-progress-wrap">
+          <div className="cfm-progress-track">
+            <div className="cfm-progress-fill" style={{ width: `${pct}%` }} />
+            {effectiveSelected && totalGain > 0 && (
+              <div
+                className="cfm-progress-preview"
+                style={{ width: `${Math.min(100, ((refinedQi + totalGain) / requiredForNext) * 100)}%` }}
+              />
+            )}
+          </div>
+          <div className="cfm-progress-labels">
+            <span>{fmtRqi(refinedQi)} / {fmtRqi(requiredForNext)} RQI</span>
+            <span className="cfm-progress-next">Level {level + 1}</span>
+          </div>
         </div>
 
-        {effectiveSelected && (
-          <div className="crystal-feed-actions">
-            <div className="crystal-feed-qty-row">
-              <button
-                className="crystal-feed-qty-btn"
-                onClick={() => setFeedQty(q => Math.max(1, q - 1))}
-                disabled={feedQty <= 1}
-              >−</button>
-              <span className="crystal-feed-qty-value">{feedQty}</span>
-              <button
-                className="crystal-feed-qty-btn"
-                onClick={() => setFeedQty(q => Math.min(q + 1, selectedOwned))}
-                disabled={feedQty >= selectedOwned}
-              >+</button>
-              <button
-                className="crystal-feed-qty-btn crystal-feed-max-btn"
-                onClick={() => setFeedQty(selectedOwned)}
-              >Max</button>
+        {/* ── Stone grid ── */}
+        <div className="cfm-section-label">Feed QI Stones</div>
+
+        {availableStones.length === 0 ? (
+          <div className="cfm-empty">
+            <span className="cfm-empty-icon">🪨</span>
+            <span>No QI stones available</span>
+            <span className="cfm-empty-hint">Mine or gather cultivation stones first</span>
+          </div>
+        ) : (
+          <div className="cfm-stone-grid">
+            {availableStones.map(stone => (
+              <StoneCard
+                key={stone.id}
+                stone={stone}
+                selected={effectiveSelected === stone.id}
+                onSelect={() => handleSelect(stone.id)}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* ── Controls ── */}
+        {effectiveSelected && selectedStone && (
+          <div className="cfm-controls">
+            <div className="cfm-controls-name" style={{ color: RARITY[selectedStone.rarity]?.color }}>
+              {selectedStone.name}
             </div>
-            <button className="crystal-feed-btn" onClick={handleFeed}>
-              Feed (+{feedQty * getRefinedQi(effectiveSelected)} RQI)
+            <div className="cfm-qty-row">
+              <button className="cfm-qty-btn" onClick={() => setFeedQty(q => clampQty(q - 1))} disabled={feedQty <= 1}>−</button>
+              <span className="cfm-qty-val">{feedQty}</span>
+              <button className="cfm-qty-btn" onClick={() => setFeedQty(q => clampQty(q + 1))} disabled={feedQty >= selectedOwned}>+</button>
+              <button className="cfm-qty-btn cfm-qty-step" onClick={() => setFeedQty(q => clampQty(q + 10))}>+10</button>
+              <button className="cfm-qty-btn cfm-qty-max" onClick={() => setFeedQty(selectedOwned)}>Max</button>
+            </div>
+            <div className="cfm-gain-preview">
+              Gain: <strong>+{fmtRqi(totalGain)} RQI</strong>
+              {willLevelUp && <span className="cfm-levelup-tag">Level Up!</span>}
+            </div>
+            <button className={`cfm-refine-btn${willLevelUp ? ' cfm-refine-levelup' : ''}`} onClick={handleFeed}>
+              {willLevelUp ? '⚡ Refine & Level Up' : '⚡ Refine'}
             </button>
           </div>
         )}
