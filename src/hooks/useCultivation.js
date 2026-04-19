@@ -36,7 +36,11 @@ const label = (r) => (r.stage ? `${r.name} - ${r.stage}` : r.name);
 
 export default function useCultivation() {
   const saved = loadGame();
-  const [realmIndex, setRealmIndex] = useState(saved?.realmIndex ?? 0);
+  const savedIndex = Math.min(
+    Math.max(0, saved?.realmIndex ?? 0),
+    REALMS.length - 1,
+  );
+  const [realmIndex, setRealmIndex] = useState(savedIndex);
   const [boosting, setBoosting] = useState(false);
   // Transient event set whenever a MAJOR realm transition fires — the home
   // screen renders a celebratory banner keyed on this id. Null otherwise.
@@ -187,9 +191,9 @@ export default function useCultivation() {
 
   // Mutable refs — updated every tick, no React re-render needed
   const qiRef      = useRef(saved?.qi ?? 0);
-  const costRef    = useRef(REALMS[saved?.realmIndex ?? 0].cost);
-  const maxedRef   = useRef(!REALMS[(saved?.realmIndex ?? 0) + 1]);
-  const indexRef   = useRef(saved?.realmIndex ?? 0);
+  const costRef    = useRef(REALMS[savedIndex].cost);
+  const maxedRef   = useRef(!REALMS[savedIndex + 1]);
+  const indexRef   = useRef(savedIndex);
   // Live cultivation rate (qi/s) — updated every tick for the HUD readout.
   const rateRef    = useRef(0);
   // When the player is qi-capped waiting for enough qi/s to ascend between

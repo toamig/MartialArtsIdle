@@ -121,6 +121,7 @@ export default function useCombat() {
    *                                       zone difficulty on a smooth 1.12×-per-index curve
    */
   const startFight = useCallback((stats, equippedTechs, enemyDef = null, onDrops = null, onTechniqueDrop = null, worldId = 1, regionIndex = 0) => {
+    if (stateRef.current.phase === 'fighting') return;
     const { essence, soul, body } = stats;
     const total  = essence + soul + body;
 
