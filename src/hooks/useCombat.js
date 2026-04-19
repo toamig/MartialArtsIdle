@@ -272,11 +272,19 @@ export default function useCombat() {
         if (!techFired) {
           // Law typeMults scale each primary stat individually. Uncovered
           // categories are 0 so stats the law doesn't anchor contribute
-          // nothing to the basic attack.
-          const tm = s.stats.law?.typeMults ?? { essence: 0, body: 0, soul: 0 };
-          let dmg = s.stats.essence * (tm.essence ?? 0)
-                  + s.stats.body    * (tm.body    ?? 0)
-                  + s.stats.soul    * (tm.soul    ?? 0);
+          // nothing to the basic attack. With no law equipped at all
+          // (fresh life / between picks) fall back to (body + essence) / 2
+          // so combat is functional without an active law.
+          const law = s.stats.law;
+          let dmg;
+          if (!law) {
+            dmg = (s.stats.body + s.stats.essence) / 2;
+          } else {
+            const tm = law.typeMults ?? { essence: 0, body: 0, soul: 0 };
+            dmg = s.stats.essence * (tm.essence ?? 0)
+                + s.stats.body    * (tm.body    ?? 0)
+                + s.stats.soul    * (tm.soul    ?? 0);
+          }
           // Universal damage_all flat (artefacts / law uniques).
           dmg += s.stats.damageStats?.damage_all ?? 0;
           // Source multiplier: default_attack_damage applies only to basic
