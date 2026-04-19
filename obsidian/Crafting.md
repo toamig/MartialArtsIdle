@@ -41,17 +41,17 @@ Seven operations, all using **minerals only**. Same operations apply to all thre
 
 Each mineral serves a specific crafting purpose. The tier of mineral required matches the quality of the operation.
 
-| Mineral | Rarity | Primary Use |
-|---|---|---|
-| Black Tortoise Iron | Uncommon | Low-tier operations; Refine base cost |
-| Crimson Flame Crystal | Uncommon | Mid-low operations; Upgrade to Bronze |
-| **Chaos Jade** | Uncommon | Hone — targeted single-property reroll |
-| Void Stone | Rare | Transmute; Upgrade to Silver |
-| Mithril Essence | Rare | Imbue — inscribing new properties |
-| Deep Sea Cold Iron | Rare | Seal — freezing a property in place |
-| Star Metal Ore | Epic | High-tier operations; Upgrade to Gold |
-| Skyfire Meteorite | Epic | Refine at epic/legendary quality |
-| Heavenly Profound Metal | Legendary | Upgrade to Transcendent |
+| Mineral                 | Rarity    | Primary Use                            |
+| ----------------------- | --------- | -------------------------------------- |
+| Black Tortoise Iron     | Uncommon  | Low-tier operations; Refine base cost  |
+| Crimson Flame Crystal   | Uncommon  | Mid-low operations; Upgrade to Bronze  |
+| **Chaos Jade**          | Uncommon  | Hone — targeted single-property reroll |
+| Void Stone              | Rare      | Transmute; Upgrade to Silver           |
+| Mithril Essence         | Rare      | Imbue — inscribing new properties      |
+| Deep Sea Cold Iron      | Rare      | Seal — freezing a property in place    |
+| Star Metal Ore          | Epic      | High-tier operations; Upgrade to Gold  |
+| Skyfire Meteorite       | Epic      | Refine at epic/legendary quality       |
+| Heavenly Profound Metal | Legendary | Upgrade to Transcendent                |
 
 ---
 

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Reincarnation.md",
-                "mode": "preview",
+                "file": "Ideation.md",
+                "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Reincarnation"
+              "title": "Ideation"
             }
           }
         ]
@@ -44,7 +44,7 @@
                 "autoReveal": false
               },
               "icon": "lucide-folder-closed",
-              "title": "Files"
+              "title": "Explorador de ficheiros"
             }
           },
           {
@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 270.5
+    "width": 300
   },
   "right": {
     "id": "e3cb3fb5a9fae5fc",
@@ -174,22 +174,25 @@
   },
   "left-ribbon": {
     "hiddenItems": {
-      "switcher:Open quick switcher": false,
-      "graph:Open graph view": false,
-      "canvas:Create new canvas": false,
-      "daily-notes:Open today's daily note": false,
-      "templates:Insert template": false,
-      "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "switcher:Abrir Quick Switcher": false,
+      "graph:Abrir Visualização de diagrama de grafo": false,
+      "canvas:Criar novo Canvas": false,
+      "daily-notes:Abrir nota de hoje": false,
+      "templates:Inserir templates": false,
+      "command-palette:Abrir paleta de comando": false,
+      "bases:Criar nova base": false
     }
   },
   "active": "c3aa73ef4da1bbd1",
   "lastOpenFiles": [
-    "Reincarnation.md.tmp.1432.1776491881863",
+    "Combat.md",
+    "Artefacts.md",
+    "Crafting.md",
+    "Implementation Notes.md",
+    "Primary Stats.md",
     "Stats.md",
     "Unique Modifiers - Review.md",
     "Ideation.md",
-    "Implementation Notes.md",
     "Implementation Notes.md.tmp.32808.1775778390583",
     "Realm Progression.md",
     "Realm Progression.md.tmp.32808.1775778308370",
@@ -197,7 +200,6 @@
     "Home.md.tmp.32808.1775778034735",
     "Implementation Notes.md.tmp.32808.1775778031323",
     "Cultivation System.md",
-    "Combat.md",
     "Combat.md.tmp.32808.1775778005946",
     "Primary Stats.md.tmp.32808.1775778000141",
     "Items.md.tmp.32808.1775777993269",
