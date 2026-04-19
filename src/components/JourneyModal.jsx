@@ -60,7 +60,7 @@ function JourneyModal({ realmIndex, onClose }) {
           <div className="journey-progress-label">
             {realmIndex + 1} / {REALMS.length} stages
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="journey-close" onClick={onClose} aria-label="Close">✕</button>
         </div>
 
         <div className="journey-progress-bar">
@@ -75,6 +75,8 @@ function JourneyModal({ realmIndex, onClose }) {
             const groupPast    = group.entries.every(e => e.index < realmIndex);
             const groupCurrent = group.entries.some(e => e.index === realmIndex);
             const groupFuture  = group.entries.every(e => e.index > realmIndex);
+            // Single-entry groups with no sub-stage label (e.g. Half-Step Open Heaven)
+            const noSubStages  = group.entries.length === 1 && !group.entries[0].stage;
 
             return (
               <div
@@ -86,35 +88,36 @@ function JourneyModal({ realmIndex, onClose }) {
                     {REALM_ICONS[group.name] ?? '•'}
                   </span>
                   <span className="journey-group-name">{group.name}</span>
-                  {groupPast && <span className="journey-group-done">✓</span>}
+                  {groupPast    && <span className="journey-group-done">✓</span>}
+                  {groupCurrent && noSubStages && <span className="js-dot-pulse jg-header-pulse" />}
                 </div>
 
-                <div className="journey-stages">
-                  {group.entries.map((entry) => {
-                    const isCurrent = entry.index === realmIndex;
-                    const isPast    = entry.index < realmIndex;
-                    const cls = `journey-stage${isCurrent ? ' js-current' : ''}${isPast ? ' js-past' : ''}`;
+                {!noSubStages && (
+                  <div className="journey-stages">
+                    {group.entries.map((entry, i) => {
+                      const isCurrent = entry.index === realmIndex;
+                      const isPast    = entry.index < realmIndex;
+                      const cls = `journey-stage${i === 0 ? ' js-first' : ''}${isCurrent ? ' js-current' : ''}${isPast ? ' js-past' : ''}`;
 
-                    return (
-                      <div
-                        key={entry.index}
-                        className={cls}
-                        ref={isCurrent ? currentRef : null}
-                      >
-                        <div className="js-dot">
-                          {isPast  && <span className="js-dot-check">✓</span>}
-                          {isCurrent && <span className="js-dot-pulse" />}
+                      return (
+                        <div
+                          key={entry.index}
+                          className={cls}
+                          ref={isCurrent ? currentRef : null}
+                        >
+                          <div className="js-dot">
+                            {isPast    && <span className="js-dot-check">✓</span>}
+                            {isCurrent && <span className="js-dot-pulse" />}
+                          </div>
+                          <div className="js-body">
+                            <span className="js-label">{entry.stage}</span>
+                            <span className="js-cost">{fmtQi(entry.cost)} Qi</span>
+                          </div>
                         </div>
-                        <div className="js-body">
-                          <span className="js-label">
-                            {entry.stage || entry.name}
-                          </span>
-                          <span className="js-cost">{fmtQi(entry.cost)} Qi</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}

@@ -32,7 +32,7 @@ function AchievementsModal({ achievements, onClose }) {
           <div className="ach-modal-progress">
             {achievements.unlockedCount} / {achievements.totalCount}
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="journey-close" onClick={onClose} aria-label="Close">✕</button>
         </div>
 
         <div className="ach-progress-bar">
