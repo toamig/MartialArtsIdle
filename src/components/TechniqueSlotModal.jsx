@@ -49,10 +49,10 @@ function TechniqueCard({ tech, equipped, locked, onClick }) {
           <span>{t('techniqueSlotModal.healPercent', { pct: Math.round((tech.healPercent ?? 0.25) * 100) })}</span>
         )}
         {tech.type === 'Defend' && (
-          <span>{t('techniqueSlotModal.defBuff', { mult: tech.defMult, dur: tech.buffDuration })}</span>
+          <span>{t('techniqueSlotModal.defBuff', { mult: tech.defMult, hits: tech.buffAttacks })}</span>
         )}
         {tech.type === 'Dodge' && (
-          <span>{t('techniqueSlotModal.dodgeBuff', { pct: Math.round((tech.dodgeChance ?? 0) * 100), dur: tech.buffDuration })}</span>
+          <span>{t('techniqueSlotModal.dodgeBuff', { pct: Math.round((tech.dodgeChance ?? 0) * 100), hits: tech.buffAttacks })}</span>
         )}
         {tech.element !== 'Normal' && (
           <span className="tech-element">

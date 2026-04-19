@@ -108,6 +108,7 @@
     "labelHeal":           "Cura",
     "labelDefMult":        "Mult. DEF",
     "labelDuration":       "Duração",
+    "labelBuffHits":       "Cobre",
     "labelDodgeChance":    "Chance de Esquiva",
     "labelElement":        "Elemento",
     "labelCultSpeed":      "Velocidade de Cultivo",
@@ -257,8 +258,8 @@
     "cooldown":     "Recarga {{cd}}s",
     "kMult":        "K ×{{k}}",
     "healPercent":  "Cura {{pct}}% de Vida",
-    "defBuff":      "DEF ×{{mult}} / {{dur}}s",
-    "dodgeBuff":    "{{pct}}% esquiva / {{dur}}s",
+    "defBuff":      "DEF ×{{mult}} / {{hits}} golpes",
+    "dodgeBuff":    "{{pct}}% esquiva / {{hits}} golpes",
     "requiresRealm":"Requer reino {{rank}}",
     "unequip":      "Desequipar"
   },

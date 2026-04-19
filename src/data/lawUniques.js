@@ -601,7 +601,7 @@ export const LAW_UNIQUES = [
   { id: 'l_slow_burn_combat',  range: { min: 300, max: 500 }, description: (v) => `${v}% increased Damage after 15s in combat.`,
     effects: [stat('damage_all', MOD.INCREASED, rolled, cCombatAbove(15))] },
 
-  { id: 'l_time_master',       range: { min: 20,  max: 40  }, description: (v) => `${v}% increased Buff Durations.`,
+  { id: 'l_time_master',       range: { min: 20,  max: 40  }, description: (v) => `${v}% more hits covered by Defend/Dodge buffs.`,
     effects: [stat('buff_duration', MOD.INCREASED, rolled)] },
 ];
 

@@ -110,6 +110,7 @@
     "labelHeal": "Heal",
     "labelDefMult": "DEF Mult",
     "labelDuration": "Duration",
+    "labelBuffHits": "Covers",
     "labelDodgeChance": "Dodge Chance",
     "labelElement": "Element",
     "labelCultSpeed": "Cultivation Speed",
@@ -254,8 +255,8 @@
     "cooldown": "CD {{cd}}s",
     "kMult": "K ×{{k}}",
     "healPercent": "Heal {{pct}}% HP",
-    "defBuff": "DEF ×{{mult}} / {{dur}}s",
-    "dodgeBuff": "{{pct}}% dodge / {{dur}}s",
+    "defBuff": "DEF ×{{mult}} / {{hits}} hits",
+    "dodgeBuff": "{{pct}}% dodge / {{hits}} hits",
     "requiresRealm": "Requires {{rank}} realm",
     "unequip": "Unequip"
   },

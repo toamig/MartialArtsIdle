@@ -11,6 +11,19 @@ function fmtHp(n) {
   return String(Math.ceil(n));
 }
 
+/**
+ * Resolve the number of enemy attacks a buff will cover.
+ *
+ * Base value comes from the technique's `buffAttacks`. If the stats bundle
+ * carries a `buffDurationMult` (fed by the buff_duration stat — e.g. the
+ * Time Master law unique grants +20–50% more charges), scale up and ceil.
+ * Always floors at 1 so a cast is never wasted.
+ */
+function resolveBuffAttacks(base, stats) {
+  const mult = stats?.buffDurationMult ?? 1;
+  return Math.max(1, Math.ceil(base * mult));
+}
+
 function rollDrops(drops) {
   if (!drops?.length) return [];
   const result = [];
@@ -46,8 +59,11 @@ export default function useCombat() {
     eHp: 0, eMaxHp: 0, eAtk: 0,
     cds:    [Infinity, Infinity, Infinity],
     maxCds: [Infinity, Infinity, Infinity],
-    defBuff:   { mult: 1, endsAt: 0 },
-    dodgeBuff: { chance: 0, endsAt: 0 },
+    // Both buffs now consume 1 charge per enemy attack instead of ticking
+    // on a wall-clock timer. A cast sets `attacksLeft`; the enemy turn
+    // decrements it after applying the effect (if any charges remain).
+    defBuff:   { mult: 1, attacksLeft: 0 },
+    dodgeBuff: { chance: 0, attacksLeft: 0 },
     stats:    null,
     equipped: [null, null, null],
   });
@@ -151,8 +167,8 @@ export default function useCombat() {
       eHp: eMaxHp, eMaxHp, eAtk,
       cds:    [...cds],
       maxCds: [...maxCds],
-      defBuff:   { mult: 1, endsAt: 0 },
-      dodgeBuff: { chance: 0, endsAt: 0 },
+      defBuff:   { mult: 1, attacksLeft: 0 },
+      dodgeBuff: { chance: 0, attacksLeft: 0 },
       stats:    { ...stats },
       equipped: [...equippedTechs],
       enemyDrops:       enemyDef?.drops ?? [],
@@ -237,11 +253,13 @@ export default function useCombat() {
             s.pHp = Math.min(s.pMaxHp, s.pHp + heal);
             logs.push({ msg: `${tech.name} → +${heal.toLocaleString()} HP`, kind: 'heal' });
           } else if (tech.type === 'Defend') {
-            s.defBuff = { mult: tech.defMult ?? 1.5, endsAt: nowSec + (tech.buffDuration ?? 5) };
-            logs.push({ msg: `${tech.name} → DEF ×${tech.defMult ?? 1.5} (${tech.buffDuration ?? 5}s)`, kind: 'buff' });
+            const atks = resolveBuffAttacks(tech.buffAttacks ?? 3, s.stats);
+            s.defBuff = { mult: tech.defMult ?? 1.5, attacksLeft: atks };
+            logs.push({ msg: `${tech.name} → DEF ×${tech.defMult ?? 1.5} (${atks} hits)`, kind: 'buff' });
           } else if (tech.type === 'Dodge') {
-            s.dodgeBuff = { chance: tech.dodgeChance ?? 0.4, endsAt: nowSec + (tech.buffDuration ?? 4) };
-            logs.push({ msg: `${tech.name} → ${Math.round((tech.dodgeChance ?? 0.4) * 100)}% dodge (${tech.buffDuration ?? 4}s)`, kind: 'buff' });
+            const atks = resolveBuffAttacks(tech.buffAttacks ?? 3, s.stats);
+            s.dodgeBuff = { chance: tech.dodgeChance ?? 0.4, attacksLeft: atks };
+            logs.push({ msg: `${tech.name} → ${Math.round((tech.dodgeChance ?? 0.4) * 100)}% dodge (${atks} hits)`, kind: 'buff' });
           }
           break; // one technique per turn
         }
@@ -329,14 +347,18 @@ export default function useCombat() {
       if (s.turnPhase === 'enemy_turn') {
         s.turnPhase = 'waiting_enemy';
         const logs = [];
-        const nowSec2 = performance.now() / 1000;
 
-        if (s.dodgeBuff.endsAt > nowSec2 && Math.random() < s.dodgeBuff.chance) {
+        // Buffs are charge-based: each enemy attack consumes one charge
+        // from whichever buff is active, regardless of whether it triggered.
+        const dodgeActive = s.dodgeBuff.attacksLeft > 0;
+        const defActive   = s.defBuff.attacksLeft > 0;
+
+        if (dodgeActive && Math.random() < s.dodgeBuff.chance) {
           logs.push({ msg: 'Enemy attack — dodged!', kind: 'dodge' });
         } else if (debugRef.current.godMode) {
           logs.push({ msg: 'Enemy attack — negated (god mode)', kind: 'dodge' });
         } else {
-          const defMult = s.defBuff.endsAt > nowSec2 ? s.defBuff.mult : 1;
+          const defMult = defActive ? s.defBuff.mult : 1;
           const def     = (s.stats.essence + s.stats.body) * defMult;
           // Scale-independent formula: dmg = eAtk² / (eAtk + def)
           // At equal eAtk and def → 50% reduction. Fully works at any stat scale.
@@ -345,6 +367,10 @@ export default function useCombat() {
           logs.push({ msg: `Enemy hits → −${dmg.toLocaleString()} HP`, kind: 'damage-taken' });
           spawnDamageNumberRef.current?.(dmg, 'player', s.pMaxHp);
         }
+
+        // Consume a charge from any active buff after this attack resolves.
+        if (dodgeActive) s.dodgeBuff.attacksLeft -= 1;
+        if (defActive)   s.defBuff.attacksLeft   -= 1;
 
         if (logs.length) setLog(prev => [...logs, ...prev].slice(0, MAX_LOG));
 

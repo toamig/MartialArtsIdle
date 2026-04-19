@@ -409,14 +409,14 @@ function TechniqueDetail({ tech, techniques, inventory }) {
         )}
         {tech.type === 'Defend' && (
           <>
-            {tech.defMult      != null && <div className="tx-stat-row"><span>DEF Mult.</span><span>x{tech.defMult.toFixed(2)}</span></div>}
-            {tech.buffDuration != null && <div className="tx-stat-row"><span>Duration</span><span>{tech.buffDuration}s</span></div>}
+            {tech.defMult     != null && <div className="tx-stat-row"><span>DEF Mult.</span><span>x{tech.defMult.toFixed(2)}</span></div>}
+            {tech.buffAttacks != null && <div className="tx-stat-row"><span>Covers</span><span>{tech.buffAttacks} hits</span></div>}
           </>
         )}
         {tech.type === 'Dodge' && (
           <>
-            {tech.dodgeChance  != null && <div className="tx-stat-row"><span>Dodge Chance</span><span>{Math.round(tech.dodgeChance * 100)}%</span></div>}
-            {tech.buffDuration != null && <div className="tx-stat-row"><span>Duration</span><span>{tech.buffDuration}s</span></div>}
+            {tech.dodgeChance != null && <div className="tx-stat-row"><span>Dodge Chance</span><span>{Math.round(tech.dodgeChance * 100)}%</span></div>}
+            {tech.buffAttacks != null && <div className="tx-stat-row"><span>Covers</span><span>{tech.buffAttacks} hits</span></div>}
           </>
         )}
       </div>

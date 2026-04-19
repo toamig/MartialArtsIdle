@@ -180,11 +180,12 @@ export function generateTechnique(worldId) {
   } else if (type === 'Heal') {
     typeStats.healPercent = parseFloat((0.15 + Math.random() * 0.20).toFixed(3));
   } else if (type === 'Defend') {
-    typeStats.defMult      = parseFloat((1.3 + Math.random() * 0.7).toFixed(2));
-    typeStats.buffDuration = 4 + Math.floor(Math.random() * 4);
+    typeStats.defMult     = parseFloat((1.3 + Math.random() * 0.7).toFixed(2));
+    // Buffs are charge-based (N enemy attacks) now, not a wall-clock timer.
+    typeStats.buffAttacks = 2 + Math.floor(Math.random() * 3); // 2-4 hits
   } else if (type === 'Dodge') {
-    typeStats.dodgeChance  = parseFloat((0.30 + Math.random() * 0.30).toFixed(2));
-    typeStats.buffDuration = 3 + Math.floor(Math.random() * 4);
+    typeStats.dodgeChance = parseFloat((0.30 + Math.random() * 0.30).toFixed(2));
+    typeStats.buffAttacks = 2 + Math.floor(Math.random() * 2); // 2-3 hits
   }
 
   return {

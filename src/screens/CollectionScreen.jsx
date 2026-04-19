@@ -326,8 +326,8 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
                       <span className="item-stat-value">×{tech.defMult}</span>
                     </div>
                     <div className="item-stat-row">
-                      <span className="item-stat-label">{t('inventory.labelDuration')}</span>
-                      <span className="item-stat-value">{tech.buffDuration}s</span>
+                      <span className="item-stat-label">{t('inventory.labelBuffHits', { defaultValue: 'Covers' })}</span>
+                      <span className="item-stat-value">{tech.buffAttacks} hits</span>
                     </div>
                   </>
                 )}
@@ -338,8 +338,8 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
                       <span className="item-stat-value">{Math.round((tech.dodgeChance ?? 0) * 100)}%</span>
                     </div>
                     <div className="item-stat-row">
-                      <span className="item-stat-label">{t('inventory.labelDuration')}</span>
-                      <span className="item-stat-value">{tech.buffDuration}s</span>
+                      <span className="item-stat-label">{t('inventory.labelBuffHits', { defaultValue: 'Covers' })}</span>
+                      <span className="item-stat-value">{tech.buffAttacks} hits</span>
                     </div>
                   </>
                 )}

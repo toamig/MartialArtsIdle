@@ -147,6 +147,15 @@ function App() {
     );
 
     const bundle = computeAllStats(qi, law, realmIndex, mergedMods);
+    // Collapse any buff_duration modifiers (law uniques, future artefacts)
+    // into a single multiplier for useCombat's buff-cast sites. Treats all
+    // stacking types additively — close enough for a scalar on a small
+    // integer count.
+    const buffDurationMods = mergedMods.buff_duration ?? [];
+    const buffDurationMult = buffDurationMods.reduce(
+      (mult, m) => mult + (m.value ?? 0),
+      1,
+    );
     return {
       // Combat-shaped (existing fields)
       essence:    bundle.primary.essence,
@@ -173,6 +182,8 @@ function App() {
       exploitMult:   bundle.combat.exploitMult,
       // Reincarnation "Triple All Damage" — consumed by useCombat.
       damageMult:    tree.modifiers.damageMult,
+      // Scales the attack-count of Defend / Dodge buffs at cast time.
+      buffDurationMult,
     };
   }, [cultivation, artefacts, pills, selections, tree]);
 
