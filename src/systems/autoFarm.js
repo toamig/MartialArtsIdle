@@ -12,24 +12,18 @@
  */
 
 import { ALL_MATERIALS, getGatherCost, getMineCost } from '../data/materials';
-import ENEMIES, { pickEnemy } from '../data/enemies';
-import { calcDamage, getCooldown } from '../data/techniques';
-import { generateTechnique } from '../data/techniqueDrops';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export const AUTO_FARM_KEY  = 'mai_auto_farm';
 const BASE_GATHER_SPEED     = 3;   // gather points/sec — must match GatheringScreen
 const BASE_MINE_SPEED       = 3;   // mine points/sec — must match MiningScreen
-const TURN_TIME_SEC         = 1.0; // seconds per player-turn cycle (animation approximation)
 const MAX_OFFLINE_HOURS     = 8;   // cap offline simulation to prevent startup lag
-const MAX_KILLS_PER_SESSION = 100_000;
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 export function getDefaultConfig() {
   return {
-    combat:    { enabled: false, worldIndex: 0, regionIndex: 0 },
     gathering: { enabled: false, worldIndex: 0, regionIndex: 0 },
     mining:    { enabled: false, worldIndex: 0, regionIndex: 0 },
   };
@@ -41,12 +35,7 @@ export function loadAutoFarmConfig() {
     if (raw) {
       const saved = JSON.parse(raw);
       const defaults = getDefaultConfig();
-      // Merge saved values but force every activity to disabled=false — the
-      // hook that owns the config (useAutoFarm) will re-enable activities only
-      // after verifying the target region is actually cleared.  This prevents
-      // a stale config from showing an active idle assignment on a fresh save.
       return {
-        combat:    { ...defaults.combat,    ...saved.combat,    enabled: false },
         gathering: { ...defaults.gathering, ...saved.gathering, enabled: false },
         mining:    { ...defaults.mining,    ...saved.mining,    enabled: false },
       };
@@ -94,62 +83,6 @@ function pickWeighted(drops) {
 /** Random integer in [min, max] inclusive. */
 function rollQty([min, max]) {
   return min + Math.floor(Math.random() * (max - min + 1));
-}
-
-// ─── Drop roll (mirrors useCombat.rollDrops) ──────────────────────────────────
-
-function rollDrops(drops) {
-  if (!drops?.length) return [];
-  const result = [];
-  for (const drop of drops) {
-    if (Math.random() < drop.chance) {
-      const qty = drop.qty[0] + Math.floor(Math.random() * (drop.qty[1] - drop.qty[0] + 1));
-      result.push({ itemId: drop.itemId, qty });
-    }
-  }
-  return result;
-}
-
-// ─── DPS estimation ───────────────────────────────────────────────────────────
-
-/**
- * Estimate sustained player DPS from stats and equipped techniques.
- * Used to approximate kill time for combat simulation.
- *
- * Model:
- *   - Techniques fire on their cooldowns; basic attack fills gaps.
- *   - Heal/Defend/Dodge techniques contribute 0 damage but consume a turn.
- */
-function estimateDps(stats, equippedTechs) {
-  const { essence = 0, soul = 0, body = 0, lawElement = 'Normal', law = null, damageStats = null } = stats;
-  // Basic attack follows the law's per-stat typeMults; uncovered categories
-  // are 0 so stats without a matching law type drop out.
-  const tm = law?.typeMults ?? { essence: 0, body: 0, soul: 0 };
-  const basicDmg = Math.max(
-    5,
-    Math.floor(
-      essence * (tm.essence ?? 0)
-      + body    * (tm.body    ?? 0)
-      + soul    * (tm.soul    ?? 0)
-    )
-  );
-  const basicDps = basicDmg / TURN_TIME_SEC;
-
-  // Sum DPS contribution from each equipped attack technique
-  let techDps = 0;
-  let techTimeShare = 0; // fraction of time used by techniques
-
-  for (const tech of (equippedTechs ?? [])) {
-    if (!tech || tech.type !== 'Attack') continue;
-    const dmg = calcDamage(tech, essence, soul, body, law ?? lawElement, 0, damageStats);
-    const cd  = getCooldown(tech.type, tech.quality);
-    techDps      += dmg / cd;
-    techTimeShare += TURN_TIME_SEC / cd;
-  }
-
-  // Basic attack fills time not covered by techniques
-  const basicShare = Math.max(0, 1 - techTimeShare);
-  return techDps + basicDps * basicShare;
 }
 
 // ─── Simulation — Gathering ───────────────────────────────────────────────────
@@ -283,55 +216,3 @@ export function simulateMining(seconds, region, stats = null) {
   return result;
 }
 
-// ─── Simulation — Combat ──────────────────────────────────────────────────────
-
-/**
- * Simulate auto-combat for `seconds` in the given region.
- *
- * @param {number}   seconds
- * @param {object}   region         — world region (enemyPool, minRealmIndex, worldId)
- * @param {object}   stats          — { essence, soul, body, lawElement }
- * @param {Array}    equippedTechs  — [tech|null, tech|null, tech|null]
- * @returns {{ items: { [itemId]: qty }, techniques: Array }}
- */
-export function simulateCombat(seconds, region, stats, equippedTechs) {
-  if (!region?.enemyPool?.length) return { items: {}, techniques: [] };
-
-  const dps      = estimateDps(stats, equippedTechs ?? []);
-  const items    = {};
-  const techniques = [];
-  let remaining  = Math.min(seconds, MAX_OFFLINE_HOURS * 3600);
-  let kills      = 0;
-
-  while (remaining > 0 && kills < MAX_KILLS_PER_SESSION) {
-    const enemyDef = pickEnemy(region.enemyPool);
-    if (!enemyDef) { remaining -= 1; continue; }
-
-    // Enemy HP anchored to region index, same formula as useCombat.
-    const regionIndex = Math.max(0, region.minRealmIndex ?? 0);
-    const hpBase      = 150 * Math.pow(1.12, regionIndex);
-    const hpMult      = enemyDef.statMult?.hp ?? 1;
-    const eHp         = Math.max(100, Math.floor(hpBase * hpMult));
-
-    // Time to kill: if DPS is 0, bail out early
-    if (dps <= 0) break;
-    const killTime = eHp / dps;
-    if (killTime > remaining) break;
-
-    remaining -= killTime;
-    kills++;
-
-    // Roll material drops
-    for (const d of rollDrops(enemyDef.drops ?? [])) {
-      items[d.itemId] = (items[d.itemId] ?? 0) + d.qty;
-    }
-
-    // Roll technique drop
-    const techChance = enemyDef.techniqueDrop?.chance ?? 0;
-    if (techChance > 0 && Math.random() < techChance) {
-      techniques.push(generateTechnique(region.worldId ?? 1));
-    }
-  }
-
-  return { items, techniques };
-}

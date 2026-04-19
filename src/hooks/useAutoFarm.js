@@ -2,16 +2,15 @@
  * useAutoFarm — manages auto-farming config, background ticking, and offline gains.
  *
  * Design decisions:
- *   - This hook NEVER touches inventory or techniques directly.
+ *   - This hook NEVER touches inventory directly.
  *     Gains accumulate in `pendingGains`; the caller applies them via `collectGains`.
  *   - Auto-farm is OFF by default. No activity starts unless explicitly enabled.
  *   - Background ticking uses setInterval (survives hidden tabs, unlike rAF).
  *   - Offline gains use the existing `lastSeen` timestamp from the main save.
- *   - `getStats` and `getEquippedTechs` are called at tick time so they always
- *     reflect the current game state without causing re-renders.
+ *   - `getStats` is called at tick time so it always reflects the current game state.
  *
  * Usage:
- *   const autoFarm = useAutoFarm({ worlds, getStats, getEquippedTechs });
+ *   const autoFarm = useAutoFarm({ worlds, getStats });
  *
  *   // Enable an activity:
  *   autoFarm.setAutoFarm('gathering', true, worldIndex, regionIndex);
@@ -19,7 +18,6 @@
  *   // Apply accumulated gains when ready (e.g. on screen open or modal):
  *   autoFarm.collectGains((gains) => {
  *     Object.entries(gains.items).forEach(([id, qty]) => inventory.addItem(id, qty));
- *     gains.techniques.forEach(t => techniques.addOwnedTechnique(t));
  *   });
  */
 
@@ -31,7 +29,6 @@ import {
   getDefaultConfig,
   simulateGathering,
   simulateMining,
-  simulateCombat,
   mergeGains,
   hasGains,
 } from '../systems/autoFarm';
@@ -80,39 +77,14 @@ function clearPersistedGains() {
   } catch {}
 }
 
-// ─── Reconstruct player stats from saved data ─────────────────────────────────
-// Used for offline simulation only — we don't have live refs at init time.
-
-function reconstructOfflineStats(_savedQi, ownedLaws, activeLawId) {
-  try {
-    const allLaws   = ownedLaws ?? [];
-    const activeLaw = (activeLawId && allLaws.find(l => l.id === activeLawId))
-      ?? allLaws[0];
-    if (!activeLaw) return null;
-
-    // Primary stats are no longer derived from Qi — they come from modifier
-    // sources (pills, artefacts, law passives). Offline simulation has no
-    // access to those live mod stacks, so use a zero baseline.
-    return {
-      essence:    0,
-      soul:       0,
-      body:       0,
-      lawElement: activeLaw.element ?? 'Normal',
-    };
-  } catch {
-    return null;
-  }
-}
-
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 /**
  * @param {object}   options
- * @param {Array}    options.worlds           — WORLDS array (static world/region data)
- * @param {function} options.getStats         — () => { essence, soul, body, lawElement }
- * @param {function} options.getEquippedTechs — () => [tech|null, tech|null, tech|null]
+ * @param {Array}    options.worlds    — WORLDS array (static world/region data)
+ * @param {function} options.getStats — () => { harvestSpeed?, harvestLuck?, miningSpeed?, miningLuck? }
  */
-export default function useAutoFarm({ worlds, getStats, getEquippedTechs }) {
+export default function useAutoFarm({ worlds, getStats }) {
   const [config, setConfigRaw] = useState(loadAutoFarmConfig);
 
   // Persist config whenever it changes
@@ -121,17 +93,15 @@ export default function useAutoFarm({ worlds, getStats, getEquippedTechs }) {
   // Notify Electron main process of active state so it knows whether to show notifications
   useEffect(() => {
     if (!window.electronBridge?.isElectron) return;
-    const anyEnabled = config.combat.enabled || config.gathering.enabled || config.mining.enabled;
+    const anyEnabled = config.gathering.enabled || config.mining.enabled;
     window.electronBridge.setAutoFarmActive(anyEnabled);
   }, [config]);
 
   // Live refs so the tick always uses fresh values without re-subscribing
-  const getStatsRef         = useRef(getStats);
-  const getEquippedTechsRef = useRef(getEquippedTechs);
-  const configRef           = useRef(config);
-  useEffect(() => { getStatsRef.current         = getStats;         }, [getStats]);
-  useEffect(() => { getEquippedTechsRef.current = getEquippedTechs; }, [getEquippedTechs]);
-  useEffect(() => { configRef.current           = config;           }, [config]);
+  const getStatsRef = useRef(getStats);
+  const configRef   = useRef(config);
+  useEffect(() => { getStatsRef.current = getStats; }, [getStats]);
+  useEffect(() => { configRef.current   = config;   }, [config]);
 
   // ─── Pending gains ──────────────────────────────────────────────────────────
 
@@ -149,26 +119,7 @@ export default function useAutoFarm({ worlds, getStats, getEquippedTechs }) {
     const cfg = loadAutoFarmConfig();
     let offline = emptyGains();
 
-    // Reconstruct stats for offline combat simulation
-    let offlineStats = null;
-    if (cfg.combat.enabled) {
-      try {
-        const ownedLaws   = JSON.parse(localStorage.getItem('mai_owned_laws') ?? '[]');
-        const activeLawId = JSON.parse(localStorage.getItem('mai_active_law') ?? 'null');
-        offlineStats = reconstructOfflineStats(saved.qi, ownedLaws, activeLawId);
-      } catch {}
-    }
-
-    // Reconstruct equipped techniques for offline combat simulation
-    let offlineTechs = [null, null, null];
-    if (cfg.combat.enabled) {
-      try {
-        const techSlots = JSON.parse(localStorage.getItem('mai_techniques') ?? 'null');
-        if (Array.isArray(techSlots)) offlineTechs = techSlots;
-      } catch {}
-    }
-
-    for (const activity of ['combat', 'gathering', 'mining']) {
+    for (const activity of ['gathering', 'mining']) {
       const actCfg = cfg[activity];
       if (!actCfg.enabled) continue;
 
@@ -179,14 +130,9 @@ export default function useAutoFarm({ worlds, getStats, getEquippedTechs }) {
       let gained = emptyGains();
 
       if (activity === 'gathering') {
-        // Offline gathering uses base speed/luck only — we don't have full
-        // computed stats here without the live game loop. That's a fair
-        // tradeoff for offline simulation; live ticks below get the bonuses.
         gained.items = simulateGathering(awaySeconds, region, null);
       } else if (activity === 'mining') {
         gained.items = simulateMining(awaySeconds, region, null);
-      } else if (activity === 'combat' && offlineStats) {
-        gained = simulateCombat(awaySeconds, region, offlineStats, offlineTechs);
       }
 
       offline = mergeFullGains(offline, gained);
@@ -203,14 +149,13 @@ export default function useAutoFarm({ worlds, getStats, getEquippedTechs }) {
   useEffect(() => {
     const interval = setInterval(() => {
       const cfg = configRef.current;
-      const anyEnabled = cfg.combat.enabled || cfg.gathering.enabled || cfg.mining.enabled;
+      const anyEnabled = cfg.gathering.enabled || cfg.mining.enabled;
       if (!anyEnabled) return;
 
-      const stats         = getStatsRef.current?.() ?? null;
-      const equippedTechs = getEquippedTechsRef.current?.() ?? [null, null, null];
+      const stats = getStatsRef.current?.() ?? null;
       let tick = emptyGains();
 
-      for (const activity of ['combat', 'gathering', 'mining']) {
+      for (const activity of ['gathering', 'mining']) {
         const actCfg = cfg[activity];
         if (!actCfg.enabled) continue;
 
@@ -224,8 +169,6 @@ export default function useAutoFarm({ worlds, getStats, getEquippedTechs }) {
           gained.items = simulateGathering(TICK_INTERVAL_MS / 1000, region, stats);
         } else if (activity === 'mining') {
           gained.items = simulateMining(TICK_INTERVAL_MS / 1000, region, stats);
-        } else if (activity === 'combat' && stats) {
-          gained = simulateCombat(TICK_INTERVAL_MS / 1000, region, stats, equippedTechs);
         }
 
         tick = mergeFullGains(tick, gained);
@@ -238,7 +181,6 @@ export default function useAutoFarm({ worlds, getStats, getEquippedTechs }) {
           if (window.electronBridge?.isElectron) {
             const cfg = configRef.current;
             window.electronBridge.notifyGainsReady({
-              combat:    cfg.combat.enabled,
               gathering: cfg.gathering.enabled,
               mining:    cfg.mining.enabled,
               itemCount: Object.values(next.items).reduce((s, n) => s + n, 0),

@@ -38,12 +38,12 @@ const WORLDS = [
         gatherDrops: [
           { itemId: 'iron_herb_1',        chance: 0.60, qty: [1, 3] },
           { itemId: 'iron_herb_2',        chance: 0.40, qty: [1, 2] },
-          { itemId: 'iron_cultivation_1', chance: 0.30, qty: [1, 2] },
+          { itemId: 'iron_cultivation_1', chance: 0.40, qty: [1, 2] },
         ],
         mineDrops: [
           { itemId: 'iron_mineral_1',     chance: 0.60, qty: [1, 3] },
           { itemId: 'iron_mineral_2',     chance: 0.40, qty: [1, 2] },
-          { itemId: 'iron_cultivation_2', chance: 0.30, qty: [1, 2] },
+          { itemId: 'iron_cultivation_2', chance: 0.40, qty: [1, 2] },
         ],
         enemyPool: [
           { enemyId: 'outer_sect_disciple', weight: 7 },
@@ -58,12 +58,12 @@ const WORLDS = [
         gatherDrops: [
           { itemId: 'iron_herb_1',        chance: 0.50, qty: [1, 3] },
           { itemId: 'iron_herb_2',        chance: 0.50, qty: [1, 3] },
-          { itemId: 'iron_cultivation_1', chance: 0.35, qty: [1, 2] },
+          { itemId: 'iron_cultivation_1', chance: 0.40, qty: [1, 2] },
         ],
         mineDrops: [
           { itemId: 'iron_mineral_1',     chance: 0.50, qty: [1, 3] },
           { itemId: 'iron_mineral_2',     chance: 0.50, qty: [1, 3] },
-          { itemId: 'iron_cultivation_2', chance: 0.35, qty: [1, 2] },
+          { itemId: 'iron_cultivation_2', chance: 0.40, qty: [1, 2] },
         ],
         enemyPool: [
           { enemyId: 'outer_sect_disciple', weight: 5 },
@@ -78,14 +78,14 @@ const WORLDS = [
         gatherDrops: [
           { itemId: 'iron_herb_2',          chance: 0.50, qty: [1, 3] },
           { itemId: 'bronze_herb_1',        chance: 0.30, qty: [1, 2] },
-          { itemId: 'iron_cultivation_1',   chance: 0.35, qty: [1, 2] },
-          { itemId: 'bronze_cultivation_1', chance: 0.15, qty: [1, 1] },
+          { itemId: 'iron_cultivation_1',   chance: 0.40, qty: [1, 2] },
+          { itemId: 'bronze_cultivation_1', chance: 0.20, qty: [1, 1] },
         ],
         mineDrops: [
           { itemId: 'iron_mineral_2',       chance: 0.50, qty: [1, 3] },
           { itemId: 'bronze_mineral_1',     chance: 0.30, qty: [1, 2] },
-          { itemId: 'iron_cultivation_2',   chance: 0.35, qty: [1, 2] },
-          { itemId: 'bronze_cultivation_2', chance: 0.15, qty: [1, 1] },
+          { itemId: 'iron_cultivation_2',   chance: 0.40, qty: [1, 2] },
+          { itemId: 'bronze_cultivation_2', chance: 0.20, qty: [1, 1] },
         ],
         enemyPool: [
           { enemyId: 'bandit_scout',   weight: 5 },
@@ -100,12 +100,12 @@ const WORLDS = [
         gatherDrops: [
           { itemId: 'bronze_herb_1',        chance: 0.55, qty: [1, 3] },
           { itemId: 'bronze_herb_2',        chance: 0.45, qty: [1, 2] },
-          { itemId: 'bronze_cultivation_1', chance: 0.35, qty: [1, 2] },
+          { itemId: 'bronze_cultivation_1', chance: 0.40, qty: [1, 2] },
         ],
         mineDrops: [
           { itemId: 'bronze_mineral_1',     chance: 0.55, qty: [1, 3] },
           { itemId: 'bronze_mineral_2',     chance: 0.45, qty: [1, 2] },
-          { itemId: 'bronze_cultivation_2', chance: 0.35, qty: [1, 2] },
+          { itemId: 'bronze_cultivation_2', chance: 0.40, qty: [1, 2] },
         ],
         enemyPool: [
           { enemyId: 'wandering_beast', weight: 5 },
@@ -121,13 +121,13 @@ const WORLDS = [
           { itemId: 'bronze_herb_2',        chance: 0.55, qty: [1, 3] },
           { itemId: 'silver_herb_1',        chance: 0.25, qty: [1, 2] },
           { itemId: 'bronze_cultivation_1', chance: 0.40, qty: [1, 2] },
-          { itemId: 'silver_cultivation_1', chance: 0.15, qty: [1, 1] },
+          { itemId: 'silver_cultivation_1', chance: 0.20, qty: [1, 1] },
         ],
         mineDrops: [
           { itemId: 'bronze_mineral_2',     chance: 0.55, qty: [1, 3] },
           { itemId: 'silver_mineral_1',     chance: 0.25, qty: [1, 2] },
           { itemId: 'bronze_cultivation_2', chance: 0.40, qty: [1, 2] },
-          { itemId: 'silver_cultivation_2', chance: 0.15, qty: [1, 1] },
+          { itemId: 'silver_cultivation_2', chance: 0.20, qty: [1, 1] },
         ],
         enemyPool: [
           { enemyId: 'rogue_disciple',  weight: 5 },

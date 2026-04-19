@@ -191,7 +191,6 @@ function App() {
   const autoFarm = useAutoFarm({
     worlds: WORLDS,
     getStats: getFullStats,
-    getEquippedTechs: () => techniques.equippedTechniques,
   });
 
   // Derive the single active idle assignment from the config
