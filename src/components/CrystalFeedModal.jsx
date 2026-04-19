@@ -58,10 +58,8 @@ function CrystalFeedModal({ crystal, inventory, onClose }) {
   const willLevelUp            = effectiveSelected && (refinedQi + totalGain) >= requiredForNext;
 
   const pct      = requiredForNext > 0 ? Math.min(100, (refinedQi / requiredForNext) * 100) : 100;
-  const tier     = getCrystalTier(level);
-  const crystalSrc = tier
-    ? `${BASE}crystals/crystal_${tier}.png`
-    : `${BASE}crystals/crystal_locked.png`;
+  const tier       = getCrystalTier(level) ?? 1;
+  const crystalSrc = `${BASE}crystals/crystal_${tier}.png`;
 
   const clampQty = (next) => Math.max(1, Math.min(next, selectedOwned));
 
