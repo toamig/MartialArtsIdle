@@ -9,6 +9,7 @@ import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
 import CrystalFeedModal from '../components/CrystalFeedModal';
 import JadeShopModal from '../components/JadeShopModal';
 import AchievementsModal from '../components/AchievementsModal';
+import JourneyModal from '../components/JourneyModal';
 import { PILLS_BY_ID } from '../data/pills';
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
@@ -26,7 +27,7 @@ function getSpriteState(boosting, adBoostActive) {
 }
 
 // ── Top HUD bar ─────────────────────────────────────────────────────────────
-function HomeTopHud({ jadeBalance, onNavigate, onOpenShop, onOpenAchievements, hasNewAchievement }) {
+function HomeTopHud({ jadeBalance, onNavigate, onOpenShop, onOpenAchievements, hasNewAchievement, onOpenJourney }) {
   return (
     <div className="home-top-hud">
       <button className="home-hud-jade" onClick={onOpenShop} aria-label="Blood Lotus Shop">
@@ -39,6 +40,13 @@ function HomeTopHud({ jadeBalance, onNavigate, onOpenShop, onOpenAchievements, h
         <span className="home-hud-jade-amount">{jadeBalance ?? 0}</span>
       </button>
       <div className="home-hud-spacer" />
+      <button
+        className="home-hud-journey"
+        onClick={onOpenJourney}
+        aria-label="Cultivation Journey"
+      >
+        🗺️
+      </button>
       <button
         className="home-hud-trophy"
         onClick={onOpenAchievements}
@@ -379,6 +387,9 @@ function HomeScreen({
   // ── Jade shop modal ──────────────────────────────────────────────────────
   const [shopOpen, setShopOpen] = useState(false);
 
+  // ── Journey modal ────────────────────────────────────────────────────────
+  const [journeyOpen, setJourneyOpen] = useState(false);
+
   // ── Achievements modal ───────────────────────────────────────────────────
   const [achOpen, setAchOpen] = useState(false);
   const [hasNewAch, setHasNewAch] = useState(false);
@@ -454,6 +465,7 @@ function HomeScreen({
         jadeBalance={jadeBalance}
         onNavigate={onNavigate}
         onOpenShop={() => setShopOpen(true)}
+        onOpenJourney={() => setJourneyOpen(true)}
         onOpenAchievements={() => { setAchOpen(true); setHasNewAch(false); }}
         hasNewAchievement={hasNewAch}
       />
@@ -631,6 +643,14 @@ function HomeScreen({
           crystal={crystal}
           inventory={inventory}
           onClose={() => setCrystalModalOpen(false)}
+        />
+      )}
+
+      {/* Journey modal */}
+      {journeyOpen && (
+        <JourneyModal
+          realmIndex={cultivation.realmIndex}
+          onClose={() => setJourneyOpen(false)}
         />
       )}
 
