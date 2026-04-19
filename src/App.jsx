@@ -275,6 +275,8 @@ function App() {
     activeTab:     screenParam?.fromTab  ?? null,
   });
 
+  const reincarnationUnlocked = karma.unlocked;
+
   const screens = {
     home:   <HomeScreen cultivation={cultivation} pills={pills} inventory={inventory} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} onNavigate={navigate} crystal={crystal} isCrystalUnlocked={featureFlags.isUnlocked('qi_crystal')} achievements={achievements} reincarnationUnlocked={reincarnationUnlocked} karma={karma.karma} karmaLives={karma.lives} karmaHighestReached={karma.highestReached} karmaPeakTotal={karma.peakKarmaTotal} tree={tree} onReincarnate={handleReincarnate} />,
     worlds: <WorldsScreen cultivation={cultivation} onNavigate={navigate} expandWorldId={screenParam?.expandWorldId ?? null} activeTab={screenParam?.activeTab ?? null} clearedRegions={clearedRegions} idleAssignment={idleAssignment} onSetIdle={autoFarm.setIdleActivity} pendingGains={autoFarm.pendingGains} hasPendingGains={autoFarm.hasPendingGains} onCollectGains={(applyFn) => autoFarm.collectGains(applyFn)} inventory={inventory} techniques={techniques} />,
@@ -300,8 +302,6 @@ function App() {
     production: <ProductionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} pills={pills} isUnlocked={featureFlags.isUnlocked} getHint={featureFlags.getHint} />,
     settings:   <SettingsScreen />,
   };
-
-  const reincarnationUnlocked = karma.unlocked;
 
   const BASE = import.meta.env.BASE_URL;
 
