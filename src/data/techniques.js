@@ -61,7 +61,8 @@ export const TECHNIQUES = [];
  * so this always returns null and the caller should fall back to the
  * ownedTechniques map (see useTechniques.getTechById).
  */
-export function getTechnique(_id) {
+// eslint-disable-next-line no-unused-vars
+export function getTechnique(id) {
   return null;
 }
 
@@ -112,24 +113,38 @@ export function calcDamage(tech, essence, soul, body, lawOrElement = 'Normal', a
           * elemBonus
           + (tech.bonus ?? 0);
 
-  // Damage-category flat bonus — only when we have a law object and stats.
+  // Damage-category flat bonus + per-pool flat bonus + universal damage_all.
+  // All gated on having a law object + stats + at least one law type.
   if (law && damageStats && Array.isArray(law.types) && law.types.length > 0) {
-    const catCounts = new Map();
-    for (const t of law.types) {
-      const cat = TYPE_TO_DAMAGE_CATEGORY[t];
-      if (!cat) continue;
-      catCounts.set(cat, (catCounts.get(cat) ?? 0) + 1);
-    }
     const totalTypes = law.types.length;
-    if (catCounts.size > 0) {
-      let bonus = 0;
-      for (const [cat, count] of catCounts) {
-        const share = count / totalTypes;
-        bonus += (damageStats[cat] ?? 0) * share;
-      }
-      dmg += bonus;
+    const catCounts  = new Map();
+    const poolCounts = new Map();
+    for (const t of law.types) {
+      poolCounts.set(t, (poolCounts.get(t) ?? 0) + 1);
+      const cat = TYPE_TO_DAMAGE_CATEGORY[t];
+      if (cat) catCounts.set(cat, (catCounts.get(cat) ?? 0) + 1);
     }
+
+    let bonus = 0;
+    // Category flat: shared between law types in the same category.
+    for (const [cat, count] of catCounts) {
+      bonus += (damageStats[cat] ?? 0) * (count / totalTypes);
+    }
+    // Pool-specific flat: each pool contributes its own portion.
+    const pools = damageStats.pools ?? {};
+    for (const [pool, count] of poolCounts) {
+      bonus += (pools[pool] ?? 0) * (count / totalTypes);
+    }
+    dmg += bonus;
   }
+
+  // Universal damage_all flat bonus (whole-attack, no share).
+  if (damageStats?.damage_all) dmg += damageStats.damage_all;
+
+  // Source multiplier — secret_technique_damage applies only to technique
+  // damage (this code path), not to default attacks.
+  const techMult = damageStats?.secret_technique_damage ?? 0;
+  if (techMult) dmg *= 1 + techMult;
 
   return Math.floor(dmg);
 }

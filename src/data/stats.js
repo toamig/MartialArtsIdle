@@ -75,7 +75,16 @@ export function mergeModifiers(...bundles) {
 }
 
 export function computeAllStats(qi, law, realmIndex, modifiers = {}) {
-  const mods         = (id) => modifiers[id] ?? [];
+  // Sugar: `all_primary_stats` flows into each of essence/body/soul. Done
+  // here (not at the modifier merge layer) so artefact / pill / unique
+  // sources all benefit equally without needing to know about the alias.
+  const allPrimary = modifiers.all_primary_stats ?? [];
+  const mods = (id) => {
+    if (id === 'essence' || id === 'body' || id === 'soul') {
+      return [...(modifiers[id] ?? []), ...allPrimary];
+    }
+    return modifiers[id] ?? [];
+  };
   const soulUnlocked = realmIndex >= SAINT_INDEX;
 
   // ── Primary ────────────────────────────────────────────────────────────────

@@ -27,9 +27,15 @@ const ARTEFACT_UNIQUE_COLOR = '#ff7ae6';
 function formatBonus(b, t) {
   if (b.unique) return b.description ?? b.name ?? '';
   const label = t(STAT_KEYS[b.stat] ?? 'statNames.defense', { defaultValue: b.stat.replace(/_/g, ' ') });
-  if (b.type === MOD.INCREASED) return `+${Math.round(b.value * 100)}% ${label}`;
-  if (b.type === MOD.MORE)      return `×${b.value.toFixed(2)} ${label}`;
-  return `+${b.value} ${label}`;
+  if (b.type === MOD.INCREASED)      return `+${Math.round(b.value * 100)}% ${label}`;
+  if (b.type === MOD.MORE)           return `×${b.value.toFixed(2)} ${label}`;
+  // FLAT / BASE_FLAT: display 'base' prefix for BASE_FLAT, otherwise raw '+'.
+  // Decimal values (< 1) print as percent points; integers print as-is.
+  const v = (typeof b.value === 'number' && b.value > 0 && b.value < 1)
+    ? `${(b.value * 100).toFixed(1).replace(/\.0$/, '')}%`
+    : b.value;
+  const prefix = b.type === MOD.BASE_FLAT ? '+ base' : '+';
+  return `${prefix} ${v} ${label}`;
 }
 
 // col/row are 1-indexed CSS grid positions (3 columns, 5 rows)

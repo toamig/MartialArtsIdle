@@ -211,6 +211,10 @@ export default function useCultivation() {
   const treeHeavenlyMultRef = useRef(1);
   // Crystal flat qi/sec bonus — written by App.jsx from useQiCrystal.crystalQiBonus
   const crystalQiBonusRef  = useRef(0);
+  // Heavenly QI multiplier from artefacts (and any future modifier source).
+  // Decimal: 0.30 = +30% on top of the ad boost. Only applies while the ad
+  // boost is live. Stacks multiplicatively with the reincarnation tree node.
+  const heavenlyQiMultRef  = useRef(0);
   // Hold-to-cultivate boost multiplier (qi_focus_mult stat, expressed as %).
   // Default 300% = the legacy 3× behavior; App.jsx writes the player's actual
   // focus mult into this ref each second.
@@ -271,11 +275,14 @@ export default function useCultivation() {
         const boostMult = boostRef.current
           ? Math.max(1, (focusMultRef.current ?? 300) / 100)
           : 1;
-        // Heavenly QI tree node — only applies while the ad boost is live.
-        const heavenlyExtra = adBoostRef.current > 1 ? treeHeavenlyMultRef.current : 1;
+        // Heavenly QI extras — only apply while the ad boost is live. Two
+        // independent multiplicative sources: the reincarnation tree node
+        // and the artefact heavenly_qi_mult stat.
+        const heavenlyTree = adBoostRef.current > 1 ? treeHeavenlyMultRef.current : 1;
+        const heavenlyArt  = adBoostRef.current > 1 ? (1 + heavenlyQiMultRef.current) : 1;
         const rate = (BASE_RATE + crystalQiBonusRef.current) * lawMult * qiUniqueMult *
           boostMult *
-          adBoostRef.current * heavenlyExtra *
+          adBoostRef.current * heavenlyTree * heavenlyArt *
           pillQiMultRef.current * selectionQiMultRef.current *
           treeQiMultRef.current;
         rateRef.current = rate;
@@ -392,6 +399,8 @@ export default function useCultivation() {
     selectionQiMultRef,
     // QI Crystal flat bonus ref — updated by App.jsx from useQiCrystal
     crystalQiBonusRef,
+    // Artefact heavenly_qi_mult ref — updated by App.jsx from getFullStats
+    heavenlyQiMultRef,
     // Reincarnation tree refs — updated by App.jsx each render
     treeQiMultRef,
     treeHeavenlyMultRef,

@@ -66,6 +66,7 @@ function CombatScreen({ cultivation, techniques, combat, inventory, region = nul
           exploitChance: full.exploitChance,
           exploitMult:   full.exploitMult,
           buffDurationMult: full.buffDurationMult,
+          buffEffectMult:   full.buffEffectMult,
         }
       : {
           // Stats decoupled from Qi — fallback uses zero baseline.

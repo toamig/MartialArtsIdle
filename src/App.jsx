@@ -23,7 +23,7 @@ import useQiCrystal  from './hooks/useQiCrystal';
 import useAutoFarm    from './hooks/useAutoFarm';
 import WORLDS         from './data/worlds';
 import { mineralForRarity } from './data/materials';
-import { computeAllStats, mergeModifiers } from './data/stats';
+import { computeAllStats, computeStat, mergeModifiers } from './data/stats';
 import { evaluateLawUniques, buildContext } from './systems/lawEngine';
 import { initDebug } from './debug/gameDebug';
 import { preloadImages, PLAYER_SPRITE_SRCS } from './utils/preload';
@@ -147,15 +147,32 @@ function App() {
     );
 
     const bundle = computeAllStats(qi, law, realmIndex, mergedMods);
-    // Collapse any buff_duration modifiers (law uniques, future artefacts)
-    // into a single multiplier for useCombat's buff-cast sites. Treats all
-    // stacking types additively — close enough for a scalar on a small
-    // integer count.
-    const buffDurationMods = mergedMods.buff_duration ?? [];
-    const buffDurationMult = buffDurationMods.reduce(
-      (mult, m) => mult + (m.value ?? 0),
-      1,
-    );
+
+    // Collapse a percentage-style stat into a single scalar via the same
+    // 5-layer formula (so artefacts / law uniques / pills / selections all
+    // contribute the same way they would for a primary stat).
+    const collapsePct = (statId) => {
+      const list = mergedMods[statId];
+      if (!list || !list.length) return 0;
+      return computeStat(0, list);
+    };
+    const collapseFlat = (statId) => {
+      const list = mergedMods[statId];
+      if (!list || !list.length) return 0;
+      return computeStat(0, list);
+    };
+
+    // Per-pool damage flats (each pool stat goes through the same 5-layer
+    // pipeline — the result is the additive flat each pool contributes
+    // when its share of the law's types resolves in calcDamage).
+    const POOL_KEYS = [
+      'physical', 'sword', 'fist',
+      'fire', 'water', 'earth',
+      'spirit', 'void', 'dao',
+    ];
+    const poolDamage = {};
+    for (const k of POOL_KEYS) poolDamage[k] = collapseFlat(`dmg_${k}`);
+
     return {
       // Combat-shaped (existing fields)
       essence:    bundle.primary.essence,
@@ -165,11 +182,16 @@ function App() {
       // Full active law — calcDamage reads law.types to split damage
       // between categories (physical / elemental / psychic).
       law,
-      // Flat damage bonuses keyed by category, consumed by calcDamage.
+      // Flat damage bonuses + pool-specific bonuses + the source-gated
+      // multipliers, all consumed by calcDamage and useCombat's basic-attack.
       damageStats: {
-        physical:  bundle.combat.physDmg,
-        elemental: bundle.combat.elemDmg,
-        psychic:   bundle.combat.psychDmg,
+        physical:               bundle.combat.physDmg,
+        elemental:              bundle.combat.elemDmg,
+        psychic:                bundle.combat.psychDmg,
+        damage_all:             collapseFlat('damage_all'),
+        secret_technique_damage: collapsePct('secret_technique_damage'),
+        default_attack_damage:  collapsePct('default_attack_damage'),
+        pools:                  poolDamage,
       },
       // Activity stats — needed by autoFarm + Gathering/Mining screens
       harvestSpeed: bundle.activity.harvestSpeed,
@@ -183,19 +205,30 @@ function App() {
       // Reincarnation "Triple All Damage" — consumed by useCombat.
       damageMult:    tree.modifiers.damageMult,
       // Scales the attack-count of Defend / Dodge buffs at cast time.
-      buffDurationMult,
+      buffDurationMult: 1 + collapsePct('buff_duration'),
+      // Scales magnitude (defMult / dodgeChance) at cast time.
+      buffEffectMult:   collapsePct('buff_effect'),
+      // Heavenly QI multiplier (artefact rings) — only applies during ad boost.
+      heavenlyQiMult:   collapsePct('heavenly_qi_mult'),
     };
   }, [cultivation, artefacts, pills, selections, tree]);
 
   // Mirror focusMult into a ref the cultivation tick reads directly so
-  // boost speed reflects equipment / pill modifiers.
+  // boost speed reflects equipment / pill modifiers. Same loop also keeps
+  // the artefact-derived heavenly_qi multiplier in sync so cultivation
+  // sees ring rolls without the cultivation hook needing to know about
+  // the artefact layer.
   useEffect(() => {
     if (!cultivation.focusMultRef) return;
     const id = setInterval(() => {
-      cultivation.focusMultRef.current = getFullStats().focusMult;
+      const full = getFullStats();
+      cultivation.focusMultRef.current = full.focusMult;
+      if (cultivation.heavenlyQiMultRef) {
+        cultivation.heavenlyQiMultRef.current = full.heavenlyQiMult ?? 0;
+      }
     }, 1000);
     return () => clearInterval(id);
-  }, [cultivation.focusMultRef, getFullStats]);
+  }, [cultivation.focusMultRef, cultivation.heavenlyQiMultRef, getFullStats]);
 
   // Auto-farm — stat getter reads live refs so the hook never triggers re-renders
   const autoFarm = useAutoFarm({

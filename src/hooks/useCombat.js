@@ -253,13 +253,17 @@ export default function useCombat() {
             s.pHp = Math.min(s.pMaxHp, s.pHp + heal);
             logs.push({ msg: `${tech.name} → +${heal.toLocaleString()} HP`, kind: 'heal' });
           } else if (tech.type === 'Defend') {
-            const atks = resolveBuffAttacks(tech.buffAttacks ?? 3, s.stats);
-            s.defBuff = { mult: tech.defMult ?? 1.5, attacksLeft: atks };
-            logs.push({ msg: `${tech.name} → DEF ×${tech.defMult ?? 1.5} (${atks} hits)`, kind: 'buff' });
+            const atks    = resolveBuffAttacks(tech.buffAttacks ?? 3, s.stats);
+            const effMult = 1 + (s.stats.buffEffectMult ?? 0);
+            const defMult = (tech.defMult ?? 1.5) * effMult;
+            s.defBuff = { mult: defMult, attacksLeft: atks };
+            logs.push({ msg: `${tech.name} → DEF ×${defMult.toFixed(2)} (${atks} hits)`, kind: 'buff' });
           } else if (tech.type === 'Dodge') {
-            const atks = resolveBuffAttacks(tech.buffAttacks ?? 3, s.stats);
-            s.dodgeBuff = { chance: tech.dodgeChance ?? 0.4, attacksLeft: atks };
-            logs.push({ msg: `${tech.name} → ${Math.round((tech.dodgeChance ?? 0.4) * 100)}% dodge (${atks} hits)`, kind: 'buff' });
+            const atks    = resolveBuffAttacks(tech.buffAttacks ?? 3, s.stats);
+            const effMult = 1 + (s.stats.buffEffectMult ?? 0);
+            const chance  = Math.min(1, (tech.dodgeChance ?? 0.4) * effMult);
+            s.dodgeBuff = { chance, attacksLeft: atks };
+            logs.push({ msg: `${tech.name} → ${Math.round(chance * 100)}% dodge (${atks} hits)`, kind: 'buff' });
           }
           break; // one technique per turn
         }
@@ -270,14 +274,16 @@ export default function useCombat() {
           // categories are 0 so stats the law doesn't anchor contribute
           // nothing to the basic attack.
           const tm = s.stats.law?.typeMults ?? { essence: 0, body: 0, soul: 0 };
-          let dmg = Math.max(
-            5,
-            Math.floor(
-              s.stats.essence * (tm.essence ?? 0)
-              + s.stats.body    * (tm.body    ?? 0)
-              + s.stats.soul    * (tm.soul    ?? 0)
-            )
-          );
+          let dmg = s.stats.essence * (tm.essence ?? 0)
+                  + s.stats.body    * (tm.body    ?? 0)
+                  + s.stats.soul    * (tm.soul    ?? 0);
+          // Universal damage_all flat (artefacts / law uniques).
+          dmg += s.stats.damageStats?.damage_all ?? 0;
+          // Source multiplier: default_attack_damage applies only to basic
+          // attacks (techniques get their own secret_technique_damage in
+          // calcDamage).
+          const baseMult = 1 + (s.stats.damageStats?.default_attack_damage ?? 0);
+          dmg = Math.max(5, Math.floor(dmg * baseMult));
           // Exploit also applies to basic attacks.
           const exChance = s.stats.exploitChance ?? 0;
           const exMult   = s.stats.exploitMult   ?? 150;

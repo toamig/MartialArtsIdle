@@ -75,77 +75,162 @@ export const RARITY_TIER = {
 //     and additive percentages (exploit_chance) can use FLAT.
 //   - INCREASED stores additive % (0.10 = +10%); MORE stores multiplier (1.10 = ×1.10).
 
-// Common range tables to keep entries readable
-const INCR_SMALL = { Iron:[0.05,0.10], Bronze:[0.08,0.15], Silver:[0.12,0.22], Gold:[0.18,0.32], Transcendent:[0.25,0.45] };
-const INCR_LARGE = { Iron:[0.08,0.14], Bronze:[0.12,0.22], Silver:[0.18,0.32], Gold:[0.25,0.42], Transcendent:[0.35,0.60] };
-const MORE_TIER  = { Iron:[1.03,1.06], Bronze:[1.05,1.10], Silver:[1.08,1.16], Gold:[1.12,1.22], Transcendent:[1.18,1.35] };
+// ─── Per-rarity value families ────────────────────────────────────────────────
+// Each affix entry references one of these by name (see STAT_META below).
+// Keep numbers in canonical units:
+//   - INCR / MORE rolls store decimals (0.10 = +10%, 1.10 = ×1.10).
+//   - FLAT primary / HP / damage rolls store integers (Math.floor at roll).
+//   - FLAT_PCT rolls store decimals (0.05 = +5pp on percentage stats).
+//   - FLAT_QI rolls store decimals (0.30 = +0.30 qi/sec).
+const RANGES = {
+  INCR_BASIC:   { Iron:[0.06,0.12], Bronze:[0.10,0.18], Silver:[0.16,0.28], Gold:[0.24,0.40], Transcendent:[0.35,0.60] },
+  INCR_LARGE:   { Iron:[0.08,0.15], Bronze:[0.14,0.24], Silver:[0.22,0.36], Gold:[0.32,0.50], Transcendent:[0.45,0.75] },
+  MORE_TIER:    { Iron:[1.03,1.07], Bronze:[1.05,1.11], Silver:[1.09,1.18], Gold:[1.14,1.26], Transcendent:[1.20,1.40] },
+  FLAT_DMG:     { Iron:[6,14],      Bronze:[14,32],     Silver:[32,70],     Gold:[70,150],    Transcendent:[150,300]   },
+  FLAT_HP:      { Iron:[20,50],     Bronze:[50,120],    Silver:[120,280],   Gold:[280,600],   Transcendent:[600,1200]  },
+  FLAT_PRIMARY: { Iron:[3,8],       Bronze:[8,18],      Silver:[18,35],     Gold:[35,60],     Transcendent:[60,100]    },
+  FLAT_PCT:     { Iron:[0.01,0.03], Bronze:[0.02,0.05], Silver:[0.04,0.08], Gold:[0.06,0.12], Transcendent:[0.10,0.20] },
+  FLAT_QI:      { Iron:[0.05,0.15], Bronze:[0.15,0.30], Silver:[0.30,0.55], Gold:[0.55,0.90], Transcendent:[0.90,1.50] },
+};
 
-const WEAPON_POOL = [
-  { id: 'w_phys_flat', name: 'Sharpness',       stat: 'physical_damage',  type: MOD.FLAT,      ranges: { Iron:[5,12], Bronze:[10,24], Silver:[20,48], Gold:[40,96], Transcendent:[80,192] } },
-  { id: 'w_phys_incr', name: 'Empowered',       stat: 'physical_damage',  type: MOD.INCREASED, ranges: INCR_LARGE },
-  { id: 'w_phys_more', name: 'Vicious',         stat: 'physical_damage',  type: MOD.MORE,      ranges: MORE_TIER },
-  { id: 'w_essence',   name: 'Essence Channel', stat: 'essence',          type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'w_body',      name: 'Body Force',      stat: 'body',             type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'w_exploit',   name: 'Exploit Chance',  stat: 'exploit_chance',   type: MOD.FLAT,      ranges: { Iron:[1,3], Bronze:[2,5], Silver:[4,8], Gold:[6,12], Transcendent:[10,20] } },
-];
+// Aggregate stats (damage_all, all_primary_stats) roll at this fraction of
+// the single-stat range — between 1/3 and 1/1 per design constraint.
+const AGGREGATE_SCALE = 0.5;
 
-const HEAD_POOL = [
-  { id: 'h_soul_tough_incr', name: 'Soul Barrier',  stat: 'soul_toughness',   type: MOD.INCREASED, ranges: INCR_LARGE },
-  { id: 'h_elem_def_incr',   name: 'Spirit Ward',   stat: 'elemental_defense',type: MOD.INCREASED, ranges: INCR_LARGE },
-  { id: 'h_soul_incr',       name: 'Mind Clarity',  stat: 'soul',             type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'h_health_incr',     name: 'Vitality',      stat: 'health',           type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'h_def_incr',        name: 'Hardened Mind', stat: 'defense',          type: MOD.INCREASED, ranges: INCR_SMALL },
-];
+// ─── Stat catalogue ──────────────────────────────────────────────────────────
+// Per-stat metadata used by the affix generator:
+//   incr  → range key for INCREASED rolls
+//   flat  → range key for FLAT / BASE_FLAT rolls (FLAT_* tables)
+//   decimalFlat → if true, FLAT/BASE_FLAT rolls store decimal (no Math.floor)
+//   aggregate   → if true, all rolled values are scaled by AGGREGATE_SCALE
+const STAT_META = {
+  // Primary stats
+  essence:                 { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
+  body:                    { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
+  soul:                    { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
+  all_primary_stats:       { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY', aggregate: true },
+  // Defensive stats
+  health:                  { incr: 'INCR_BASIC', flat: 'FLAT_HP' },
+  defense:                 { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
+  elemental_defense:       { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
+  soul_toughness:          { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
+  // Damage categories (existing engine consumers)
+  physical_damage:         { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
+  elemental_damage:        { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
+  psychic_damage:          { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
+  damage_all:              { incr: 'INCR_LARGE', flat: 'FLAT_DMG', aggregate: true },
+  // Per-pool damage (gated by law.types share at calcDamage time)
+  dmg_physical:            { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
+  dmg_sword:               { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
+  dmg_fist:                { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
+  dmg_fire:                { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
+  dmg_water:               { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
+  dmg_earth:               { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
+  dmg_spirit:              { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
+  dmg_void:                { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
+  dmg_dao:                 { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
+  // Source-gated damage multipliers
+  default_attack_damage:   { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
+  secret_technique_damage: { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
+  // Cultivation
+  qi_speed:                { incr: 'INCR_BASIC', flat: 'FLAT_QI',  decimalFlat: true },
+  qi_focus_mult:           { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
+  heavenly_qi_mult:        { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
+  // Activity
+  harvest_speed:           { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
+  harvest_luck:            { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
+  mining_speed:            { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
+  mining_luck:             { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
+  // Combat utility
+  exploit_chance:          { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
+  exploit_attack_mult:     { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
+  // Buff scaling
+  buff_effect:             { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
+};
 
-const BODY_POOL = [
-  { id: 'b_def_incr',    name: 'Reinforced',     stat: 'defense',          type: MOD.INCREASED, ranges: INCR_LARGE },
-  { id: 'b_def_more',    name: 'Steel Skin',     stat: 'defense',          type: MOD.MORE,      ranges: MORE_TIER },
-  { id: 'b_health_incr', name: 'Vigor',          stat: 'health',           type: MOD.INCREASED, ranges: INCR_LARGE },
-  { id: 'b_health_more', name: 'Iron Heart',     stat: 'health',           type: MOD.MORE,      ranges: MORE_TIER },
-  { id: 'b_body_incr',   name: 'Body Hardening', stat: 'body',             type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'b_elem_def',    name: 'Elemental Shell',stat: 'elemental_defense',type: MOD.INCREASED, ranges: INCR_SMALL },
-];
+// ─── Per-slot stat allowlist ─────────────────────────────────────────────────
+// The pool for a slot is the cross-product of its stats × all 4 mod types,
+// generated at module load by buildSlotPool().
+const SLOT_STATS = {
+  weapon: [
+    'damage_all', 'physical_damage', 'elemental_damage', 'psychic_damage',
+    'dmg_physical', 'dmg_sword', 'dmg_fist',
+    'dmg_fire', 'dmg_water', 'dmg_earth',
+    'dmg_spirit', 'dmg_void', 'dmg_dao',
+    'default_attack_damage', 'secret_technique_damage',
+  ],
+  head:   ['elemental_defense', 'defense', 'soul_toughness', 'health', 'soul'],
+  body:   ['elemental_defense', 'defense', 'soul_toughness', 'health', 'body'],
+  hands:  ['qi_speed', 'harvest_luck', 'mining_luck', 'elemental_defense',
+           'defense', 'soul_toughness', 'health', 'exploit_chance', 'exploit_attack_mult'],
+  waist:  ['elemental_defense', 'defense', 'soul_toughness', 'health', 'essence'],
+  feet:   ['elemental_defense', 'defense', 'soul_toughness', 'health',
+           'exploit_chance', 'exploit_attack_mult', 'mining_speed', 'harvest_speed', 'qi_speed'],
+  neck:   ['essence', 'soul', 'body', 'all_primary_stats', 'buff_effect'],
+  ring:   ['qi_speed', 'harvest_speed', 'harvest_luck', 'mining_speed', 'mining_luck',
+           'qi_focus_mult', 'heavenly_qi_mult'],
+};
 
-const HANDS_POOL = [
-  { id: 'ha_phys_flat', name: 'Iron Fist', stat: 'physical_damage',  type: MOD.FLAT,      ranges: { Iron:[4,10], Bronze:[8,20], Silver:[16,40], Gold:[32,80], Transcendent:[64,160] } },
-  { id: 'ha_elem_flat', name: 'Flame Palm',stat: 'elemental_damage', type: MOD.FLAT,      ranges: { Iron:[3,8],  Bronze:[6,16], Silver:[12,32], Gold:[24,64], Transcendent:[48,128] } },
-  { id: 'ha_phys_incr', name: 'Striker',   stat: 'physical_damage',  type: MOD.INCREASED, ranges: INCR_LARGE },
-  { id: 'ha_phys_more', name: 'Brutal',    stat: 'physical_damage',  type: MOD.MORE,      ranges: MORE_TIER },
-  { id: 'ha_essence',   name: 'Qi Surge',  stat: 'essence',          type: MOD.INCREASED, ranges: INCR_SMALL },
-];
+const SLOT_PREFIX = {
+  weapon: 'w', head: 'h', body: 'b', hands: 'ha',
+  waist: 'wa', feet: 'fe', neck: 'ne', ring: 'ri',
+};
 
-const WAIST_POOL = [
-  { id: 'wa_health_incr',name: 'Endurance',     stat: 'health',         type: MOD.INCREASED, ranges: INCR_LARGE },
-  { id: 'wa_def_incr',   name: 'Belt Guard',    stat: 'defense',        type: MOD.INCREASED, ranges: INCR_LARGE },
-  { id: 'wa_body',       name: 'Core Strength', stat: 'body',           type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'wa_essence',    name: 'Qi Storage',    stat: 'essence',        type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'wa_iron_will',  name: 'Iron Will',     stat: 'soul_toughness', type: MOD.INCREASED, ranges: INCR_SMALL },
-];
+const ALL_MOD_TYPES = [MOD.FLAT, MOD.BASE_FLAT, MOD.INCREASED, MOD.MORE];
 
-const FEET_POOL = [
-  { id: 'fe_def_incr',    name: 'Rooted',        stat: 'defense',          type: MOD.INCREASED, ranges: INCR_LARGE },
-  { id: 'fe_def_more',    name: 'Stalwart',      stat: 'defense',          type: MOD.MORE,      ranges: MORE_TIER },
-  { id: 'fe_health_incr', name: 'Light Step',    stat: 'health',           type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'fe_soul_incr',   name: 'Mental Footing',stat: 'soul',             type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'fe_elem_def',    name: 'Spirit Steps',  stat: 'elemental_defense',type: MOD.INCREASED, ranges: INCR_SMALL },
-];
+const MOD_SUFFIX = {
+  [MOD.FLAT]:      'flat',
+  [MOD.BASE_FLAT]: 'base',
+  [MOD.INCREASED]: 'incr',
+  [MOD.MORE]:      'more',
+};
 
-const NECK_POOL = [
-  { id: 'ne_elem_def_i',   name: 'Warding Light',    stat: 'elemental_defense',type: MOD.INCREASED, ranges: INCR_LARGE },
-  { id: 'ne_soul_tough_m', name: 'Soul Anchor',      stat: 'soul_toughness',   type: MOD.MORE,      ranges: MORE_TIER },
-  { id: 'ne_essence',      name: 'Jade Resonance',   stat: 'essence',          type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'ne_soul',         name: 'Spiritual Link',   stat: 'soul',             type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'ne_soul_tough_i', name: 'Mental Fortitude', stat: 'soul_toughness',   type: MOD.INCREASED, ranges: INCR_LARGE },
-];
+const MOD_LABEL = {
+  [MOD.FLAT]:      '',
+  [MOD.BASE_FLAT]: '(base)',
+  [MOD.INCREASED]: '(%)',
+  [MOD.MORE]:      '(more)',
+};
 
-const RING_POOL = [
-  { id: 'ri_essence',  name: 'Essence Flow',  stat: 'essence',          type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'ri_soul',     name: 'Soul Resonance',stat: 'soul',             type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'ri_body',     name: 'Body Ring',     stat: 'body',             type: MOD.INCREASED, ranges: INCR_SMALL },
-  { id: 'ri_phys_incr',name: 'Striker Band',  stat: 'physical_damage',  type: MOD.INCREASED, ranges: INCR_LARGE },
-  { id: 'ri_elem_incr',name: 'Elemental Ring',stat: 'elemental_damage', type: MOD.INCREASED, ranges: INCR_LARGE },
-  { id: 'ri_phys_more',name: 'Pure Power',    stat: 'physical_damage',  type: MOD.MORE,      ranges: MORE_TIER },
-];
+/** Convert a stat id like 'all_primary_stats' or 'dmg_fire' into a display name. */
+function statDisplayName(statId) {
+  if (statId.startsWith('dmg_')) {
+    const pool = statId.slice(4);
+    return `${pool[0].toUpperCase()}${pool.slice(1)} Damage`;
+  }
+  return statId.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+}
+
+function rangesFor(stat, modType) {
+  const meta = STAT_META[stat];
+  if (!meta) return RANGES.FLAT_PRIMARY;
+  if (modType === MOD.MORE)      return RANGES.MORE_TIER;
+  if (modType === MOD.INCREASED) return RANGES[meta.incr];
+  return RANGES[meta.flat];
+}
+
+/** Build the affix pool for a slot — every (stat × mod_type) tuple. */
+function buildSlotPool(slot) {
+  const pool   = [];
+  const stats  = SLOT_STATS[slot] ?? [];
+  const prefix = SLOT_PREFIX[slot] ?? slot;
+  for (const stat of stats) {
+    const meta = STAT_META[stat];
+    if (!meta) continue;
+    for (const modType of ALL_MOD_TYPES) {
+      pool.push({
+        id:           `${prefix}_${stat}_${MOD_SUFFIX[modType]}`,
+        name:         `${statDisplayName(stat)} ${MOD_LABEL[modType]}`.trim(),
+        stat,
+        type:         modType,
+        ranges:       rangesFor(stat, modType),
+        decimalFlat:  !!meta.decimalFlat,
+        aggregate:    !!meta.aggregate,
+      });
+    }
+  }
+  return pool;
+}
 
 /**
  * Designer overrides: src/data/config/affixPools.override.json wraps each
@@ -153,35 +238,61 @@ const RING_POOL = [
  * pool]). Edits replace the entire pool for that slot, not individual affixes.
  */
 const AFFIX_POOL_BY_SLOT_RAW = {
-  weapon: WEAPON_POOL,
-  head:   HEAD_POOL,
-  body:   BODY_POOL,
-  hands:  HANDS_POOL,
-  waist:  WAIST_POOL,
-  feet:   FEET_POOL,
-  neck:   NECK_POOL,
-  ring:   RING_POOL,
+  weapon: buildSlotPool('weapon'),
+  head:   buildSlotPool('head'),
+  body:   buildSlotPool('body'),
+  hands:  buildSlotPool('hands'),
+  waist:  buildSlotPool('waist'),
+  feet:   buildSlotPool('feet'),
+  neck:   buildSlotPool('neck'),
+  ring:   buildSlotPool('ring'),
 };
 export const AFFIX_POOL_BY_SLOT = {
-  weapon: mergeSingleton(WEAPON_POOL, 'affixPools', 'weapon'),
-  head:   mergeSingleton(HEAD_POOL,   'affixPools', 'head'),
-  body:   mergeSingleton(BODY_POOL,   'affixPools', 'body'),
-  hands:  mergeSingleton(HANDS_POOL,  'affixPools', 'hands'),
-  waist:  mergeSingleton(WAIST_POOL,  'affixPools', 'waist'),
-  feet:   mergeSingleton(FEET_POOL,   'affixPools', 'feet'),
-  neck:   mergeSingleton(NECK_POOL,   'affixPools', 'neck'),
-  ring:   mergeSingleton(RING_POOL,   'affixPools', 'ring'),
+  weapon: mergeSingleton(AFFIX_POOL_BY_SLOT_RAW.weapon, 'affixPools', 'weapon'),
+  head:   mergeSingleton(AFFIX_POOL_BY_SLOT_RAW.head,   'affixPools', 'head'),
+  body:   mergeSingleton(AFFIX_POOL_BY_SLOT_RAW.body,   'affixPools', 'body'),
+  hands:  mergeSingleton(AFFIX_POOL_BY_SLOT_RAW.hands,  'affixPools', 'hands'),
+  waist:  mergeSingleton(AFFIX_POOL_BY_SLOT_RAW.waist,  'affixPools', 'waist'),
+  feet:   mergeSingleton(AFFIX_POOL_BY_SLOT_RAW.feet,   'affixPools', 'feet'),
+  neck:   mergeSingleton(AFFIX_POOL_BY_SLOT_RAW.neck,   'affixPools', 'neck'),
+  ring:   mergeSingleton(AFFIX_POOL_BY_SLOT_RAW.ring,   'affixPools', 'ring'),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Roll a single affix value within its rarity range. The tier is preserved on the affix. */
+/**
+ * Roll a single affix value within its rarity range.
+ *
+ * - INCREASED rolls store decimals (0.10 = +10%).
+ * - MORE rolls store multipliers (1.10 = ×1.10). For aggregate stats the
+ *   bonus distance from 1.0 is scaled (1 + (raw - 1) × scale).
+ * - FLAT / BASE_FLAT rolls are integers UNLESS the entry is flagged
+ *   `decimalFlat` (percentage-points / qi-per-second).
+ * - Aggregate-stat rolls (damage_all, all_primary_stats) get
+ *   AGGREGATE_SCALE applied so they don't outshine single-stat rolls.
+ */
 export function rollAffix(entry, rarity) {
   const range = entry.ranges[rarity] ?? entry.ranges.Iron;
   const [min, max] = range;
-  const value = entry.type === MOD.FLAT
-    ? Math.floor(min + Math.random() * (max - min + 1))
-    : Math.round((min + Math.random() * (max - min)) * 1000) / 1000;
+  const isFlatLike = entry.type === MOD.FLAT || entry.type === MOD.BASE_FLAT;
+  const isInt      = isFlatLike && !entry.decimalFlat;
+  const scale      = entry.aggregate ? AGGREGATE_SCALE : 1;
+
+  let value;
+  if (isInt) {
+    value = Math.floor(min + Math.random() * (max - min + 1));
+    value = Math.max(1, Math.floor(value * scale));
+  } else if (entry.type === MOD.MORE) {
+    const raw = min + Math.random() * (max - min);
+    // Scale distance from 1: 1.20 with 0.5 scale → 1.10.
+    value = 1 + (raw - 1) * scale;
+    value = Math.round(value * 1000) / 1000;
+  } else {
+    const raw = min + Math.random() * (max - min);
+    value = raw * scale;
+    value = Math.round(value * 1000) / 1000;
+  }
+
   return { id: entry.id, name: entry.name, stat: entry.stat, type: entry.type, value, tier: rarity };
 }
 
