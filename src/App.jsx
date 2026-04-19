@@ -71,18 +71,15 @@ function App() {
   }, [cultivation.realmIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keep pill qi multiplier in sync with cultivation game loop.
-  // Reincarnation "Double Pill Effects" node doubles the qi_speed contribution.
-  const pillQiMult       = pills.getQiMult();
-  const treePillMult     = tree.modifiers.pillMult;
-  const effectivePillQi  = 1 + (pillQiMult - 1) * treePillMult;
+  const pillQiMult = pills.getQiMult();
   useEffect(() => {
-    cultivation.pillQiMultRef.current = effectivePillQi;
-  }, [effectivePillQi, cultivation.pillQiMultRef]);
+    cultivation.pillQiMultRef.current = pillQiMult;
+  }, [pillQiMult, cultivation.pillQiMultRef]);
 
-  // Push reincarnation-tree multipliers into cultivation refs each render.
+  // Push reincarnation-tree cultivation speed bonus into the loop.
   useEffect(() => {
-    cultivation.treeQiMultRef.current       = tree.modifiers.qiMult;
-    cultivation.treeHeavenlyMultRef.current = tree.modifiers.heavenlyMult;
+    cultivation.treeQiMultRef.current       = tree.modifiers.cultivSpeedMult ?? 1;
+    cultivation.treeHeavenlyMultRef.current = 1; // heavenly mult now at neutral
   }, [tree.modifiers, cultivation.treeQiMultRef, cultivation.treeHeavenlyMultRef]);
 
   // Open selection modal on level-up only when already on home screen.
@@ -101,11 +98,10 @@ function App() {
   }, [selections, cultivation.selectionQiMultRef]);
 
   // Keep QI crystal bonus in sync with cultivation game loop.
-  // Reincarnation "Triple QI-Stones Effects" node multiplies the bonus.
   useEffect(() => {
     if (!cultivation.crystalQiBonusRef) return;
-    cultivation.crystalQiBonusRef.current = crystal.crystalQiBonus * tree.modifiers.crystalMult;
-  }, [crystal.crystalQiBonus, tree.modifiers.crystalMult, cultivation.crystalQiBonusRef]);
+    cultivation.crystalQiBonusRef.current = crystal.crystalQiBonus;
+  }, [crystal.crystalQiBonus, cultivation.crystalQiBonusRef]);
 
 
   // ── Centralised stat getter ─────────────────────────────────────────────
@@ -127,16 +123,7 @@ function App() {
     });
     const lawBundle = evaluateLawUniques(law, lawCtx);
 
-    // "Double Pill Effects" node scales all permanent-pill flat/increased mods.
-    const pillMods = pills?.getStatModifiers?.() ?? {};
-    const scaledPillMods = tree.modifiers.pillMult === 1
-      ? pillMods
-      : Object.fromEntries(
-          Object.entries(pillMods).map(([stat, list]) => [
-            stat,
-            list.map(m => ({ ...m, value: m.value * tree.modifiers.pillMult })),
-          ])
-        );
+    const scaledPillMods = pills?.getStatModifiers?.() ?? {};
 
     const mergedMods = mergeModifiers(
       artefacts?.getStatModifiers?.(),

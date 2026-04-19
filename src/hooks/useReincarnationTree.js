@@ -1,15 +1,16 @@
 /**
- * useReincarnationTree.js — purchased tree nodes + derived modifier bundle.
+ * useReincarnationTree.js — purchased node set + derived modifier bundle.
  *
- * Purchases are persisted to 'mai_reincarnation_tree' and are NOT wiped on
- * reincarnation. Each node is a one-time purchase.
+ * Purchases persist in 'mai_reincarnation_tree' and survive reincarnation.
  *
- * The hook exposes `modifiers`, a plain object consumed by the cultivation /
- * combat / stat systems to apply the buffs.
+ * prereqMode handling:
+ *   'or'       — any one prereq satisfies
+ *   'and'      — every prereq must be satisfied (sequential + cross-branch)
+ *   'yyUnlock' — ≥ 2 of the 4 main keystones must be purchased
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { NODES, NODES_BY_ID } from '../data/reincarnationTree';
+import { NODES, NODES_BY_ID, MAIN_KEYSTONES } from '../data/reincarnationTree';
 
 const SAVE_KEY = 'mai_reincarnation_tree';
 
@@ -32,12 +33,17 @@ export default function useReincarnationTree({ karma, spendKarma }) {
 
   const isPurchased = useCallback((id) => purchased.has(id), [purchased]);
 
-  /** A node is available when every prereq ORs to satisfied (or no prereqs). */
   const isAvailable = useCallback((id) => {
     const node = NODES_BY_ID[id];
-    if (!node) return false;
-    if (purchased.has(id)) return false;
+    if (!node || purchased.has(id)) return false;
+
+    if (node.prereqMode === 'yyUnlock') {
+      return MAIN_KEYSTONES.filter(k => purchased.has(k)).length >= 2;
+    }
     if (node.prereqs.length === 0) return true;
+    if (node.prereqMode === 'and') {
+      return node.prereqs.every(pid => purchased.has(pid));
+    }
     return node.prereqs.some(pid => purchased.has(pid));
   }, [purchased]);
 
@@ -49,8 +55,7 @@ export default function useReincarnationTree({ karma, spendKarma }) {
 
   const buy = useCallback((id) => {
     const node = NODES_BY_ID[id];
-    if (!node) return false;
-    if (!isAvailable(id)) return false;
+    if (!node || !isAvailable(id)) return false;
     const ok = spendKarma(node.cost);
     if (!ok) return false;
     setPurchased(prev => {
@@ -61,41 +66,52 @@ export default function useReincarnationTree({ karma, spendKarma }) {
     return true;
   }, [isAvailable, spendKarma]);
 
-  /** Derived multipliers / flats for consumers. */
+  /**
+   * Derived modifier bundle — consumed by cultivation, combat, and stat systems.
+   * Old modifier names kept at neutral values so existing consumers don't crash.
+   * New names carry the actual effects from the original design.
+   */
   const modifiers = useMemo(() => ({
-    qiMult:         purchased.has('qis2x')     ? 2 : 1,
-    damageMult:     purchased.has('damage3x')  ? 3 : 1,
-    pillMult:       purchased.has('pills2x')   ? 2 : 1,
-    crystalMult:    purchased.has('stones3x')  ? 3 : 1,
-    miningMult:     purchased.has('mining2x')  ? 2 : 1,
-    gatheringMult:  purchased.has('gather2x')  ? 2 : 1,
-    focusMult:      purchased.has('focus3x')   ? 3 : 1,
-    heavenlyMult:   purchased.has('heaven2x')  ? 2 : 1,
-    statsFlat:      purchased.has('stats1000') ? 1000 : 0,
+    // ── Backward-compat stubs (old node IDs gone; set neutral) ──
+    qiMult:        1,
+    damageMult:    1,
+    pillMult:      1,
+    crystalMult:   1,
+    miningMult:    1,
+    gatheringMult: 1,
+    focusMult:     1,
+    heavenlyMult:  1,
+    statsFlat:     0,
+
+    // ── Ancestor's Legacy ─────────────────────────────────────────
+    cultivSpeedMult: purchased.has('al_1') ? 1.10 : 1,  // +10% qi/s
+    offlineCapHours: purchased.has('al_4') ? 12   : 8,
+    lawCarryForward: purchased.has('al_k'),
+
+    // ── Martial Dao ───────────────────────────────────────────────
+    exploitChanceFlat: purchased.has('md_3') ? 0.03 : 0,  // +3%
+
+    // ── Heavenly Will ─────────────────────────────────────────────
+    maxHpMult:         purchased.has('hw_2') ? 1.10 : 1,
+    undyingResolve:    purchased.has('hw_3'),
+    exploitMultBonus:  purchased.has('hw_4') ? 0.10 : 0,  // +10%
+
+    // ── Yin Yang ──────────────────────────────────────────────────
+    yangExploitMult:   purchased.has('yy_3') ? 2.5  : 1.5,
   }), [purchased]);
 
-  /** Stat-bundle modifiers merged into computeAllStats via mergeModifiers. */
+  /** Stat-bundle modifiers fed into computeAllStats via mergeModifiers. */
   const getStatModifiers = useCallback(() => {
     const mods = {};
-    if (modifiers.miningMult !== 1) {
-      mods.mining_speed = [{ type: 'more', value: modifiers.miningMult }];
+    if (modifiers.exploitChanceFlat > 0) {
+      mods.exploit_chance = [{ type: 'flat', value: modifiers.exploitChanceFlat }];
     }
-    if (modifiers.gatheringMult !== 1) {
-      mods.harvest_speed = [{ type: 'more', value: modifiers.gatheringMult }];
-    }
-    if (modifiers.focusMult !== 1) {
-      // qi_focus_mult has a base of 300 (%); triple = 900%.
-      mods.qi_focus_mult = [{ type: 'more', value: modifiers.focusMult }];
-    }
-    if (modifiers.statsFlat > 0) {
-      mods.essence = [{ type: 'flat', value: modifiers.statsFlat }];
-      mods.body    = [{ type: 'flat', value: modifiers.statsFlat }];
-      mods.soul    = [{ type: 'flat', value: modifiers.statsFlat }];
+    if (modifiers.exploitMultBonus > 0) {
+      mods.exploit_mult = [{ type: 'increased', value: modifiers.exploitMultBonus }];
     }
     return mods;
   }, [modifiers]);
 
-  /** Reset the tree — used by the designer; NOT called by reincarnation. */
   const _reset = useCallback(() => setPurchased(new Set()), []);
 
   return {
