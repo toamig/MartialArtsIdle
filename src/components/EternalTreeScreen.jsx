@@ -233,35 +233,26 @@ export default function EternalTreeScreen({
       >
         <div className="et-hint">Drag to pan · Scroll to zoom · Tap a glowing node to unlock</div>
 
-        <div className="et-world" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` }}>
-
-          {/* SVG for edges + labels — uses a large real viewport so the parent's
-              overflow:hidden doesn't clip to zero. All coordinates are offset
-              by SVG_O so that world-origin (0,0) maps to the SVG centre. */}
-          {(() => {
-            const SVG_O = 10000;
-            const SVG_S = SVG_O * 2;
-            return (
-          <svg
-            width={SVG_S} height={SVG_S}
-            style={{ position:'absolute', left: -SVG_O, top: -SVG_O, pointerEvents:'none', overflow:'visible' }}
-          >
-            <defs>
-              <filter id="et-glow-f" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="3" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              <filter id="et-glow-soft" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="2" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              <marker id="et-arrow" viewBox="0 0 10 10" refX="8" refY="5"
-                markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-                <path d="M 0 1 L 9 5 L 0 9 z" fill="context-stroke" />
-              </marker>
-            </defs>
-            {/* Translate so world (0,0) sits at SVG centre */}
-            <g transform={`translate(${SVG_O}, ${SVG_O})`}>
+        {/* ── SVG edges — lives at canvas level, fills canvas, no overflow issue ── */}
+        <svg
+          style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none' }}
+        >
+          <defs>
+            <filter id="et-glow-f" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="et-glow-soft" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <marker id="et-arrow" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="context-stroke" />
+            </marker>
+          </defs>
+          {/* Pan+scale transform applied directly to SVG group — same as world div */}
+          <g transform={`translate(${pan.x}, ${pan.y}) scale(${scale})`}>
 
             {EDGES.map(([srcId, tgtId]) => {
               const p1  = WORLD[srcId];
@@ -273,9 +264,8 @@ export default function EternalTreeScreen({
               const isYY = tgt?.branch === 'yinyang';
               const effectiveSt = (isYY && !yyUnlocked) ? 'dim' : st;
 
-              // Stop the line at the edge of the target node so the arrow
-              // tip sits just outside the box rather than at the centre.
-              const STOP = tgt?.keystone ? 64 : 58;
+              // Stop line at edge of target circle (r≈56 normal, r≈61 keystone)
+              const STOP = tgt?.keystone ? 62 : 57;
               const dx = p2.x - p1.x, dy = p2.y - p1.y;
               const dist = Math.sqrt(dx * dx + dy * dy) || 1;
               const ex = p2.x - (dx / dist) * STOP;
@@ -283,9 +273,9 @@ export default function EternalTreeScreen({
 
               const stroke =
                 effectiveSt === 'active' ? `rgba(${rgb},0.9)` :
-                effectiveSt === 'lit'    ? `rgba(${rgb},0.6)` :
-                                           `rgba(${rgb},0.18)`;
-              const sw   = effectiveSt === 'active' ? 3.5 : effectiveSt === 'lit' ? 2.5 : 1.5;
+                effectiveSt === 'lit'    ? `rgba(${rgb},0.65)` :
+                                           `rgba(${rgb},0.22)`;
+              const sw   = effectiveSt === 'active' ? 3 : effectiveSt === 'lit' ? 2.5 : 1.5;
               const dash = effectiveSt === 'dim' ? '6 5' : undefined;
               const filter =
                 effectiveSt === 'active' ? 'url(#et-glow-f)' :
@@ -318,12 +308,12 @@ export default function EternalTreeScreen({
               );
             })}
 
-            {/* Yin Yang sealed ring hint */}
+            {/* Yin Yang sealed hint */}
             {!yyUnlocked && (() => {
               const pos = WORLD['yy_1'];
               return (
-                <text x={pos.x} y={pos.y - 68}
-                  fill="rgba(168,85,247,0.45)" fontSize="11" fontWeight="600"
+                <text x={pos.x} y={pos.y - 72}
+                  fill="rgba(168,85,247,0.5)" fontSize="11" fontWeight="600"
                   textAnchor="middle" dominantBaseline="middle"
                   style={{ userSelect: 'none' }}
                 >
@@ -332,10 +322,11 @@ export default function EternalTreeScreen({
               );
             })()}
 
-            </g>
-          </svg>
-            );
-          })()}
+          </g>
+        </svg>
+
+        {/* ── HTML nodes — world div with same pan+scale transform ── */}
+        <div className="et-world" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` }}>
 
           {/* Root node */}
           <div className="et-node et-node-root" style={{ left: 0, top: 0 }}>
@@ -356,11 +347,7 @@ export default function EternalTreeScreen({
               <div
                 key={node.id}
                 className={`et-node et-node-${state}${node.keystone ? ' et-node-keystone' : ''}${node.branch === 'cross' ? ' et-node-cross' : ''}`}
-                style={{
-                  left: pos.x,
-                  top:  pos.y,
-                  '--branch-rgb': rgb,
-                }}
+                style={{ left: pos.x, top: pos.y, '--branch-rgb': rgb }}
                 onClick={() => !isSealed && handleNodeClick(node)}
                 onMouseEnter={() => !isSealed && setActiveNode(node)}
                 onMouseLeave={() => setActiveNode(null)}
@@ -368,7 +355,7 @@ export default function EternalTreeScreen({
                 <span className="et-node-icon">{isSealed ? '🔒' : node.icon}</span>
                 <span className="et-node-label">{node.label}</span>
                 <span className="et-node-cost">
-                  {purchasedSet.has(node.id) ? '✓ Owned' : isSealed ? 'Sealed' : `${node.cost} ◈`}
+                  {purchasedSet.has(node.id) ? '✓' : isSealed ? 'Sealed' : `${node.cost} ◈`}
                 </span>
                 {node.keystone && !purchasedSet.has(node.id) && !isSealed && (
                   <span className="et-keystone-star">★</span>
