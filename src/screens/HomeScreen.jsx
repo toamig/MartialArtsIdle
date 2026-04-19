@@ -10,7 +10,7 @@ import CrystalFeedModal from '../components/CrystalFeedModal';
 import JadeShopModal from '../components/JadeShopModal';
 import AchievementsModal from '../components/AchievementsModal';
 import JourneyModal from '../components/JourneyModal';
-import ReincarnationModal from '../components/ReincarnationModal';
+import EternalTreeScreen from '../components/EternalTreeScreen';
 import { PILLS_BY_ID } from '../data/pills';
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
@@ -693,9 +693,9 @@ function HomeScreen({
         />
       )}
 
-      {/* Reincarnation modal */}
+      {/* Eternal Tree — full-screen overlay */}
       {reincOpen && (
-        <ReincarnationModal
+        <EternalTreeScreen
           karma={karma}
           tree={tree}
           lives={karmaLives}
