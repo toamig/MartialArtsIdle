@@ -27,21 +27,21 @@ nothing — you only earn karma by progressing.
 | Major realm (index range)        | Karma / stage | Major total |
 |----------------------------------|--------------:|------------:|
 | Tempered Body Layer 2–10 (1–9)   | 1             | 9           |
-| Qi Transformation (10–13)        | 2             | 8           |
-| True Element (14–17)             | 3             | 12          |
-| Separation & Reunion (18–20)     | 4             | 12          |
-| Immortal Ascension (21–23)       | 5             | 15          |
-| Saint (24–26) — **unlock here**  | 6             | 18          |
-| Saint King (27–29)               | 7             | 21          |
-| Origin Returning (30–32)         | 8             | 24          |
-| Origin King (33–35)              | 9             | 27          |
-| Void King (36–38)                | 10            | 30          |
-| Dao Source (39–41)               | 11            | 33          |
-| Emperor Realm (42–44)            | 12            | 36          |
-| Open Heaven Layer 1–6 (45–50)    | 15            | 90          |
-| **Peak total**                   |               | **335**     |
+| Qi Transformation (10–13)        | 1             | 4           |
+| True Element (14–17)             | 1             | 4           |
+| Separation & Reunion (18–20)     | 2             | 6           |
+| Immortal Ascension (21–23)       | 2             | 6           |
+| Saint (24–26) — **unlock here**  | 2             | 6           |
+| Saint King (27–29)               | 3             | 9           |
+| Origin Returning (30–32)         | 3             | 9           |
+| Origin King (33–35)              | 4             | 12          |
+| Void King (36–38)                | 4             | 12          |
+| Dao Source (39–41)               | 5             | 15          |
+| Emperor Realm (42–44)            | 5             | 15          |
+| Open Heaven Layer 1–6 (45–50)    | 6             | 36          |
+| **Peak total**                   |               | **143**     |
 
-Reaching peak in a single life awards all 335 karma.
+Reaching peak in a single life awards all 143 karma.
 
 Karma state lives in `localStorage` key `mai_reincarnation` and tracks:
 - `karma` — current spendable balance
@@ -62,16 +62,16 @@ Each link is **OR**, so the player can pivot between paths to reach any top
 node via multiple middle options.
 
 ```
-[Triple All Damage 70]  [+1000 Soul/Body/Essence 60]  [Double QI/s 65]
+[Triple All Damage 30]  [+1000 Soul/Body/Essence 26]  [Double QI/s 28]
         |   \                 /   |   \                    /   |
         |    \               /    |    \                  /    |
-[Triple Focused QI 45]  [Double Heavenly QI 30]  [Triple QI-Stones 30]
+[Triple Focused QI 19]  [Double Heavenly QI 13]  [Triple QI-Stones 13]
         |   \                 /   |   \                    /   |
         |    \               /    |    \                  /    |
-[Double Pill Effects 15]  [Double Mining 10]   [Double Gathering 10]
+[Double Pill Effects 6]  [Double Mining 4]   [Double Gathering 4]
 ```
 
-**Total cost = 335 karma — exactly what one peak life awards.**
+**Total cost = 143 karma — exactly what one peak life awards.**
 
 Purchases persist in `localStorage` key `mai_reincarnation_tree` and are NOT
 wiped on reincarnation. Each node is a one-time purchase.

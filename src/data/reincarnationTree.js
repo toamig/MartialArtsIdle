@@ -16,18 +16,18 @@
 export function karmaForReachingIndex(i) {
   if (i <= 0) return 0;
   if (i <= 9)  return 1;   // Tempered Body layers 2-10
-  if (i <= 13) return 2;   // Qi Transformation
-  if (i <= 17) return 3;   // True Element
-  if (i <= 20) return 4;   // Separation & Reunion
-  if (i <= 23) return 5;   // Immortal Ascension
-  if (i <= 26) return 6;   // Saint
-  if (i <= 29) return 7;   // Saint King
-  if (i <= 32) return 8;   // Origin Returning
-  if (i <= 35) return 9;   // Origin King
-  if (i <= 38) return 10;  // Void King
-  if (i <= 41) return 11;  // Dao Source
-  if (i <= 44) return 12;  // Emperor Realm
-  return 15;               // Open Heaven (45-50)
+  if (i <= 13) return 1;   // Qi Transformation
+  if (i <= 17) return 1;   // True Element
+  if (i <= 20) return 2;   // Separation & Reunion
+  if (i <= 23) return 2;   // Immortal Ascension
+  if (i <= 26) return 2;   // Saint
+  if (i <= 29) return 3;   // Saint King
+  if (i <= 32) return 3;   // Origin Returning
+  if (i <= 35) return 4;   // Origin King
+  if (i <= 38) return 4;   // Void King
+  if (i <= 41) return 5;   // Dao Source
+  if (i <= 44) return 5;   // Emperor Realm
+  return 6;                // Open Heaven (45-50)
 }
 
 /** Cumulative karma earned by reaching `maxIndex` (never awarded twice). */
@@ -47,19 +47,19 @@ export const PEAK_INDEX         = 50;   // Open Heaven Layer 6
 // prereqs: ids where ANY ONE satisfies the gate (OR logic)
 export const NODES = [
   // Bottom row — no prereqs
-  { id: 'pills2x',    label: 'Double Pill Effects',     cost: 15, row: 0, col: 0, prereqs: [] },
-  { id: 'mining2x',   label: 'Double Mining Speed',     cost: 10, row: 0, col: 1, prereqs: [] },
-  { id: 'gather2x',   label: 'Double Gathering Speed',  cost: 10, row: 0, col: 2, prereqs: [] },
+  { id: 'pills2x',    label: 'Double Pill Effects',     cost: 6, row: 0, col: 0, prereqs: [] },
+  { id: 'mining2x',   label: 'Double Mining Speed',     cost: 4, row: 0, col: 1, prereqs: [] },
+  { id: 'gather2x',   label: 'Double Gathering Speed',  cost: 4, row: 0, col: 2, prereqs: [] },
 
   // Middle row — each needs any adjacent/diagonal bottom node
-  { id: 'focus3x',    label: 'Triple Focused QI Multiplier', cost: 45, row: 1, col: 0, prereqs: ['pills2x', 'mining2x'] },
-  { id: 'heaven2x',   label: 'Double Heavenly QI Bonus',     cost: 30, row: 1, col: 1, prereqs: ['pills2x', 'mining2x', 'gather2x'] },
-  { id: 'stones3x',   label: 'Triple QI-Stones Effects',     cost: 30, row: 1, col: 2, prereqs: ['mining2x', 'gather2x'] },
+  { id: 'focus3x',    label: 'Triple Focused QI Multiplier', cost: 19, row: 1, col: 0, prereqs: ['pills2x', 'mining2x'] },
+  { id: 'heaven2x',   label: 'Double Heavenly QI Bonus',     cost: 13, row: 1, col: 1, prereqs: ['pills2x', 'mining2x', 'gather2x'] },
+  { id: 'stones3x',   label: 'Triple QI-Stones Effects',     cost: 13, row: 1, col: 2, prereqs: ['mining2x', 'gather2x'] },
 
   // Top row — each needs any adjacent/diagonal middle node
-  { id: 'damage3x',   label: 'Triple All Damage',                  cost: 70, row: 2, col: 0, prereqs: ['focus3x', 'heaven2x'] },
-  { id: 'stats1000',  label: '+1000 Soul, Body & Essence',         cost: 60, row: 2, col: 1, prereqs: ['focus3x', 'heaven2x', 'stones3x'] },
-  { id: 'qis2x',      label: 'Double QI/s',                        cost: 65, row: 2, col: 2, prereqs: ['heaven2x', 'stones3x'] },
+  { id: 'damage3x',   label: 'Triple All Damage',                  cost: 30, row: 2, col: 0, prereqs: ['focus3x', 'heaven2x'] },
+  { id: 'stats1000',  label: '+1000 Soul, Body & Essence',         cost: 26, row: 2, col: 1, prereqs: ['focus3x', 'heaven2x', 'stones3x'] },
+  { id: 'qis2x',      label: 'Double QI/s',                        cost: 28, row: 2, col: 2, prereqs: ['heaven2x', 'stones3x'] },
 ];
 
 export const NODES_BY_ID = Object.fromEntries(NODES.map(n => [n.id, n]));
