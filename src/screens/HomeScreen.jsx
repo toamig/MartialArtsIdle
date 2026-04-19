@@ -8,6 +8,7 @@ import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
 import CrystalFeedModal from '../components/CrystalFeedModal';
 import JadeShopModal from '../components/JadeShopModal';
+import AchievementsModal from '../components/AchievementsModal';
 import { PILLS_BY_ID } from '../data/pills';
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
@@ -25,7 +26,7 @@ function getSpriteState(boosting, adBoostActive) {
 }
 
 // ── Top HUD bar ─────────────────────────────────────────────────────────────
-function HomeTopHud({ jadeBalance, onNavigate, onOpenShop }) {
+function HomeTopHud({ jadeBalance, onNavigate, onOpenShop, onOpenAchievements, hasNewAchievement }) {
   return (
     <div className="home-top-hud">
       <button className="home-hud-jade" onClick={onOpenShop} aria-label="Blood Lotus Shop">
@@ -38,6 +39,14 @@ function HomeTopHud({ jadeBalance, onNavigate, onOpenShop }) {
         <span className="home-hud-jade-amount">{jadeBalance ?? 0}</span>
       </button>
       <div className="home-hud-spacer" />
+      <button
+        className="home-hud-trophy"
+        onClick={onOpenAchievements}
+        aria-label="Achievements"
+      >
+        🏆
+        {hasNewAchievement && <span className="home-hud-trophy-badge" />}
+      </button>
       <button
         className="home-hud-settings"
         onClick={() => onNavigate('settings')}
@@ -311,6 +320,7 @@ function HomeScreen({
   selections, onOpenSelections,
   onNavigate,
   crystal, isCrystalUnlocked,
+  achievements,
 }) {
   const { t } = useTranslation('ui');
   const {
@@ -368,6 +378,16 @@ function HomeScreen({
 
   // ── Jade shop modal ──────────────────────────────────────────────────────
   const [shopOpen, setShopOpen] = useState(false);
+
+  // ── Achievements modal ───────────────────────────────────────────────────
+  const [achOpen, setAchOpen] = useState(false);
+  const [hasNewAch, setHasNewAch] = useState(false);
+  const prevUnlockedCount = useRef(achievements?.unlockedCount ?? 0);
+  useEffect(() => {
+    const count = achievements?.unlockedCount ?? 0;
+    if (count > prevUnlockedCount.current) setHasNewAch(true);
+    prevUnlockedCount.current = count;
+  }, [achievements?.unlockedCount]);
 
   // ── Crystal feed modal ───────────────────────────────────────────────────
   const [crystalModalOpen, setCrystalModalOpen] = useState(false);
@@ -430,7 +450,13 @@ function HomeScreen({
       )}
 
       {/* ── Top HUD bar: jade balance + settings ─────────────────────── */}
-      <HomeTopHud jadeBalance={jadeBalance} onNavigate={onNavigate} onOpenShop={() => setShopOpen(true)} />
+      <HomeTopHud
+        jadeBalance={jadeBalance}
+        onNavigate={onNavigate}
+        onOpenShop={() => setShopOpen(true)}
+        onOpenAchievements={() => { setAchOpen(true); setHasNewAch(false); }}
+        hasNewAchievement={hasNewAch}
+      />
 
       {/* ── Scene: fills all space between HUD and nav bar ───────────── */}
       <div className="home-scene">
@@ -605,6 +631,14 @@ function HomeScreen({
           crystal={crystal}
           inventory={inventory}
           onClose={() => setCrystalModalOpen(false)}
+        />
+      )}
+
+      {/* Achievements modal */}
+      {achOpen && achievements && (
+        <AchievementsModal
+          achievements={achievements}
+          onClose={() => setAchOpen(false)}
         />
       )}
     </div>

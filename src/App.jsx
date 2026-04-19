@@ -28,6 +28,7 @@ import useNotifications from './hooks/useNotifications';
 import useSelections from './hooks/useSelections';
 import useClearedRegions from './hooks/useClearedRegions';
 import useFeatureFlags from './hooks/useFeatureFlags';
+import useAchievements from './hooks/useAchievements';
 import ToastStack from './components/ToastStack';
 import SelectionModal from './components/SelectionModal';
 import './App.css';
@@ -174,6 +175,30 @@ function App() {
 
   const notifications = useNotifications({ cultivation, inventory });
 
+  const achievements = useAchievements({
+    onUnlock: (a) => notifications.addToast({ message: `🏆 Achievement: ${a.title}` }),
+  });
+
+  // Check achievements whenever key progression metrics change.
+  useEffect(() => {
+    achievements.check({
+      realmIndex:            cultivation.realmIndex,
+      ownedLawsCount:        cultivation.ownedLaws.length,
+      ownedTechniquesCount:  Object.keys(techniques.ownedTechniques).length,
+      clearedRegionsCount:   clearedRegions.size,
+      ownedArtefactsCount:   artefacts.owned.length,
+      discoveredPillsCount:  Object.keys(pills.discoveredPills).length,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    cultivation.realmIndex,
+    cultivation.ownedLaws.length,
+    Object.keys(techniques.ownedTechniques).length,
+    clearedRegions.size,
+    artefacts.owned.length,
+    Object.keys(pills.discoveredPills).length,
+  ]);
+
   const featureFlags = useFeatureFlags({
     cultivation,
     clearedRegions,
@@ -204,7 +229,7 @@ function App() {
   });
 
   const screens = {
-    home:   <HomeScreen cultivation={cultivation} pills={pills} inventory={inventory} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} onNavigate={navigate} crystal={crystal} isCrystalUnlocked={featureFlags.isUnlocked('qi_crystal')} />,
+    home:   <HomeScreen cultivation={cultivation} pills={pills} inventory={inventory} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} onNavigate={navigate} crystal={crystal} isCrystalUnlocked={featureFlags.isUnlocked('qi_crystal')} achievements={achievements} />,
     worlds: <WorldsScreen cultivation={cultivation} onNavigate={navigate} expandWorldId={screenParam?.expandWorldId ?? null} activeTab={screenParam?.activeTab ?? null} clearedRegions={clearedRegions} idleAssignment={idleAssignment} onSetIdle={autoFarm.setIdleActivity} pendingGains={autoFarm.pendingGains} hasPendingGains={autoFarm.hasPendingGains} onCollectGains={(applyFn) => autoFarm.collectGains(applyFn)} inventory={inventory} techniques={techniques} />,
     // Sub-screens launched from the Worlds hub
     'combat-arena': <CombatScreen
