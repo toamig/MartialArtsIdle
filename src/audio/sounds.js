@@ -70,18 +70,6 @@ const _BGM_BASE = {
     loop:   true,
     volume: 1.0,
   },
-  /** Ambient exploration — Worlds, Gathering, Mining screens. */
-  world: {
-    src:    [`${BASE}audio/bgm/world.ogg`, `${BASE}audio/bgm/world.mp3`],
-    loop:   true,
-    volume: 1.0,
-  },
-  /** Soft ambient — Settings, Inventory, Stats, non-gameplay screens. */
-  menu: {
-    src:    [`${BASE}audio/bgm/menu.ogg`, `${BASE}audio/bgm/menu.mp3`],
-    loop:   true,
-    volume: 0.6,
-  },
 };
 
 export const BGM_TRACKS = Object.fromEntries(
