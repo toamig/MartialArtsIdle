@@ -39,12 +39,12 @@ export function spendJade(amount) {
 // ── IAP stubs — replace with platform SDK calls when ready ───────────────────
 
 export const JADE_PACKAGES = [
-  { id: 'jade_60',   jade: 60,   price: '$0.99',  label: 'Handful of Jade'  },
-  { id: 'jade_330',  jade: 330,  price: '$4.99',  label: 'Pouch of Jade'    },
-  { id: 'jade_980',  jade: 980,  price: '$14.99', label: 'Chest of Jade'    },
-  { id: 'jade_1980', jade: 1980, price: '$29.99', label: 'Vault of Jade'    },
-  { id: 'jade_3280', jade: 3280, price: '$49.99', label: 'Treasury of Jade' },
-  { id: 'jade_6480', jade: 6480, price: '$99.99', label: 'Heaven\'s Fortune' },
+  { id: 'jade_60',   jade: 300,   price: '$0.99',  label: 'Handful of Jade'  },
+  { id: 'jade_330',  jade: 1650,  price: '$4.99',  label: 'Pouch of Jade'    },
+  { id: 'jade_980',  jade: 4900,  price: '$14.99', label: 'Chest of Jade'    },
+  { id: 'jade_1980', jade: 9900,  price: '$29.99', label: 'Vault of Jade'    },
+  { id: 'jade_3280', jade: 16400, price: '$49.99', label: 'Treasury of Jade' },
+  { id: 'jade_6480', jade: 32400, price: '$99.99', label: 'Heaven\'s Fortune' },
 ];
 
 export async function purchaseJade(packageId) {
@@ -64,10 +64,10 @@ export async function purchaseJade(packageId) {
 // ── Jade costs ────────────────────────────────────────────────────────────────
 
 export const JADE_COSTS = {
-  reroll_minor:       10,   // reroll on a minor level-up selection
+  reroll_minor:       50,   // reroll on a minor level-up selection
   reroll_breakthrough: 0,   // first reroll on breakthrough is free (handled in hook)
-  reroll_extra:       20,   // additional rerolls on breakthrough after the free one
+  reroll_extra:       100,  // additional rerolls on breakthrough after the free one
   // Law offers are rarer than augments and shape several realms of play,
   // so each reroll past the free first costs more than reroll_extra.
-  reroll_law_extra:   30,
+  reroll_law_extra:   150,
 };

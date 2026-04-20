@@ -352,12 +352,12 @@ const POOL_RAW = [
   {
     id: 'jade_affinity',
     name: 'Jade Affinity',
-    description: 'Earn +1 Jade per realm breakthrough',
+    description: 'Earn +5 Jade per realm breakthrough',
     category: 'economy',
     rarity: 'rare',
     minRealmIndex: 0,
     maxStacks: 5,
-    effects: [{ type: 'special', key: 'jade_per_breakthrough', value: 1 }],
+    effects: [{ type: 'special', key: 'jade_per_breakthrough', value: 5 }],
   },
 
   // ── Special ─────────────────────────────────────────────────────────────────
