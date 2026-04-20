@@ -351,7 +351,8 @@ function AudioUploadRow({ soundId, folder, onUploaded }) {
       message: `design: audio — upload ${folder}/${soundId}.${ext}`,
     });
     if (!res.ok) throw new Error(uploadError(label, res));
-    return `/audio/${folder}/${soundId}.${ext}`;
+    // Store as a BASE-relative path so it works on any deployment base URL.
+    return `audio/${folder}/${soundId}.${ext}`;
   }
 
   async function upload() {

@@ -299,7 +299,7 @@
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-image: url('/backgrounds/ui_screens.png');
+  background-image: var(--screen-bg-url);
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;

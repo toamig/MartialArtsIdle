@@ -522,7 +522,7 @@ function App() {
   const BASE = import.meta.env.BASE_URL;
 
   return (
-    <div className="app">
+    <div className="app" style={{ '--screen-bg-url': `url(${BASE}backgrounds/ui_screens.png)` }}>
       {currentScreen !== 'home' && (
         <div
           className="app-bg"
