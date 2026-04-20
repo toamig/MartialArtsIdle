@@ -302,6 +302,20 @@ export default function useAutoFarm({ worlds, getStats }) {
     setPendingGains(emptyGains());
   }, []);
 
+  // Derive the exposed assignment:
+  // • While idle is RUNNING  → always use the live config so the collect button
+  //   reappears immediately after each collect without needing a restart.
+  // • While idle is STOPPED  → fall back to lastAssignment so the collect button
+  //   persists until the player actually collects the pending gains.
+  const lastIdleAssignment = (() => {
+    for (const activity of ['gathering', 'mining']) {
+      if (config[activity]?.enabled) {
+        return { activity, worldIndex: config[activity].worldIndex, regionIndex: config[activity].regionIndex };
+      }
+    }
+    return lastAssignment;
+  })();
+
   return {
     /** Current auto-farm configuration. */
     autoFarmConfig: config,
@@ -317,7 +331,7 @@ export default function useAutoFarm({ worlds, getStats }) {
     clearGains,
     /** True if any gains are waiting. */
     hasPendingGains: hasGains(pendingGains),
-    /** Last active assignment — survives idle being cleared so collect remains visible. */
-    lastIdleAssignment: lastAssignment,
+    /** Active assignment when running; last assignment when stopped (for collect persistence). */
+    lastIdleAssignment,
   };
 }
