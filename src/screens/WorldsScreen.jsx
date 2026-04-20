@@ -74,7 +74,7 @@ const TAB_ACTIVITY = { world: 'combat', gather: 'gathering', mine: 'mining' };
 const ACTIVITY_ICON = { combat: '⚔', gathering: '🌿', mining: '⛏' };
 
 function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, worldId,
-                     canIdle, isIdling, onSetIdle, onClearIdle,
+                     canIdle, isIdling, isLastIdle, onSetIdle, onClearIdle,
                      pendingGains, hasPendingGains, onCollect }) {
   const { t } = useTranslation('ui');
   const { t: tGame }  = useTranslation('game');
@@ -156,22 +156,6 @@ function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, wo
         {combatLocked && (
           <div className="region-combat-gate">⚔ Clear combat first</div>
         )}
-        {isIdling && hasPendingGains && pendingGains && (
-          <div className="region-loot-chips">
-            {Object.entries(pendingGains.items ?? {})
-              .filter(([, qty]) => qty > 0)
-              .map(([id, qty]) => {
-                const mat = ALL_MATERIALS[id];
-                const name = mat?.name ?? id;
-                return <span key={id} className="loot-banner-item">{name} ×{qty}</span>;
-              })}
-            {(pendingGains.techniques?.length ?? 0) > 0 && (
-              <span className="loot-banner-item loot-banner-item-tech">
-                +{pendingGains.techniques.length} Technique{pendingGains.techniques.length > 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
       {!locked && isWorld && enemyIds.length > 0 && (
@@ -180,9 +164,9 @@ function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, wo
         </div>
       )}
 
-      {(!locked && (canIdle || isIdling)) && (
+      {(!locked && (canIdle || isIdling || isLastIdle)) && (
         <div className="region-row-actions">
-          {isIdling && hasPendingGains && onCollect && (
+          {isLastIdle && hasPendingGains && onCollect && (
             <button
               className="region-collect-btn"
               onClick={e => { e.stopPropagation(); onCollect(); }}
@@ -190,20 +174,22 @@ function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, wo
               Collect
             </button>
           )}
-          <button
-            className={`region-idle-btn${isIdling ? ' region-idle-btn-active' : ''}`}
-            onClick={handleIdleClick}
-            title={isIdling ? 'Stop idling here' : 'Idle here automatically'}
-          >
-            {isIdling ? '◉ Idling' : '◎ Idle'}
-          </button>
+          {(canIdle || isIdling) && (
+            <button
+              className={`region-idle-btn${isIdling ? ' region-idle-btn-active' : ''}`}
+              onClick={handleIdleClick}
+              title={isIdling ? 'Stop idling here' : 'Idle here automatically'}
+            >
+              {isIdling ? '◉ Idling' : '◎ Idle'}
+            </button>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavigate, expandWorldId, idleAssignment, onSetIdle,
+function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavigate, expandWorldId, idleAssignment, lastIdleAssignment, onSetIdle,
                      pendingGains, hasPendingGains, onCollect }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
@@ -272,6 +258,9 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
             const isIdling   = idleAssignment?.activity === activity
                             && idleAssignment?.worldIndex === worldIndex
                             && idleAssignment?.regionIndex === regionIndex;
+            const isLastIdle = lastIdleAssignment?.activity === activity
+                            && lastIdleAssignment?.worldIndex === worldIndex
+                            && lastIdleAssignment?.regionIndex === regionIndex;
             return (
               <RegionRow
                 key={region.name}
@@ -284,11 +273,12 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
                 worldId={world.id}
                 canIdle={canIdle}
                 isIdling={isIdling}
+                isLastIdle={isLastIdle}
                 onSetIdle={() => onSetIdle(activity, worldIndex, regionIndex)}
                 onClearIdle={() => onSetIdle(null)}
-                pendingGains={isIdling ? pendingGains : null}
-                hasPendingGains={isIdling ? hasPendingGains : false}
-                onCollect={isIdling ? onCollect : null}
+                pendingGains={pendingGains}
+                hasPendingGains={hasPendingGains}
+                onCollect={onCollect}
               />
             );
           })}
@@ -298,7 +288,7 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
   );
 }
 
-function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clearedRegions, idleAssignment, onSetIdle,
+function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clearedRegions, idleAssignment, lastIdleAssignment, onSetIdle,
                         pendingGains, hasPendingGains, onCollectGains, inventory, techniques }) {
   const { t } = useTranslation('ui');
   const [tab, setTab] = useState(activeTab ?? 'world');
@@ -352,6 +342,7 @@ function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clear
             onNavigate={onNavigate}
             expandWorldId={expandWorldId}
             idleAssignment={idleAssignment}
+            lastIdleAssignment={lastIdleAssignment}
             onSetIdle={onSetIdle ?? (() => {})}
             pendingGains={pendingGains}
             hasPendingGains={hasPendingGains}

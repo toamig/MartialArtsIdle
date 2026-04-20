@@ -87,6 +87,18 @@ function clearPersistedGains() {
 export default function useAutoFarm({ worlds, getStats }) {
   const [config, setConfigRaw] = useState(loadAutoFarmConfig);
 
+  // Tracks the most recent *active* assignment so the collect button stays
+  // visible after idle is cleared, until the player collects.
+  const [lastAssignment, setLastAssignment] = useState(() => {
+    const cfg = loadAutoFarmConfig();
+    for (const activity of ['gathering', 'mining']) {
+      if (cfg[activity]?.enabled) {
+        return { activity, worldIndex: cfg[activity].worldIndex, regionIndex: cfg[activity].regionIndex };
+      }
+    }
+    return null;
+  });
+
   // Persist config whenever it changes
   useEffect(() => { saveAutoFarmConfig(config); }, [config]);
 
@@ -246,6 +258,7 @@ export default function useAutoFarm({ worlds, getStats }) {
     if (activity) {
       clearPersistedGains();
       setPendingGains(emptyGains());
+      setLastAssignment({ activity, worldIndex, regionIndex });
     }
 
     setConfigRaw((prev) => {
@@ -280,6 +293,7 @@ export default function useAutoFarm({ worlds, getStats }) {
       clearPersistedGains();
       return emptyGains();
     });
+    setLastAssignment(null);
   }, []);
 
   /** Discard pending gains without applying them. */
@@ -303,5 +317,7 @@ export default function useAutoFarm({ worlds, getStats }) {
     clearGains,
     /** True if any gains are waiting. */
     hasPendingGains: hasGains(pendingGains),
+    /** Last active assignment — survives idle being cleared so collect remains visible. */
+    lastIdleAssignment: lastAssignment,
   };
 }
