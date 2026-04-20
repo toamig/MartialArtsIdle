@@ -5,6 +5,8 @@ import HomeScreen from './screens/HomeScreen';
 import JadeShopModal from './components/JadeShopModal';
 import AchievementsModal from './components/AchievementsModal';
 import JourneyModal from './components/JourneyModal';
+import DailyBonusModal from './components/DailyBonusModal';
+import { useDailyBonus } from './hooks/useDailyBonus';
 import EternalTreeScreen from './components/EternalTreeScreen';
 import { initAds } from './ads/adService';
 import CombatScreen from './screens/CombatScreen';
@@ -53,6 +55,14 @@ function App() {
   const [journeyOpen, setJourneyOpen] = useState(false);
   const [achOpen,     setAchOpen]     = useState(false);
   const [hasNewAch,   setHasNewAch]   = useState(false);
+  const [dailyOpen,   setDailyOpen]   = useState(false);
+
+  const dailyBonus = useDailyBonus();
+
+  // Auto-open daily bonus popup on login if uncollected
+  useEffect(() => {
+    if (dailyBonus.isAvailable) setDailyOpen(true);
+  }, []);
 
   useEffect(() => { initAds(); }, []);
   useEffect(() => { preloadImages(PLAYER_SPRITE_SRCS); }, []);
@@ -473,7 +483,7 @@ function App() {
   const reincarnationUnlocked = karma.unlocked;
 
   const screens = {
-    home:   <HomeScreen cultivation={cultivation} pills={pills} inventory={inventory} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} onNavigate={navigate} crystal={crystal} isCrystalUnlocked={featureFlags.isUnlocked('qi_crystal')} />,
+    home:   <HomeScreen cultivation={cultivation} pills={pills} inventory={inventory} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} onNavigate={navigate} crystal={crystal} isCrystalUnlocked={featureFlags.isUnlocked('qi_crystal')} dailyBonus={dailyBonus} onOpenDailyBonus={() => setDailyOpen(true)} />,
     worlds: <WorldsScreen cultivation={cultivation} onNavigate={navigate} expandWorldId={screenParam?.expandWorldId ?? null} activeTab={screenParam?.activeTab ?? null} clearedRegions={clearedRegions} idleAssignment={idleAssignment} onSetIdle={(act, w, r) => autoFarm.setIdleActivity(act, w, r, !!tree.modifiers.dualAutoFarm)} pendingGains={autoFarm.pendingGains} hasPendingGains={autoFarm.hasPendingGains} onCollectGains={(applyFn) => autoFarm.collectGains(applyFn)} inventory={inventory} techniques={techniques} />,
     // Sub-screens launched from the Worlds hub
     'combat-arena': <CombatScreen
@@ -564,6 +574,15 @@ function App() {
       {shopOpen && <JadeShopModal onClose={() => setShopOpen(false)} onBalanceChange={() => {}} />}
       {journeyOpen && <JourneyModal realmIndex={cultivation.realmIndex} onClose={() => setJourneyOpen(false)} />}
       {achOpen && achievements && <AchievementsModal achievements={achievements} onClose={() => setAchOpen(false)} />}
+      {dailyOpen && (
+        <DailyBonusModal
+          streak={dailyBonus.streak}
+          todayReward={dailyBonus.todayReward}
+          isAvailable={dailyBonus.isAvailable}
+          onCollect={() => { const n = dailyBonus.collect(); return n; }}
+          onClose={() => setDailyOpen(false)}
+        />
+      )}
     </div>
   );
 }

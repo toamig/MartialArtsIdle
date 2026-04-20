@@ -7,6 +7,7 @@ import PillDrawer from '../components/PillDrawer';
 import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
 import CrystalFeedModal from '../components/CrystalFeedModal';
+import DailyBonusWidget from '../components/DailyBonusWidget';
 import { PILLS_BY_ID } from '../data/pills';
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
@@ -285,6 +286,7 @@ function HomeScreen({
   selections, onOpenSelections,
   onNavigate,
   crystal, isCrystalUnlocked,
+  dailyBonus, onOpenDailyBonus,
 }) {
   const { t } = useTranslation('ui');
   const {
@@ -463,6 +465,16 @@ function HomeScreen({
             adBoostRemaining={adBoostRemaining}
             maxed={maxed}
           />
+
+          {/* Daily bonus widget — below Heavenly Qi */}
+          {dailyBonus && (
+            <DailyBonusWidget
+              streak={dailyBonus.streak}
+              todayReward={dailyBonus.todayReward}
+              isAvailable={dailyBonus.isAvailable}
+              onOpen={onOpenDailyBonus}
+            />
+          )}
 
           {/* Crystal + particles + character — stacked so gap always equals particles height */}
           <div className="home-crystal-char-stack">
