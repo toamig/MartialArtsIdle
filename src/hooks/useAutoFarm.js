@@ -110,10 +110,12 @@ export default function useAutoFarm({ worlds, getStats }) {
   }, [config]);
 
   // Live refs so the tick always uses fresh values without re-subscribing
-  const getStatsRef = useRef(getStats);
-  const configRef   = useRef(config);
-  useEffect(() => { getStatsRef.current = getStats; }, [getStats]);
-  useEffect(() => { configRef.current   = config;   }, [config]);
+  const getStatsRef      = useRef(getStats);
+  const configRef        = useRef(config);
+  const pendingGainsRef  = useRef(pendingGains);
+  useEffect(() => { getStatsRef.current     = getStats;     }, [getStats]);
+  useEffect(() => { configRef.current       = config;       }, [config]);
+  useEffect(() => { pendingGainsRef.current = pendingGains; }, [pendingGains]);
 
   // ─── Pending gains ──────────────────────────────────────────────────────────
 
@@ -252,13 +254,13 @@ export default function useAutoFarm({ worlds, getStats }) {
    * Call with activity=null to stop all auto-farming.
    */
   const setIdleActivity = useCallback((activity, worldIndex = 0, regionIndex = 0, dualEnabled = false) => {
-    // Starting a new assignment resets progress — toggling on/off/on rapidly
-    // should not bank extra resources. Disabling keeps pending gains so the
-    // player can still collect before they're gone.
     if (activity) {
-      clearPersistedGains();
-      setPendingGains(emptyGains());
-      setLastAssignment({ activity, worldIndex, regionIndex });
+      // Gains survive an activity switch — the player must collect them first.
+      // Only move the collect-button anchor to the new region when nothing is
+      // waiting; otherwise keep it on the old region until the player collects.
+      if (!hasGains(pendingGainsRef.current)) {
+        setLastAssignment({ activity, worldIndex, regionIndex });
+      }
     }
 
     setConfigRaw((prev) => {
@@ -293,7 +295,14 @@ export default function useAutoFarm({ worlds, getStats }) {
       clearPersistedGains();
       return emptyGains();
     });
-    setLastAssignment(null);
+    // After collecting, point the anchor at whatever is currently running so
+    // the collect button re-appears there when the next batch of gains arrives.
+    const cfg = configRef.current;
+    const running = ['gathering', 'mining'].find(a => cfg[a]?.enabled);
+    setLastAssignment(running
+      ? { activity: running, worldIndex: cfg[running].worldIndex, regionIndex: cfg[running].regionIndex }
+      : null
+    );
   }, []);
 
   /** Discard pending gains without applying them. */
