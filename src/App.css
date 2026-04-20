@@ -152,13 +152,15 @@
   pointer-events: none;
 }
 
-/* Locked nav tab */
+/* Locked nav tab — dim content children only so the tooltip card stays fully opaque */
 .nav-btn-locked {
-  opacity: 0.35;
   cursor: not-allowed;
-  filter: grayscale(1);
-  /* Re-enable pointer events so :hover triggers the tooltip */
   pointer-events: auto;
+}
+.nav-btn-locked .nav-icon-wrap,
+.nav-btn-locked .nav-label {
+  opacity: 0.35;
+  filter: grayscale(1);
 }
 
 .nav-lock-icon {
@@ -3343,9 +3345,11 @@
 }
 
 .inv-tab-locked {
-  opacity: 0.45;
   cursor: not-allowed;
   pointer-events: auto;
+}
+.inv-tab-locked .inv-tab-label {
+  opacity: 0.45;
 }
 
 .inv-tab-active {
@@ -5537,7 +5541,7 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.world-card.world-locked {
+.world-card.world-locked > .world-header {
   opacity: 0.42;
 }
 

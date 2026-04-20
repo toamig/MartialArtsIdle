@@ -1241,7 +1241,7 @@ function ProductionScreen({ inventory, artefacts, techniques, cultivation, pills
               className={`inv-tab ${activeTab === tab.key ? 'inv-tab-active' : ''}${!unlocked ? ' inv-tab-locked' : ''}`}
               onClick={() => unlocked && setActiveTab(tab.key)}
             >
-              {!unlocked && '🔒 '}{t(tab.tKey)}
+              <span className="inv-tab-label">{!unlocked && '🔒 '}{t(tab.tKey)}</span>
               {!unlocked && <LockTooltip desc={desc} hint={hint} position="below" />}
             </button>
           );
