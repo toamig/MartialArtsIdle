@@ -155,6 +155,16 @@ export default function useAutoFarm({ worlds, getStats }) {
       const stats = getStatsRef.current?.() ?? null;
       let tick = emptyGains();
 
+      // cb_ts Veteran's Hunt — consume at most one pending kill-bump per
+      // tick across all auto-farm activities. The first eligible activity
+      // (gathering before mining, alphabetical order of the loop) gets it.
+      const huntRef = stats?.huntBumpsPendingRef;
+      let bumpThisTick = false;
+      if (huntRef && huntRef.current > 0) {
+        huntRef.current -= 1;
+        bumpThisTick = true;
+      }
+
       for (const activity of ['gathering', 'mining']) {
         const actCfg = cfg[activity];
         if (!actCfg.enabled) continue;
@@ -165,10 +175,15 @@ export default function useAutoFarm({ worlds, getStats }) {
 
         let gained = emptyGains();
 
+        // Pass a per-call clone so the bump flag is consumed by exactly
+        // the first activity that produces a drop (cleared after first use).
+        const callStats = stats ? { ...stats, regionKillBumpPending: bumpThisTick } : null;
+        if (bumpThisTick) bumpThisTick = false;
+
         if (activity === 'gathering') {
-          gained.items = simulateGathering(TICK_INTERVAL_MS / 1000, region, stats);
+          gained.items = simulateGathering(TICK_INTERVAL_MS / 1000, region, callStats);
         } else if (activity === 'mining') {
-          gained.items = simulateMining(TICK_INTERVAL_MS / 1000, region, stats);
+          gained.items = simulateMining(TICK_INTERVAL_MS / 1000, region, callStats);
         }
 
         tick = mergeFullGains(tick, gained);
@@ -216,14 +231,31 @@ export default function useAutoFarm({ worlds, getStats }) {
   }, []);
 
   /**
-   * Set exactly one idle activity (mutex — clears all others in one update).
+   * Set an idle activity. By default mutex — clears all other activities so
+   * exactly one assignment is active. When fp_k Twofold Path is owned the
+   * caller passes `dualEnabled: true` and a second assignment is allowed
+   * (cap of 2 enabled at once; the oldest is preserved if user tries to add
+   * a third).
+   *
    * Call with activity=null to stop all auto-farming.
    */
-  const setIdleActivity = useCallback((activity, worldIndex = 0, regionIndex = 0) => {
-    setConfigRaw(() => {
+  const setIdleActivity = useCallback((activity, worldIndex = 0, regionIndex = 0, dualEnabled = false) => {
+    setConfigRaw((prev) => {
       const base = getDefaultConfig();
       if (!activity) return base;
-      return { ...base, [activity]: { enabled: true, worldIndex, regionIndex } };
+      if (!dualEnabled) {
+        return { ...base, [activity]: { enabled: true, worldIndex, regionIndex } };
+      }
+      // Dual mode: keep any other already-enabled activity, cap at 2.
+      const enabled = Object.entries(prev).filter(([k, v]) => v.enabled && k !== activity);
+      const next = { ...base };
+      // Keep at most one other enabled activity.
+      if (enabled.length >= 1) {
+        const [keepKey, keepCfg] = enabled[0];
+        next[keepKey] = keepCfg;
+      }
+      next[activity] = { enabled: true, worldIndex, regionIndex };
+      return next;
     });
   }, []);
 

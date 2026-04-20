@@ -810,8 +810,12 @@ function HerbSelector({ slotIndex, selectedHerbId, onSelect, inventory }) {
 const REFINE_RARITIES = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
 
 // Per-rarity recipes — each tier uses materials of matching rarity.
-function getRefineCost(type, rarity) {
-  return REFINE_COSTS[type]?.[rarity] ?? [];
+// `costMult` (0..1) shrinks every entry's qty (rounded up, min 1) — used by
+// the fp_3 Connoisseur reincarnation node which sets the mult to 0.7.
+function getRefineCost(type, rarity, costMult = 1) {
+  const base = REFINE_COSTS[type]?.[rarity] ?? [];
+  if (costMult >= 1) return base;
+  return base.map(c => ({ ...c, qty: Math.max(1, Math.ceil(c.qty * costMult)) }));
 }
 
 const REFINE_ICONS = { artefact: '⚔', technique: '✦', law: '☯' };
@@ -834,7 +838,7 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function RefineCard({ type, inventory, onRefine, inventoryFull = false }) {
+function RefineCard({ type, inventory, onRefine, inventoryFull = false, refineCostMult = 1 }) {
   const { t } = useTranslation('ui');
   const [rarity, setRarity] = useState('Iron');
 
@@ -843,7 +847,7 @@ function RefineCard({ type, inventory, onRefine, inventoryFull = false }) {
     technique: { title: t('production.refineTechTitle'),    description: t('production.refineTechDesc'),    icon: REFINE_ICONS.technique },
   };
   const info  = REFINE_INFO[type];
-  const costs = getRefineCost(type, rarity);
+  const costs = getRefineCost(type, rarity, refineCostMult);
   const afford = costs.every(c => inventory.getQuantity(c.itemId) >= c.qty);
   const canRefine = afford && !inventoryFull;
   const rColor = RARITY_COLOR[rarity];
@@ -904,24 +908,45 @@ function RefineCard({ type, inventory, onRefine, inventoryFull = false }) {
   );
 }
 
-function RefiningPanel({ inventory, artefacts, techniques, cultivation }) {
+function RefiningPanel({ inventory, artefacts, techniques, cultivation, tree }) {
   const { t } = useTranslation('ui');
   const [flashMsg, setFlashMsg] = useState(null);
 
+  // fp_3 Connoisseur — multiplier on every refine cost (×0.7 when owned).
+  const refineCostMult = tree?.modifiers?.refineCostMult ?? 1;
+  // fp_1 Lucky Star — 10% chance the refined output bumps one rarity.
+  const craftRarityUpChance = tree?.modifiers?.craftRarityUpChance ?? 0;
+  // md_4 Veteran's Eye — all crafted techniques arrive +1 quality tier.
+  const techQualityBump = tree?.modifiers?.craftedTechQualityBump ?? 0;
+
+  const RARITY_LADDER = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
+  const bumpRarity = (r) => {
+    const i = RARITY_LADDER.indexOf(r);
+    return i >= 0 && i < RARITY_LADDER.length - 1 ? RARITY_LADDER[i + 1] : r;
+  };
+
   const refine = (type, rarity) => {
-    const costs = getRefineCost(type, rarity);
+    const costs = getRefineCost(type, rarity, refineCostMult);
     if (!costs.every(c => inventory.getQuantity(c.itemId) >= c.qty)) return;
     for (const c of costs) inventory.removeItem(c.itemId, c.qty);
 
+    // fp_1 Lucky Star — 10% chance to upgrade output rarity by one tier.
+    let outRarity = rarity;
+    if (craftRarityUpChance > 0 && Math.random() < craftRarityUpChance) {
+      outRarity = bumpRarity(rarity);
+    }
+
     let resultName = '';
     if (type === 'artefact') {
-      const pool = ARTEFACTS_BY_RARITY[rarity] ?? [];
+      const pool = ARTEFACTS_BY_RARITY[outRarity] ?? ARTEFACTS_BY_RARITY[rarity] ?? [];
       if (pool.length === 0) return;
       const cat = pickRandom(pool);
       artefacts.addArtefact(cat.id);
       resultName = cat.name;
     } else if (type === 'technique') {
-      const worldId = RARITY_TO_WORLD[rarity] ?? 1;
+      // md_4 stacks on top of fp_1 — bump rarity once more if owned.
+      const finalRarity = techQualityBump > 0 ? bumpRarity(outRarity) : outRarity;
+      const worldId = RARITY_TO_WORLD[finalRarity] ?? RARITY_TO_WORLD[rarity] ?? 1;
       const tech = generateTechnique(worldId);
       techniques.addOwnedTechnique(tech);
       resultName = tech.name;
@@ -941,8 +966,8 @@ function RefiningPanel({ inventory, artefacts, techniques, cultivation }) {
 
   return (
     <div className="refining-panel">
-      <RefineCard type="artefact"  inventory={inventory} onRefine={refine} inventoryFull={artefactsFull} />
-      <RefineCard type="technique" inventory={inventory} onRefine={refine} inventoryFull={techniquesFull} />
+      <RefineCard type="artefact"  inventory={inventory} onRefine={refine} inventoryFull={artefactsFull} refineCostMult={refineCostMult} />
+      <RefineCard type="technique" inventory={inventory} onRefine={refine} inventoryFull={techniquesFull} refineCostMult={refineCostMult} />
       {flashMsg && <div className="refine-flash">{flashMsg}</div>}
     </div>
   );
@@ -1041,7 +1066,7 @@ function CraftableRecipes({ inventory, pills, onFillSlots }) {
 
 const CRAFT_QTY_OPTIONS = [1, 5, 10];
 
-function AlchemyPanel({ inventory, pills }) {
+function AlchemyPanel({ inventory, pills, tree }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
   const [slots, setSlots] = useState([null, null, null]);
@@ -1084,6 +1109,16 @@ function AlchemyPanel({ inventory, pills }) {
       inventory.removeItem(id, qty * n);
     }
     pills.craftPill(resultPill.id, n);
+
+    // fp_1 Lucky Star — 10% chance per brew to grant 1 bonus copy of the
+    // SAME pill (cheap interpretation since tier-laddering pills doesn't
+    // map cleanly to the recipe table).
+    const luckChance = tree?.modifiers?.craftRarityUpChance ?? 0;
+    if (luckChance > 0) {
+      let bonus = 0;
+      for (let i = 0; i < n; i++) if (Math.random() < luckChance) bonus++;
+      if (bonus > 0) pills.craftPill(resultPill.id, bonus);
+    }
 
     const msgId = ++floatIdRef.current;
     const text = t('production.craftedFloat', {
@@ -1171,7 +1206,7 @@ function AlchemyPanel({ inventory, pills }) {
 
 // ─── ProductionScreen ─────────────────────────────────────────────────────────
 
-function ProductionScreen({ inventory, artefacts, techniques, cultivation, pills, isUnlocked = () => true, getHint = () => null }) {
+function ProductionScreen({ inventory, artefacts, techniques, cultivation, pills, tree, isUnlocked = () => true, getHint = () => null }) {
   const { t } = useTranslation('ui');
 
   const PROD_TABS = [
@@ -1218,11 +1253,12 @@ function ProductionScreen({ inventory, artefacts, techniques, cultivation, pills
           artefacts={artefacts}
           techniques={techniques}
           cultivation={cultivation}
+          tree={tree}
         />
       )}
 
       {activeUnlocked && activeTab === 'alchemy' && (
-        <AlchemyPanel inventory={inventory} pills={pills} />
+        <AlchemyPanel inventory={inventory} pills={pills} tree={tree} />
       )}
 
       {activeUnlocked && activeTab === 'transmutation' && (

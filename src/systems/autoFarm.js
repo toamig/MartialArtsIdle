@@ -134,7 +134,18 @@ export function simulateGathering(seconds, region, stats = null) {
       // Give primary herb
       const qty = rollQty(primary.qty ?? [1, 1])
                 + (luckPct > 0 && Math.random() * 100 < luckPct ? 1 : 0);
-      result[primary.itemId] = (result[primary.itemId] ?? 0) + qty;
+      // fp_2 Heavenly Nose — 10% chance the primary drop swaps to its
+      // next-rarity equivalent. cb_ts Veteran's Hunt is a one-shot bump
+      // consumed below.
+      const tierUpChance = stats?.gatherMineRarityUpChance ?? 0;
+      let dropId = primary.itemId;
+      if (stats?.regionKillBumpPending) {
+        dropId = nextRarityItemId(dropId);
+        // Caller is responsible for clearing the flag after consuming.
+      } else if (tierUpChance > 0 && Math.random() < tierUpChance) {
+        dropId = nextRarityItemId(dropId);
+      }
+      result[dropId] = (result[dropId] ?? 0) + qty;
 
       // Roll bonus drops (cultivation / QI stones)
       for (const bd of bonusDrops) {
@@ -155,6 +166,20 @@ export function simulateGathering(seconds, region, stats = null) {
   }
 
   return result;
+}
+
+// Map an item id like `iron_herb_1` → `bronze_herb_1`. Falls back to the
+// original id if the next-tier id doesn't exist in `ALL_MATERIALS`.
+const RARITY_LADDER = ['iron', 'bronze', 'silver', 'gold', 'transcendent'];
+function nextRarityItemId(itemId) {
+  for (let i = 0; i < RARITY_LADDER.length - 1; i++) {
+    const prefix = RARITY_LADDER[i] + '_';
+    if (itemId.startsWith(prefix)) {
+      const candidate = RARITY_LADDER[i + 1] + '_' + itemId.slice(prefix.length);
+      return ALL_MATERIALS[candidate] ? candidate : itemId;
+    }
+  }
+  return itemId;
 }
 
 // ─── Simulation — Mining ──────────────────────────────────────────────────────
@@ -195,7 +220,15 @@ export function simulateMining(seconds, region, stats = null) {
       // Give primary ore
       const qty = rollQty(primary.qty ?? [1, 1])
                 + (luckPct > 0 && Math.random() * 100 < luckPct ? 1 : 0);
-      result[primary.itemId] = (result[primary.itemId] ?? 0) + qty;
+      // fp_2 / cb_ts — same rarity-bump logic as the gathering branch.
+      const tierUpChance = stats?.gatherMineRarityUpChance ?? 0;
+      let dropId = primary.itemId;
+      if (stats?.regionKillBumpPending) {
+        dropId = nextRarityItemId(dropId);
+      } else if (tierUpChance > 0 && Math.random() < tierUpChance) {
+        dropId = nextRarityItemId(dropId);
+      }
+      result[dropId] = (result[dropId] ?? 0) + qty;
 
       // Roll bonus drops (cultivation / QI stones)
       for (const bd of bonusDrops) {

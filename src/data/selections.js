@@ -420,7 +420,7 @@ for (const opt of SELECTION_POOL) {
  * @param {'minor'|'breakthrough'} tier
  * @returns {string[]}  array of 3 option IDs
  */
-export function rollOptions(realmIndex, activeStacks, tier) {
+export function rollOptions(realmIndex, activeStacks, tier, optionCount = 3) {
   const weights = tier === 'breakthrough' ? BREAKTHROUGH_WEIGHTS : MINOR_WEIGHTS;
 
   const eligible = SELECTION_POOL.filter(opt => {
@@ -443,7 +443,7 @@ export function rollOptions(realmIndex, activeStacks, tier) {
   const picked = [];
   const usedCategories = new Set();
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < optionCount; attempt++) {
     // Soft category diversity: prefer unused categories on first pass
     const preferDiverse = eligible.filter(
       o => !picked.some(p => p.id === o.id) && !usedCategories.has(o.category)

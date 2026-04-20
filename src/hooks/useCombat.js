@@ -72,6 +72,11 @@ export default function useCombat() {
   // md_k Killing Stride — flag persists across fights so the bonus applies
   // to the *next* cast even if the kill ended the current fight.
   const strideRef = useRef(false);
+  // cb_ts Veteran's Hunt — every 10 kills grants one pending +1-rarity
+  // bump that the next gather/mine cycle consumes. Read by App.jsx and
+  // forwarded into autoFarm via getFullStats.
+  const killsForHuntRef = useRef(0);
+  const huntBumpsPendingRef = useRef(0);
 
   // ─── React state — phase transitions and log only ────────────────────────
   const [phase, setPhase] = useState('idle');
@@ -113,7 +118,7 @@ export default function useCombat() {
     if (eHpTextRef.current)
       eHpTextRef.current.textContent = `${fmtHp(s.eHp)} / ${fmtHp(s.eMaxHp)}`;
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < s.cds.length; i++) {
       const el = cdBarRefs.current[i];
       if (!el) continue;
       const cd = s.cds[i], maxCd = s.maxCds[i];
@@ -212,7 +217,7 @@ export default function useCombat() {
       const nowSec = now / 1000;
 
       // ── Tick technique cooldowns (time-based, independent of turns) ───────
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < s.cds.length; i++) {
         if (isFinite(s.cds[i])) s.cds[i] = Math.max(0, s.cds[i] - dt);
       }
 
@@ -229,7 +234,7 @@ export default function useCombat() {
 
         // Find first ready technique
         let techFired = false;
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < s.cds.length; i++) {
           if (!isFinite(s.cds[i]) || s.cds[i] > 0) continue;
           const tech = s.equipped[i];
           if (!tech) continue;
@@ -353,6 +358,15 @@ export default function useCombat() {
             s2.phase = 'won';
             // md_k Killing Stride — arm the next cast for guaranteed exploit + 50%.
             if (s2.stats?.killingStride) strideRef.current = true;
+            // cb_ts Veteran's Hunt — every 10 kills banks 1 rarity-bump
+            // for the next gather/mine cycle.
+            if (s2.stats?.regionKillBonus) {
+              killsForHuntRef.current += 1;
+              if (killsForHuntRef.current >= 10) {
+                killsForHuntRef.current = 0;
+                huntBumpsPendingRef.current += 1;
+              }
+            }
 
             const newLogs = [{ msg: 'Enemy defeated! Victory!', kind: 'system' }];
 
@@ -471,5 +485,8 @@ export default function useCombat() {
     playerAnimDoneRef,
     enemyAnimDoneRef,
     spawnDamageNumberRef,
+    // cb_ts Veteran's Hunt — read by App.jsx getFullStats so the next
+    // gather/mine tick consumes a pending bump.
+    huntBumpsPendingRef,
   };
 }

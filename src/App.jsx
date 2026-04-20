@@ -27,6 +27,7 @@ import usePills       from './hooks/usePills';
 import useQiCrystal  from './hooks/useQiCrystal';
 import useAutoFarm    from './hooks/useAutoFarm';
 import WORLDS         from './data/worlds';
+import { PHASE_TECHNIQUE_LAW, PHASE_TECHNIQUE_ID } from './data/laws';
 import { mineralForRarity } from './data/materials';
 import { computeAllStats, computeStat, mergeModifiers } from './data/stats';
 import { evaluateLawUniques, buildContext } from './systems/lawEngine';
@@ -67,15 +68,16 @@ function App() {
 
   const cultivation     = useCultivation();
   const inventory       = useInventory();
-  const techniques      = useTechniques();
+  const karma           = useReincarnationKarma();
+  const tree            = useReincarnationTree({ karma: karma.karma, spendKarma: karma.spendKarma, lives: karma.lives });
+  // md_3 The Fourth Form — +1 technique slot from the reincarnation tree.
+  const techniques      = useTechniques({ extraSlots: tree.modifiers.extraTechSlot ? 1 : 0 });
   const combat          = useCombat();
   const artefacts       = useArtefacts();
   const pills           = usePills();
   const crystal         = useQiCrystal({ getQuantity: inventory.getQuantity, removeItem: inventory.removeItem });
-  const selections      = useSelections({ cultivation });
   const { clearedRegions, clearRegion } = useClearedRegions();
-  const karma           = useReincarnationKarma();
-  const tree            = useReincarnationTree({ karma: karma.karma, spendKarma: karma.spendKarma, lives: karma.lives });
+  const selections      = useSelections({ cultivation, optionCount: tree.modifiers.selectionOptionCount });
 
   // Record every new realm reached so karma awards are first-time-only.
   useEffect(() => {
@@ -92,7 +94,48 @@ function App() {
   useEffect(() => {
     cultivation.treeQiMultRef.current       = tree.modifiers.cultivSpeedMult ?? 1;
     cultivation.treeHeavenlyMultRef.current = 1; // heavenly mult now at neutral
-  }, [tree.modifiers, cultivation.treeQiMultRef, cultivation.treeHeavenlyMultRef]);
+    if (cultivation.qiOnRealmFracRef) {
+      cultivation.qiOnRealmFracRef.current  = tree.modifiers.qiOnEveryRealmFrac ?? 0;
+    }
+  }, [tree.modifiers, cultivation.treeQiMultRef, cultivation.treeHeavenlyMultRef, cultivation.qiOnRealmFracRef]);
+
+  // cb_pt Phase Technique — when the connector is purchased, grant the law
+  // (idempotent — addOwnedLaw is a no-op if the id is already in the
+  // library). Auto-equip if the player has no active law.
+  useEffect(() => {
+    if (!tree.modifiers.phaseTechniqueOwned) return;
+    const alreadyOwned = cultivation.ownedLaws?.some(l => l.id === PHASE_TECHNIQUE_ID);
+    if (!alreadyOwned) {
+      cultivation.addOwnedLaw(PHASE_TECHNIQUE_LAW);
+    }
+    if (!cultivation.activeLaw) {
+      cultivation.setActiveLaw(PHASE_TECHNIQUE_ID);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tree.modifiers.phaseTechniqueOwned, cultivation.ownedLaws.length]);
+
+  // al_k Living Memory — at mount, read the localStorage timestamp set by
+  // handleReincarnate; if the buff is still live, set rebirthCultBuffRef to 2
+  // and schedule a clear at expiry.
+  useEffect(() => {
+    if (!cultivation.rebirthCultBuffRef) return;
+    let until = 0;
+    try {
+      until = Number(localStorage.getItem('mai_rebirth_cult_buff_until') ?? 0);
+    } catch { /* localStorage unavailable */ }
+    const remainingMs = until - Date.now();
+    if (remainingMs <= 0) {
+      cultivation.rebirthCultBuffRef.current = 1;
+      return;
+    }
+    cultivation.rebirthCultBuffRef.current = 2;
+    const id = setTimeout(() => {
+      cultivation.rebirthCultBuffRef.current = 1;
+      try { localStorage.removeItem('mai_rebirth_cult_buff_until'); }
+      catch { /* localStorage unavailable */ }
+    }, remainingMs);
+    return () => clearTimeout(id);
+  }, [cultivation.rebirthCultBuffRef]);
 
   // Open selection modal on level-up only when already on home screen.
   // currentScreen is intentionally excluded from deps — we want this to fire
@@ -262,6 +305,9 @@ function App() {
       qiOnEveryRealmFrac:     tree.modifiers.qiOnEveryRealmFrac ?? 0,
       gatherMineRarityUpChance: tree.modifiers.gatherMineRarityUpChance ?? 0,
       regionKillBonus:        !!tree.modifiers.regionKillBonus,
+      // cb_ts Veteran's Hunt — pending bump *count*. autoFarm decrements
+      // it explicitly when it consumes a bump (see useAutoFarm tick).
+      huntBumpsPendingRef:    combat.huntBumpsPendingRef,
       damageMult:             tree.modifiers.damageMult ?? 1,
     };
   }, [cultivation, artefacts, pills, selections, tree]);
@@ -425,7 +471,7 @@ function App() {
 
   const screens = {
     home:   <HomeScreen cultivation={cultivation} pills={pills} inventory={inventory} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} onNavigate={navigate} crystal={crystal} isCrystalUnlocked={featureFlags.isUnlocked('qi_crystal')} />,
-    worlds: <WorldsScreen cultivation={cultivation} onNavigate={navigate} expandWorldId={screenParam?.expandWorldId ?? null} activeTab={screenParam?.activeTab ?? null} clearedRegions={clearedRegions} idleAssignment={idleAssignment} onSetIdle={autoFarm.setIdleActivity} pendingGains={autoFarm.pendingGains} hasPendingGains={autoFarm.hasPendingGains} onCollectGains={(applyFn) => autoFarm.collectGains(applyFn)} inventory={inventory} techniques={techniques} />,
+    worlds: <WorldsScreen cultivation={cultivation} onNavigate={navigate} expandWorldId={screenParam?.expandWorldId ?? null} activeTab={screenParam?.activeTab ?? null} clearedRegions={clearedRegions} idleAssignment={idleAssignment} onSetIdle={(act, w, r) => autoFarm.setIdleActivity(act, w, r, !!tree.modifiers.dualAutoFarm)} pendingGains={autoFarm.pendingGains} hasPendingGains={autoFarm.hasPendingGains} onCollectGains={(applyFn) => autoFarm.collectGains(applyFn)} inventory={inventory} techniques={techniques} />,
     // Sub-screens launched from the Worlds hub
     'combat-arena': <CombatScreen
                       cultivation={cultivation}
@@ -445,7 +491,7 @@ function App() {
                  : null,
     character:  <CharacterScreen cultivation={cultivation} techniques={techniques} artefacts={artefacts} selections={selections} pills={pills} />,
     collection: <CollectionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} />,
-    production: <ProductionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} pills={pills} isUnlocked={featureFlags.isUnlocked} getHint={featureFlags.getHint} />,
+    production: <ProductionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} pills={pills} tree={tree} isUnlocked={featureFlags.isUnlocked} getHint={featureFlags.getHint} />,
     settings:   <SettingsScreen />,
   };
 

@@ -69,7 +69,7 @@ let selCounter = 0;
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export default function useSelections({ cultivation }) {
+export default function useSelections({ cultivation, optionCount = 3 }) {
   const [pending, setPending] = useState(loadPending);
   const [active,  setActive]  = useState(loadActive);
   const [jadeBalance, setJadeBalance] = useState(() => {
@@ -97,7 +97,7 @@ export default function useSelections({ cultivation }) {
     prevRealmIndex.current = curr;
 
     const tier = isBreakthrough(prev, curr) ? 'breakthrough' : 'minor';
-    const options = rollOptions(curr, active, tier);
+    const options = rollOptions(curr, active, tier, optionCount);
     if (options.length === 0) return;
 
     const realmLabel = REALMS[curr]
@@ -219,7 +219,7 @@ export default function useSelections({ cultivation }) {
         refreshJade();
       }
 
-      const newOptions = rollOptions(cultivation.realmIndex, active, sel.tier);
+      const newOptions = rollOptions(cultivation.realmIndex, active, sel.tier, optionCount);
       return {
         ...sel,
         options:     newOptions,

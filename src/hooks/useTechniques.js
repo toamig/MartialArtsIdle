@@ -41,7 +41,11 @@ function pickRandomPassive(type, excludeNames = []) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+// Base slot count is 3; the reincarnation tree node `md_3` (The Fourth
+// Form) raises it to 4. Hook accepts an `extraSlots` arg from App.jsx so
+// the base value lives here and the augment lives in the tree hook.
 const SLOT_COUNT = 3;
+export const MAX_SLOT_COUNT = 4;
 export const MAX_TECHNIQUES = 100;
 
 export const TECH_NEXT_QUALITY = {
@@ -51,10 +55,11 @@ export const TECH_NEXT_QUALITY = {
   Gold:   'Transcendent',
 };
 
-export default function useTechniques() {
+export default function useTechniques({ extraSlots = 0 } = {}) {
+  const totalSlots = Math.min(MAX_SLOT_COUNT, SLOT_COUNT + extraSlots);
   const [slots, setSlots] = useState(() => {
     const saved = loadTechniques();
-    return Array.from({ length: SLOT_COUNT }, (_, i) => saved?.[i] ?? null);
+    return Array.from({ length: MAX_SLOT_COUNT }, (_, i) => saved?.[i] ?? null);
   });
 
   // { [id]: techniqueObj } — all acquired techniques (drops only, no starter seeding)
@@ -177,13 +182,20 @@ export default function useTechniques() {
     return quality;
   }, [slots]);
 
+  // Slice both `slots` and `equippedTechniques` to `totalSlots` so the
+  // UI / combat loops that consume them see only the unlocked ones.
+  // Underlying state always carries MAX_SLOT_COUNT positions so a player
+  // who unlocks the 4th slot mid-life keeps any tech they had stored
+  // there (e.g. via debug commands) without losing it.
+  const visibleSlots = slots.slice(0, totalSlots);
   return {
-    slots,
+    slots: visibleSlots,
+    slotCount: totalSlots,
     ownedTechniques,
     upgradeTechnique,
     replacePassive,
     addPassive,
-    equippedTechniques: slots.map(getTechById),
+    equippedTechniques: visibleSlots.map(getTechById),
     addOwnedTechnique,
     dismantleTechnique,
     equip,

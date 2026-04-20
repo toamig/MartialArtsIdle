@@ -126,6 +126,8 @@ export default function useCultivation() {
    */
   const dismantleLaw = useCallback((lawId) => {
     if (lawId === activeLawId) return null;
+    // cb_pt Phase Technique — soul-bound, never dismantle.
+    if (lawId === 'phase_technique') return null;
     let rarity = null;
     setOwnedLaws(prev => {
       const law = prev.find(l => l.id === lawId);
@@ -215,6 +217,13 @@ export default function useCultivation() {
   // Decimal: 0.30 = +30% on top of the ad boost. Only applies while the ad
   // boost is live. Stacks multiplicatively with the reincarnation tree node.
   const heavenlyQiMultRef  = useRef(0);
+  // yy_2 Yin Reservoir — fraction of the next-realm qi cost auto-credited
+  // every time the player breaks through into a new realm. App.jsx writes
+  // this from `tree.modifiers.qiOnEveryRealmFrac`.
+  const qiOnRealmFracRef   = useRef(0);
+  // al_k Living Memory — extra cultivation-rate multiplier active while a
+  // post-rebirth buff is live (1-hour ×2 buff). 1 means inactive.
+  const rebirthCultBuffRef = useRef(1);
   // Hold-to-cultivate boost multiplier (qi_focus_mult stat, expressed as %).
   // Default 300% = the legacy 3× behavior; App.jsx writes the player's actual
   // focus mult into this ref each second.
@@ -284,7 +293,7 @@ export default function useCultivation() {
           boostMult *
           adBoostRef.current * heavenlyTree * heavenlyArt *
           pillQiMultRef.current * selectionQiMultRef.current *
-          treeQiMultRef.current;
+          treeQiMultRef.current * rebirthCultBuffRef.current;
         rateRef.current = rate;
         qiRef.current += rate * dt;
 
@@ -303,6 +312,13 @@ export default function useCultivation() {
             costRef.current   = REALMS[nextIndex].cost;
             maxedRef.current  = !REALMS[nextIndex + 1];
             gateRef.current = null;
+            // yy_2 Yin Reservoir — every realm starts with a fraction of its
+            // breakthrough qi cost already accumulated. Reservoir adds on top
+            // of any leftover qi from the previous realm.
+            const reservoir = qiOnRealmFracRef.current;
+            if (reservoir > 0) {
+              qiRef.current += costRef.current * reservoir;
+            }
             setRealmIndex(nextIndex);
             if (isMajor) {
               try { AudioManager.playSfx('cult_breakthrough'); } catch {}
@@ -404,6 +420,8 @@ export default function useCultivation() {
     // Reincarnation tree refs — updated by App.jsx each render
     treeQiMultRef,
     treeHeavenlyMultRef,
+    qiOnRealmFracRef,
+    rebirthCultBuffRef,
     // Focus multiplier ref (qi_focus_mult, in %) — updated by App.jsx every second
     focusMultRef,
     // Ads

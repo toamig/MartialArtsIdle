@@ -14,6 +14,32 @@ export const LAW_RARITY = {
   Transcendent: { label: 'Transcendent', color: '#c084fc', passiveSlots: 5 },
 };
 
+// ── Phase Technique law ─────────────────────────────────────────────────────
+// Granted exclusively by the `cb_pt` reincarnation-tree connector. Cannot be
+// dismantled or unequipped (see useReincarnationKarma + Character tab guard).
+// Crafting on it stays at base-tier mineral cost regardless of its actual
+// quality — handled in src/data/crafting.js.
+export const PHASE_TECHNIQUE_ID = 'phase_technique';
+
+export const PHASE_TECHNIQUE_LAW = {
+  id:                   PHASE_TECHNIQUE_ID,
+  name:                 'Phase Technique',
+  element:              'Phase',
+  types:                ['physical', 'sword', 'fist', 'fire', 'water', 'earth', 'spirit', 'void', 'dao'],
+  typeMults:            { essence: 3.50, body: 3.50, soul: 3.50 },
+  rarity:               'Transcendent',
+  realmRequirement:     0,
+  realmRequirementLabel:'None — granted by Eternal Tree',
+  flavour:              'Nine Daos braided into one cycle — the fruit of every life lived. Permanently bound to the soul; can never be unequipped.',
+  cultivationSpeedMult: 1.5,
+  // Special-case fields read by other systems:
+  isPhaseTechnique:     true,
+  uniques: {
+    // Filled in on grant via lawEngine's standard roll function so each
+    // player's Phase Technique has its own flavour. Frozen after grant.
+  },
+};
+
 const LAWS_RAW = {
   // id kept stable across the rebrand so existing saves keep their active law.
   three_harmony_manual: {
@@ -39,7 +65,10 @@ const LAWS_RAW = {
   },
 };
 
-export const LAWS = mergeRecords(LAWS_RAW, 'laws');
+// Phase Technique is added to the LAWS map so the rest of the engine
+// (typeMults reads, unique evaluation, equip flow) finds it by id.
+const LAWS_WITH_PHASE = { ...LAWS_RAW, [PHASE_TECHNIQUE_ID]: PHASE_TECHNIQUE_LAW };
+export const LAWS = mergeRecords(LAWS_WITH_PHASE, 'laws');
 
 export const THREE_HARMONY_MANUAL = LAWS.three_harmony_manual;
 
