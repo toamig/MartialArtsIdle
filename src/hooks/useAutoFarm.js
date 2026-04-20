@@ -213,7 +213,7 @@ export default function useAutoFarm({ worlds, getStats }) {
 
   /**
    * Enable or disable an auto-farm activity and set its target region.
-   * @param {'combat'|'gathering'|'mining'} activity
+   * @param {'gathering'|'mining'} activity
    * @param {boolean} enabled
    * @param {number}  worldIndex   — index into the worlds array
    * @param {number}  regionIndex  — index into world.regions

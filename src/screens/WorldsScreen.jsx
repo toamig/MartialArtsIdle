@@ -237,7 +237,7 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
             const isLocked   = realmLocked || activityLocked;
             const lockHint   = activityLocked ? 'Clear this region in combat first' : undefined;
             const activity   = TAB_ACTIVITY[tab];
-            const canIdle    = !realmLocked && clearedRegions.has(region.name);
+            const canIdle    = !realmLocked && clearedRegions.has(region.name) && tab !== 'world';
             const isIdling   = idleAssignment?.activity === activity
                             && idleAssignment?.worldIndex === worldIndex
                             && idleAssignment?.regionIndex === regionIndex;

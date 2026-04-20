@@ -1,5 +1,5 @@
 /**
- * autoFarm.js — Pure simulation engine for auto-combat, gathering, and mining.
+ * autoFarm.js — Pure simulation engine for auto-farm gathering and mining.
  *
  * All functions here are stateless and side-effect-free.
  * They take time (seconds) + game state and return what would have been earned.

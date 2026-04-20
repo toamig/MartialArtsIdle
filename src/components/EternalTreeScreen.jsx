@@ -180,7 +180,7 @@ export default function EternalTreeScreen({
       const cx     = e.clientX - rect.left;
       const cy     = e.clientY - rect.top;
       const prev   = scaleRef.current;
-      const next   = Math.max(0.5, Math.min(1.75, prev * factor));
+      const next   = Math.max(0.5, Math.min(1.5, prev * factor));
       scaleRef.current = next;
       setScale(next);
       setPan(p => clampPan(
@@ -681,7 +681,6 @@ export default function EternalTreeScreen({
           <div className="et-node et-node-root" style={{ left: 0, top: 0 }}>
             <span className="et-node-icon">☯</span>
             <span className="et-node-label">Eternal Tree</span>
-            <span className="et-node-sub">{karma} ◈</span>
           </div>
 
           {NODES.map(node => {
