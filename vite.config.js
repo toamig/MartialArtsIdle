@@ -1,6 +1,39 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import fs   from 'node:fs'
+import path from 'node:path'
+
+// Dev-only plugin: receives edited NODE_POS / CUSTOM_CP from the in-browser
+// tree editor and writes them back into EternalTreeScreen.jsx so Vite
+// hot-reloads the changes without manual copy-paste.
+function treeEditorPlugin() {
+  return {
+    name: 'tree-editor-save',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.method !== 'POST' || req.url !== '/__tree-save') return next();
+        let body = '';
+        req.on('data', c => { body += c; });
+        req.on('end', () => {
+          try {
+            const { nodePosBlock, customCPBlock } = JSON.parse(body);
+            const filePath = path.resolve('src/components/EternalTreeScreen.jsx');
+            let src = fs.readFileSync(filePath, 'utf-8');
+            src = src.replace(/const NODE_POS = \{[\s\S]*?\n\};/, nodePosBlock);
+            src = src.replace(/const CUSTOM_CP = \{[\s\S]*?\n\};/, customCPBlock);
+            fs.writeFileSync(filePath, src, 'utf-8');
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ ok: true }));
+          } catch (err) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ ok: false, error: String(err) }));
+          }
+        });
+      });
+    },
+  };
+}
 
 export default defineConfig(({ command, mode }) => {
   const isNative   = mode === 'native';
@@ -28,6 +61,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     base,
     plugins: [
+      treeEditorPlugin(),
       react(),
       enablePWA && VitePWA({
         registerType: 'autoUpdate',

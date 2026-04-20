@@ -52,7 +52,6 @@ function App() {
   const [shopOpen,    setShopOpen]    = useState(false);
   const [journeyOpen, setJourneyOpen] = useState(false);
   const [achOpen,     setAchOpen]     = useState(false);
-  const [reincOpen,   setReincOpen]   = useState(false);
   const [hasNewAch,   setHasNewAch]   = useState(false);
 
   useEffect(() => { initAds(); }, []);
@@ -493,6 +492,16 @@ function App() {
     collection: <CollectionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} />,
     production: <ProductionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} pills={pills} tree={tree} isUnlocked={featureFlags.isUnlocked} getHint={featureFlags.getHint} />,
     settings:   <SettingsScreen />,
+    reincarnation: <EternalTreeScreen
+                     karma={karma.karma}
+                     tree={tree}
+                     lives={karma.lives}
+                     highestReached={karma.highestReached}
+                     peakKarmaTotal={karma.peakKarmaTotal}
+                     realmIndex={cultivation.realmIndex}
+                     onReincarnate={handleReincarnate}
+                     onClose={() => navigate('home')}
+                   />,
   };
 
   const BASE = import.meta.env.BASE_URL;
@@ -512,7 +521,7 @@ function App() {
         onOpenJourney={() => setJourneyOpen(true)}
         onOpenAchievements={() => { setAchOpen(true); setHasNewAch(false); }}
         hasNewAchievement={hasNewAch}
-        onOpenReincarnation={() => setReincOpen(true)}
+        onOpenReincarnation={() => navigate('reincarnation')}
         reincarnationUnlocked={reincarnationUnlocked}
       />
       <NavBar
@@ -522,7 +531,7 @@ function App() {
         isUnlocked={featureFlags.isUnlocked}
         getHint={featureFlags.getHint}
       />
-      <main className={`screen-container${currentScreen === 'home' ? ' sc-fullbleed' : ''}`}>
+      <main className={`screen-container${(currentScreen === 'home' || currentScreen === 'reincarnation') ? ' sc-fullbleed' : ''}`}>
         {screens[currentScreen]}
       </main>
       <ToastStack
@@ -551,18 +560,6 @@ function App() {
       {shopOpen && <JadeShopModal onClose={() => setShopOpen(false)} onBalanceChange={() => {}} />}
       {journeyOpen && <JourneyModal realmIndex={cultivation.realmIndex} onClose={() => setJourneyOpen(false)} />}
       {achOpen && achievements && <AchievementsModal achievements={achievements} onClose={() => setAchOpen(false)} />}
-      {reincOpen && (
-        <EternalTreeScreen
-          karma={karma.karma}
-          tree={tree}
-          lives={karma.lives}
-          highestReached={karma.highestReached}
-          peakKarmaTotal={karma.peakKarmaTotal}
-          realmIndex={cultivation.realmIndex}
-          onReincarnate={handleReincarnate}
-          onClose={() => setReincOpen(false)}
-        />
-      )}
     </div>
   );
 }

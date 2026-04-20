@@ -32,12 +32,12 @@ function radialXY(angleDeg, r) {
 //   Martial  18°– 85°   Will  183°–244°   Yin Yang 250°–290°
 //   Legacy   93°–172°   Fate  298°–358°
 const NODE_POS = {
-  md_1: [52, 214],   md_2: [27, 402],   md_3: [57, 571],   md_4: [40, 745],   md_k: [49, 933],
-  al_1: [123, 218],  al_2: [149, 402],  al_3: [121, 571],  al_4: [136, 752],  al_k: [129, 944],
-  hw_1: [205, 222],  hw_2: [199, 475],  hw_3: [232, 549],  hw_4: [212, 744],  hw_k: [227, 926],
-  fp_1: [325, 231],  fp_2: [334, 475],  fp_3: [302, 512],  fp_4: [324, 714],  fp_k: [308, 891],
-  yy_1: [270, 255],  yy_2: [270, 452],  yy_3: [270, 657],  yy_4: [270, 871],  yy_k: [270, 1064],
-  cb_is: [160, 633], cb_ts: [2,   754], cb_pt: [91,  828],
+  md_1: [52, 214], md_2: [27, 402], md_3: [57, 571], md_4: [40, 745], md_k: [49, 933],
+  al_1: [123, 218], al_2: [149, 402], al_3: [121, 571], al_4: [136, 752], al_k: [129, 944],
+  hw_1: [207, 226], hw_2: [199, 475], hw_3: [232, 549], hw_4: [212, 744], hw_k: [227, 926],
+  fp_1: [326, 230], fp_2: [334, 475], fp_3: [302, 512], fp_4: [324, 714], fp_k: [308, 891],
+  yy_1: [268, 232], yy_2: [268, 434], yy_3: [268, 672], yy_4: [268, 907], yy_k: [268, 1139],
+  cb_is: [174, 803], cb_ts: [2, 800], cb_pt: [91, 828],
 };
 
 // Compute world position for every node
@@ -79,8 +79,39 @@ for (const node of NODES) {
 // cp2 = control point near the destination (lighter, sets arrival angle).
 // Entries with cp1+cp2 → cubic bezier. Entries with cp → quadratic override.
 const CUSTOM_CP = {
-  'fp_k-cb_pt': { cp1: { x:  1688, y:  278 }, cp2: { x:   894, y: -1398 } },
-  'hw_k-cb_pt': { cp1: { x: -1516, y:  144 }, cp2: { x: -1004, y: -1438 } },
+  'fp_k-cb_pt': { cp1: { x: 1688, y: 278 }, cp2: { x: 894, y: -1398 } },
+  'hw_k-cb_pt': { cp1: { x: -1516, y: 144 }, cp2: { x: -1004, y: -1438 } },
+  'hw_1-hw_2': { cp: { x: -301.3604366436874, y: 175.17499803735103 } },
+  'root-hw_1': { cp: { x: -117.32105904867339, y: 11.29940074913084 } },
+  'yy_1-yy_2': { cp: { x: -11, y: 326.5 } },
+  'yy_2-yy_3': { cp: { x: -18, y: 556.5 } },
+  'yy_3-yy_4': { cp: { x: -24, y: 787.5 } },
+  'yy_4-yy_k': { cp: { x: -28.638399159208547, y: 1023.4998258694764 } },
+  'hw_2-hw_3': { cp: { x: -446.5603902111898, y: 316.9193258502918 } },
+  'hw_3-hw_4': { cp: { x: -485.3352072150303, y: 468.20455765410736 } },
+  'hw_4-hw_k': { cp: { x: -678.4484274652293, y: 533.0714693707527 } },
+  'hw_1-cb_is': { cp: { x: -446.99899528497485, y: -132.38929324719464 } },
+  'al_k-cb_is': { cp: { x: -821.6258544449504, y: -476.2956784883961 } },
+  'al_4-al_k': { cp: { x: -613.3755551309265, y: -598.8067817131663 } },
+  'al_3-al_4': { cp: { x: -413.5241435055454, y: -549.9064779450376 } },
+  'al_2-al_3': { cp: { x: -371.6964745939491, y: -359.5144699802638 } },
+  'al_1-al_2': { cp: { x: -224.1030403434513, y: -236.3883313231595 } },
+  'root-al_1': { cp: { x: -69.48321496159757, y: -68.60864149556602 } },
+  'root-md_1': { cp: { x: 77.85544489868374, y: -61.84522869604206 } },
+  'md_1-md_2': { cp: { x: 239.66894460279246, y: -224.08871122486315 } },
+  'md_2-md_3': { cp: { x: 379.5948673215318, y: -345.6858029399911 } },
+  'md_3-md_4': { cp: { x: 438.2527468544508, y: -521.4627341117504 } },
+  'md_4-md_k': { cp: { x: 629.3908729652601, y: -576.3908729652601 } },
+  'root-fp_1': { cp: { x: 112.59135519469135, y: 26.49237505660983 } },
+  'fp_1-fp_2': { cp: { x: 304.1522114497628, y: 206.57751930668724 } },
+  'fp_4-fp_k': { cp: { x: 618.4772392296412, y: 561.8043144770696 } },
+  'fp_3-fp_4': { cp: { x: 442.27652241714964, y: 482.0048882735522 } },
+  'fp_2-fp_3': { cp: { x: 402.48082888952626, y: 347.2330833052663 } },
+  'fp_k-cb_ts': { cp: { x: 882.2893648023402, y: 399.73416009699304 } },
+  'md_k-cb_ts': { cp: { x: 936.3094528070163, y: -446.54458312527225 } },
+  'md_k-cb_pt': { cp: { x: 335.5411241582807, y: -965.2023448335885 } },
+  'al_k-cb_pt': { cp: { x: -359.3108785884939, y: -971.2920926895188 } },
+  'root-yy_1': { cp: { x: -3.87250055008775, y: 119.68044727896219 } },
 };
 
 // Brief descriptions shown in the branch legend panel on hover/tap
@@ -328,6 +359,21 @@ export default function EternalTreeScreen({
       setCopied(label);
       setTimeout(() => setCopied(null), 1800);
     });
+  };
+
+  const doSave = async () => {
+    try {
+      const res = await fetch('/__tree-save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nodePosBlock: nodePosJson, customCPBlock: customCPJson }),
+      });
+      const data = await res.json();
+      setCopied(data.ok ? 'saved' : 'error');
+    } catch {
+      setCopied('error');
+    }
+    setTimeout(() => setCopied(null), 2200);
   };
 
   return (
@@ -715,12 +761,17 @@ export default function EternalTreeScreen({
             <pre className="et-editor-pre">{customCPJson}</pre>
           </div>
 
-          <button className="et-editor-reset" onClick={() => {
-            setEditPos(Object.fromEntries(NODES.map(n => [n.id, { ...WORLD[n.id] }])));
-            setEditCP(JSON.parse(JSON.stringify(CUSTOM_CP)));
-          }}>
-            Reset to defaults
-          </button>
+          <div className="et-editor-bottom-row">
+            <button className="et-editor-save" onClick={doSave}>
+              {copied === 'saved' ? '✓ Saved!' : copied === 'error' ? '✗ Error' : '💾 Save to file'}
+            </button>
+            <button className="et-editor-reset" onClick={() => {
+              setEditPos(Object.fromEntries(NODES.map(n => [n.id, { ...WORLD[n.id] }])));
+              setEditCP(JSON.parse(JSON.stringify(CUSTOM_CP)));
+            }}>
+              Reset
+            </button>
+          </div>
         </div>
       )}
     </div>

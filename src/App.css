@@ -7757,3 +7757,17 @@
 .et-editor-reset:hover { background: rgba(255, 80, 80, 0.22); }
 .et-node-editable { cursor: grab !important; }
 .et-node-editable:active { cursor: grabbing !important; }
+.et-editor-bottom-row { display: flex; gap: 8px; align-items: center; }
+.et-editor-save {
+  flex: 1;
+  background: rgba(0, 200, 100, 0.15);
+  border: 1px solid rgba(0, 220, 110, 0.4);
+  border-radius: 6px;
+  color: rgba(80, 255, 160, 0.95);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  transition: background 0.15s;
+}
+.et-editor-save:hover { background: rgba(0, 200, 100, 0.28); }
