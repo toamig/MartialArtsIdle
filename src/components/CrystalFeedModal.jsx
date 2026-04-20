@@ -40,6 +40,7 @@ function CrystalFeedModal({ crystal, inventory, onClose }) {
   const [feedQty, setFeedQty]           = useState(1);
 
   const { level, refinedQi, requiredForNext, crystalQiBonus, feed } = crystal;
+  const nextBonus = (level + 1) * 2;
 
   const availableStones = CULTIVATION_ITEMS
     .map(item => ({
@@ -91,9 +92,16 @@ function CrystalFeedModal({ crystal, inventory, onClose }) {
             <div className="cfm-title">Qi Crystal</div>
             <div className="cfm-subtitle">Level {level}</div>
           </div>
-          <div className="cfm-bonus-badge">
-            <span className="cfm-bonus-gem">◆</span>
-            +{crystalQiBonus} Qi/s
+          <div className="cfm-bonus-block">
+            {level > 0 && (
+              <div className="cfm-bonus-current">
+                <span className="cfm-bonus-gem">◆</span> +{crystalQiBonus} Qi/s
+              </div>
+            )}
+            <div className="cfm-bonus-next">
+              <span className="cfm-bonus-arrow">▲</span>
+              <span>Lv.{level + 1} → +{nextBonus} Qi/s</span>
+            </div>
           </div>
           <button className="journey-close" onClick={onClose} aria-label="Close">✕</button>
         </div>

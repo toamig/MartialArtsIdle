@@ -628,21 +628,28 @@
 
 .char-tab-btn {
   flex: 1;
-  padding: 8px 4px;
+  padding: 11px 8px;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 0.88rem;
   font-weight: 500;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s, border-color 0.2s, background 0.15s;
+}
+
+.char-tab-btn:active {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .char-tab-btn.active {
   color: var(--accent);
   border-bottom-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 .char-tab-content {
@@ -678,6 +685,17 @@
   color: var(--text-muted);
   margin-bottom: 20px;
   font-size: 0.95rem;
+}
+
+.character-screen .subtitle {
+  display: inline-block;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.8;
+  margin-bottom: 16px;
 }
 
 /* Card Grid */
@@ -1120,7 +1138,12 @@
 .build-law-card-compact {
   height: auto;
   cursor: pointer;
-  transition: border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s, background 0.12s;
+}
+
+.build-law-card-compact:active {
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-card));
 }
 
 .build-law-card-compact:hover {
@@ -1152,11 +1175,12 @@
 }
 
 .law-tap-hint {
-  font-size: 0.6rem;
-  color: var(--text-muted);
+  font-size: 0.65rem;
+  color: var(--accent);
   text-align: center;
   font-style: italic;
   margin-top: auto;
+  opacity: 0.7;
 }
 
 /* ── Home Screen ──────────────────────────────────────────────────────────── */
@@ -2101,22 +2125,45 @@
   margin-top: 1px;
 }
 
-.cfm-bonus-badge {
+.cfm-bonus-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.cfm-bonus-current {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(139, 92, 246, 0.14);
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(196, 181, 253, 0.55);
+  white-space: nowrap;
+}
+
+.cfm-bonus-next {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(139, 92, 246, 0.18);
+  border: 1px solid rgba(139, 92, 246, 0.4);
   border-radius: 20px;
   padding: 4px 10px;
   font-size: 12px;
   font-weight: 700;
   color: #c4b5fd;
   white-space: nowrap;
-  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.25);
 }
 
 .cfm-bonus-gem {
+  font-size: 9px;
+  color: rgba(167, 139, 250, 0.55);
+}
+
+.cfm-bonus-arrow {
   font-size: 9px;
   color: #a78bfa;
 }
@@ -3694,12 +3741,16 @@
   gap: 6px;
 }
 
+.art-picker-backdrop {
+  display: none;
+}
+
 .art-inline-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 8px 4px;
+  gap: 4px;
+  padding: 10px 6px;
   background: var(--bg-secondary);
   border: 2px solid var(--border);
   border-radius: 8px;
@@ -3725,15 +3776,15 @@
 }
 
 .art-inline-card-name {
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   font-weight: 600;
   text-align: center;
-  line-height: 1.2;
+  line-height: 1.3;
   word-break: break-word;
 }
 
 .art-inline-card-tag {
-  font-size: 0.5rem;
+  font-size: 0.62rem;
   color: var(--text-muted);
   font-style: italic;
 }
@@ -5052,9 +5103,39 @@
     align-self: flex-start;
   }
 
-  /* Inline picker: 3 columns on mobile */
+  /* Inline picker as bottom sheet on mobile */
+  .art-picker-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 99;
+  }
+
+  .art-inline-picker {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    margin: 0;
+    border-radius: 18px 18px 0 0;
+    border-bottom: none;
+    max-height: 72vh;
+    overflow-y: auto;
+    padding: 16px 14px max(16px, env(safe-area-inset-bottom));
+    animation: art-sheet-up 0.22s ease-out;
+  }
+
+  @keyframes art-sheet-up {
+    from { transform: translateY(100%); opacity: 0.6; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  /* 2 columns on mobile — bigger tap targets */
   .art-inline-picker-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
   /* Slightly smaller gear slots to stay within safe margins */
@@ -5169,6 +5250,12 @@
 
   .nav-label {
     font-size: 9px;
+  }
+
+  .stat-triangle-container {
+    transform: scale(0.82);
+    transform-origin: top center;
+    margin-bottom: -32px;
   }
 }
 
