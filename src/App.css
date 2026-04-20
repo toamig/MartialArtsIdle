@@ -460,7 +460,7 @@
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px) brightness(0.45);
   pointer-events: none;
 }
 
@@ -3780,19 +3780,22 @@
 
 .tech-type-btn {
   padding: 4px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg-secondary);
-  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(10, 8, 28, 0.65);
+  color: rgba(160, 155, 190, 0.65);
   font-size: 0.72rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: all 0.15s;
 }
 
 .tech-type-btn-active {
-  color: #fff;
+  background: linear-gradient(135deg, rgba(233, 69, 96, 0.2), rgba(180, 30, 60, 0.12));
+  border-color: rgba(233, 69, 96, 0.55);
+  color: var(--accent);
+  box-shadow: 0 0 10px rgba(233, 69, 96, 0.1);
 }
 
 .tech-list {
@@ -3806,20 +3809,25 @@
 
 .tech-list-item {
   width: 100%;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: rgba(10, 8, 28, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
   padding: 10px 12px;
   cursor: pointer;
   text-align: left;
   position: relative;
-  transition: border-color 0.15s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.15s, background 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
 
-.tech-list-item:hover { border-color: var(--accent); }
+.tech-list-item:hover { border-color: rgba(233, 69, 96, 0.4); background: rgba(255, 255, 255, 0.02); }
 
-.tech-list-equipped { border-color: var(--gold); }
+.tech-list-equipped {
+  background: rgba(233, 69, 96, 0.07);
+  border-color: rgba(233, 69, 96, 0.45);
+  box-shadow: 0 0 12px rgba(233, 69, 96, 0.09), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
 
 .tech-list-locked {
   opacity: 0.45;
@@ -3857,8 +3865,8 @@
 }
 
 .tech-badge-rank {
-  color: var(--text-muted);
-  border-color: var(--border);
+  color: rgba(160, 155, 190, 0.55);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .tech-item-stats {
@@ -3913,7 +3921,7 @@
   right: 8px;
   font-size: 0.58rem;
   font-weight: 700;
-  color: var(--gold);
+  color: rgba(233, 69, 96, 0.9);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -3944,15 +3952,15 @@
 .art-tooltip {
   z-index: 1000;
   pointer-events: none;
-  background: rgba(18, 18, 24, 0.96);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: rgba(10, 8, 28, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 3px;
   max-width: 220px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.65);
 }
 
 .art-tooltip-name {
@@ -3973,7 +3981,7 @@
 }
 
 .art-tooltip-affixes {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
   padding-top: 4px;
   margin-top: 2px;
 }
@@ -3990,10 +3998,11 @@
 /* ── Inline Artefact Picker ── */
 .art-inline-picker {
   margin-top: 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: rgba(10, 8, 28, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
   padding: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
 }
 
 .art-inline-picker-header {
@@ -4004,10 +4013,11 @@
 }
 
 .art-inline-picker-title {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  color: rgba(180, 160, 220, 0.55);
 }
 
 .art-inline-picker-close {
@@ -4036,12 +4046,13 @@
   align-items: center;
   gap: 4px;
   padding: 10px 6px;
-  background: var(--bg-secondary);
-  border: 2px solid var(--border);
+  background: rgba(10, 8, 28, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.12s, background 0.12s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.12s, background 0.12s, border-color 0.12s;
 }
 
 .art-inline-card:active {
@@ -4051,13 +4062,15 @@
 @media (hover: hover) {
   .art-inline-card:hover {
     background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.16);
     transform: translateY(-1px);
   }
 }
 
 .art-inline-card-equipped {
-  background: rgba(255, 255, 255, 0.04);
-  border-style: solid;
+  background: rgba(233, 69, 96, 0.08);
+  border-color: rgba(233, 69, 96, 0.45);
+  box-shadow: 0 0 10px rgba(233, 69, 96, 0.1), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .art-inline-card-name {
@@ -4090,15 +4103,16 @@
 }
 
 .law-picker-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: rgba(10, 8, 28, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
   padding: 12px 14px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 6px;
   -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
   transition: border-color 0.15s, background 0.15s;
   text-align: left;
 }
@@ -4109,13 +4123,15 @@
 
 @media (hover: hover) {
   .law-picker-card:hover {
-    border-color: var(--accent);
+    border-color: rgba(233, 69, 96, 0.45);
+    background: rgba(255, 255, 255, 0.03);
   }
 }
 
 .law-picker-card-active {
-  border-color: var(--gold, #f5c842);
-  background: rgba(245, 200, 66, 0.04);
+  background: rgba(233, 69, 96, 0.07);
+  border-color: rgba(233, 69, 96, 0.5);
+  box-shadow: 0 0 14px rgba(233, 69, 96, 0.1), 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 
 .law-picker-card-header {
@@ -4140,8 +4156,8 @@
 
 .law-picker-card-active-tag {
   font-size: 0.6rem;
-  color: var(--gold, #f5c842);
-  font-weight: 600;
+  color: rgba(233, 69, 96, 0.9);
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
