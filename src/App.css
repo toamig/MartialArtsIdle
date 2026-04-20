@@ -4395,7 +4395,8 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 7px;
   padding: 10px 12px;
 }
@@ -4452,13 +4453,14 @@
 
 /* Transmutation detail panel */
 .tx-detail-panel {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: rgba(10, 8, 28, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
 }
 
 .tx-detail-header {
@@ -4469,12 +4471,12 @@
 }
 
 .tx-section-title {
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.1em;
+  color: rgba(180, 160, 220, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   padding-bottom: 4px;
 }
 
@@ -4503,13 +4505,13 @@
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 7px;
   padding: 8px 10px;
 }
 
 .tx-mod-row-empty {
-  border: 1px dashed var(--border);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
   background: transparent;
 }
 
@@ -4572,14 +4574,22 @@
   align-items: center;
   gap: 2px;
   padding: 4px 8px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(233, 69, 96, 0.35);
   border-radius: 6px;
-  background: rgba(233,69,96,0.08);
+  background: rgba(233, 69, 96, 0.08);
   color: var(--accent);
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   min-width: 42px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+@media (hover: hover) {
+  .tx-craft-btn:hover:not(.tx-craft-btn-disabled) {
+    border-color: rgba(233, 69, 96, 0.7);
+    background: rgba(233, 69, 96, 0.14);
+  }
 }
 
 .tx-craft-btn:active { transform: scale(0.95); }
@@ -5668,6 +5678,7 @@
 }
 
 .worlds-tab-btn {
+  position: relative;
   border-radius: 9px;
   background: rgba(10, 8, 28, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -5676,6 +5687,26 @@
   cursor: pointer;
   transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
+}
+
+.worlds-tab-badge {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.7);
+}
+
+.world-header-badge {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.7);
+  flex-shrink: 0;
 }
 
 /* ── Combat tab — primary, full width, prominent ── */
@@ -6264,21 +6295,23 @@
 .alchemy-slot-btn {
   width: 100%;
   padding: 10px 12px;
-  border: 2px solid var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
-  background: var(--bg-card);
+  background: rgba(10, 8, 28, 0.88);
   color: var(--text-primary);
   font-size: 0.82rem;
   cursor: pointer;
   text-align: center;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .alchemy-slot-btn:hover {
-  border-color: var(--accent);
+  border-color: rgba(233, 69, 96, 0.55);
+  box-shadow: 0 0 12px rgba(233, 69, 96, 0.1);
 }
 
 .herb-selector {
@@ -6287,12 +6320,12 @@
   left: 0;
   right: 0;
   z-index: 20;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: rgba(10, 8, 28, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   max-height: 200px;
   overflow-y: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 .herb-selector-empty {
@@ -6317,7 +6350,7 @@
 }
 
 .herb-selector-item:hover {
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .herb-selector-qty {
@@ -6329,11 +6362,12 @@
   width: 100%;
   max-width: 320px;
   padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  background: rgba(10, 8, 28, 0.88);
   text-align: center;
   min-height: 60px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .alchemy-result-pill {
@@ -6392,9 +6426,10 @@
 
 .alchemy-qty-selector {
   display: inline-flex;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   overflow: hidden;
+  background: rgba(10, 8, 28, 0.75);
 }
 
 .alchemy-qty-btn {
@@ -6409,7 +6444,7 @@
 }
 
 .alchemy-qty-btn + .alchemy-qty-btn {
-  border-left: 1px solid var(--border);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .alchemy-qty-btn:hover {
@@ -6417,28 +6452,31 @@
 }
 
 .alchemy-qty-btn-active {
-  background: var(--accent);
-  color: #fff;
+  background: linear-gradient(135deg, rgba(233, 69, 96, 0.25), rgba(180, 30, 60, 0.15));
+  color: var(--accent);
+  box-shadow: inset 0 1px 0 rgba(255, 100, 120, 0.1);
 }
 
 .alchemy-qty-btn-active:hover {
-  color: #fff;
+  color: var(--accent);
 }
 
 .alchemy-craft-btn {
   padding: 10px 32px;
-  border: 2px solid var(--accent);
+  border: 1px solid rgba(233, 69, 96, 0.8);
   border-radius: 8px;
-  background: var(--accent);
+  background: rgba(233, 69, 96, 0.85);
   color: #fff;
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 16px rgba(233, 69, 96, 0.2);
 }
 
 .alchemy-craft-btn:hover {
-  opacity: 0.9;
+  background: rgba(233, 69, 96, 0.95);
+  box-shadow: 0 0 24px rgba(233, 69, 96, 0.35);
 }
 
 .alchemy-craft-btn-disabled {
@@ -6456,13 +6494,14 @@
 }
 
 .refine-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: rgba(10, 8, 28, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
 }
 
 .refine-card-header {
@@ -6505,26 +6544,28 @@
   flex: 1;
   min-width: 50px;
   padding: 6px 4px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: rgba(10, 8, 28, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 6px;
-  color: var(--text-muted);
+  color: rgba(160, 155, 190, 0.6);
   font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .refine-rarity-tab-active {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.06);
   font-weight: 700;
+  /* border + color driven by inline style per rarity */
 }
 
 .refine-cost-list {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 7px;
   padding: 10px 12px;
 }
@@ -6554,8 +6595,8 @@
   bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--bg-card);
-  border: 1px solid var(--accent);
+  background: rgba(10, 8, 28, 0.95);
+  border: 1px solid rgba(233, 69, 96, 0.6);
   color: var(--accent);
   padding: 10px 18px;
   border-radius: 8px;
@@ -6563,7 +6604,7 @@
   font-weight: 600;
   z-index: 1000;
   pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 16px rgba(233, 69, 96, 0.15);
 }
 
 /* ─── Recipe Book ─────────────────────────────────────────────────────────────── */
@@ -6576,12 +6617,12 @@
 }
 
 .recipe-book-title {
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.1em;
+  color: rgba(180, 160, 220, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   padding-bottom: 4px;
 }
 
@@ -6594,13 +6635,15 @@
 }
 
 .recipe-pill-group {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: rgba(10, 8, 28, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.15s;
 }
 
 .recipe-pill-header {
@@ -6657,18 +6700,18 @@
   display: block;
   width: 100%;
   font-size: 0.72rem;
-  color: var(--text-muted);
+  color: rgba(160, 155, 190, 0.65);
   padding: 5px 8px;
-  background: var(--bg-secondary);
-  border: 1px solid transparent;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .recipe-row:hover {
-  border-color: var(--accent);
+  border-color: rgba(233, 69, 96, 0.5);
   color: var(--text-primary);
 }
 

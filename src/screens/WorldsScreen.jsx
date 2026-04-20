@@ -248,6 +248,9 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
           <span className="world-name">{worldName}</span>
         </div>
         <div className="world-header-right">
+          {hasPendingGains && lastIdleAssignment?.worldIndex === worldIndex && (
+            <span className="world-header-badge" />
+          )}
           <span className="world-realms-tag">{world.realms}</span>
           {worldLocked
             ? <span className="world-lock-icon">&#x1F512;</span>
@@ -335,12 +338,18 @@ function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clear
             onClick={() => setTab('gather')}
           >
             🌿 {t('worlds.tabGather')}
+            {hasPendingGains && lastIdleAssignment?.activity === 'gathering' && (
+              <span className="worlds-tab-badge" />
+            )}
           </button>
           <button
             className={`worlds-tab-btn worlds-tab-resource${tab === 'mine' ? ' active' : ''}`}
             onClick={() => setTab('mine')}
           >
             ⛏ {t('worlds.tabMine')}
+            {hasPendingGains && lastIdleAssignment?.activity === 'mining' && (
+              <span className="worlds-tab-badge" />
+            )}
           </button>
         </div>
       </div>
