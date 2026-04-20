@@ -9,7 +9,7 @@ import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
 import CrystalFeedModal from '../components/CrystalFeedModal';
 import DailyBonusWidget from '../components/DailyBonusWidget';
 import { PILLS_BY_ID } from '../data/pills';
-import FEATURE_GATES from '../data/featureGates';
+import { FEATURE_GATES } from '../data/featureGates';
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
