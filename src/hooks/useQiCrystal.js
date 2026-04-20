@@ -1,7 +1,7 @@
 /**
- * useQiCrystal.js — Key Crystal hook (refined QI accumulation).
+ * useQiCrystal.js — Qi Crystal hook (refined QI accumulation).
  *
- * The Key Crystal is a permanent upgrade that adds flat qi/sec to cultivation.
+ * The Qi Crystal is a permanent upgrade that adds flat qi/sec to cultivation.
  * Players feed QI stones (cultivation materials) to accumulate refined QI.
  * When the accumulated refined QI reaches the threshold, the crystal levels up.
  *

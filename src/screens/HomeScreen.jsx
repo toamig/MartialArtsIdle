@@ -186,7 +186,7 @@ const CRYSTAL_COLORS = {
   10:     { glowA: 'rgba(255,170,34,1)',   glowB: 'rgba(220,120,0,0.55)', particles: ['#ffaa22','#ffe566','#ffbb44','#ff9900','#fff0aa'] },
 };
 
-/** Key Crystal — locked (dim, greyscale) or unlocked (glowing, tappable). */
+/** Qi Crystal — locked (dim, greyscale) or unlocked (glowing, tappable). */
 function KeyCrystal({ crystal, isUnlocked, onOpen, particleColors }) {
   if (!isUnlocked) {
     return (

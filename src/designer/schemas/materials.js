@@ -37,6 +37,6 @@ export const QI_STONE_SCHEMA = [
   { key: 'gatherCost', type: 'number', label: 'Gather cost (points)', min: 1, step: 1 },
   { key: 'mineCost',   type: 'number', label: 'Mine cost (points)',   min: 1, step: 1 },
   { key: 'refinedQi',  type: 'number', label: 'Refined QI granted',   min: 0, step: 1,
-    help: 'QI value when fed to the Key Crystal.' },
+    help: 'QI value when fed to the Qi Crystal.' },
   descriptionField,
 ];

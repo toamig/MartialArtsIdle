@@ -108,7 +108,7 @@ const BASELINE = {
   qi_crystal: {
     gate: { type: 'realm', minRealmIndex: 3 },
     hint: 'Reach Tempered Body Layer 4',
-    unlockMsg: 'The Key Crystal awakens. Feed it QI stones to boost your cultivation.',
+    unlockMsg: 'The Qi Crystal awakens. Feed it QI stones to boost your cultivation.',
   },
 };
 

@@ -88,7 +88,7 @@ function CrystalFeedModal({ crystal, inventory, onClose }) {
         <div className="cfm-header">
           <img src={crystalSrc} className="cfm-crystal-img" alt="" draggable="false" />
           <div className="cfm-header-text">
-            <div className="cfm-title">Key Crystal</div>
+            <div className="cfm-title">Qi Crystal</div>
             <div className="cfm-subtitle">Level {level}</div>
           </div>
           <div className="cfm-bonus-badge">
