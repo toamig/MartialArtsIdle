@@ -36,8 +36,8 @@ export function loadAutoFarmConfig() {
       const saved = JSON.parse(raw);
       const defaults = getDefaultConfig();
       return {
-        gathering: { ...defaults.gathering, ...saved.gathering, enabled: false },
-        mining:    { ...defaults.mining,    ...saved.mining,    enabled: false },
+        gathering: { ...defaults.gathering, ...saved.gathering },
+        mining:    { ...defaults.mining,    ...saved.mining    },
       };
     }
   } catch {}
