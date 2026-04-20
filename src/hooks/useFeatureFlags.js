@@ -73,7 +73,9 @@ export default function useFeatureFlags({ cultivation, clearedRegions, inventory
     }
   }, [unlocked, onUnlock]);
 
-  const isUnlocked  = (featureId) => unlocked.has(featureId);
+  // Once unlocked, always unlocked — features don't re-lock when transient
+  // conditions (e.g. item counts) drop back to zero.
+  const isUnlocked  = (featureId) => unlocked.has(featureId) || seenRef.current.has(featureId);
   const getHint     = (featureId) => FEATURE_GATES[featureId]?.hint ?? null;
   const getDesc     = (featureId) => FEATURE_GATES[featureId]?.desc ?? null;
 
