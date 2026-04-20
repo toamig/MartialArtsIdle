@@ -5235,28 +5235,54 @@
 
 .worlds-tab-bar {
   display: flex;
+  flex-direction: column;
   gap: 6px;
   margin-bottom: 16px;
 }
 
+.worlds-tab-resource-row {
+  display: flex;
+  gap: 6px;
+}
+
 .worlds-tab-btn {
-  flex: 1;
-  padding: 8px 0;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 9px;
   background: var(--bg-card);
+  border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
 
-.worlds-tab-btn.active {
-  border-color: var(--accent);
+/* ── Combat tab — primary, full width, prominent ── */
+.worlds-tab-combat {
+  width: 100%;
+  padding: 11px 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  border-radius: 10px;
+}
+
+.worlds-tab-combat.active {
+  background: linear-gradient(135deg, rgba(233, 69, 96, 0.2), rgba(180, 30, 60, 0.12));
+  border-color: rgba(233, 69, 96, 0.65);
   color: var(--accent);
-  background: rgba(233, 69, 96, 0.08);
+  box-shadow: 0 0 18px rgba(233, 69, 96, 0.15), inset 0 1px 0 rgba(255,100,120,0.1);
+}
+
+/* ── Resource tabs — secondary, equal halves ── */
+.worlds-tab-resource {
+  flex: 1;
+  padding: 7px 0;
+  font-size: 0.82rem;
+}
+
+.worlds-tab-resource.active {
+  background: rgba(80, 160, 80, 0.1);
+  border-color: rgba(120, 200, 100, 0.5);
+  color: rgba(150, 220, 130, 1);
 }
 
 .worlds-list {
@@ -5396,12 +5422,12 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.region-row:not(.region-locked):hover {
+.region-row:not(.region-locked):not(.region-row-world):hover {
   background: rgba(255, 255, 255, 0.04);
 }
 
-.region-row:not(.region-locked):active {
-  background: rgba(233, 69, 96, 0.08);
+.region-row:not(.region-locked):not(.region-row-world):active {
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .region-row-info {
@@ -5450,6 +5476,32 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  border-left: 3px solid rgba(233, 69, 96, 0.3);
+}
+
+.region-row-world:not(.region-locked):hover {
+  background: rgba(233, 69, 96, 0.06);
+  border-left-color: rgba(233, 69, 96, 0.7);
+}
+
+.region-row-world:not(.region-locked):active {
+  background: rgba(233, 69, 96, 0.1);
+}
+
+/* ── Combat-gate badge on locked gather/mine regions ── */
+.region-combat-gate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 5px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(233, 69, 96, 0.08);
+  border: 1px solid rgba(233, 69, 96, 0.25);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(233, 69, 96, 0.7);
+  letter-spacing: 0.03em;
 }
 
 .region-row-left {

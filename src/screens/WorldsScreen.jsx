@@ -73,7 +73,7 @@ function LootBanner({ pendingGains, onCollect }) {
 const TAB_ACTIVITY = { world: 'combat', gather: 'gathering', mine: 'mining' };
 const ACTIVITY_ICON = { combat: '⚔', gathering: '🌿', mining: '⛏' };
 
-function RegionRow({ region, tab, locked, lockHint, onNavigate, worldId,
+function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, worldId,
                      canIdle, isIdling, onSetIdle, onClearIdle }) {
   const { t } = useTranslation('ui');
   const { t: tGame }  = useTranslation('game');
@@ -151,6 +151,9 @@ function RegionRow({ region, tab, locked, lockHint, onNavigate, worldId,
           <div className="region-row-detail">
             <span className="region-detail-secondary">{content.secondary}</span>
           </div>
+        )}
+        {combatLocked && (
+          <div className="region-combat-gate">⚔ Clear combat first</div>
         )}
       </div>
 
@@ -248,6 +251,7 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
                 tab={tab}
                 locked={isLocked}
                 lockHint={lockHint}
+                combatLocked={activityLocked}
                 onNavigate={onNavigate}
                 worldId={world.id}
                 canIdle={canIdle}
@@ -277,12 +281,6 @@ function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clear
     });
   }
 
-  const TABS = [
-    { id: 'world',  tKey: 'worlds.tabWorld'  },
-    { id: 'gather', tKey: 'worlds.tabGather' },
-    { id: 'mine',   tKey: 'worlds.tabMine'   },
-  ];
-
   return (
     <div className="screen worlds-screen">
       <h1>{t('worlds.title')}</h1>
@@ -293,15 +291,26 @@ function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clear
       )}
 
       <div className="worlds-tab-bar">
-        {TABS.map(tb => (
+        <button
+          className={`worlds-tab-btn worlds-tab-combat${tab === 'world' ? ' active' : ''}`}
+          onClick={() => setTab('world')}
+        >
+          ⚔ {t('worlds.tabWorld')}
+        </button>
+        <div className="worlds-tab-resource-row">
           <button
-            key={tb.id}
-            className={`worlds-tab-btn${tab === tb.id ? ' active' : ''}`}
-            onClick={() => setTab(tb.id)}
+            className={`worlds-tab-btn worlds-tab-resource${tab === 'gather' ? ' active' : ''}`}
+            onClick={() => setTab('gather')}
           >
-            {t(tb.tKey)}
+            🌿 {t('worlds.tabGather')}
           </button>
-        ))}
+          <button
+            className={`worlds-tab-btn worlds-tab-resource${tab === 'mine' ? ' active' : ''}`}
+            onClick={() => setTab('mine')}
+          >
+            ⛏ {t('worlds.tabMine')}
+          </button>
+        </div>
       </div>
 
       <div className="worlds-list">
