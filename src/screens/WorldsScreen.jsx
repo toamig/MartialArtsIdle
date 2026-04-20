@@ -119,16 +119,13 @@ function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, wo
   const regionName    = locked ? '???' : tGame(`regions.${region.name}.name`, { defaultValue: region.name });
   const minRealmLabel = tGame(`stages.${region.minRealm}.name`, { defaultValue: region.minRealm });
 
-  const SCREEN_MAP = { world: 'combat-arena', gather: 'gathering', mine: 'mining' };
-
   function handleClick() {
-    if (isWorld) {
-      const sprites = [...new Set(
-        (region.enemyPool ?? []).map(e => ENEMIES[e.enemyId]?.sprite).filter(Boolean)
-      )];
-      sprites.forEach(sprite => preloadEnemySprites(sprite));
-    }
-    onNavigate(SCREEN_MAP[tab], { region, worldId, fromTab: tab });
+    if (!isWorld) return;
+    const sprites = [...new Set(
+      (region.enemyPool ?? []).map(e => ENEMIES[e.enemyId]?.sprite).filter(Boolean)
+    )];
+    sprites.forEach(sprite => preloadEnemySprites(sprite));
+    onNavigate('combat-arena', { region, worldId, fromTab: tab });
   }
 
   function handleIdleClick(e) {
@@ -140,8 +137,8 @@ function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, wo
   return (
     <div
       className={`region-row${locked ? ' region-locked' : ''}${isWorld && !locked ? ' region-row-world' : ''}${isIdling ? ' region-row-idling' : ''}`}
-      onClick={!locked ? handleClick : undefined}
-      role={!locked ? 'button' : undefined}
+      onClick={isWorld && !locked ? handleClick : undefined}
+      role={isWorld && !locked ? 'button' : undefined}
       title={locked && lockHint ? lockHint : undefined}
     >
       <div className="region-row-left">

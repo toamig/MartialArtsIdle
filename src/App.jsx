@@ -12,8 +12,6 @@ import EternalTreeScreen from './components/EternalTreeScreen';
 import { initAds } from './ads/adService';
 import CombatScreen from './screens/CombatScreen';
 import WorldsScreen from './screens/WorldsScreen';
-import GatheringScreen from './screens/GatheringScreen';
-import MiningScreen from './screens/MiningScreen';
 import CharacterScreen from './screens/CharacterScreen';
 import CollectionScreen from './screens/CollectionScreen';
 import ProductionScreen from './screens/ProductionScreen';
@@ -411,8 +409,7 @@ function App() {
     inventory,
     onUnlock: (featureId, msg) => notifications.addToast({
       message: msg,
-      targetScreen: featureId === 'worlds' || featureId === 'gathering' || featureId === 'mining'
-        ? 'worlds' : featureId,
+      targetScreen: featureId === 'worlds' ? 'worlds' : featureId,
     }),
   });
 
@@ -506,12 +503,6 @@ function App() {
                       getFullStats={getFullStats}
                       onRegionCleared={clearRegion}
                     />,
-    gathering: screenParam?.region
-                 ? <GatheringScreen region={screenParam.region} inventory={inventory} onBack={goBack} getFullStats={getFullStats} />
-                 : null,
-    mining:    screenParam?.region
-                 ? <MiningScreen    region={screenParam.region} inventory={inventory} onBack={goBack} getFullStats={getFullStats} />
-                 : null,
     character:  <CharacterScreen cultivation={cultivation} techniques={techniques} artefacts={artefacts} selections={selections} pills={pills} />,
     collection: <CollectionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} />,
     production: <ProductionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} pills={pills} tree={tree} isUnlocked={featureFlags.isUnlocked} getHint={featureFlags.getHint} />,
