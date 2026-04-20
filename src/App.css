@@ -5191,16 +5191,6 @@
     grid-template-columns: 1fr;
   }
 
-  /* ── Character tabs: shrink to content, don't stretch across 1100px ──── */
-  .char-tab-bar {
-    justify-content: flex-start;
-  }
-
-  .char-tab-btn {
-    flex: 0 0 auto;
-    padding: 8px 28px;
-  }
-
   /* ── Art picker: centred modal on desktop (not inline box) ───────────── */
   .art-picker-backdrop {
     display: block;
