@@ -447,7 +447,7 @@ function HomeScreen({
             onDone={clearMajorBreakthrough}
           />
 
-          {/* ── Top-left chip stack — priority order: rewards → no law ── */}
+          {/* ── Top-left chip stack — priority order: rewards → no law → idle ── */}
           <div className="home-chips-tl">
             {selections?.pendingCount > 0 && (
               <button className="home-sel-btn" onClick={onOpenSelections}>
@@ -463,9 +463,21 @@ function HomeScreen({
                 <span className="home-sel-btn-label">No law equipped</span>
               </button>
             )}
+            {lastIdleAssignment && (() => {
+              const world  = WORLDS[lastIdleAssignment.worldIndex];
+              const region = world?.regions?.[lastIdleAssignment.regionIndex];
+              if (!region) return null;
+              const icon = lastIdleAssignment.activity === 'gathering' ? '🌿' : '⛏';
+              return (
+                <button className="home-idle-chip" onClick={() => onNavigate?.('worlds', { activeTab: lastIdleAssignment.activity === 'gathering' ? 'gather' : 'mine' })}>
+                  <span className="home-idle-chip-icon">{icon}</span>
+                  <span className="home-idle-chip-label">{region.name}</span>
+                </button>
+              );
+            })()}
           </div>
 
-          {/* ── Top-right chip stack — priority order: HQ → daily → idle ── */}
+          {/* ── Top-right chip stack — reserved for timed/seasonal events ── */}
           <div className="home-chips-tr">
             <HeavenlyQiButton
               ad={cultivationAd}
@@ -481,18 +493,7 @@ function HomeScreen({
                 onOpen={onOpenDailyBonus}
               />
             )}
-            {lastIdleAssignment && (() => {
-              const world  = WORLDS[lastIdleAssignment.worldIndex];
-              const region = world?.regions?.[lastIdleAssignment.regionIndex];
-              if (!region) return null;
-              const icon = lastIdleAssignment.activity === 'gathering' ? '🌿' : '⛏';
-              return (
-                <button className="home-idle-chip" onClick={() => onNavigate?.('worlds', { activeTab: lastIdleAssignment.activity === 'gathering' ? 'gather' : 'mine' })}>
-                  <span className="home-idle-chip-icon">{icon}</span>
-                  <span className="home-idle-chip-label">{region.name}</span>
-                </button>
-              );
-            })()}</div>
+          </div>
 
           {/* Crystal + particles + character — stacked so gap always equals particles height */}
           <div className="home-crystal-char-stack">
