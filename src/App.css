@@ -65,6 +65,7 @@
 }
 
 .nav-btn {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -176,35 +177,108 @@
 .lock-tooltip {
   position: absolute;
   left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  background: rgba(10, 7, 25, 0.97);
-  border: 1px solid rgba(139, 92, 246, 0.4);
-  border-radius: 8px;
-  padding: 8px 10px;
+  transform: translateX(-50%) scale(0.93);
+  transform-origin: center bottom;
+  width: 210px;
+  background: rgba(10, 7, 25, 0.98);
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  border-radius: 9px;
+  padding: 9px 11px;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.15s ease, visibility 0.15s ease;
+  transition: opacity 0.14s ease, visibility 0.14s ease, transform 0.14s ease;
   z-index: 300;
-  box-shadow: 0 4px 18px rgba(80, 40, 180, 0.3);
+  box-shadow: 0 6px 24px rgba(60, 20, 160, 0.45);
   text-align: left;
   white-space: normal;
 }
 
 .lock-tooltip-above {
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 10px);
+  transform-origin: center bottom;
 }
 
 .lock-tooltip-below {
-  top: calc(100% + 6px);
+  top: calc(100% + 10px);
+  transform-origin: center top;
 }
 
+/* Carets — border layer */
+.lock-tooltip-above::before,
+.lock-tooltip-below::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+}
+.lock-tooltip-above::before {
+  top: 100%;
+  border-top-color: rgba(139, 92, 246, 0.45);
+}
+.lock-tooltip-below::before {
+  bottom: 100%;
+  border-bottom-color: rgba(139, 92, 246, 0.45);
+}
+
+/* Carets — fill layer */
+.lock-tooltip-above::after,
+.lock-tooltip-below::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+}
+.lock-tooltip-above::after {
+  top: calc(100% - 1px);
+  border-top-color: rgba(10, 7, 25, 0.98);
+}
+.lock-tooltip-below::after {
+  bottom: calc(100% - 1px);
+  border-bottom-color: rgba(10, 7, 25, 0.98);
+}
+
+/* Visible state */
 .nav-btn:hover .lock-tooltip,
 .inv-tab:hover .lock-tooltip,
 .world-card:hover .lock-tooltip {
   opacity: 1;
   visibility: visible;
+  transform: translateX(-50%) scale(1);
+}
+
+/* Edge alignment — first nav item: anchor left */
+.nav-btn:first-child .lock-tooltip {
+  left: 0;
+  transform: translateX(0) scale(0.93);
+  transform-origin: left bottom;
+}
+.nav-btn:first-child:hover .lock-tooltip {
+  transform: translateX(0) scale(1);
+}
+.nav-btn:first-child .lock-tooltip::before,
+.nav-btn:first-child .lock-tooltip::after {
+  left: 18px;
+  transform: none;
+}
+
+/* Edge alignment — last nav item: anchor right */
+.nav-btn:last-child .lock-tooltip {
+  left: auto;
+  right: 0;
+  transform: translateX(0) scale(0.93);
+  transform-origin: right bottom;
+}
+.nav-btn:last-child:hover .lock-tooltip {
+  transform: translateX(0) scale(1);
+}
+.nav-btn:last-child .lock-tooltip::before,
+.nav-btn:last-child .lock-tooltip::after {
+  left: auto;
+  right: 18px;
+  transform: none;
 }
 
 .ltip-desc {
@@ -228,6 +302,14 @@
   font-size: 10px;
   flex-shrink: 0;
   margin-top: 1px;
+}
+
+@media (min-width: 768px) {
+  .lock-tooltip {
+    width: 230px;
+  }
+  .ltip-desc { font-size: 12px; }
+  .ltip-hint { font-size: 12px; }
 }
 
 /* Toast stack — top center, below safe area */
