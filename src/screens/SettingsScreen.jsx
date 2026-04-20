@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { exportSave, importSave, wipeSave } from '../systems/save';
 import { setLanguage, SUPPORTED_LANGUAGES } from '../i18n';
 import { loadGraphics, applyGraphics, saveGraphics } from '../systems/graphics';
+import useAudio from '../audio/useAudio';
 
 const RENDERING_MODES = [
   { mode: 'auto',      label: 'Smooth',    sub: 'bilinear',  icon: '〜' },
@@ -66,8 +67,15 @@ function ActionRow({ icon, label, sublabel, onClick, danger, disabled }) {
   );
 }
 
+const AUDIO_CHANNELS = [
+  { channel: 'master', label: 'Master', volKey: 'masterVol', muteKey: 'masterMuted' },
+  { channel: 'bgm',    label: 'Music',  volKey: 'bgmVol',    muteKey: 'bgmMuted'    },
+  { channel: 'sfx',    label: 'Effects',volKey: 'sfxVol',    muteKey: 'sfxMuted'    },
+];
+
 function SettingsScreen({ onClose }) {
   const { t, i18n } = useTranslation('ui');
+  const audio = useAudio();
 
   const [showImport,  setShowImport]  = useState(false);
   const [importText,  setImportText]  = useState('');
@@ -138,6 +146,37 @@ function SettingsScreen({ onClose }) {
 
         {/* ── Body ── */}
         <div className="settings-modal-body">
+
+          {/* Audio */}
+          <div className="stg-section">
+            <div className="stg-section-label">Audio</div>
+            {AUDIO_CHANNELS.map(({ channel, label, volKey, muteKey }) => {
+              const muted = audio.settings[muteKey];
+              const vol   = audio.settings[volKey];
+              return (
+                <div key={channel} className="stg-audio-row">
+                  <span className="stg-audio-label">{label}</span>
+                  <input
+                    type="range"
+                    className={`stg-audio-slider${muted ? ' stg-audio-slider-muted' : ''}`}
+                    min="0" max="1" step="0.01"
+                    value={vol}
+                    onChange={e => audio.setVolume(channel, parseFloat(e.target.value))}
+                    disabled={muted}
+                    aria-label={`${label} volume`}
+                  />
+                  <span className="stg-audio-pct">{muted ? '—' : `${Math.round(vol * 100)}%`}</span>
+                  <button
+                    className={`stg-audio-mute${muted ? ' stg-audio-muted' : ''}`}
+                    onClick={() => audio.setMuted(channel, !muted)}
+                    aria-label={muted ? `Unmute ${label}` : `Mute ${label}`}
+                  >
+                    {muted ? '🔇' : '🔊'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
 
           {/* Visual effects */}
           <div className="stg-section">
