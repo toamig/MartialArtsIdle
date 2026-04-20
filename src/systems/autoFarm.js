@@ -119,7 +119,7 @@ export function simulateGathering(seconds, region, stats = null) {
   const luckPct = Math.min(100, Math.max(0, stats?.harvestLuck ?? 0));
 
   const result  = {};
-  let remaining = Math.min(seconds, MAX_OFFLINE_HOURS * 3600);
+  let remaining = Math.min(seconds, (stats?.maxOfflineHours ?? MAX_OFFLINE_HOURS) * 3600);
 
   while (remaining > 0) {
     const primary = pickWeighted(activePools);
@@ -180,7 +180,7 @@ export function simulateMining(seconds, region, stats = null) {
   const luckPct = Math.min(100, Math.max(0, stats?.miningLuck ?? 0));
 
   const result  = {};
-  let remaining = Math.min(seconds, MAX_OFFLINE_HOURS * 3600);
+  let remaining = Math.min(seconds, (stats?.maxOfflineHours ?? MAX_OFFLINE_HOURS) * 3600);
 
   while (remaining > 0) {
     const primary = pickWeighted(activePools);

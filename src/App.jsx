@@ -75,7 +75,7 @@ function App() {
   const selections      = useSelections({ cultivation });
   const { clearedRegions, clearRegion } = useClearedRegions();
   const karma           = useReincarnationKarma();
-  const tree            = useReincarnationTree({ karma: karma.karma, spendKarma: karma.spendKarma });
+  const tree            = useReincarnationTree({ karma: karma.karma, spendKarma: karma.spendKarma, lives: karma.lives });
 
   // Record every new realm reached so karma awards are first-time-only.
   useEffect(() => {
@@ -135,17 +135,61 @@ function App() {
     });
     const lawBundle = evaluateLawUniques(law, lawCtx);
 
-    const scaledPillMods = pills?.getStatModifiers?.() ?? {};
+    // hw_4 Soul Crucible — multiply every pill-derived mod value by 1.25.
+    // Multiplies the raw flat / increased / more values themselves so the
+    // scaling shows up as a simple post-roll boost on the existing pill mods.
+    const pillMult = tree?.modifiers?.pillEffectMult ?? 1;
+    const scalePillBundle = (mods) => {
+      if (!mods || pillMult === 1) return mods ?? {};
+      const out = {};
+      for (const [statId, list] of Object.entries(mods)) {
+        out[statId] = list.map(m =>
+          m.type === 'more'
+            ? { ...m, value: 1 + (m.value - 1) * pillMult }
+            : { ...m, value: m.value * pillMult }
+        );
+      }
+      return out;
+    };
+    const scaledPillMods = scalePillBundle(pills?.getStatModifiers?.() ?? {});
+
+    // yy_k Primordial Balance — +10% engine-side multiplier on every artefact
+    // affix value the player owns. Same shape as the pill scaler above.
+    const artefactMult = tree?.modifiers?.artefactValueMult ?? 1;
+    const scaleArtefactBundle = (mods) => {
+      if (!mods || artefactMult === 1) return mods ?? {};
+      const out = {};
+      for (const [statId, list] of Object.entries(mods)) {
+        out[statId] = list.map(m =>
+          m.type === 'more'
+            ? { ...m, value: 1 + (m.value - 1) * artefactMult }
+            : { ...m, value: m.value * artefactMult }
+        );
+      }
+      return out;
+    };
+    const scaledArtefactMods = scaleArtefactBundle(artefacts?.getStatModifiers?.() ?? {});
+
+    // cb_is Inherited Strength — +25% to the active law's typeMults. Mutates
+    // a shallow clone so the real law definition isn't touched.
+    const typeMultsBonus = tree?.modifiers?.typeMultsBonus ?? 0;
+    const lawForCompute = (typeMultsBonus > 0 && law?.typeMults)
+      ? { ...law, typeMults: {
+          essence: (law.typeMults.essence ?? 0) * (1 + typeMultsBonus),
+          body:    (law.typeMults.body    ?? 0) * (1 + typeMultsBonus),
+          soul:    (law.typeMults.soul    ?? 0) * (1 + typeMultsBonus),
+        } }
+      : law;
 
     const mergedMods = mergeModifiers(
-      artefacts?.getStatModifiers?.(),
+      scaledArtefactMods,
       scaledPillMods,
       lawBundle.statMods,
       selections?.getStatModifiers?.(),
       tree?.getStatModifiers?.(),
     );
 
-    const bundle = computeAllStats(qi, law, realmIndex, mergedMods);
+    const bundle = computeAllStats(qi, lawForCompute, realmIndex, mergedMods);
 
     // Collapse a percentage-style stat into a single scalar via the same
     // 5-layer formula (so artefacts / law uniques / pills / selections all
@@ -179,8 +223,9 @@ function App() {
       body:       bundle.primary.body,
       lawElement: law?.element ?? 'Normal',
       // Full active law — calcDamage reads law.types to split damage
-      // between categories (physical / elemental / psychic).
-      law,
+      // between categories (physical / elemental / psychic). Pass the
+      // cb_is-scaled clone so the +25% typeMults bonus reaches combat.
+      law: lawForCompute,
       // Flat damage bonuses + pool-specific bonuses + the source-gated
       // multipliers, all consumed by calcDamage and useCombat's basic-attack.
       damageStats: {
@@ -201,14 +246,23 @@ function App() {
       // Combat-only
       exploitChance: bundle.combat.exploitChance,
       exploitMult:   bundle.combat.exploitMult,
-      // Reincarnation "Triple All Damage" — consumed by useCombat.
-      damageMult:    tree.modifiers.damageMult,
       // Scales the attack-count of Defend / Dodge buffs at cast time.
       buffDurationMult: 1 + collapsePct('buff_duration'),
       // Scales magnitude (defMult / dodgeChance) at cast time.
       buffEffectMult:   collapsePct('buff_effect'),
       // Heavenly QI multiplier (artefact rings) — only applies during ad boost.
       heavenlyQiMult:   collapsePct('heavenly_qi_mult'),
+      // Reincarnation tree exposures consumed by autoFarm / combat / selections.
+      maxOfflineHours:        tree.modifiers.offlineCapHours,
+      cooldownMult:           tree.modifiers.cooldownMult ?? 1,
+      undyingResolve:         !!tree.modifiers.undyingResolve,
+      killingStride:          !!tree.modifiers.killingStride,
+      hpRegenPerSec:          tree.modifiers.hpRegenPerSec ?? 0,
+      freeCastEvery:          tree.modifiers.freeCastEvery ?? 0,
+      qiOnEveryRealmFrac:     tree.modifiers.qiOnEveryRealmFrac ?? 0,
+      gatherMineRarityUpChance: tree.modifiers.gatherMineRarityUpChance ?? 0,
+      regionKillBonus:        !!tree.modifiers.regionKillBonus,
+      damageMult:             tree.modifiers.damageMult ?? 1,
     };
   }, [cultivation, artefacts, pills, selections, tree]);
 
@@ -312,13 +366,55 @@ function App() {
     // refuse here too so any future callsite can't bypass the gate.
     if (cultivation.realmIndex < 24) return;
     karma.reincarnate();
+
+    // ─── Reincarnation tree carry-overs (al_2 / al_4 / al_k) ───────────────
+    const treeMods = tree.modifiers ?? {};
+
+    // al_2 Echo of Mastery — snapshot discovered-recipe set so the wipe
+    // doesn't drop it. Restored after wipeReincarnation re-seeds the laws.
+    let recipeSnapshot = null;
+    if (treeMods.keepRecipes) {
+      try {
+        recipeSnapshot = localStorage.getItem('mai_discovered_pills');
+      } catch {}
+    }
+
     // Give React a tick to flush the karma state to localStorage before we
     // wipe the rest of the save + hard-reload.
     setTimeout(() => {
       wipeReincarnation();
+
+      // Restore al_2 Echo of Mastery snapshot.
+      if (recipeSnapshot != null) {
+        try { localStorage.setItem('mai_discovered_pills', recipeSnapshot); } catch {}
+      }
+
+      // al_4 Bloodline Vigor — +50 jade + 1 banked Selection re-roll.
+      if (treeMods.jadeOnRebirth > 0) {
+        try {
+          const cur = Number(localStorage.getItem('mai_jade') ?? 0);
+          localStorage.setItem('mai_jade', String(cur + treeMods.jadeOnRebirth));
+        } catch {}
+      }
+      if (treeMods.bankedRerollOnRebirth > 0) {
+        try {
+          const cur = Number(localStorage.getItem('mai_banked_rerolls') ?? 0);
+          localStorage.setItem('mai_banked_rerolls', String(cur + treeMods.bankedRerollOnRebirth));
+        } catch {}
+      }
+
+      // al_k Living Memory — set a 1-hour ×2 cultivation buff that the
+      // cultivation tick reads via the existing ad-boost code path.
+      if (treeMods.cultBuffOnRebirthSec > 0) {
+        try {
+          localStorage.setItem('mai_rebirth_cult_buff_until',
+            String(Date.now() + treeMods.cultBuffOnRebirthSec * 1000));
+        } catch {}
+      }
+
       window.location.reload();
     }, 50);
-  }, [karma, cultivation.realmIndex]);
+  }, [karma, cultivation.realmIndex, tree.modifiers]);
 
   const goBack = () => navigate('worlds', {
     expandWorldId: screenParam?.worldId ?? null,

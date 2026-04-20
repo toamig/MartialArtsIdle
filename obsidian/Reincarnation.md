@@ -70,19 +70,25 @@ A **5-branch radial tree** rendered in an SVG canvas (pannable + scroll-to-zoom)
 Four main branches radiate from the root with a sealed fifth branch (Yin Yang)
 that unlocks once the player has bought ≥ 2 of the four main keystones.
 
-| Branch | Theme | Direction |
+> **Total tree cost = 143 karma** — exactly what one peak life awards. Players
+> reincarnate only when they have reached a *higher* realm than any previous
+> life (each realm grants karma once via `maxAwarded` tracking). Reincarnation
+> is a true progression milestone, not a karma-farming loop.
+
+| Branch | Theme | Total |
 |---|---|---|
-| 🏛 **Ancestor's Legacy** | Carry-overs from past lives, offline cap, head-start | 135° |
-| ⚔ **Martial Dao** | Combat — technique slots, exploit, drop quality | 45° |
-| 🌟 **Fate's Path** | Drop-rate, rarity upgrades, preview-luck | 320° |
-| 💪 **Heavenly Will** | Cultivation Power, HP, survival | 220° |
-| ☯ **Yin Yang** *(sealed)* | Phase-based playstyle around the Taiji Manual | 270° |
+| 🏛 **Ancestor's Legacy** | Head-start, recipe carry-over, offline cap, jade + cult buff | 25 |
+| ⚔ **Martial Dao** | Cooldowns, exploit, +1 slot, crafted-tech quality, post-kill exploit | 25 |
+| 🌟 **Fate's Path** | Craft-tier luck, gather/mine rarity, refine cost, +Selection options, dual auto-farm | 25 |
+| 💪 **Heavenly Will** | All-primaries / HP scaling, undying resolve, pill effect mult | 25 |
+| ☯ **Yin Yang** *(sealed: ≥ 2 keystones)* | Per-life scaling, qi-on-realm, HP regen, free-cast cycle, artefact value mult | 28 |
+| 🔗 **Cross-branch connectors** | typeMults bonus, kill-bonus gather drops, Phase Technique law | 15 |
 
-Each main branch has 4 sequential nodes + 1 keystone (5 nodes). Yin Yang has
-6 nodes. **Cross-branch connector nodes** (`cb_*`) link adjacent keystones
-with AND prereqs and grant cross-branch synergies.
+Each main branch has 4 sequential nodes + 1 keystone. Yin Yang has 5 nodes
+unlocked behind the keystone gate. **Cross-branch connectors** (`cb_*`)
+link main keystones with AND prereqs.
 
-Authoritative definitions: `NODES` array in `src/data/reincarnationTree.js`.
+Authoritative definitions: `NODES` array in [src/data/reincarnationTree.js](../src/data/reincarnationTree.js).
 Each node is `{ id, branch, step, label, icon, desc, cost, prereqs, prereqMode, keystone? }`
 with `prereqMode ∈ { 'or', 'and', 'yyUnlock' }`.
 
@@ -90,21 +96,38 @@ Purchases persist in `localStorage` key `mai_reincarnation_tree` and are NOT
 wiped on reincarnation. Each node is a one-time purchase. Nodes can be
 bought at any time during a run — rebirth is not required.
 
-### Sample node effects (representative — full list in code)
+### Full node list
 
 | Node | Branch | Cost | Effect |
 |---|---|---|---|
-| Inherited Meridians (`al_1`) | Legacy | 50 | +10% cultivation speed permanently. |
-| Ancient Roots ★ (`al_k`) | Legacy | 300 | Start each life with your previous Law in your collection. |
-| Veteran's Eye (`md_1`) | Martial | 75 | Dropped techniques arrive one quality tier higher. |
-| The Fourth Form (`md_4`) | Martial | 250 | Unlocks a 4th technique slot. |
-| Heaven's Bladework ★ (`md_k`) | Martial | 400 | Auto-upgrades highest-quality technique once per life. |
-| Lucky Star (`fp_1`) | Fate | 50 | +1% technique drop rate on all enemies. |
-| Fortune's Thread ★ (`fp_k`) | Fate | 350 | First technique drop in each world is the highest tier available. |
-| Soul Tempering (`hw_1`) | Will | 100 | +5% Cultivation Power (purchasable up to 5×). |
-| Heavenly Constitution ★ (`hw_k`) | Will | 500 | Cultivation Power growth curve permanently steepened. |
-| Taiji Manual (`yy_1`) | Yin Yang | 400 | Adds the Yin/Yang phase-cycling Taiji law to your collection. |
-| Primordial Balance ★ (`yy_k`) | Yin Yang | 800 | Taiji Manual ascends to Transcendent + 6th passive slot. |
+| Inherited Meridians (`al_1`) | Legacy | 3 | +25% qi/s permanently. |
+| Echo of Mastery (`al_2`) | Legacy | 4 | Each new life starts with all crafting/alchemy recipes still discovered. |
+| Ancestor's Shelter (`al_3`) | Legacy | 5 | Offline-gains cap raised 8h → 16h. |
+| Bloodline Vigor (`al_4`) | Legacy | 6 | Each new life starts with +50 jade and 1 banked free Selection re-roll. |
+| Living Memory ★ (`al_k`) | Legacy | 7 | At rebirth, gain a 1-hour ×2 cultivation buff. |
+| Steady Hands (`md_1`) | Martial | 3 | All technique cooldowns −10%. |
+| Combat Instinct (`md_2`) | Martial | 4 | +20% exploit chance permanently. |
+| The Fourth Form (`md_3`) | Martial | 5 | Unlocks a 4th technique slot. |
+| Veteran's Eye (`md_4`) | Martial | 6 | All crafted techniques arrive +1 quality tier. |
+| Killing Stride ★ (`md_k`) | Martial | 7 | After defeating an enemy, next cast is a guaranteed exploit and deals +50% damage. |
+| Lucky Star (`fp_1`) | Fate | 3 | +10% chance any artefact craft / pill brew rolls 1 tier higher. |
+| Heavenly Nose (`fp_2`) | Fate | 4 | 10% chance any gathered/mined material is +1 rarity. |
+| Connoisseur (`fp_3`) | Fate | 5 | All Refine operations cost −30% minerals. |
+| Sage's Foresight (`fp_4`) | Fate | 6 | Selection screens at every major-realm breakthrough show 4 options instead of 3. |
+| Twofold Path ★ (`fp_k`) | Fate | 7 | Auto-Farm can run two zone assignments simultaneously. |
+| Soul Tempering (`hw_1`) | Will | 3 | +20% to all primary stats. |
+| Iron Will (`hw_2`) | Will | 4 | +50% max HP permanently. |
+| Undying Resolve (`hw_3`) | Will | 5 | Once per fight, surviving a lethal hit leaves you at 1 HP. |
+| Soul Crucible (`hw_4`) | Will | 6 | All permanent pill stat bonuses are increased by 25%. |
+| Heavenly Constitution ★ (`hw_k`) | Will | 7 | +25% MORE all primary stats and +25% MORE max HP (multiplicative). |
+| Wisdom of Lives (`yy_1`) | Yin Yang | 4 | +5% to all damage and Health per completed life, capped +50%. |
+| Yin Reservoir (`yy_2`) | Yin Yang | 5 | Every realm starts with 20% of its breakthrough qi cost already accumulated. |
+| Yang Resolve (`yy_3`) | Yin Yang | 5 | Regenerate +5% max HP per second while above 50% HP. |
+| Equilibrium (`yy_4`) | Yin Yang | 6 | Every 5th technique cast is free (no cooldown). |
+| Primordial Balance ★ (`yy_k`) | Yin Yang | 8 | +10% engine-side multiplier on every artefact affix value you own. |
+| Inherited Strength (`cb_is`) | cross — `al_k` + `hw_1` | 4 | Active law's typeMults are permanently +25%. |
+| Veteran's Hunt (`cb_ts`) | cross — `md_k` + `fp_k` | 5 | After 10 enemy kills in a region, next gather/mine in that region drops at +1 rarity. |
+| Phase Technique (`cb_pt`) | cross — all 4 main keystones | 6 | Grants the Phase Technique law: Transcendent, all 9 types, cannot be unequipped, crafting on it stays at base cost. |
 
 ---
 

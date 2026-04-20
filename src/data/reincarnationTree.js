@@ -1,14 +1,19 @@
 /**
  * Reincarnation — Eternal Tree definitions.
  *
- * 5 branches radiating from the root, each with sequential nodes.
- * The Yin Yang branch is sealed until 2 keystones (★) are purchased.
- * Cross-branch connector nodes require both adjacent keystones (AND logic).
+ * 5 branches radiating from a root, plus 3 cross-branch connectors.
+ * The Yin Yang branch is sealed until 2 of the 4 main keystones (★) are bought.
+ * The `cb_pt` capstone connector requires all 4 main keystones (every main
+ * branch fully cleared).
  *
  * prereqMode:
  *   'or'       — any one prereq satisfies (default, rarely used)
  *   'and'      — every prereq must be satisfied (sequential / cross-branch)
  *   'yyUnlock' — special: requires ≥ 2 of the 4 main keystones
+ *
+ * Total tree cost = 143 — exactly what one peak life awards. Players reincarnate
+ * only when they have reached a higher realm than any previous life (each realm
+ * grants karma once via `maxAwarded` tracking). No farming loops.
  */
 
 export const SAINT_UNLOCK_INDEX = 24;
@@ -50,191 +55,184 @@ export const BRANCHES = {
 
 export const NODES = [
 
-  // ── Ancestor's Legacy (135°) ──────────────────────────────────────────────
+  // ── Ancestor's Legacy ────────────────────────────────────────────────────
   {
     id: 'al_1', branch: 'legacy', step: 0,
     label: 'Inherited Meridians', icon: '🏛',
-    desc: '+10% cultivation speed permanently.',
-    cost: 50, prereqs: [], prereqMode: 'or',
+    desc: '+25% qi/s permanently.',
+    cost: 3, prereqs: [], prereqMode: 'or',
   },
   {
     id: 'al_2', branch: 'legacy', step: 1,
-    label: 'Faint Memories', icon: '📜',
-    desc: 'Best technique from previous life auto-appears as a guaranteed World 1 drop within first 30 fights.',
-    cost: 75, prereqs: ['al_1'], prereqMode: 'and',
+    label: 'Echo of Mastery', icon: '📜',
+    desc: 'Each new life starts with all crafting and alchemy recipes from your previous life still discovered.',
+    cost: 4, prereqs: ['al_1'], prereqMode: 'and',
   },
   {
     id: 'al_3', branch: 'legacy', step: 2,
-    label: 'Bloodline Resonance', icon: '🩸',
-    desc: 'Each new life begins at Realm 3 instead of 1.',
-    cost: 100, prereqs: ['al_2'], prereqMode: 'and',
+    label: "Ancestor's Shelter", icon: '⛩️',
+    desc: 'Offline gains cap raised from 8 h → 16 h.',
+    cost: 5, prereqs: ['al_2'], prereqMode: 'and',
   },
   {
     id: 'al_4', branch: 'legacy', step: 3,
-    label: "Ancestor's Shelter", icon: '⛩️',
-    desc: 'Offline gains cap raised from 8 h → 12 h.',
-    cost: 125, prereqs: ['al_3'], prereqMode: 'and',
+    label: 'Bloodline Vigor', icon: '🩸',
+    desc: 'Each new life starts with +50 jade and one banked free Selection re-roll.',
+    cost: 6, prereqs: ['al_3'], prereqMode: 'and',
   },
   {
     id: 'al_k', branch: 'legacy', step: 4,
-    label: 'Ancient Roots', icon: '🌿',
-    desc: 'Start each life with your previous Law already in your collection — no crafting required.',
-    cost: 300, prereqs: ['al_4'], prereqMode: 'and', keystone: true,
+    label: 'Living Memory', icon: '🌿',
+    desc: 'At the start of every new life, gain a 1-hour ×2 cultivation buff.',
+    cost: 7, prereqs: ['al_4'], prereqMode: 'and', keystone: true,
   },
 
-  // ── Martial Dao (45°) ────────────────────────────────────────────────────
+  // ── Martial Dao ──────────────────────────────────────────────────────────
   {
     id: 'md_1', branch: 'martial', step: 0,
-    label: "Veteran's Eye", icon: '👁️',
-    desc: 'Dropped techniques arrive one quality tier higher than rolled.',
-    cost: 75, prereqs: [], prereqMode: 'or',
+    label: 'Steady Hands', icon: '🤲',
+    desc: 'All technique cooldowns −10%.',
+    cost: 3, prereqs: [], prereqMode: 'or',
   },
   {
     id: 'md_2', branch: 'martial', step: 1,
-    label: 'Third Slot Mastery', icon: '⚔️',
-    desc: 'Technique slot 3 has −15% cooldown permanently.',
-    cost: 100, prereqs: ['md_1'], prereqMode: 'and',
+    label: 'Combat Instinct', icon: '🎯',
+    desc: '+20% exploit chance permanently.',
+    cost: 4, prereqs: ['md_1'], prereqMode: 'and',
   },
   {
     id: 'md_3', branch: 'martial', step: 2,
-    label: 'Combat Instinct', icon: '🎯',
-    desc: '+3% exploit chance permanently.',
-    cost: 125, prereqs: ['md_2'], prereqMode: 'and',
+    label: 'The Fourth Form', icon: '🔮',
+    desc: 'Unlocks a 4th technique slot.',
+    cost: 5, prereqs: ['md_2'], prereqMode: 'and',
   },
   {
     id: 'md_4', branch: 'martial', step: 3,
-    label: 'The Fourth Form', icon: '🔮',
-    desc: 'Unlocks a 4th technique slot.',
-    cost: 250, prereqs: ['md_3'], prereqMode: 'and',
+    label: "Veteran's Eye", icon: '👁️',
+    desc: 'All crafted techniques arrive one quality tier higher.',
+    cost: 6, prereqs: ['md_3'], prereqMode: 'and',
   },
   {
     id: 'md_k', branch: 'martial', step: 4,
-    label: "Heaven's Bladework", icon: '⚡',
-    desc: 'Once per life your highest-quality technique auto-upgrades one rarity tier at the midpoint realm of its tier.',
-    cost: 400, prereqs: ['md_4'], prereqMode: 'and', keystone: true,
+    label: 'Killing Stride', icon: '⚡',
+    desc: 'After defeating an enemy, your next technique cast is a guaranteed exploit and deals +50% damage.',
+    cost: 7, prereqs: ['md_4'], prereqMode: 'and', keystone: true,
   },
 
-  // ── Fate's Path (320°) ───────────────────────────────────────────────────
+  // ── Fate's Path ──────────────────────────────────────────────────────────
   {
     id: 'fp_1', branch: 'fate', step: 0,
     label: 'Lucky Star', icon: '⭐',
-    desc: '+1% technique drop rate on all enemies.',
-    cost: 50, prereqs: [], prereqMode: 'or',
+    desc: '+10% chance any artefact craft or pill brew rolls one rarity tier higher than its inputs would normally allow.',
+    cost: 3, prereqs: [], prereqMode: 'or',
   },
   {
     id: 'fp_2', branch: 'fate', step: 1,
     label: 'Heavenly Nose', icon: '🌺',
-    desc: '10% chance for any gathered or mined material to be one rarity tier higher.',
-    cost: 75, prereqs: ['fp_1'], prereqMode: 'and',
+    desc: '10% chance any gathered or mined material is +1 rarity.',
+    cost: 4, prereqs: ['fp_1'], prereqMode: 'and',
   },
   {
     id: 'fp_3', branch: 'fate', step: 2,
-    label: 'Destiny Read', icon: '🔭',
-    desc: 'Once per life, preview one of your next three Selection options before the breakthrough.',
-    cost: 150, prereqs: ['fp_2'], prereqMode: 'and',
+    label: 'Connoisseur', icon: '💎',
+    desc: 'All Refine operations cost −30% minerals.',
+    cost: 5, prereqs: ['fp_2'], prereqMode: 'and',
   },
   {
     id: 'fp_4', branch: 'fate', step: 3,
-    label: "Collector's Eye", icon: '💎',
-    desc: 'Duplicate techniques convert to quality upgrades for your existing copy instead of being discarded.',
-    cost: 200, prereqs: ['fp_3'], prereqMode: 'and',
+    label: "Sage's Foresight", icon: '🔭',
+    desc: 'Selection screens at every major-realm breakthrough show 4 options instead of 3.',
+    cost: 6, prereqs: ['fp_3'], prereqMode: 'and',
   },
   {
     id: 'fp_k', branch: 'fate', step: 4,
-    label: "Fortune's Thread", icon: '🌟',
-    desc: 'First technique drop in each world is guaranteed to be the highest quality tier available in that world.',
-    cost: 350, prereqs: ['fp_4'], prereqMode: 'and', keystone: true,
+    label: 'Twofold Path', icon: '🌟',
+    desc: 'Auto-Farm can run two zone assignments simultaneously.',
+    cost: 7, prereqs: ['fp_4'], prereqMode: 'and', keystone: true,
   },
 
-  // ── Heavenly Will (220°) ─────────────────────────────────────────────────
+  // ── Heavenly Will ────────────────────────────────────────────────────────
   {
     id: 'hw_1', branch: 'will', step: 0,
     label: 'Soul Tempering', icon: '💪',
-    desc: '+5% Cultivation Power permanently (purchasable up to 5×).',
-    cost: 100, prereqs: [], prereqMode: 'or',
+    desc: '+20% to all primary stats (Essence / Body / Soul).',
+    cost: 3, prereqs: [], prereqMode: 'or',
   },
   {
     id: 'hw_2', branch: 'will', step: 1,
     label: 'Iron Will', icon: '🛡️',
-    desc: '+10% max HP permanently.',
-    cost: 100, prereqs: ['hw_1'], prereqMode: 'and',
+    desc: '+50% max HP permanently.',
+    cost: 4, prereqs: ['hw_1'], prereqMode: 'and',
   },
   {
     id: 'hw_3', branch: 'will', step: 2,
     label: 'Undying Resolve', icon: '❤️',
     desc: 'Once per fight, surviving a lethal hit leaves you at 1 HP instead of dying.',
-    cost: 175, prereqs: ['hw_2'], prereqMode: 'and',
+    cost: 5, prereqs: ['hw_2'], prereqMode: 'and',
   },
   {
     id: 'hw_4', branch: 'will', step: 3,
-    label: 'Exploit Refinement', icon: '🗡️',
-    desc: '+10% exploit multiplier permanently.',
-    cost: 150, prereqs: ['hw_3'], prereqMode: 'and',
+    label: 'Soul Crucible', icon: '🔥',
+    desc: 'All permanent pill stat bonuses are increased by 25%.',
+    cost: 6, prereqs: ['hw_3'], prereqMode: 'and',
   },
   {
     id: 'hw_k', branch: 'will', step: 4,
     label: 'Heavenly Constitution', icon: '🌌',
-    desc: 'Cultivation Power growth curve permanently steepened — each realm breakthrough yields more Power.',
-    cost: 500, prereqs: ['hw_4'], prereqMode: 'and', keystone: true,
+    desc: '+25% MORE all primary stats and +25% MORE max HP (multiplicative on top of every other modifier).',
+    cost: 7, prereqs: ['hw_4'], prereqMode: 'and', keystone: true,
   },
 
-  // ── Yin Yang — Sealed (270°) ─────────────────────────────────────────────
-  // yy_1 unlocks when ≥ 2 of the 4 main keystones are purchased.
+  // ── Yin Yang — Sealed (unlocks at ≥ 2 main keystones) ────────────────────
   {
     id: 'yy_1', branch: 'yinyang', step: 0,
-    label: 'Taiji Manual', icon: '☯️',
-    desc: 'The Yin Yang law is added to your collection permanently. Combat alternates between Yin phase (−20% dmg taken, DoT) and Yang phase (+30% dmg, ×2 exploit chance) every 10 s.',
-    cost: 400, prereqs: [], prereqMode: 'yyUnlock',
+    label: 'Wisdom of Lives', icon: '☯️',
+    desc: '+5% to all damage and Health per completed life, capped at +50% (10 lives).',
+    cost: 4, prereqs: [], prereqMode: 'yyUnlock',
   },
   {
     id: 'yy_2', branch: 'yinyang', step: 1,
-    label: 'Deepen the Yin', icon: '🌙',
-    desc: 'Yin phase also regenerates +3% HP per second.',
-    cost: 300, prereqs: ['yy_1'], prereqMode: 'and',
+    label: 'Yin Reservoir', icon: '🌙',
+    desc: 'Every realm starts with 20% of its breakthrough qi cost already accumulated.',
+    cost: 5, prereqs: ['yy_1'], prereqMode: 'and',
   },
   {
     id: 'yy_3', branch: 'yinyang', step: 2,
-    label: 'Sharpen the Yang', icon: '☀️',
-    desc: 'Yang phase exploit procs deal ×2.5 instead of ×1.5.',
-    cost: 300, prereqs: ['yy_2'], prereqMode: 'and',
+    label: 'Yang Resolve', icon: '☀️',
+    desc: 'In combat, regenerate +5% max HP per second while above 50% HP.',
+    cost: 5, prereqs: ['yy_2'], prereqMode: 'and',
   },
   {
     id: 'yy_4', branch: 'yinyang', step: 3,
-    label: 'Harmony Scroll', icon: '📿',
-    desc: 'Unlocks Taiji Strike — a unique technique. Passive: 15% of Yang phase damage converts to healing in the next Yin phase.',
-    cost: 350, prereqs: ['yy_3'], prereqMode: 'and',
+    label: 'Equilibrium', icon: '🔄',
+    desc: 'Every 5th technique cast is free (no cooldown applied to that cast).',
+    cost: 6, prereqs: ['yy_3'], prereqMode: 'and',
   },
   {
-    id: 'yy_5', branch: 'yinyang', step: 4,
-    label: 'Phase Mastery', icon: '🔄',
-    desc: 'Burst during Yang = max damage; Burst during Yin = 5 s full damage immunity.',
-    cost: 400, prereqs: ['yy_4'], prereqMode: 'and',
-  },
-  {
-    id: 'yy_k', branch: 'yinyang', step: 5,
-    label: 'Primordial Balance', icon: '⚖️',
-    desc: 'Taiji Manual permanently ascends to Transcendent rarity and gains a 6th passive slot: killing blow during Yang does not trigger phase switch.',
-    cost: 800, prereqs: ['yy_5'], prereqMode: 'and', keystone: true,
+    id: 'yy_k', branch: 'yinyang', step: 4,
+    label: 'Primordial Balance', icon: '⚖',
+    desc: 'All artefact affix values you own gain a permanent +10% engine-side multiplier.',
+    cost: 8, prereqs: ['yy_4'], prereqMode: 'and', keystone: true,
   },
 
   // ── Cross-Branch Connectors ──────────────────────────────────────────────
   {
     id: 'cb_is', branch: 'cross', step: 0,
     label: 'Inherited Strength', icon: '🔗',
-    desc: "Ancestor's Legacy cultivation speed bonus also scales the Heavenly Constitution power curve.",
-    cost: 150, prereqs: ['al_k', 'hw_1'], prereqMode: 'and',
+    desc: "The active law's typeMults are permanently increased by +25%.",
+    cost: 4, prereqs: ['al_k', 'hw_1'], prereqMode: 'and',
   },
   {
     id: 'cb_ts', branch: 'cross', step: 0,
-    label: 'Technique Savant', icon: '🔗',
-    desc: "Fortune's Thread's guaranteed world drop also triggers a 2nd technique drop from the same fight.",
-    cost: 200, prereqs: ['md_k', 'fp_k'], prereqMode: 'and',
+    label: "Veteran's Hunt", icon: '🔗',
+    desc: 'After defeating 10 enemies in a region, the next gather/mine cycle in that region drops one material at +1 rarity.',
+    cost: 5, prereqs: ['md_k', 'fp_k'], prereqMode: 'and',
   },
   {
     id: 'cb_pt', branch: 'cross', step: 0,
-    label: 'Phase Technique', icon: '🔗',
-    desc: '4th technique slot can be designated Yin-only or Yang-only — fires exclusively during its phase.',
-    cost: 300, prereqs: ['md_k', 'yy_5'], prereqMode: 'and',
+    label: 'Phase Technique', icon: '☯',
+    desc: 'Grants the Phase Technique law — Transcendent rarity, all 9 types, cannot be unequipped, crafting on it stays at base cost.',
+    cost: 6, prereqs: ['al_k', 'md_k', 'fp_k', 'hw_k'], prereqMode: 'and',
   },
 ];
 
@@ -243,3 +241,7 @@ export const TREE_TOTAL_COST = NODES.reduce((s, n) => s + n.cost, 0);
 
 // The 4 main branch keystones — Yin Yang branch unlocks when ≥ 2 are owned.
 export const MAIN_KEYSTONES = ['al_k', 'md_k', 'fp_k', 'hw_k'];
+
+// Removed in this redesign — kept here so the migration in useReincarnationTree
+// can refund their old cost when an old save still has them purchased.
+export const RETIRED_NODE_IDS = ['yy_5', 'cb_pt_legacy'];

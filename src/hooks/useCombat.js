@@ -69,6 +69,9 @@ export default function useCombat() {
   });
 
   const lastTRef = useRef(performance.now());
+  // md_k Killing Stride — flag persists across fights so the bonus applies
+  // to the *next* cast even if the kill ended the current fight.
+  const strideRef = useRef(false);
 
   // ─── React state — phase transitions and log only ────────────────────────
   const [phase, setPhase] = useState('idle');
@@ -154,8 +157,12 @@ export default function useCombat() {
     // ATK stays player-stats-based: it measures danger TO the current player.
     const eAtk   = Math.max(10,  Math.floor(total * atkMult));
 
+    // md_1 Steady Hands — `cooldownMult` shrinks every cooldown.
+    const cdMult = stats?.cooldownMult ?? 1;
     const cds    = equippedTechs.map(t => t ? 0        : Infinity);
-    const maxCds = equippedTechs.map(t => t ? getCooldown(t.type, t.quality) : Infinity);
+    const maxCds = equippedTechs.map(t => t
+      ? getCooldown(t.type, t.quality) * cdMult
+      : Infinity);
 
     onDropsRef.current         = onDrops;
     onTechniqueDropRef.current = onTechniqueDrop;
@@ -174,6 +181,10 @@ export default function useCombat() {
       enemyDrops:       enemyDef?.drops ?? [],
       techDropChance:   enemyDef?.techniqueDrop?.chance ?? 0,
       worldId,
+      // Reincarnation tree state
+      undyingUsed: false,                 // hw_3 once-per-fight
+      castCount:   0,                     // yy_4 every-Nth free
+      stridePending: false,               // md_k post-kill exploit flag
     };
 
     lastTRef.current = performance.now();
@@ -205,6 +216,12 @@ export default function useCombat() {
         if (isFinite(s.cds[i])) s.cds[i] = Math.max(0, s.cds[i] - dt);
       }
 
+      // ── yy_3 Yang Resolve — regen 5%/s of max HP while above 50% HP ──────
+      const regen = s.stats?.hpRegenPerSec ?? 0;
+      if (regen > 0 && s.pHp > s.pMaxHp * 0.5 && s.pHp < s.pMaxHp) {
+        s.pHp = Math.min(s.pMaxHp, s.pHp + s.pMaxHp * regen * dt);
+      }
+
       // ── Player's turn: deal damage, fire animation, then wait ─────────────
       if (s.turnPhase === 'player_turn') {
         s.turnPhase = 'waiting_player';
@@ -219,7 +236,11 @@ export default function useCombat() {
           if (tech.type === 'Heal' && s.pHp > s.pMaxHp * 0.5) continue;
 
           techFired  = true;
-          s.cds[i]   = s.maxCds[i];
+          // yy_4 Equilibrium — every Nth cast is free (no CD applied).
+          s.castCount += 1;
+          const freeEvery = s.stats?.freeCastEvery ?? 0;
+          const isFree = freeEvery > 0 && (s.castCount % freeEvery === 0);
+          s.cds[i]   = isFree ? 0 : s.maxCds[i];
 
           if (tech.type === 'Attack') {
             // Prefer the full law object so calcDamage can apply the
@@ -236,8 +257,13 @@ export default function useCombat() {
             // damage by exploitMult % (default 150%).
             const exChance = s.stats.exploitChance ?? 0;
             const exMult   = s.stats.exploitMult   ?? 150;
-            const exploited = exChance > 0 && Math.random() * 100 < exChance;
+            // md_k Killing Stride — next cast after a kill is a guaranteed
+            // exploit and gets +50% damage. One-shot flag, consumed here.
+            const stride = strideRef.current;
+            strideRef.current = false;
+            const exploited = stride || (exChance > 0 && Math.random() * 100 < exChance);
             if (exploited) dmg = Math.floor(dmg * (exMult / 100));
+            if (stride) dmg = Math.floor(dmg * 1.5);
             // Reincarnation-tree "Triple All Damage" node.
             dmg = Math.floor(dmg * (s.stats.damageMult ?? 1));
             s.eHp = Math.max(0, s.eHp - dmg);
@@ -325,6 +351,8 @@ export default function useCombat() {
           if (s2.phase !== 'fighting') return;
           if (s2.eHp <= 0) {
             s2.phase = 'won';
+            // md_k Killing Stride — arm the next cast for guaranteed exploit + 50%.
+            if (s2.stats?.killingStride) strideRef.current = true;
 
             const newLogs = [{ msg: 'Enemy defeated! Victory!', kind: 'system' }];
 
@@ -376,8 +404,17 @@ export default function useCombat() {
           const def     = (s.stats.essence + s.stats.body) * defMult;
           // Scale-independent formula: dmg = eAtk² / (eAtk + def)
           // At equal eAtk and def → 50% reduction. Fully works at any stat scale.
-          const dmg     = Math.max(1, Math.floor(s.eAtk * s.eAtk / (s.eAtk + def)));
-          s.pHp         = Math.max(0, s.pHp - dmg);
+          const rawDmg  = Math.max(1, Math.floor(s.eAtk * s.eAtk / (s.eAtk + def)));
+          // hw_3 Undying Resolve — once per fight, a lethal hit leaves you
+          // at 1 HP instead of dying. Charge consumed regardless of whether
+          // the hit would actually have killed (only triggers on kill).
+          let dmg = rawDmg;
+          if (s.stats?.undyingResolve && !s.undyingUsed && rawDmg >= s.pHp) {
+            dmg = Math.max(0, s.pHp - 1);
+            s.undyingUsed = true;
+            logs.push({ msg: 'UNDYING RESOLVE — survived at 1 HP!', kind: 'system' });
+          }
+          s.pHp = Math.max(0, s.pHp - dmg);
           logs.push({ msg: `Enemy hits → −${dmg.toLocaleString()} HP`, kind: 'damage-taken' });
           spawnDamageNumberRef.current?.(dmg, 'player', s.pMaxHp);
         }
