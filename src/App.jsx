@@ -375,7 +375,7 @@ function App() {
     onUnlock: (a) => notifications.addToast({ message: `🏆 Achievement: ${a.title}` }),
   });
 
-  const prevAchCountRef = useRef(0);
+  const prevAchCountRef = useRef(achievements.unlockedCount);
   useEffect(() => {
     const count = achievements?.unlockedCount ?? 0;
     if (count > prevAchCountRef.current) setHasNewAch(true);
