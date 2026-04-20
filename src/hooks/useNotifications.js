@@ -65,6 +65,7 @@ export default function useNotifications({ cultivation, inventory }) {
         message: `New World Unlocked: ${w.name}`,
         targetScreen: 'worlds',
         targetParam: { expandWorldId: w.id },
+        duration: 6000,
       })),
     ]);
   }, [cultivation.realmIndex]);
