@@ -5434,6 +5434,10 @@
 .region-row:not(.region-locked) {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .region-row:not(.region-locked):not(.region-row-world):hover {
@@ -5442,6 +5446,43 @@
 
 .region-row:not(.region-locked):not(.region-row-world):active {
   background: rgba(255, 255, 255, 0.07);
+}
+
+/* Right-side action column (idle toggle + collect) */
+.region-row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Inline collect button inside the idling region row */
+.region-collect-btn {
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(120, 200, 100, 0.5);
+  background: rgba(60, 140, 60, 0.18);
+  color: rgba(150, 220, 130, 1);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  transition: background 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.region-collect-btn:active {
+  background: rgba(60, 140, 60, 0.3);
+}
+
+/* Inline loot chips below drops text when idling */
+.region-loot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
 }
 
 .region-row-info {
