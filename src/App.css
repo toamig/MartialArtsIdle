@@ -172,8 +172,7 @@
 
 .toast-stack {
   position: fixed;
-  /* sit below the home HUD bar; acceptable gap on all other screens too */
-  top: calc(env(safe-area-inset-top) + 58px);
+  top: calc(var(--top-bar-h) + env(safe-area-inset-top) + 8px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 500;
@@ -1181,7 +1180,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 700;
 }
 
 .home-hud-jade {
@@ -7196,6 +7195,7 @@
 .et-screen {
   position: fixed;
   inset: 0;
+  padding-top: calc(var(--top-bar-h) + env(safe-area-inset-top));
   z-index: 600;
   display: flex;
   flex-direction: column;
