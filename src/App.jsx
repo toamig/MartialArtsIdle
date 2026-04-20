@@ -44,6 +44,7 @@ import useFeatureFlags from './hooks/useFeatureFlags';
 import useAchievements from './hooks/useAchievements';
 import ToastStack from './components/ToastStack';
 import SelectionModal from './components/SelectionModal';
+import { AudioManager } from './audio';
 import './App.css';
 
 function App() {
@@ -58,7 +59,8 @@ function App() {
 
   const openModal = useCallback((key, sideEffect) => {
     setActiveModal(prev => {
-      if (prev === key) return null; // toggle off
+      if (prev === key) { AudioManager.playSfx('ui_close'); return null; }
+      AudioManager.playSfx('ui_open');
       if (sideEffect) sideEffect();
       return key;
     });
@@ -421,6 +423,7 @@ function App() {
 
   // Navigate to a screen, optionally carrying a parameter (e.g. region data).
   const navigate = (screen, param = null) => {
+    AudioManager.playSfx('ui_click');
     setCurrentScreen(screen);
     setScreenParam(param);
     setSelectionModalOpen(false);
@@ -479,10 +482,13 @@ function App() {
     }, 50);
   }, [karma, cultivation.realmIndex, tree.modifiers]);
 
-  const goBack = () => navigate('worlds', {
-    expandWorldId: screenParam?.worldId ?? null,
-    activeTab:     screenParam?.fromTab  ?? null,
-  });
+  const goBack = () => {
+    AudioManager.playSfx('ui_close');
+    navigate('worlds', {
+      expandWorldId: screenParam?.worldId ?? null,
+      activeTab:     screenParam?.fromTab  ?? null,
+    });
+  };
 
   const reincarnationUnlocked = karma.unlocked;
 
@@ -576,17 +582,17 @@ function App() {
           onClose={() => setSelectionModalOpen(false)}
         />
       )}
-      {activeModal === 'settings' && <SettingsScreen onClose={() => setActiveModal(null)} />}
-      {activeModal === 'shop' && <JadeShopModal onClose={() => setActiveModal(null)} onBalanceChange={null} />}
-      {activeModal === 'journey' && <JourneyModal realmIndex={cultivation.realmIndex} onClose={() => setActiveModal(null)} />}
-      {activeModal === 'achievements' && achievements && <AchievementsModal achievements={achievements} onClose={() => setActiveModal(null)} />}
+      {activeModal === 'settings'     && <SettingsScreen onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} />}
+      {activeModal === 'shop'         && <JadeShopModal  onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} onBalanceChange={null} />}
+      {activeModal === 'journey'      && <JourneyModal   realmIndex={cultivation.realmIndex} onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} />}
+      {activeModal === 'achievements' && achievements && <AchievementsModal achievements={achievements} onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} />}
       {activeModal === 'daily' && (
         <DailyBonusModal
           streak={dailyBonus.streak}
           todayReward={dailyBonus.todayReward}
           isAvailable={dailyBonus.isAvailable}
-          onCollect={() => dailyBonus.collect()}
-          onClose={() => setActiveModal(null)}
+          onCollect={() => { AudioManager.playSfx('ui_confirm'); dailyBonus.collect(); }}
+          onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }}
         />
       )}
     </div>

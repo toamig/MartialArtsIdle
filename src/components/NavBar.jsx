@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { AudioManager } from '../audio';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -25,7 +26,7 @@ function NavBar({ currentScreen, onNavigate, badges = {}, isUnlocked = () => tru
           <button
             key={screen.id}
             className={`nav-btn ${currentScreen === screen.id ? 'active' : ''}${!unlocked ? ' nav-btn-locked' : ''}`}
-            onClick={() => unlocked && onNavigate(screen.id)}
+            onClick={() => { if (!unlocked) return; AudioManager.playSfx('ui_click'); onNavigate(screen.id); }}
             disabled={!unlocked}
             title={hint ?? undefined}
             aria-label={hint ? `${label} — ${hint}` : label}

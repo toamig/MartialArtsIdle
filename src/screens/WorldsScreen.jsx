@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AudioManager } from '../audio';
 import WORLDS from '../data/worlds';
 import ENEMIES from '../data/enemies';
 import { preloadEnemySprites } from '../utils/preload';
@@ -132,8 +133,8 @@ function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, wo
 
   function handleIdleClick(e) {
     e.stopPropagation();
-    if (isIdling) onClearIdle();
-    else onSetIdle();
+    if (isIdling) { AudioManager.playSfx('ui_click'); onClearIdle(); }
+    else          { AudioManager.playSfx('ui_confirm'); onSetIdle(); }
   }
 
   return (
@@ -184,7 +185,7 @@ function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, wo
           {isLastIdle && hasPendingGains && onCollect && (
             <button
               className="region-collect-btn"
-              onClick={e => { e.stopPropagation(); onCollect(); }}
+              onClick={e => { e.stopPropagation(); AudioManager.playSfx('ui_confirm'); onCollect(); }}
             >
               Collect
             </button>
@@ -244,7 +245,7 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
     >
       <button
         className="world-header"
-        onClick={() => !worldLocked && setOpen(o => !o)}
+        onClick={() => { if (worldLocked) return; AudioManager.playSfx('ui_click'); setOpen(o => !o); }}
         disabled={worldLocked}
       >
         <div className="world-header-left">

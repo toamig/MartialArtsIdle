@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RARITY, ALL_MATERIALS, getGatherCost } from '../data/materials';
+import { AudioManager } from '../audio';
 
 const BASE_GATHER_SPEED = 3; // gather points per second
 
@@ -82,6 +83,7 @@ function GatheringScreen({ region, inventory, onBack, getFullStats }) {
         const qty = rollQty(cur.qty ?? [1, 1]) + (luckPct > 0 && Math.random() * 100 < luckPct ? 1 : 0);
         if (inventory && cur.itemId) inventory.addItem(cur.itemId, qty);
         gathered.push({ itemId: cur.itemId, name: cur.name, rarity: cur.rarity ?? 'Iron', qty });
+        AudioManager.playSfx((cur.rarity ?? 'Iron') !== 'Iron' ? 'gather_rare' : 'gather_collect');
 
         // Roll bonus drops (cultivation / QI stones)
         for (const bd of bonusDrops) {
