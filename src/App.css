@@ -764,36 +764,28 @@
 /* Character Screen tabs */
 .char-tab-bar {
   display: flex;
-  gap: 4px;
-  margin-bottom: 20px;
-  border-bottom: 2px solid var(--border);
-  padding-bottom: 0;
+  gap: 6px;
+  margin-bottom: 16px;
 }
 
 .char-tab-btn {
   flex: 1;
-  padding: 11px 8px;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
+  padding: 8px 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-secondary);
   color: var(--text-muted);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  letter-spacing: 0.01em;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: color 0.2s, border-color 0.2s, background 0.15s;
-}
-
-.char-tab-btn:active {
-  background: rgba(255, 255, 255, 0.04);
+  transition: all 0.2s;
 }
 
 .char-tab-btn.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
 .char-tab-content {
@@ -916,11 +908,14 @@
 }
 
 .build-section-title {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
-  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+  margin-bottom: 12px;
 }
 
 /* ── Build layout: stack on mobile → 3-col grid (law|artefacts|techniques) on desktop */
@@ -960,13 +955,12 @@
 .build-law-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  /* Match the gear grid height: 5×72px rows + 4×8px gaps */
-  height: 392px;
+  height: auto;
 }
 
 /* Body silhouette gear layout — 3 cols × 5 rows */
@@ -5187,11 +5181,6 @@
     align-items: center;
   }
 
-  /* Law card matches gear grid height on desktop */
-  .build-law-card {
-    height: 392px;
-  }
-
   /* Techniques stack vertically — one card per row in the right column */
   .build-tech-section .build-tech-grid {
     grid-template-columns: 1fr;
@@ -5330,11 +5319,6 @@
 
   /* ── Build screen: stack vertically on mobile ─────────────────────────── */
   /* .build-layout is already flex-direction:column at base — no override needed */
-
-  /* Remove fixed height on mobile — law card grows with content */
-  .build-law-card {
-    height: auto;
-  }
 
   /* Centre the gear grid when it's full width */
   .build-artefact-section {
