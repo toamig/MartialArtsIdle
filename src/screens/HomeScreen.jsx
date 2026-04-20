@@ -444,12 +444,6 @@ function HomeScreen({
             onDone={clearMajorBreakthrough}
           />
 
-          {/* Realm title overlay — top center of scene, mobile only */}
-          <div className="home-realm-overlay">
-            <span className="home-realm-overlay-name">{realmName.split(' - ')[0]}</span>
-            {realmStage && <span className="home-realm-overlay-stage">{realmStage}</span>}
-          </div>
-
           {/* Rewards badge — scene chip, top-left */}
           {selections?.pendingCount > 0 && (
             <div className="home-chip-tl">

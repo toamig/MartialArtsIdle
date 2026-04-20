@@ -923,7 +923,27 @@
   margin-bottom: 10px;
 }
 
-/* Artefacts + Law side by side */
+/* ── Build layout: stack on mobile → 3-col grid (law|artefacts|techniques) on desktop */
+.build-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.build-law-section {
+  min-width: 0;
+  cursor: pointer;
+}
+
+.build-tech-section {
+  min-width: 0;
+}
+
+.build-artefact-section {
+  min-width: 0;
+}
+
+/* legacy — kept for any CSS cascade refs, no longer in JSX */
 .build-top-row {
   display: flex;
   gap: 12px;
@@ -931,20 +951,10 @@
   margin-bottom: 0;
 }
 
-.build-law-section {
-  flex: 1;
-  min-width: 0;
-}
-
 .build-law-compact-section {
   width: 180px;
   flex-shrink: 0;
   cursor: pointer;
-}
-
-.build-artefact-section {
-  flex: 1;
-  min-width: 0;
 }
 
 .build-law-card {
@@ -1390,45 +1400,33 @@
 
 .home-hud-spacer { flex: 1; }
 
-.home-realm-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+/* Realm name + stage in the top bar — mobile only; PC left panel handles it at >=900px */
+.topbar-realm {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  z-index: 4;
-  pointer-events: none;
-  white-space: nowrap;
-  padding: 18px 24px 32px;
-  background: linear-gradient(to bottom,
-    rgba(2, 1, 8, 0.72) 0%,
-    rgba(2, 1, 8, 0.45) 70%,
-    rgba(2, 1, 8, 0)    100%);
+  gap: 1px;
+  line-height: 1.15;
+  min-width: 0;
 }
-.home-realm-overlay-name {
-  font-size: 17px;
-  font-weight: 800;
+.topbar-realm-name {
+  font-size: 13px;
+  font-weight: 700;
   color: #f5c842;
-  letter-spacing: 0.05em;
-  text-shadow:
-    0 0 18px rgba(245, 175, 20, 0.9),
-    0 2px 8px rgba(0, 0, 0, 1);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.home-realm-overlay-stage {
-  font-size: 12px;
+.topbar-realm-stage {
+  font-size: 10px;
   font-weight: 600;
-  color: rgba(255, 210, 100, 0.92);
-  letter-spacing: 0.1em;
+  color: rgba(255, 210, 100, 0.75);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  text-shadow:
-    0 0 10px rgba(220, 150, 20, 0.7),
-    0 1px 5px rgba(0, 0, 0, 1);
+  white-space: nowrap;
 }
 @media (min-width: 900px) {
-  .home-realm-overlay { display: none; }
+  .topbar-realm { display: none; }
 }
 
 .home-hud-settings {
@@ -5174,6 +5172,31 @@
     grid-template-columns: repeat(3, 1fr);
   }
 
+  /* ── Build screen: 3-column layout (law | artefacts | techniques) ──────── */
+  .build-layout {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* Artefact section: centre the gear grid within its column */
+  .build-artefact-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Law card matches gear grid height on desktop */
+  .build-law-card {
+    height: 392px;
+  }
+
+  /* Techniques stack vertically — one card per row in the right column */
+  .build-tech-section .build-tech-grid {
+    grid-template-columns: 1fr;
+  }
+
   /* ── Home screen: cultivation stage on desktop ───────────────────────── */
   .cultivation-layout {
     max-width: 730px;
@@ -5305,17 +5328,10 @@
     align-self: auto;
   }
 
-  /* ── Build screen: stack law on top, gear below ───────────────────────── */
-  .build-top-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
+  /* ── Build screen: stack vertically on mobile ─────────────────────────── */
+  /* .build-layout is already flex-direction:column at base — no override needed */
 
-  .build-law-compact-section {
-    width: 100%;
-  }
-
-  /* Remove fixed height — let content determine height on mobile */
+  /* Remove fixed height on mobile — law card grows with content */
   .build-law-card {
     height: auto;
   }

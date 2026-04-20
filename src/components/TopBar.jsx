@@ -12,6 +12,8 @@ export default function TopBar({
   activeModal,
   onOpenReincarnation,
   reincarnationUnlocked,
+  realmName,
+  realmStage,
 }) {
   return (
     <div className="top-bar">
@@ -28,6 +30,12 @@ export default function TopBar({
         />
         <span className="home-hud-jade-amount">{jadeBalance ?? 0}</span>
       </button>
+      {realmName && (
+        <div className="topbar-realm">
+          <span className="topbar-realm-name">{realmName.split(' - ')[0]}</span>
+          {realmStage && <span className="topbar-realm-stage">{realmStage}</span>}
+        </div>
+      )}
       <div className="home-hud-spacer" />
       {reincarnationUnlocked && (
         <button

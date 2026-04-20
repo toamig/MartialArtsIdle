@@ -551,6 +551,8 @@ function App() {
         activeModal={activeModal}
         onOpenReincarnation={() => navigate('reincarnation')}
         reincarnationUnlocked={reincarnationUnlocked}
+        realmName={cultivation.realmName}
+        realmStage={cultivation.realmStage}
       />
       <NavBar
         currentScreen={currentScreen}
