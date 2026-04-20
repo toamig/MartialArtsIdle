@@ -455,6 +455,15 @@
   pointer-events: none;
 }
 
+.screen-container:not(.sc-fullbleed)::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
 /* ── Perks list (CharacterScreen) ──────────────────────────────────────────── */
 .char-perks-list {
   display: flex;
@@ -6507,6 +6516,74 @@
   justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
+  width: 100%;
+  max-width: 460px;
+}
+
+/* ── Recipe browser — flat, fixed-height scrollable ── */
+.recipe-browser {
+  width: 100%;
+  max-width: 460px;
+  margin-top: 4px;
+}
+
+.recipe-browser-list {
+  margin-top: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recipe-browser-empty {
+  color: rgba(160, 155, 190, 0.45);
+  font-size: 0.78rem;
+  font-style: italic;
+  text-align: center;
+  padding: 12px 0;
+}
+
+.recipe-flat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.recipe-flat-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.recipe-flat-row:active {
+  transform: scale(0.99);
+}
+
+.recipe-flat-herbs {
+  font-size: 0.72rem;
+  color: rgba(160, 155, 190, 0.6);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recipe-flat-pill {
+  font-size: 0.78rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .alchemy-qty-selector {
