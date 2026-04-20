@@ -2085,6 +2085,7 @@
     padding: 20px 18px;
     background: linear-gradient(90deg, rgba(4, 2, 12, 0.90) 72%, rgba(4, 2, 12, 0) 100%);
     z-index: 5;
+    text-align: left;
   }
 
   /* Right spacer (mirrors left width so the cultivation zone stays centred) */
@@ -6235,36 +6236,114 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 16px;
+  gap: 12px;
+  padding: 8px 0;
+  width: 100%;
 }
 
-.alchemy-triangle {
+/* ── Workspace: slot column + herb picker side-by-side ── */
+.alchemy-workspace {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 460px;
+}
+
+.alchemy-slots-col {
   display: flex;
   flex-direction: column;
+  gap: 6px;
+  flex: 0 0 155px;
+}
+
+.alchemy-slot-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.alchemy-slot-active {
+  border-color: rgba(233, 69, 96, 0.65) !important;
+  box-shadow: 0 0 14px rgba(233, 69, 96, 0.14), inset 0 1px 0 rgba(255, 100, 120, 0.06);
+}
+
+.alchemy-slot-clear {
+  flex-shrink: 0;
+  color: rgba(160, 155, 190, 0.45);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color 0.15s;
+}
+
+.alchemy-slot-clear:hover {
+  color: rgba(233, 69, 96, 0.8);
+}
+
+/* Herb picker — always visible, scrollable */
+.alchemy-herb-picker {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 132px;
+  overflow-y: auto;
+}
+
+.alchemy-herb-opt {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
-  max-width: 320px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: left;
+  flex-shrink: 0;
 }
 
-.alchemy-triangle-top {
-  display: flex;
-  justify-content: center;
+.alchemy-herb-opt:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
-.alchemy-triangle-bottom {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
+.alchemy-herb-name {
+  font-size: 0.78rem;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+.alchemy-herb-qty {
+  font-size: 0.7rem;
+  color: rgba(160, 155, 190, 0.5);
+  flex-shrink: 0;
+}
+
+.alchemy-herb-empty {
+  color: rgba(160, 155, 190, 0.45);
+  font-size: 0.78rem;
+  text-align: center;
+  padding: 16px 8px;
+  font-style: italic;
+}
+
+/* Furnace as inline icon within result strip */
 .alchemy-furnace {
   position: relative;
-  font-size: 2.5rem;
-  text-align: center;
+  font-size: 1.6rem;
   line-height: 1;
-  filter: drop-shadow(0 0 8px rgba(255, 120, 0, 0.6));
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(255, 120, 0, 0.55));
 }
 
 .alchemy-float-msg {
@@ -6294,24 +6373,22 @@
 
 .alchemy-slot-btn {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   background: rgba(10, 8, 28, 0.88);
   color: var(--text-primary);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   cursor: pointer;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   transition: border-color 0.2s, box-shadow 0.2s;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .alchemy-slot-btn:hover {
-  border-color: rgba(233, 69, 96, 0.55);
-  box-shadow: 0 0 12px rgba(233, 69, 96, 0.1);
+  border-color: rgba(233, 69, 96, 0.45);
 }
 
 .herb-selector {
@@ -6360,20 +6437,28 @@
 
 .alchemy-result {
   width: 100%;
-  max-width: 320px;
-  padding: 12px;
+  max-width: 460px;
+  padding: 10px 14px;
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
   background: rgba(10, 8, 28, 0.88);
-  text-align: center;
-  min-height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.alchemy-result-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .alchemy-result-pill {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .alchemy-result-name {
