@@ -702,6 +702,13 @@
     padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
+  .sc-fullbleed,
+  .screen-container:has(.home-screen) {
+    padding: 0;
+    max-width: 100%;
+    margin: 0;
+  }
+
   .screen h1 {
     font-size: 2rem;
   }
@@ -1161,7 +1168,7 @@
    create a tall empty scrollable gap in the underlying document flow. */
 .screen-container:has(.home-screen),
 .sc-fullbleed {
-  padding: 0 !important;
+  padding: 0;
   max-width: 100%;
   position: relative;
   overflow: hidden;
@@ -4750,6 +4757,13 @@
     margin: 0 auto;
   }
 
+  .sc-fullbleed,
+  .screen-container:has(.home-screen) {
+    padding: 0;
+    max-width: 100%;
+    margin: 0;
+  }
+
   /* ── Card grids: more room ────────────────────────────────────────────── */
   .card-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -4804,6 +4818,13 @@
     padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
+  .sc-fullbleed,
+  .screen-container:has(.home-screen) {
+    padding: 0;
+    max-width: 100%;
+    margin: 0;
+  }
+
   .card-grid {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -4843,6 +4864,13 @@
     padding: 16px 14px;
     padding-top: calc(var(--top-bar-h) + env(safe-area-inset-top) + 16px);
     padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+
+  .sc-fullbleed,
+  .screen-container:has(.home-screen) {
+    padding: 0;
+    max-width: 100%;
+    margin: 0;
   }
 
   /* ── Nav: bigger tap targets ──────────────────────────────────────────── */
