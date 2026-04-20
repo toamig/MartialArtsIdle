@@ -87,7 +87,8 @@ function _createBgmHowl(trackId) {
 function _fadeOutAndStop(howl, duration = BGM_FADE_OUT) {
   if (!howl || !howl.playing()) return;
   howl.fade(howl.volume(), 0, duration);
-  setTimeout(() => { try { howl.stop(); howl.unload(); } catch {} }, duration + 50);
+  // Stop only — no unload so preloaded/cached instances stay buffered and can replay instantly
+  setTimeout(() => { try { howl.stop(); } catch {} }, duration + 50);
 }
 
 // ── SFX ───────────────────────────────────────────────────────────────────────
