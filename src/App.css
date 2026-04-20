@@ -207,7 +207,7 @@
 
 .ltip-desc {
   font-size: 11px;
-  color: rgba(196, 181, 253, 0.78);
+  color: #ddd6fe;
   line-height: 1.45;
   margin-bottom: 6px;
 }
@@ -218,7 +218,7 @@
   gap: 4px;
   font-size: 11px;
   font-weight: 600;
-  color: rgba(251, 191, 36, 0.88);
+  color: #fbbf24;
   line-height: 1.35;
 }
 
