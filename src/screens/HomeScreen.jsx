@@ -1,3 +1,4 @@
+// @refresh reset
 import { useCallback, useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import SpriteAnimator from '../components/SpriteAnimator';
@@ -10,6 +11,7 @@ import CrystalFeedModal from '../components/CrystalFeedModal';
 import DailyBonusWidget from '../components/DailyBonusWidget';
 import { PILLS_BY_ID } from '../data/pills';
 import { FEATURE_GATES } from '../data/featureGates';
+import WORLDS from '../data/worlds';
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -303,6 +305,7 @@ function HomeScreen({
   onNavigate,
   crystal, isCrystalUnlocked,
   dailyBonus, onOpenDailyBonus,
+  lastIdleAssignment,
 }) {
   const { t } = useTranslation('ui');
   const {
@@ -444,47 +447,52 @@ function HomeScreen({
             onDone={clearMajorBreakthrough}
           />
 
-          {/* Rewards badge — scene chip, top-left */}
-          {selections?.pendingCount > 0 && (
-            <div className="home-chip-tl">
+          {/* ── Top-left chip stack — priority order: rewards → no law ── */}
+          <div className="home-chips-tl">
+            {selections?.pendingCount > 0 && (
               <button className="home-sel-btn" onClick={onOpenSelections}>
                 <span className="home-sel-btn-icon">📦</span>
                 <span className="home-sel-btn-label">
                   {selections.pendingCount} Reward{selections.pendingCount !== 1 ? 's' : ''}!
                 </span>
               </button>
-            </div>
-          )}
-
-          {/* "No law equipped" hint — surfaces only when the player has a
-              library but nothing selected as active. Tapping opens the
-              Character tab where the law picker lives. */}
-          {!cultivation.activeLaw && (cultivation.ownedLaws?.length ?? 0) > 0 && (
-            <div className="home-chip-tl" style={{ top: 'calc(var(--chip-top, 12px) + 52px)' }}>
-              <button className="home-sel-btn" onClick={() => onNavigate?.('character')}>
+            )}
+            {!cultivation.activeLaw && (cultivation.ownedLaws?.length ?? 0) > 0 && (
+              <button className="home-sel-btn home-sel-btn-law" onClick={() => onNavigate?.('character')}>
                 <span className="home-sel-btn-icon">☯</span>
                 <span className="home-sel-btn-label">No law equipped</span>
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Heavenly Qi pill chip — scene chip, top-right */}
-          <HeavenlyQiButton
-            ad={cultivationAd}
-            adBoostActive={adBoostActive}
-            adBoostRemaining={adBoostRemaining}
-            maxed={maxed}
-          />
-
-          {/* Daily bonus widget — below Heavenly Qi */}
-          {dailyBonus && (
-            <DailyBonusWidget
-              streak={dailyBonus.streak}
-              todayReward={dailyBonus.todayReward}
-              isAvailable={dailyBonus.isAvailable}
-              onOpen={onOpenDailyBonus}
+          {/* ── Top-right chip stack — priority order: HQ → daily → idle ── */}
+          <div className="home-chips-tr">
+            <HeavenlyQiButton
+              ad={cultivationAd}
+              adBoostActive={adBoostActive}
+              adBoostRemaining={adBoostRemaining}
+              maxed={maxed}
             />
-          )}
+            {dailyBonus && (
+              <DailyBonusWidget
+                streak={dailyBonus.streak}
+                todayReward={dailyBonus.todayReward}
+                isAvailable={dailyBonus.isAvailable}
+                onOpen={onOpenDailyBonus}
+              />
+            )}
+            {lastIdleAssignment && (() => {
+              const world  = WORLDS[lastIdleAssignment.worldIndex];
+              const region = world?.regions?.[lastIdleAssignment.regionIndex];
+              if (!region) return null;
+              const icon = lastIdleAssignment.activity === 'gathering' ? '🌿' : '⛏';
+              return (
+                <button className="home-idle-chip" onClick={() => onNavigate?.('worlds', { activeTab: lastIdleAssignment.activity === 'gathering' ? 'gather' : 'mine' })}>
+                  <span className="home-idle-chip-icon">{icon}</span>
+                  <span className="home-idle-chip-label">{region.name}</span>
+                </button>
+              );
+            })()}</div>
 
           {/* Crystal + particles + character — stacked so gap always equals particles height */}
           <div className="home-crystal-char-stack">

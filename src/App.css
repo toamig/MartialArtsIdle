@@ -739,16 +739,21 @@
 
 /* ── HomeScreen selection badge ─────────────────────────────────────────────── */
 
-/* Scene-relative placement — top-left of cultivation zone.
-   No safe-area offset needed here — the top HUD bar already consumes it. */
-.home-chip-tl {
+/* ── Scene chip stacks — flex columns anchored to top corners ─────────────── */
+.home-chips-tl,
+.home-chips-tr {
   position: absolute;
   top: 10px;
-  left: 12px;
   z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
 }
+.home-chips-tl { left: 12px; align-items: flex-start; }
+.home-chips-tr { right: 12px; align-items: flex-end; }
 
-/* Rewards chip — amber pill, mirrors the HQ chip's style on the opposite side */
+/* Rewards / law chip — amber pill */
 .home-sel-btn {
   display: flex;
   align-items: center;
@@ -773,10 +778,41 @@
 .home-sel-btn-icon  { font-size: 13px; }
 .home-sel-btn-label { white-space: nowrap; }
 
+/* Law chip — muted teal variant so it reads as lower urgency than rewards */
+.home-sel-btn-law {
+  background: linear-gradient(135deg, rgba(15, 80, 80, 0.85), rgba(20, 110, 100, 0.85));
+  border-color: rgba(45, 180, 160, 0.55);
+  color: #a7f3e8;
+  box-shadow: 0 0 12px rgba(20, 150, 130, 0.35);
+  animation: none;
+}
+
 @keyframes home-rewards-pulse {
   0%, 100% { box-shadow: 0 0 16px rgba(217, 119, 6, 0.50); }
   50%       { box-shadow: 0 0 28px rgba(217, 119, 6, 0.80); }
 }
+
+/* Idle status chip — green, non-animated (background info, not urgent) */
+.home-idle-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, rgba(20, 80, 30, 0.82), rgba(30, 100, 50, 0.82));
+  border: 1px solid rgba(80, 200, 100, 0.40);
+  border-radius: 20px;
+  color: rgba(180, 255, 190, 0.92);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 8px rgba(40, 160, 60, 0.25);
+  transition: transform 0.15s;
+}
+.home-idle-chip:hover { transform: scale(1.04); }
+.home-idle-chip-icon  { font-size: 11px; }
+.home-idle-chip-label { white-space: nowrap; }
 
 /* Character Screen tabs */
 .char-tab-bar {
@@ -1726,10 +1762,6 @@
 /* The HUD top bar now handles safe-area-inset-top, so chips inside the
    cultivation zone only need a small fixed top offset. */
 .home-hq-chip {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  z-index: 4;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1798,10 +1830,6 @@
 
 /* ── Daily Bonus Widget ──────────────────────────────────────────────────── */
 .daily-widget {
-  position: absolute;
-  top: 46px;
-  right: 12px;
-  z-index: 4;
   display: flex;
   align-items: center;
   gap: 5px;
