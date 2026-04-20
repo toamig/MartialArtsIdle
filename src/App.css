@@ -468,9 +468,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
-  background: var(--bg-card);
-  border-radius: 8px;
+  padding: 10px 14px;
+  background: rgba(10, 8, 28, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.15s;
 }
 
 .char-perk-info {
@@ -801,19 +804,36 @@
 /* Perks placeholder */
 .char-perks-empty {
   text-align: center;
-  padding: 48px 24px;
-  color: var(--text-muted);
+  padding: 44px 28px;
+  color: rgba(160, 155, 190, 0.5);
+  background: rgba(10, 8, 28, 0.6);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  margin-top: 4px;
+}
+
+.char-perks-empty::before {
+  content: '☯';
+  display: block;
+  font-size: 2.2rem;
+  color: rgba(180, 160, 220, 0.18);
+  margin-bottom: 16px;
+  line-height: 1;
 }
 
 .char-perks-title {
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(160, 155, 190, 0.75);
+  margin-bottom: 10px;
 }
 
 .char-perks-desc {
-  font-size: 0.9rem;
-  line-height: 1.6;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: rgba(160, 155, 190, 0.4);
+  max-width: 320px;
+  margin: 0 auto;
 }
 
 /* Screen Defaults */
@@ -2331,7 +2351,7 @@
 }
 
 .cfm-crystal-img {
-  width: 44px;
+  width: auto;
   height: 44px;
   image-rendering: pixelated;
   filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));
@@ -3065,13 +3085,14 @@
   width: 88px;
   height: 88px;
   border-radius: 50%;
-  border: 2px solid var(--border);
-  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 8, 28, 0.88);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1px;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
   transition: border-color 0.2s, box-shadow 0.2s;
   user-select: none;
 }
@@ -3111,9 +3132,10 @@
 
 .stat-detail-panel {
   width: 100%;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-color) 30%, transparent);
+  background: rgba(10, 8, 28, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-color) 25%, transparent),
+              0 4px 20px rgba(0, 0, 0, 0.45);
   border-radius: 12px;
   padding: 12px 14px;
   animation: sdp-in 0.15s ease-out;
@@ -3127,13 +3149,13 @@
   justify-content: center;
   gap: 4px;
   height: 100%;
-  color: var(--text-muted);
+  color: rgba(160, 155, 190, 0.5);
   font-size: 0.72rem;
   text-align: center;
-  border: 1px dashed var(--border);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 16px 8px;
-  opacity: 0.6;
+  opacity: 0.75;
 }
 
 @keyframes sdp-in {
@@ -3160,7 +3182,7 @@
 
 .sdp-divider {
   border: none;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
   margin: 6px 0;
 }
 
@@ -3175,7 +3197,7 @@
   font-family: 'Courier New', monospace;
   font-size: 0.72rem;
   color: var(--text-secondary);
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.05);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -3229,10 +3251,13 @@
 
 .secondary-stats-title {
   font-size: 0.65rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--text-muted);
-  margin-bottom: 8px;
+  color: rgba(180, 160, 220, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding-bottom: 4px;
+  margin-bottom: 12px;
 }
 
 .secondary-stat-row {
@@ -3240,10 +3265,18 @@
   align-items: center;
   gap: 8px;
   padding: 7px 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(10, 8, 28, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 8px;
   margin-bottom: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.15s;
+}
+
+@media (hover: hover) {
+  .secondary-stat-row:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+  }
 }
 
 .secondary-stat-label {
@@ -3425,15 +3458,15 @@
   flex: 1;
   position: relative;
   padding: 8px 4px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-secondary);
-  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+  background: rgba(10, 8, 28, 0.75);
+  color: rgba(160, 155, 190, 0.7);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .inv-tab-locked {
@@ -3445,9 +3478,10 @@
 }
 
 .inv-tab-active {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(233, 69, 96, 0.18), rgba(180, 30, 60, 0.1));
+  border-color: rgba(233, 69, 96, 0.6);
+  color: var(--accent);
+  box-shadow: 0 0 18px rgba(233, 69, 96, 0.12), inset 0 1px 0 rgba(255, 100, 120, 0.08);
 }
 
 .inv-grid {
@@ -3468,12 +3502,13 @@
   align-items: center;
   gap: 4px;
   padding: 10px 6px;
-  background: var(--bg-card);
-  border: 2px solid var(--border);
+  background: rgba(10, 8, 28, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   position: relative;
 }
 
@@ -3484,7 +3519,8 @@
 @media (hover: hover) {
   .inv-slot:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.18);
   }
 }
 
@@ -3588,14 +3624,15 @@
 }
 
 .modal-content {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: rgba(10, 8, 28, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 16px;
   padding: 28px 24px;
   max-width: 320px;
   width: 100%;
   text-align: center;
   position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   animation: modal-pop 0.2s ease-out;
 }
 
