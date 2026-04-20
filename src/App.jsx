@@ -418,13 +418,15 @@ function App() {
   hooksRef.current = { cultivation, inventory, techniques, combat, artefacts, pills, autoFarm, crystal };
   useEffect(() => { initDebug(hooksRef); }, []);
 
-  // BGM track per screen group
+  // Preload both BGM tracks once on mount so crossfades are instant
   useEffect(() => {
-    const track =
-      currentScreen === 'home'         ? 'cultivation' :
-      currentScreen === 'combat-arena' ? 'combat'      :
-      currentScreen === 'worlds' || currentScreen === 'gathering' || currentScreen === 'mining'
-                                       ? 'world'       : 'menu';
+    AudioManager.preloadBgm(['cultivation', 'combat']);
+    AudioManager.playBgm('cultivation');
+  }, []);
+
+  // BGM: combat screen uses combat track; everything else uses cultivation
+  useEffect(() => {
+    const track = currentScreen === 'combat-arena' ? 'combat' : 'cultivation';
     AudioManager.playBgm(track);
   }, [currentScreen]);
 

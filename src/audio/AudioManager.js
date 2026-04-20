@@ -21,8 +21,8 @@ import { BGM_TRACKS, SFX } from './sounds.js';
 import { loadAudioSettings, saveAudioSettings } from './audioSettings.js';
 
 // ── BGM fade duration (ms) ────────────────────────────────────────────────────
-const BGM_FADE_OUT = 800;
-const BGM_FADE_IN  = 1200;
+const BGM_FADE_OUT = 500;
+const BGM_FADE_IN  = 500;
 
 // ── Internal state ────────────────────────────────────────────────────────────
 
@@ -30,6 +30,9 @@ let settings      = loadAudioSettings();
 let bgmHowl       = null;   // currently active BGM Howl instance
 let bgmTrackId    = null;   // key into BGM_TRACKS
 let bgmPaused     = false;  // true while tab is hidden
+
+// BGM preload cache: { [trackId]: Howl } — keyed instances ready to play
+const bgmCache    = {};
 
 // SFX cache: { [sfxId]: Howl }
 const sfxCache    = {};
@@ -61,14 +64,20 @@ function persist() {
 // ── BGM ───────────────────────────────────────────────────────────────────────
 
 function _createBgmHowl(trackId) {
+  if (bgmCache[trackId]) {
+    // Reuse preloaded instance — reset volume so we can fade in again
+    bgmCache[trackId].volume(0);
+    return bgmCache[trackId];
+  }
+
   const config = BGM_TRACKS[trackId];
   if (!config) return null;
 
   return new Howl({
     src:    config.src,
     loop:   config.loop ?? true,
-    volume: 0,                    // always start silent; fade in separately
-    html5:  false,                // Web Audio for reliable looping
+    volume: 0,
+    html5:  false,
     onloaderror: (id, err) => {
       console.error(`[Audio] BGM "${trackId}" failed to load (tried: ${config.src.join(', ')}):`, err);
     },
@@ -138,7 +147,7 @@ const AudioManager = {
   playBgm(trackId, { fade = true } = {}) {
     if (bgmTrackId === trackId && bgmHowl?.playing()) return;
 
-    // Fade out old track
+    // Fade out old track simultaneously with new one fading in (true crossfade)
     if (bgmHowl) {
       _fadeOutAndStop(bgmHowl, fade ? BGM_FADE_OUT : 0);
     }
@@ -147,16 +156,14 @@ const AudioManager = {
     const howl = _createBgmHowl(trackId);
     if (!howl) return;
 
-    bgmHowl = howl;
+    bgmHowl   = howl;
     bgmPaused = false;
 
     const targetVol = effectiveBgmVol();
     howl.play();
 
     if (fade) {
-      setTimeout(() => {
-        if (bgmHowl === howl) howl.fade(0, targetVol, BGM_FADE_IN);
-      }, BGM_FADE_OUT * 0.5);
+      howl.fade(0, targetVol, BGM_FADE_IN);
     } else {
       howl.volume(targetVol);
     }
@@ -243,6 +250,30 @@ const AudioManager = {
   subscribe(fn) {
     subscribers.add(fn);
     return () => subscribers.delete(fn);
+  },
+
+  /**
+   * Preload BGM tracks into memory so crossfades are seamless.
+   * Call once at app startup (after first user gesture if required by browser).
+   *
+   * @param {string[]} trackIds - Keys from BGM_TRACKS to preload.
+   */
+  preloadBgm(trackIds) {
+    for (const id of trackIds) {
+      if (bgmCache[id]) continue;
+      const config = BGM_TRACKS[id];
+      if (!config) continue;
+      bgmCache[id] = new Howl({
+        src:     config.src,
+        loop:    config.loop ?? true,
+        volume:  0,
+        html5:   false,
+        preload: true,
+        onloaderror: (_id, err) => {
+          console.error(`[Audio] BGM preload "${id}" failed:`, err);
+        },
+      });
+    }
   },
 
   /**
