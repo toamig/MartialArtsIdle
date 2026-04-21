@@ -141,11 +141,13 @@ function HeavenlyQiButton({ ad, adBoostActive, adBoostRemaining, maxed }) {
  */
 function BreakthroughBanner({ event, onDone }) {
   const { t } = useTranslation('ui');
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
   useEffect(() => {
     if (!event) return undefined;
-    const id = setTimeout(onDone, 2600);
+    const id = setTimeout(() => onDoneRef.current(), 2600);
     return () => clearTimeout(id);
-  }, [event, onDone]);
+  }, [event]); // onDone intentionally excluded — captured via ref so re-renders don't reset the timer
   if (!event) return null;
   return (
     <div className="home-breakthrough-overlay" aria-live="assertive">
