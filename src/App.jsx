@@ -316,6 +316,11 @@ function App() {
       // Combat-only
       exploitChance: bundle.combat.exploitChance,
       exploitMult:   bundle.combat.exploitMult,
+      // Defence stats — useCombat picks the one matching the enemy's damage
+      // type when computing mitigation.
+      defense:          bundle.combat.defense,
+      elementalDefense: bundle.combat.elemDef,
+      soulToughness:    bundle.combat.soulTough,
       // Scales the attack-count of Defend / Dodge buffs at cast time.
       buffDurationMult: 1 + collapsePct('buff_duration'),
       // Scales magnitude (defMult / dodgeChance) at cast time.

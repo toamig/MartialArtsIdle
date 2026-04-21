@@ -152,6 +152,10 @@ export default function useCombat() {
     const hpMult  = enemyDef?.statMult?.hp  ?? 1;
     const atkMult = enemyDef?.statMult?.atk ?? 1;
     const eName   = enemyDef?.name ?? 'Training Dummy';
+    // Each enemy deals a fixed damage type; the combat tick picks the
+    // matching defence stat below. Default to 'physical' for anything the
+    // DAMAGE_TYPE_BY_ID map missed (e.g. designer-added enemies).
+    const eDmgType = enemyDef?.damageType ?? 'physical';
 
     const pMaxHp = Math.max(100, Math.floor((essence + body) * 12 + soul * 4));
     // Enemy HP anchored to region index, not player stats. Base 150 × 1.12^index
@@ -159,8 +163,13 @@ export default function useCombat() {
     // across the 52 region indices before the per-enemy hpMult is applied.
     const hpBase = 150 * Math.pow(1.12, Math.max(0, regionIndex ?? 0));
     const eMaxHp = Math.max(100, Math.floor(hpBase * hpMult));
-    // ATK stays player-stats-based: it measures danger TO the current player.
-    const eAtk   = Math.max(10,  Math.floor(total * atkMult));
+    // Enemy attack is anchored to region index (not to player stats) so the
+    // hit is a FIXED value per-region rather than scaling with the player's
+    // Essence+Soul+Body total. Base 18 × 1.12^index puts W1 R1 ≈ 18,
+    // W2 R1 ≈ 117, W3 R1 ≈ 219, W6 R4 ≈ 5520 before the per-enemy atkMult.
+    // Mitigated in the enemy-turn tick via the player's matching defence stat.
+    const atkBase = 18 * Math.pow(1.12, Math.max(0, regionIndex ?? 0));
+    const eAtk    = Math.max(10, Math.floor(atkBase * atkMult));
 
     // md_1 Steady Hands — `cooldownMult` shrinks every cooldown.
     const cdMult = stats?.cooldownMult ?? 1;
@@ -176,7 +185,7 @@ export default function useCombat() {
       phase:     'fighting',
       turnPhase: 'spawn_idle',
       pHp: pMaxHp, pMaxHp,
-      eHp: eMaxHp, eMaxHp, eAtk,
+      eHp: eMaxHp, eMaxHp, eAtk, eDmgType,
       cds:    [...cds],
       maxCds: [...maxCds],
       defBuff:   { mult: 1, attacksLeft: 0 },
@@ -415,7 +424,18 @@ export default function useCombat() {
           logs.push({ msg: 'Enemy attack — negated (god mode)', kind: 'dodge' });
         } else {
           const defMult = defActive ? s.defBuff.mult : 1;
-          const def     = (s.stats.essence + s.stats.body) * defMult;
+          // Pick the defence stat that matches this enemy's damage type.
+          // Fallback to the legacy essence+body blend when combat stats were
+          // built before the defence fields existed (e.g. debug flows).
+          let rawDef;
+          if (s.eDmgType === 'elemental') {
+            rawDef = s.stats.elementalDefense ?? (s.stats.essence ?? 0);
+          } else if (s.eDmgType === 'psychic') {
+            rawDef = s.stats.soulToughness ?? 0;
+          } else {
+            rawDef = s.stats.defense ?? ((s.stats.essence ?? 0) + (s.stats.body ?? 0));
+          }
+          const def = Math.max(1, rawDef * defMult);
           // Scale-independent formula: dmg = eAtk² / (eAtk + def)
           // At equal eAtk and def → 50% reduction. Fully works at any stat scale.
           const rawDmg  = Math.max(1, Math.floor(s.eAtk * s.eAtk / (s.eAtk + def)));

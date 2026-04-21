@@ -639,6 +639,74 @@ const ENEMIES_RAW = {
   },
 };
 
+// ── Damage type per enemy ───────────────────────────────────────────────────
+// Every enemy deals exactly one damage type. The player's matching defence
+// stat (defense / elemental_defense / soul_toughness) mitigates the hit.
+// Psychic damage is restricted to Saint-realm and later zones (world 3+).
+const DAMAGE_TYPE_BY_ID = {
+  // World 1 — pre-Saint (physical / elemental only)
+  outer_sect_disciple: 'physical',
+  training_golem:      'physical',
+  wolf:                'physical',
+  bandit_scout:        'physical',
+  wandering_beast:     'physical',
+  rogue_disciple:      'physical',
+  // World 2 — pre-Saint (physical / elemental only)
+  iron_fang_wolf:      'physical',
+  iron_spine_boar:     'physical',
+  sand_dragon:         'elemental',
+  bone_construct:      'physical',
+  city_guardian:       'physical',
+  immortal_shade:      'elemental',
+  corrupted_cultivator:'elemental',
+  blood_leviathan:     'physical',
+  // World 3 — Saint+ (psychic unlocks)
+  burial_guardian:       'physical',
+  saint_corpse_soldier:  'physical',
+  ancient_war_spirit:    'psychic',
+  saint_bone_sovereign:  'physical',
+  void_shade:            'psychic',
+  forbidden_construct:   'physical',
+  void_rift_predator:    'elemental',
+  rift_stalker:          'elemental',
+  // World 4
+  origin_crystal_golem:  'elemental',
+  origin_guardian:       'physical',
+  primordial_serpent:    'physical',
+  cavern_elder_demon:    'psychic',
+  root_sovereign:        'elemental',
+  deep_earth_titan:      'elemental',
+  ancient_beast:         'physical',
+  world_root_wraith:     'psychic',
+  // World 5
+  forest_spirit:             'elemental',
+  spatial_fissure_beast:     'elemental',
+  void_elemental:            'elemental',
+  qi_beast:                  'elemental',
+  void_sea_leviathan:        'elemental',
+  dao_inscription_guardian:  'psychic',
+  dao_inscription_revenant:  'psychic',
+  star_sea_drifter:          'psychic',
+  // World 6
+  petrified_dao_lord:     'psychic',
+  emperor_will_fragment:  'psychic',
+  boundary_wraith:        'psychic',
+  heaven_pillar_guardian: 'elemental',
+  open_heaven_beast:      'physical',
+  star_sea_leviathan:     'elemental',
+  eternal_storm_titan:    'elemental',
+  celestial_sovereign:    'psychic',
+  void_apex_predator:     'elemental',
+  open_heaven_sovereign:  'psychic',
+};
+
+// Merge damageType into each enemy before override-patching. Anything not in
+// the map falls back to 'physical' so additions in the override file still
+// deal damage.
+for (const [id, def] of Object.entries(ENEMIES_RAW)) {
+  def.damageType = DAMAGE_TYPE_BY_ID[id] ?? 'physical';
+}
+
 // Apply designer overrides — src/data/config/enemies.override.json, keyed
 // by enemy id. Unknown ids in the override are added as brand-new enemies.
 const ENEMIES = mergeRecords(ENEMIES_RAW, 'enemies');
