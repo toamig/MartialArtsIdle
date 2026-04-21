@@ -7,7 +7,9 @@ A permanent cultivation upgrade on the **Home Screen** that adds flat qi/sec to 
 ## Overview
 
 - **No level cap.** Level scales infinitely; cost grows with the level curve below.
-- Bonus per level: **+2 flat qi/sec** (additive to the BASE_RATE of 1 qi/sec).
+- Bonus per level L: **+(L + 1) flat qi/sec** — increments scale 2, 3, 4, 5, …
+- Cumulative bonus at level N: **N · (N + 3) / 2 qi/sec** (additive to the BASE_RATE of 1 qi/sec).
+- Sample progression: Lv 1 → +2, Lv 2 → +5, Lv 3 → +9, Lv 5 → +20, Lv 10 → +65.
 - The bonus stacks with all other multipliers (law mult, boost mult, pill mult, etc.).
 
 ---
@@ -19,12 +21,12 @@ auto-triggers the moment accumulated refined QI crosses the next-level
 threshold, and any overflow rolls into the next bar.
 
 ```
-required(level) = round_to_2sf( 50 × level^1.30 )
+required(level) = round_to_2sf( 25 × level^1.30 )
 ```
 
-The exponent was lowered from 1.55 → 1.30 to keep late-level upgrades
-within reach during normal play. Sample progression: 50, 120, 210, 310,
-420, 540, 660, 790, 930, 1100, …
+Base was halved from 50 → 25 (and exponent kept at 1.30) so early upgrades
+fire quickly and late-level costs stay reachable. Sample progression:
+25, 60, 105, 155, 210, 270, 330, 395, 465, 550, …
 
 Authoritative implementation: `getRequiredRefinedQi(level)` in
 [src/hooks/useQiCrystal.js](../src/hooks/useQiCrystal.js).

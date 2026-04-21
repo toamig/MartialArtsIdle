@@ -5,7 +5,9 @@
  * Players feed QI stones (cultivation materials) to accumulate refined QI.
  * When the accumulated refined QI reaches the threshold, the crystal levels up.
  *
- * Bonus formula: level × 2 qi/sec (flat addition to BASE_RATE).
+ * Bonus formula: each level L adds (L + 1) qi/sec, so the cumulative bonus at
+ * level N is N·(N+3)/2 qi/sec. Per-level gains scale 2, 3, 4, 5, … to keep
+ * upgrades feeling meaningful at high levels.
  * No level cap — cost scales infinitely.
  *
  * Debug commands are exposed on window.__debug.qiCrystal.
@@ -18,13 +20,13 @@ const SAVE_KEY = 'mai_qi_crystal';
 
 /**
  * Refined QI required to reach the given level.
- * Gentle growth curve — exponent dropped from 1.55 → 1.30 so high-level
- * costs stay reachable without grinding indefinitely.
- * Sample progression: 50, 120, 210, 310, 420, 540, 660, 790, 930, 1100, …
+ * Gentle growth curve — exponent 1.30, base halved from 50 → 25 so early
+ * upgrades stay brisk and high-level costs don't require indefinite grinding.
+ * Sample progression: 25, 60, 105, 155, 210, 270, 330, 395, 465, 550, …
  */
 export function getRequiredRefinedQi(targetLevel) {
   if (targetLevel < 1) return 0;
-  const raw = 50 * Math.pow(targetLevel, 1.30);
+  const raw = 25 * Math.pow(targetLevel, 1.30);
   // Round to a clean step that scales with magnitude (keeps ~2 significant digits)
   const step = Math.pow(10, Math.max(1, Math.floor(Math.log10(raw)) - 1));
   return Math.round(raw / step) * step;
@@ -54,10 +56,10 @@ function saveState({ level, refinedQi }) {
 export default function useQiCrystal({ getQuantity, removeItem } = {}) {
   const [state, setState] = useState(loadState);
 
-  const crystalQiBonusRef = useRef(state.level * 2);
+  const crystalQiBonusRef = useRef((state.level * (state.level + 3)) / 2);
 
   useEffect(() => {
-    crystalQiBonusRef.current = state.level * 2;
+    crystalQiBonusRef.current = (state.level * (state.level + 3)) / 2;
   }, [state.level]);
 
   /** Internal helper — set state, update ref, persist. */
@@ -67,7 +69,7 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
       refinedQi: Math.max(0, newState.refinedQi),
     };
     setState(next);
-    crystalQiBonusRef.current = next.level * 2;
+    crystalQiBonusRef.current = (next.level * (next.level + 3)) / 2;
     saveState(next);
   }, []);
 
@@ -102,7 +104,7 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
       }
 
       const next = { level, refinedQi };
-      crystalQiBonusRef.current = level * 2;
+      crystalQiBonusRef.current = (level * (level + 3)) / 2;
       saveState(next);
       return next;
     });
@@ -114,7 +116,7 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     level:            state.level,
     refinedQi:        state.refinedQi,
     requiredForNext,
-    crystalQiBonus:   state.level * 2,
+    crystalQiBonus:   (state.level * (state.level + 3)) / 2,
     crystalQiBonusRef,
     feed,
     _setLevel:        (n) => applyState({ level: n, refinedQi: 0 }),
