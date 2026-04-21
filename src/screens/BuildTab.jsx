@@ -106,8 +106,16 @@ function useTooltipPos() {
 
 function InlineArtefactPicker({ slot, artefacts, onClose }) {
   const { t } = useTranslation('ui');
-  const available = artefacts.getOwnedForSlot(slot.type);
+  const availableRaw = artefacts.getOwnedForSlot(slot.type);
   const equipped  = artefacts.getEquipped(slot.id);
+  // Items equipped anywhere float to the top so the player can see at a
+  // glance which rings/etc. are already in use across sibling slots.
+  const available = [...availableRaw].sort((a, b) => {
+    const aSlot = artefacts.equippedInSlot(a.uid);
+    const bSlot = artefacts.equippedInSlot(b.uid);
+    if (!!aSlot === !!bSlot) return 0;
+    return aSlot ? -1 : 1;
+  });
   const tooltip   = useTooltipPos();
   const [hoveredUid, setHoveredUid] = useState(null);
 
@@ -132,11 +140,13 @@ function InlineArtefactPicker({ slot, artefacts, onClose }) {
             const artName = a.name;
             const quality = QUALITY[a.rarity];
             const isEquipped = equipped?.uid === a.uid;
+            const equippedSlotId = artefacts.equippedInSlot(a.uid);
+            const isEquippedElsewhere = !!equippedSlotId && equippedSlotId !== slot.id;
             return (
               <button
                 key={a.uid}
-                className={`art-inline-card${isEquipped ? ' art-inline-card-equipped' : ''}`}
-                style={{ borderColor: isEquipped ? quality?.color : undefined }}
+                className={`art-inline-card${isEquipped ? ' art-inline-card-equipped' : ''}${isEquippedElsewhere ? ' art-inline-card-equipped-other' : ''}`}
+                style={{ borderColor: (isEquipped || isEquippedElsewhere) ? quality?.color : undefined }}
                 onClick={() => {
                   if (isEquipped) {
                     artefacts.unequip(slot.id);
@@ -165,7 +175,11 @@ function InlineArtefactPicker({ slot, artefacts, onClose }) {
                 onTouchMove={tooltip.handlers.onTouchMove}
               >
                 <span className="art-inline-card-name" style={{ color: quality?.color }}>{artName}</span>
-                {isEquipped && <span className="art-inline-card-tag">{t('common.equipped')}</span>}
+                {(isEquipped || isEquippedElsewhere) && (
+                  <span className={`art-inline-card-tag${isEquippedElsewhere ? ' art-inline-card-tag-other' : ''}`}>
+                    {t('common.equipped')}
+                  </span>
+                )}
               </button>
             );
           })}

@@ -581,23 +581,32 @@ function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
       </div>
 
       <div className="inv-grid tx-item-grid">
-        {itemTab === 'artefacts' && artefacts.owned.map(inst => {
-          const art    = ARTEFACTS_BY_ID[inst.catalogueId];
-          const rarity = inst.rarity ?? art?.rarity ?? 'Iron';
-          const q      = artQuality(rarity);
-          return (
-            <button
-              key={inst.uid}
-              className={`inv-slot tx-slot ${selected === inst.uid ? 'tx-slot-selected' : ''}`}
-              style={{ borderColor: q.color }}
-              onClick={() => setSelected(inst.uid === selected ? null : inst.uid)}
-            >
-              <span className="inv-quality-gem" style={{ color: q.color }}>◆</span>
-              <span className="inv-name" style={{ color: q.color }}>{art ? (formatArtefactName(inst) ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name })) : inst.catalogueId}</span>
-              <span className="inv-slot-label">{art?.slot ? t(`build.slots.${art.slot}`, { defaultValue: art.slot }) : ''}</span>
-            </button>
-          );
-        })}
+        {itemTab === 'artefacts' && [...artefacts.owned]
+          .sort((a, b) => {
+            const aEq = !!artefacts.equippedInSlot(a.uid);
+            const bEq = !!artefacts.equippedInSlot(b.uid);
+            if (aEq === bEq) return 0;
+            return aEq ? -1 : 1;
+          })
+          .map(inst => {
+            const art    = ARTEFACTS_BY_ID[inst.catalogueId];
+            const rarity = inst.rarity ?? art?.rarity ?? 'Iron';
+            const q      = artQuality(rarity);
+            const isEquipped = !!artefacts.equippedInSlot(inst.uid);
+            return (
+              <button
+                key={inst.uid}
+                className={`inv-slot tx-slot${selected === inst.uid ? ' tx-slot-selected' : ''}${isEquipped ? ' inv-slot-equipped' : ''}`}
+                style={{ borderColor: q.color }}
+                onClick={() => setSelected(inst.uid === selected ? null : inst.uid)}
+              >
+                <span className="inv-quality-gem" style={{ color: q.color }}>◆</span>
+                <span className="inv-name" style={{ color: q.color }}>{art ? (formatArtefactName(inst) ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name })) : inst.catalogueId}</span>
+                <span className="inv-slot-label">{art?.slot ? t(`build.slots.${art.slot}`, { defaultValue: art.slot }) : ''}</span>
+                {isEquipped && <span className="inv-equipped-badge">{t('common.equipped')}</span>}
+              </button>
+            );
+          })}
 
         {itemTab === 'techniques' && Object.values(techniques.ownedTechniques).map(tech => {
           const q = techQuality(tech.quality);

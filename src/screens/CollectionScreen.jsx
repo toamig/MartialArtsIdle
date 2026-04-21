@@ -149,26 +149,35 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
         <>
           <p className="inv-cap-label">{t('inventory.slots', { count: artefacts.owned.length, max: MAX_ARTEFACTS })}</p>
           <div className="inv-grid">
-            {artefacts.owned.map((instance) => {
-              const art = ARTEFACTS_BY_ID[instance.catalogueId];
-              if (!art) return null;
-              const rarity = instance.rarity ?? art.rarity;
-              const q = QUALITY[rarity];
-              const artName = formatArtefactName(instance)
-                ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
-              return (
-                <button
-                  key={instance.uid}
-                  className="inv-slot"
-                  style={{ borderColor: q.color }}
-                  onClick={() => setSelectedArtefact(instance)}
-                >
-                  <span className="inv-quality-gem" style={{ color: q.color }}>◆</span>
-                  <span className="inv-name" style={{ color: q.color }}>{artName}</span>
-                  <span className="inv-slot-label">{t(`build.slots.${art.slot}`, { defaultValue: art.slot })}</span>
-                </button>
-              );
-            })}
+            {[...artefacts.owned]
+              .sort((a, b) => {
+                const aEq = !!artefacts.equippedInSlot(a.uid);
+                const bEq = !!artefacts.equippedInSlot(b.uid);
+                if (aEq === bEq) return 0;
+                return aEq ? -1 : 1;
+              })
+              .map((instance) => {
+                const art = ARTEFACTS_BY_ID[instance.catalogueId];
+                if (!art) return null;
+                const rarity = instance.rarity ?? art.rarity;
+                const q = QUALITY[rarity];
+                const artName = formatArtefactName(instance)
+                  ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
+                const isEquipped = !!artefacts.equippedInSlot(instance.uid);
+                return (
+                  <button
+                    key={instance.uid}
+                    className={`inv-slot${isEquipped ? ' inv-slot-equipped' : ''}`}
+                    style={{ borderColor: q.color }}
+                    onClick={() => setSelectedArtefact(instance)}
+                  >
+                    <span className="inv-quality-gem" style={{ color: q.color }}>◆</span>
+                    <span className="inv-name" style={{ color: q.color }}>{artName}</span>
+                    <span className="inv-slot-label">{t(`build.slots.${art.slot}`, { defaultValue: art.slot })}</span>
+                    {isEquipped && <span className="inv-equipped-badge">{t('common.equipped')}</span>}
+                  </button>
+                );
+              })}
           </div>
         </>
       )}
