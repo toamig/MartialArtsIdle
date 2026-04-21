@@ -40,7 +40,7 @@ function CrystalFeedModal({ crystal, inventory, onClose }) {
   const [feedQty, setFeedQty]           = useState(1);
 
   const { level, refinedQi, requiredForNext, crystalQiBonus, feed } = crystal;
-  const nextBonus = (level + 1) * 2;
+  const nextBonus = ((level + 1) * (level + 4)) / 2;
 
   const availableStones = CULTIVATION_ITEMS
     .map(item => ({
