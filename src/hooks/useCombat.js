@@ -241,15 +241,53 @@ export default function useCombat() {
         s.turnPhase = 'waiting_player';
         const logs = [];
 
-        // Find first ready technique
-        let techFired = false;
+        // Basic attack always fires — techniques layer on top when ready.
+        // Law typeMults scale each primary stat individually. Uncovered
+        // categories are 0 so stats the law doesn't anchor contribute
+        // nothing to the basic attack. With no law equipped at all
+        // (fresh life / between picks) fall back to (body + essence) / 2
+        // so combat is functional without an active law.
+        {
+          const law = s.stats.law;
+          let dmg;
+          if (!law) {
+            dmg = (s.stats.body + s.stats.essence) / 2;
+          } else {
+            const tm = law.typeMults ?? { essence: 0, body: 0, soul: 0 };
+            dmg = s.stats.essence * (tm.essence ?? 0)
+                + s.stats.body    * (tm.body    ?? 0)
+                + s.stats.soul    * (tm.soul    ?? 0);
+          }
+          // Universal damage_all flat (artefacts / law uniques).
+          dmg += s.stats.damageStats?.damage_all ?? 0;
+          // Source multiplier: default_attack_damage applies only to basic
+          // attacks (techniques get their own secret_technique_damage in
+          // calcDamage).
+          const baseMult = 1 + (s.stats.damageStats?.default_attack_damage ?? 0);
+          dmg = Math.max(5, Math.floor(dmg * baseMult));
+          // Exploit also applies to basic attacks.
+          const exChance = s.stats.exploitChance ?? 0;
+          const exMult   = s.stats.exploitMult   ?? 150;
+          const exploited = exChance > 0 && Math.random() * 100 < exChance;
+          if (exploited) dmg = Math.floor(dmg * (exMult / 100));
+          dmg = Math.floor(dmg * (s.stats.damageMult ?? 1));
+          s.eHp = Math.max(0, s.eHp - dmg);
+          logs.push({
+            msg: exploited
+              ? `Basic attack → EXPLOIT! ${dmg.toLocaleString()} dmg`
+              : `Basic attack → ${dmg.toLocaleString()} dmg`,
+            kind: 'damage',
+          });
+          spawnDamageNumberRef.current?.(dmg, 'enemy', s.eMaxHp, { exploit: exploited });
+        }
+
+        // First ready technique fires in parallel to the basic attack.
         for (let i = 0; i < s.cds.length; i++) {
           if (!isFinite(s.cds[i]) || s.cds[i] > 0) continue;
           const tech = s.equipped[i];
           if (!tech) continue;
           if (tech.type === 'Heal' && s.pHp > s.pMaxHp * 0.5) continue;
 
-          techFired  = true;
           // yy_4 Equilibrium — every Nth cast is free (no CD applied).
           s.castCount += 1;
           const freeEvery = s.stats?.freeCastEvery ?? 0;
@@ -306,46 +344,6 @@ export default function useCombat() {
             logs.push({ msg: `${tech.name} → ${Math.round(chance * 100)}% dodge (${atks} hits)`, kind: 'buff' });
           }
           break; // one technique per turn
-        }
-
-        // Basic attack if no technique fired
-        if (!techFired) {
-          // Law typeMults scale each primary stat individually. Uncovered
-          // categories are 0 so stats the law doesn't anchor contribute
-          // nothing to the basic attack. With no law equipped at all
-          // (fresh life / between picks) fall back to (body + essence) / 2
-          // so combat is functional without an active law.
-          const law = s.stats.law;
-          let dmg;
-          if (!law) {
-            dmg = (s.stats.body + s.stats.essence) / 2;
-          } else {
-            const tm = law.typeMults ?? { essence: 0, body: 0, soul: 0 };
-            dmg = s.stats.essence * (tm.essence ?? 0)
-                + s.stats.body    * (tm.body    ?? 0)
-                + s.stats.soul    * (tm.soul    ?? 0);
-          }
-          // Universal damage_all flat (artefacts / law uniques).
-          dmg += s.stats.damageStats?.damage_all ?? 0;
-          // Source multiplier: default_attack_damage applies only to basic
-          // attacks (techniques get their own secret_technique_damage in
-          // calcDamage).
-          const baseMult = 1 + (s.stats.damageStats?.default_attack_damage ?? 0);
-          dmg = Math.max(5, Math.floor(dmg * baseMult));
-          // Exploit also applies to basic attacks.
-          const exChance = s.stats.exploitChance ?? 0;
-          const exMult   = s.stats.exploitMult   ?? 150;
-          const exploited = exChance > 0 && Math.random() * 100 < exChance;
-          if (exploited) dmg = Math.floor(dmg * (exMult / 100));
-          dmg = Math.floor(dmg * (s.stats.damageMult ?? 1));
-          s.eHp = Math.max(0, s.eHp - dmg);
-          logs.push({
-            msg: exploited
-              ? `Basic attack → EXPLOIT! ${dmg.toLocaleString()} dmg`
-              : `Basic attack → ${dmg.toLocaleString()} dmg`,
-            kind: 'damage',
-          });
-          spawnDamageNumberRef.current?.(dmg, 'enemy', s.eMaxHp, { exploit: exploited });
         }
 
         // Debug: force enemy death on every hit
