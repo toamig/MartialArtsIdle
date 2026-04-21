@@ -9,6 +9,7 @@ import { TECHNIQUE_QUALITY } from '../data/techniques';
 import { HERB_ITEMS, ALL_MATERIALS, RARITY } from '../data/materials';
 import { MOD } from '../data/stats';
 import { RARITY_TIER } from '../data/affixPools';
+import { AFFIX_UNIQUE_COLOR as UNIQUE_COLOR, formatAffixValue } from '../data/affixDisplay';
 import { findPill, PILLS, PILLS_BY_ID, RECIPES_BY_PILL } from '../data/pills';
 
 const ITEMS_BY_ID = { ...ALL_MATERIALS, ...PILLS_BY_ID };
@@ -63,86 +64,8 @@ function techQuality(quality){ return TECHNIQUE_QUALITY[quality] ?? { label: qua
 function lawQuality(rarity)  { return LAW_RARITY[rarity]         ?? { label: rarity,  color: '#aaa' }; }
 
 // ─── Value display helpers ────────────────────────────────────────────────────
-
-const STAT_LABELS = {
-  // Damage categories
-  physical_damage:        'Phys. Dmg',
-  elemental_damage:       'Elem. Dmg',
-  psychic_damage:         'Psy. Dmg',
-  damage_all:             'All Dmg',
-  // Per-pool damage
-  dmg_physical:           'Physical-pool Dmg',
-  dmg_sword:              'Sword Dmg',
-  dmg_fist:               'Fist Dmg',
-  dmg_fire:               'Fire Dmg',
-  dmg_water:              'Water Dmg',
-  dmg_earth:              'Earth Dmg',
-  dmg_spirit:             'Spirit Dmg',
-  dmg_void:               'Void Dmg',
-  dmg_dao:                'Dao Dmg',
-  // Source-gated damage
-  default_attack_damage:  'Basic Atk Dmg',
-  secret_technique_damage:'Tech Dmg',
-  // Defensive
-  defense:                'Defense',
-  elemental_defense:      'Elem. Def',
-  soul_toughness:         'Soul Tough.',
-  health:                 'Health',
-  // Primary
-  essence:                'Essence',
-  soul:                   'Soul',
-  body:                   'Body',
-  all_primary_stats:      'All Primary',
-  // Combat utility
-  exploit_chance:         'Exploit %',
-  exploit_attack_mult:    'Exploit Mult',
-  // Cultivation
-  qi_speed:               'Qi/s',
-  qi_focus_mult:          'Focus Mult',
-  heavenly_qi_mult:       'Heavenly Mult',
-  // Activity
-  harvest_speed:          'Harvest Speed',
-  harvest_luck:           'Harvest Luck',
-  mining_speed:           'Mining Speed',
-  mining_luck:            'Mining Luck',
-  // Buffs
-  buff_effect:            'Buff Effect',
-  buff_duration:          'Buff Duration',
-};
-
-// Artefact-unique affix accent — distinct from any rarity colour so uniques
-// are instantly recognisable on an item card.
-const UNIQUE_COLOR = '#ff7ae6';
-
-/**
- * Stats whose FLAT / BASE_FLAT values are stored as decimal percentage
- * points (0.05 = +5pp). Displayed with a % suffix instead of a raw number.
- */
-const PCT_FLAT_STATS = new Set([
-  'qi_focus_mult', 'heavenly_qi_mult',
-  'harvest_luck', 'mining_luck',
-  'exploit_chance', 'exploit_attack_mult',
-  'default_attack_damage', 'secret_technique_damage',
-  'buff_effect', 'buff_duration',
-]);
-
-function formatAffixValue(affix) {
-  if (affix.unique) return affix.description ?? affix.name;
-  const label = STAT_LABELS[affix.stat] ?? affix.stat;
-  if (affix.type === MOD.INCREASED) {
-    return `+${Math.round(affix.value * 100)}% ${label}`;
-  }
-  if (affix.type === MOD.MORE) {
-    return `×${affix.value.toFixed(2)} ${label}`;
-  }
-  // FLAT and BASE_FLAT — same value formatting, BASE prefix word differs.
-  const isPct = PCT_FLAT_STATS.has(affix.stat);
-  const v = isPct
-    ? `${(affix.value * 100).toFixed(1).replace(/\.0$/, '')}%`
-    : (affix.stat === 'qi_speed' ? affix.value.toFixed(2) : affix.value);
-  const prefix = affix.type === MOD.BASE_FLAT ? '+ base' : '+';
-  return `${prefix} ${v} ${label}`;
-}
+// STAT_LABELS, PCT_FLAT_STATS, UNIQUE_COLOR and formatAffixValue live in
+// src/data/affixDisplay.js so the Equip tab renders identical strings.
 
 // formatMultLabel is called inside components that have t() available
 function formatMultLabel(key, t) {

@@ -6,38 +6,7 @@ import { LAW_RARITY } from '../data/laws';
 import { formatUniqueDescription } from '../data/lawUniques';
 import { TECHNIQUE_QUALITY, TYPE_COLOR, getCooldown } from '../data/techniques';
 import { QUALITY, getSlotBonuses } from '../data/artefacts';
-import { MOD } from '../data/stats';
-
-// ── Stat label map for tooltips ──────────────────────────────────────────────
-const STAT_KEYS = {
-  physical_damage:  'statNames.physical_damage',
-  elemental_damage: 'statNames.elemental_damage',
-  defense:          'statNames.defense',
-  elemental_defense:'statNames.elemental_defense',
-  soul_toughness:   'statNames.soul_toughness',
-  health:           'statNames.health',
-  essence:          'statNames.essence',
-  soul:             'statNames.soul',
-  body:             'statNames.body',
-  exploit_chance:   'statNames.exploit_chance',
-};
-
-// Unique-affix accent — mirrors ProductionScreen's UNIQUE_COLOR.
-const ARTEFACT_UNIQUE_COLOR = '#ff7ae6';
-
-function formatBonus(b, t) {
-  if (b.unique) return b.description ?? b.name ?? '';
-  const label = t(STAT_KEYS[b.stat] ?? 'statNames.defense', { defaultValue: b.stat.replace(/_/g, ' ') });
-  if (b.type === MOD.INCREASED)      return `+${Math.round(b.value * 100)}% ${label}`;
-  if (b.type === MOD.MORE)           return `×${b.value.toFixed(2)} ${label}`;
-  // FLAT / BASE_FLAT: display 'base' prefix for BASE_FLAT, otherwise raw '+'.
-  // Decimal values (< 1) print as percent points; integers print as-is.
-  const v = (typeof b.value === 'number' && b.value > 0 && b.value < 1)
-    ? `${(b.value * 100).toFixed(1).replace(/\.0$/, '')}%`
-    : b.value;
-  const prefix = b.type === MOD.BASE_FLAT ? '+ base' : '+';
-  return `${prefix} ${v} ${label}`;
-}
+import { AFFIX_UNIQUE_COLOR as ARTEFACT_UNIQUE_COLOR, formatAffixValue } from '../data/affixDisplay';
 
 // col/row are 1-indexed CSS grid positions (3 columns, 5 rows)
 const GEAR_SLOTS = [
@@ -71,7 +40,7 @@ function ArtefactTooltip({ artefact, affixes, style }) {
       {baseBonuses.length > 0 && (
         <div className="art-tooltip-section">
           {baseBonuses.map((b, i) => (
-            <span key={i} className="art-tooltip-line">{formatBonus(b, t)}</span>
+            <span key={i} className="art-tooltip-line">{formatAffixValue(b)}</span>
           ))}
         </div>
       )}
@@ -83,7 +52,7 @@ function ArtefactTooltip({ artefact, affixes, style }) {
               className={`art-tooltip-line art-tooltip-affix${a.unique ? ' art-tooltip-affix-unique' : ''}`}
               style={a.unique ? { color: ARTEFACT_UNIQUE_COLOR } : undefined}
             >
-              {a.unique && '★ '}{formatBonus(a, t)}
+              {a.unique && '★ '}{formatAffixValue(a)}
             </span>
           ))}
         </div>
