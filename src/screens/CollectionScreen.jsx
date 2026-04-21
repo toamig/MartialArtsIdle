@@ -18,6 +18,7 @@ import { MAX_ARTEFACTS } from '../hooks/useArtefacts';
 import { MAX_TECHNIQUES } from '../hooks/useTechniques';
 import { MAX_LAWS } from '../hooks/useCultivation';
 import ItemModal from '../components/ItemModal';
+import ArtefactTooltip, { useTooltipPos } from '../components/ArtefactTooltip';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -84,6 +85,8 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
   const [activeTab, setActiveTab] = useState('herbs');
   const [selectedItem,      setSelectedItem]      = useState(null);
   const [selectedArtefact,  setSelectedArtefact]  = useState(null);
+  const artTooltip = useTooltipPos();
+  const [hoveredArtUid, setHoveredArtUid] = useState(null);
   const [selectedTechnique, setSelectedTechnique] = useState(null);
   const [selectedLaw,       setSelectedLaw]       = useState(null);
 
@@ -170,6 +173,24 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
                     className={`inv-slot${isEquipped ? ' inv-slot-equipped' : ''}`}
                     style={{ borderColor: q.color }}
                     onClick={() => setSelectedArtefact(instance)}
+                    onMouseEnter={(e) => {
+                      setHoveredArtUid(instance.uid);
+                      artTooltip.handlers.onMouseEnter(e);
+                    }}
+                    onMouseMove={artTooltip.handlers.onMouseMove}
+                    onMouseLeave={(e) => {
+                      setHoveredArtUid(null);
+                      artTooltip.handlers.onMouseLeave(e);
+                    }}
+                    onTouchStart={(e) => {
+                      setHoveredArtUid(instance.uid);
+                      artTooltip.handlers.onTouchStart(e);
+                    }}
+                    onTouchEnd={(e) => {
+                      setHoveredArtUid(null);
+                      artTooltip.handlers.onTouchEnd(e);
+                    }}
+                    onTouchMove={artTooltip.handlers.onTouchMove}
                   >
                     <span className="inv-quality-gem" style={{ color: q.color }}>◆</span>
                     <span className="inv-name" style={{ color: q.color }}>{artName}</span>
@@ -179,6 +200,21 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
                 );
               })}
           </div>
+          {artTooltip.pos && hoveredArtUid && (() => {
+            const inst = artefacts.owned.find(o => o.uid === hoveredArtUid);
+            if (!inst) return null;
+            const cat = ARTEFACTS_BY_ID[inst.catalogueId];
+            if (!cat) return null;
+            const rarity = inst.rarity ?? cat.rarity;
+            const name = formatArtefactName(inst) ?? tGame(`artefacts.${cat.id}.name`, { defaultValue: cat.name });
+            return (
+              <ArtefactTooltip
+                artefact={{ ...cat, rarity, name }}
+                affixes={inst.affixes ?? []}
+                style={{ position: 'fixed', left: artTooltip.pos.x, top: artTooltip.pos.y, zIndex: 100 }}
+              />
+            );
+          })()}
         </>
       )}
 

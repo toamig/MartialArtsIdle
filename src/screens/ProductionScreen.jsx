@@ -10,6 +10,7 @@ import { HERB_ITEMS, ALL_MATERIALS, RARITY } from '../data/materials';
 import { MOD } from '../data/stats';
 import { RARITY_TIER } from '../data/affixPools';
 import { AFFIX_UNIQUE_COLOR as UNIQUE_COLOR, formatAffixValue } from '../data/affixDisplay';
+import ArtefactTooltip, { useTooltipPos } from '../components/ArtefactTooltip';
 import { findPill, PILLS, PILLS_BY_ID, RECIPES_BY_PILL } from '../data/pills';
 
 const ITEMS_BY_ID = { ...ALL_MATERIALS, ...PILLS_BY_ID };
@@ -550,6 +551,8 @@ function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
   const { t: tGame } = useTranslation('game');
   const [itemTab,  setItemTab]  = useState('artefacts');
   const [selected, setSelected] = useState(null);
+  const artTooltip = useTooltipPos();
+  const [hoveredArtUid, setHoveredArtUid] = useState(null);
 
   const ITEM_TABS = [
     { key: 'artefacts',  tKey: 'inventory.tabArtefacts'  },
@@ -599,6 +602,24 @@ function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
                 className={`inv-slot tx-slot${selected === inst.uid ? ' tx-slot-selected' : ''}${isEquipped ? ' inv-slot-equipped' : ''}`}
                 style={{ borderColor: q.color }}
                 onClick={() => setSelected(inst.uid === selected ? null : inst.uid)}
+                onMouseEnter={(e) => {
+                  setHoveredArtUid(inst.uid);
+                  artTooltip.handlers.onMouseEnter(e);
+                }}
+                onMouseMove={artTooltip.handlers.onMouseMove}
+                onMouseLeave={(e) => {
+                  setHoveredArtUid(null);
+                  artTooltip.handlers.onMouseLeave(e);
+                }}
+                onTouchStart={(e) => {
+                  setHoveredArtUid(inst.uid);
+                  artTooltip.handlers.onTouchStart(e);
+                }}
+                onTouchEnd={(e) => {
+                  setHoveredArtUid(null);
+                  artTooltip.handlers.onTouchEnd(e);
+                }}
+                onTouchMove={artTooltip.handlers.onTouchMove}
               >
                 <span className="inv-quality-gem" style={{ color: q.color }}>◆</span>
                 <span className="inv-name" style={{ color: q.color }}>{art ? (formatArtefactName(inst) ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name })) : inst.catalogueId}</span>
@@ -641,6 +662,22 @@ function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
         })}
       </div>
 
+      {itemTab === 'artefacts' && artTooltip.pos && hoveredArtUid && (() => {
+        const inst = artefacts.owned.find(o => o.uid === hoveredArtUid);
+        if (!inst) return null;
+        const cat = ARTEFACTS_BY_ID[inst.catalogueId];
+        if (!cat) return null;
+        const rarity = inst.rarity ?? cat.rarity;
+        const name = formatArtefactName(inst) ?? tGame(`artefacts.${cat.id}.name`, { defaultValue: cat.name });
+        return (
+          <ArtefactTooltip
+            artefact={{ ...cat, rarity, name }}
+            affixes={inst.affixes ?? []}
+            style={{ position: 'fixed', left: artTooltip.pos.x, top: artTooltip.pos.y, zIndex: 100 }}
+          />
+        );
+      })()}
+
       {selectedInst && itemTab === 'artefacts' && (
         <ArtefactDetail inst={selectedInst} artefacts={artefacts} inventory={inventory} />
       )}
@@ -664,20 +701,20 @@ const STAT_DISPLAY = {
   qi_speed:             'Qi Speed',
   defense:              'Defense',
   health:               'Health',
-  physical_damage:      'Phys. Dmg',
-  elemental_damage:     'Elem. Dmg',
-  psychic_damage:       'Psy. Dmg',
+  physical_damage:      'Physical Damage',
+  elemental_damage:     'Elemental Damage',
+  psychic_damage:       'Psychic Damage',
   harvest_speed:        'Harvest Speed',
   mining_speed:         'Mining Speed',
   harvest_luck:         'Harvest Luck',
   mining_luck:          'Mining Luck',
-  soul_toughness:       'Soul Tough.',
-  elemental_defense:    'Elem. Def',
+  soul_toughness:       'Soul Toughness',
+  elemental_defense:    'Elemental Defense',
   essence:              'Essence',
   soul:                 'Soul',
   body:                 'Body',
   exploit_chance:       'Exploit Chance',
-  exploit_attack_mult:  'Exploit Mult',
+  exploit_attack_mult:  'Exploit Multiplier',
 };
 
 function formatEffect(eff) {
