@@ -7,7 +7,7 @@
 }
 
 /* ─── Prevent double-tap zoom on iOS (user-scalable=no ignored since iOS 10) */
-html, body {
+html, body, * {
   touch-action: manipulation;
 }
 
@@ -546,12 +546,11 @@ html, body {
   box-shadow: 0 0 32px rgba(192, 132, 252, 0.15);
 }
 
-/* Law selection modal — gold tint */
-.sel-modal-law {
-  border-color: rgba(245, 200, 66, 0.45);
-  box-shadow:
-    0 0 36px rgba(245, 200, 66, 0.14),
-    0 0 72px rgba(245, 200, 66, 0.06);
+/* Law selection modal — gold tint on the header tile only (modal itself is
+   transparent so a box-shadow there would show as a bare glowing rectangle) */
+.sel-modal-law .sel-header {
+  border: 1px solid rgba(245, 200, 66, 0.28);
+  box-shadow: 0 0 24px rgba(245, 200, 66, 0.10);
 }
 
 .sel-breakthrough-badge {
