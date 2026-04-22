@@ -547,6 +547,7 @@ function App() {
                       techniques={techniques}
                       combat={combat}
                       inventory={inventory}
+                      artefacts={artefacts}
                       region={screenParam?.region ?? null}
                       onBack={goBack}
                       getFullStats={getFullStats}

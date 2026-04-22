@@ -2,6 +2,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { calcDamage, getCooldown } from '../data/techniques';
 import { ALL_MATERIALS } from '../data/materials';
 import { generateTechnique } from '../data/techniqueDrops';
+import { pickRandomArtefact } from '../data/artefactDrops';
+import { ARTEFACTS_BY_ID } from '../data/artefacts';
+
+// Artefacts drop using the same per-enemy `techniqueDrop.chance`, scaled up
+// slightly so they feel marginally more common than Secret Technique scrolls.
+const ARTEFACT_DROP_MULT = 1.5;
 
 function fmtHp(n) {
   if (n >= 1e12) return (n / 1e12).toFixed(1) + 'T';
@@ -96,6 +102,7 @@ export default function useCombat() {
   // ─── Drop callbacks — refreshed on each startFight call ─────────────────
   const onDropsRef          = useRef(null);
   const onTechniqueDropRef  = useRef(null);
+  const onArtefactDropRef   = useRef(null);
 
   // ─── Sprite animation callbacks ────────────────────────────────────────────
   // playerAttackRef / enemyAttackRef: called by useCombat → CombatStage plays animation
@@ -142,8 +149,9 @@ export default function useCombat() {
    * @param {number}   worldId           — world tier 1–6, used for technique generation
    * @param {number}   regionIndex       — minRealmIndex of the region; anchors enemy HP to
    *                                       zone difficulty on a smooth 1.12×-per-index curve
+   * @param {function} onArtefactDrop    — callback(catalogueId) fired when an artefact drops
    */
-  const startFight = useCallback((stats, equippedTechs, enemyDef = null, onDrops = null, onTechniqueDrop = null, worldId = 1, regionIndex = 0) => {
+  const startFight = useCallback((stats, equippedTechs, enemyDef = null, onDrops = null, onTechniqueDrop = null, worldId = 1, regionIndex = 0, onArtefactDrop = null) => {
     if (stateRef.current.phase === 'fighting') return;
     const { essence, soul, body } = stats;
     const total  = essence + soul + body;
@@ -179,6 +187,7 @@ export default function useCombat() {
 
     onDropsRef.current         = onDrops;
     onTechniqueDropRef.current = onTechniqueDrop;
+    onArtefactDropRef.current  = onArtefactDrop;
 
     stateRef.current = {
       phase:     'fighting',
@@ -193,6 +202,7 @@ export default function useCombat() {
       equipped: [...equippedTechs],
       enemyDrops:       enemyDef?.drops ?? [],
       techDropChance:   enemyDef?.techniqueDrop?.chance ?? 0,
+      artefactDropChance: (enemyDef?.techniqueDrop?.chance ?? 0) * ARTEFACT_DROP_MULT,
       worldId,
       // Reincarnation tree state
       undyingUsed: false,                 // hw_3 once-per-fight
@@ -395,6 +405,20 @@ export default function useCombat() {
               const tech = generateTechnique(s2.worldId);
               onTechniqueDropRef.current?.(tech);
               newLogs.unshift({ msg: `Scroll found: ${tech.name} (${tech.quality} ${tech.type})`, kind: 'technique' });
+            }
+
+            // Roll artefact drop — independent from the technique roll so an
+            // enemy can drop both. Uses the techniqueDrop.chance scaled up.
+            if (s2.artefactDropChance > 0 && Math.random() < s2.artefactDropChance) {
+              const artId = pickRandomArtefact(s2.worldId);
+              if (artId) {
+                onArtefactDropRef.current?.(artId);
+                const cat = ARTEFACTS_BY_ID[artId];
+                newLogs.unshift({
+                  msg: `Artefact found: ${cat?.name ?? artId} (${cat?.rarity ?? 'Iron'})`,
+                  kind: 'technique',
+                });
+              }
             }
 
             setLog(prev => [...newLogs, ...prev].slice(0, MAX_LOG));

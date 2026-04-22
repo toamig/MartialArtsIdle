@@ -79,7 +79,7 @@ function CombatLog({ log }) {
   );
 }
 
-function CombatScreen({ cultivation, techniques, combat, inventory, region = null, onBack = null, getFullStats, onRegionCleared = null }) {
+function CombatScreen({ cultivation, techniques, combat, inventory, artefacts = null, region = null, onBack = null, getFullStats, onRegionCleared = null }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
 
@@ -139,6 +139,7 @@ function CombatScreen({ cultivation, techniques, combat, inventory, region = nul
       techniques  ? (tech)  => techniques.addOwnedTechnique(tech) : null,
       region?.worldId ?? 1,
       regionIndex,
+      artefacts   ? (id)    => artefacts.addArtefact(id) : null,
     );
   };
 
