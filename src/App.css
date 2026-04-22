@@ -64,6 +64,17 @@ html, body, * {
   pointer-events: none;
 }
 
+/* Top + bottom vignette for non-home screens — sits above the blurred bg, below content */
+.app-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0) 26%),
+    linear-gradient(to top,    rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0) 22%);
+}
+
 /* Bottom Tab Bar */
 .navbar {
   display: flex;
@@ -784,32 +795,47 @@ html, body, * {
 .augment-reroll {
   align-self: center;
   margin: 0 0 8px;
-  padding: 3px 9px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.12);
+  padding: 4px 12px;
+  background: rgba(245, 200, 66, 0.10);
+  border: 1px solid rgba(245, 200, 66, 0.32);
   border-radius: 20px;
-  color: rgba(255,255,255,0.45);
+  color: rgba(245, 200, 66, 0.72);
   font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
   cursor: pointer;
-  transition: color 0.12s, border-color 0.12s, background 0.12s;
+  transition: color 0.15s, border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 .augment-reroll:hover:not(:disabled) {
-  color: var(--cat-color);
-  border-color: var(--cat-color);
-  background: color-mix(in srgb, var(--cat-color) 15%, transparent);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--cat-color) 40%, transparent);
+  color: #f5c842;
+  border-color: rgba(245, 200, 66, 0.65);
+  background: rgba(245, 200, 66, 0.18);
+  box-shadow: 0 0 10px rgba(245, 200, 66, 0.28);
 }
 .augment-reroll:active:not(:disabled) {
   transform: scale(0.94);
 }
-.augment-reroll-disabled { opacity: 0.3; cursor: not-allowed; }
+/* Free reroll — jade tint signals no cost */
+.augment-reroll-free {
+  background: rgba(20, 170, 150, 0.12);
+  border-color: rgba(45, 180, 160, 0.38);
+  color: rgba(167, 243, 232, 0.75);
+}
+.augment-reroll-free:hover:not(:disabled) {
+  color: #a7f3e8;
+  border-color: rgba(45, 180, 160, 0.65);
+  background: rgba(20, 170, 150, 0.22);
+  box-shadow: 0 0 10px rgba(20, 170, 150, 0.28);
+}
+.augment-reroll-disabled { opacity: 0.28; cursor: not-allowed; }
 
 /* ── Footer ─────────────────────────────────────────────────────────────────── */
 .sel-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .sel-blood-lotus-balance {
@@ -818,16 +844,56 @@ html, body, * {
 }
 
 .sel-skip-btn {
-  padding: 6px 14px;
+  padding: 7px 18px;
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 13px;
+  font-family: inherit;
   cursor: pointer;
-  transition: border-color 0.12s, color 0.12s;
+  transition: border-color 0.15s, color 0.15s;
 }
-.sel-skip-btn:hover { border-color: rgba(255,255,255,0.25); color: #fff; }
+.sel-skip-btn:hover {
+  border-color: rgba(255,255,255,0.28);
+  color: var(--text-secondary);
+}
+.sel-skip-btn:active { transform: scale(0.96); }
+
+/* Law selection — reroll button (amber gradient, matches home reward chip aesthetic) */
+.sel-reroll-btn {
+  padding: 7px 20px;
+  background: linear-gradient(135deg, rgba(146, 64, 14, 0.55), rgba(180, 100, 0, 0.55));
+  border: 1px solid rgba(217, 119, 6, 0.60);
+  border-radius: 10px;
+  color: #fde68a;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+.sel-reroll-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(180, 80, 15, 0.75), rgba(217, 130, 0, 0.75));
+  border-color: rgba(245, 160, 30, 0.85);
+  box-shadow: 0 0 14px rgba(217, 119, 6, 0.38);
+  transform: translateY(-1px);
+}
+.sel-reroll-btn:active:not(:disabled) { transform: scale(0.96); }
+/* Free reroll — jade gradient (cultivation energy, no cost) */
+.sel-reroll-btn-free {
+  background: linear-gradient(135deg, rgba(12, 70, 70, 0.65), rgba(15, 100, 90, 0.65));
+  border-color: rgba(45, 180, 160, 0.55);
+  color: #a7f3e8;
+}
+.sel-reroll-btn-free:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(15, 90, 85, 0.80), rgba(20, 120, 110, 0.80));
+  border-color: rgba(45, 180, 160, 0.80);
+  box-shadow: 0 0 14px rgba(20, 170, 150, 0.32);
+  transform: translateY(-1px);
+}
+.sel-reroll-btn-disabled { opacity: 0.30; cursor: not-allowed; }
 
 /* ── HomeScreen selection badge ─────────────────────────────────────────────── */
 
@@ -849,7 +915,7 @@ html, body, * {
 .home-sel-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   padding: 5px 12px;
   background: linear-gradient(135deg,
     rgba(146, 64,  14, 0.85),
@@ -867,7 +933,7 @@ html, body, * {
   transition: transform 0.15s;
 }
 .home-sel-btn:hover { transform: scale(1.04); }
-.home-sel-btn-icon  { font-size: 13px; }
+.home-sel-btn-icon  { font-size: 12px; }
 .home-sel-btn-label { white-space: nowrap; }
 
 /* Law chip — muted teal variant so it reads as lower urgency than rewards */
@@ -888,13 +954,13 @@ html, body, * {
 .home-idle-chip {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 5px 12px;
   background: linear-gradient(135deg, rgba(20, 80, 30, 0.82), rgba(30, 100, 50, 0.82));
   border: 1px solid rgba(80, 200, 100, 0.40);
   border-radius: 20px;
   color: rgba(180, 255, 190, 0.92);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
@@ -903,7 +969,7 @@ html, body, * {
   transition: transform 0.15s;
 }
 .home-idle-chip:hover { transform: scale(1.04); }
-.home-idle-chip-icon  { font-size: 11px; }
+.home-idle-chip-icon  { font-size: 12px; }
 .home-idle-chip-label { white-space: nowrap; }
 
 /* Character Screen tabs */
@@ -1340,6 +1406,22 @@ html, body, * {
 
 .build-law-locked {
   opacity: 0.55;
+}
+
+.build-law-section-locked {
+  position: relative;
+  cursor: default !important;
+}
+.build-law-section-locked:hover .lock-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) scale(1);
+}
+
+.build-law-gate {
+  opacity: 0.40;
+  filter: grayscale(0.5);
+  pointer-events: none;
 }
 
 .law-header {
@@ -1809,6 +1891,13 @@ html, body, * {
   color: #ffe8a0;
   box-shadow: 0 0 12px rgba(255, 220, 120, 0.45);
 }
+.qi-rate-gated {
+  background: rgba(120, 0, 0, 0.78);
+  color: #ffe4b8;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 10px rgba(255, 60, 60, 0.45);
+  animation: realmGatePulse 1.4s ease-in-out infinite;
+}
 .qi-rate-badge {
   display: inline-block;
   padding: 0 6px;
@@ -1924,13 +2013,13 @@ html, body, * {
 .daily-widget {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 5px 12px;
   border-radius: 20px;
   background: linear-gradient(135deg, rgba(160, 60, 80, 0.72), rgba(100, 20, 40, 0.78));
   border: 1px solid rgba(220, 80, 100, 0.45);
   color: rgba(255, 200, 210, 0.92);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
@@ -1944,9 +2033,9 @@ html, body, * {
   box-shadow: 0 0 18px rgba(220, 60, 80, 0.55);
 }
 .daily-widget:hover { transform: scale(1.04); }
-.daily-widget-icon { width: 13px; height: 13px; object-fit: contain; flex-shrink: 0; }
+.daily-widget-icon { width: 12px; height: 12px; object-fit: contain; flex-shrink: 0; }
 .daily-widget-text { white-space: nowrap; }
-.daily-widget-day  { font-size: 9px; opacity: 0.72; white-space: nowrap; }
+.daily-widget-day  { font-size: 10px; opacity: 0.72; white-space: nowrap; }
 .daily-widget-badge {
   position: absolute;
   top: -3px; right: -3px;
@@ -2073,9 +2162,20 @@ html, body, * {
   position: relative;
   padding-bottom: 10px;
 }
+.home-scene::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22%;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+  z-index: 6;
+}
 .home-scene::after {
   content: '';
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
@@ -2098,12 +2198,12 @@ html, body, * {
 
 /* ── Major-realm breakthrough celebration ───────────────────────────────── */
 .home-breakthrough-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 200;
   pointer-events: none;
 }
 
@@ -2182,7 +2282,6 @@ html, body, * {
   width: 50%;
   display: flex;
   justify-content: center;
-  overflow: hidden;
 }
 
 /* ── PC / wide-screen layout (≥ 900 px) ─────────────────────────────────── */
@@ -2977,33 +3076,6 @@ html, body, * {
   line-height: 1;
 }
 
-/* Major-realm breakthrough gate — only shown when .realm-track is .realm-track-gated */
-.realm-gate-label {
-  position: absolute;
-  left: 50%;
-  top: calc(47.5% + 22px);
-  transform: translate(-50%, -50%);
-  z-index: 5;
-  padding: 3px 10px;
-  border-radius: 10px;
-  background: rgba(120, 0, 0, 0.78);
-  color: #ffe4b8;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.25s ease-out;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  box-shadow: 0 0 10px rgba(255, 60, 60, 0.45);
-}
-
-.realm-track-gated .realm-gate-label {
-  opacity: 1;
-  animation: realmGatePulse 1.4s ease-in-out infinite;
-}
-
 .realm-track-gated .realm-fill {
   filter: hue-rotate(-30deg) saturate(1.1);
   animation: realmGateFillPulse 1.4s ease-in-out infinite;
@@ -3736,6 +3808,48 @@ html, body, * {
   margin: 4px 0 8px;
 }
 
+/* ── Collection screen — sectioned layout ────────────────────────────────── */
+.col-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.col-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.col-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(200, 185, 220, 0.65);
+}
+
+.col-section-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(160, 155, 190, 0.55);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.col-section-empty {
+  font-size: 0.78rem;
+  color: rgba(160, 155, 190, 0.3);
+  text-align: center;
+  padding: 14px 0;
+  margin: 0;
+}
+
 /* Item Modal */
 .modal-overlay {
   position: fixed;
@@ -4116,6 +4230,100 @@ html, body, * {
   color: var(--gold, #f5c842);
 }
 
+/* ── Enemy Tooltip ── */
+.enemy-tooltip {
+  z-index: 1100;
+  pointer-events: none;
+  background: rgba(10, 8, 28, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+  max-width: 240px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.65);
+}
+
+.enemy-tooltip-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.enemy-tooltip-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.enemy-tooltip-dtype {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.enemy-tooltip-section {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 5px;
+}
+
+.enemy-tooltip-section-label {
+  font-size: 0.60rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 1px;
+}
+
+.enemy-tooltip-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.enemy-tooltip-stat-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.enemy-tooltip-stat-value {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.enemy-tooltip-drop-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.enemy-tooltip-drop-name {
+  font-size: 0.68rem;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.enemy-tooltip-drop-chance {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
 /* ── Inline Artefact Picker ── */
 .art-inline-picker {
   margin-top: 12px;
@@ -4402,20 +4610,14 @@ html, body, * {
   align-items: center;
   width: 90px;
   position: relative;
-  /* No CSS border/background — the pixel art frame handles all visuals */
-  padding: 20px 15px 17px;
-}
-
-/* Pixel art card frame overlay — covers the whole slot */
-.tech-icon-frame {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-  image-rendering: auto;
-  pointer-events: none;
-  z-index: 10;
+  padding: 8px 8px 6px;
+  background: rgba(8, 6, 20, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 2px 10px rgba(0, 0, 0, 0.5),
+    0 0 14px color-mix(in srgb, var(--tech-color, transparent) 20%, transparent);
 }
 
 .tech-icon-empty {
@@ -4429,6 +4631,8 @@ html, body, * {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 7px;
+  overflow: hidden;
 }
 
 /* Sprite — sits above glyph; if src 404s the glyph shows through */
@@ -4450,12 +4654,24 @@ html, body, * {
   user-select: none;
 }
 
-/* Clock overlay — conic-gradient patched by rAF loop, NO CSS transition */
+/* Countdown number — patched by rAF loop, NO CSS transition */
 .tech-icon-clock {
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow:
+    0 0 6px rgba(0,0,0,1),
+    0 1px 3px rgba(0,0,0,0.9),
+    0 0 14px rgba(0,0,0,0.8);
+  font-variant-numeric: tabular-nums;
+  transition: opacity 0.1s;
 }
 
 .tech-icon-name {
@@ -4856,21 +5072,35 @@ html, body, * {
 
 /* ── Combat log ── */
 .combat-log {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: rgba(8, 6, 20, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
   padding: 10px 12px;
-  max-height: 160px;
+  height: 160px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .combat-log p {
   font-size: 0.72rem;
   line-height: 1.4;
   font-variant-numeric: tabular-nums;
+}
+
+.combat-log-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.combat-log-divider {
+  color: rgba(255, 255, 255, 0.15) !important;
+  font-size: 0.6rem !important;
+  text-align: center;
+  letter-spacing: 0.05em;
+  margin: 3px 0;
+  user-select: none;
 }
 
 /* ── In-stage HP HUD ─────────────────────────────────────────────────────── */
@@ -5484,12 +5714,7 @@ html, body, * {
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   }
 
-  /* ── Combat screen: match cultivation stage width ────────────────────── */
-  .combat-screen {
-    max-width: 730px;
-    margin-left: auto;
-    margin-right: auto;
-  }
+  /* Combat screen fills the container — no artificial width cap */
 
   .hp-bar-track {
     height: 10px;
@@ -5543,10 +5768,7 @@ html, body, * {
   }
 
 
-  /* ── Combat screen: slightly roomier on ultra-wide ────────────────────── */
-  .combat-screen {
-    max-width: 830px;
-  }
+  /* Combat screen: no width cap — fills screen-container */
 
   .hp-bar-track {
     height: 11px;
@@ -7116,113 +7338,154 @@ html, body, * {
 
 /* ─── Pill Drawer (bottom sheet with tabs) ──────────────────────────────── */
 
-.pill-drawer-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  animation: pill-drawer-fade-in 0.2s ease-out;
-}
-@keyframes pill-drawer-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.pill-drawer {
-  width: 100%;
-  max-width: 560px;
-  max-height: 82vh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(180deg, #1a1511 0%, #0e0a07 100%);
-  border-top: 2px solid var(--gold);
-  border-radius: 16px 16px 0 0;
-  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.55);
-  padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* clear the nav */
-  animation: pill-drawer-slide-up 0.25s ease-out;
-}
-@keyframes pill-drawer-slide-up {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-}
-
-.pill-drawer-header {
+/* ── Pill chip (gameplay top-left) ───────────────────────────────────────── */
+.home-pill-chip {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px 10px;
-  border-bottom: 1px solid rgba(245, 200, 66, 0.15);
-}
-.pill-drawer-title {
-  font-family: 'Press Start 2P', 'Courier New', monospace;
-  font-size: 0.82rem;
-  color: var(--gold);
-  letter-spacing: 0.04em;
-  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.9);
-}
-.pill-drawer-close {
-  border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 1.4rem;
-  line-height: 1;
+  gap: 6px;
+  padding: 5px 12px;
+  background: linear-gradient(135deg, rgba(60, 42, 0, 0.85), rgba(90, 65, 5, 0.85));
+  border: 1px solid rgba(245, 200, 66, 0.50);
+  border-radius: 20px;
+  color: #fef3c7;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
-  padding: 0 6px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 8px rgba(245, 200, 66, 0.30);
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-.pill-drawer-close:hover { color: var(--gold); }
+.home-pill-chip:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 14px rgba(245, 200, 66, 0.50);
+}
+.home-pill-chip-icon  { font-size: 12px; }
+.home-pill-chip-label { white-space: nowrap; }
+
+/* ── Pill Modal ───────────────────────────────────────────────────────────── */
+.pill-modal {
+  background: linear-gradient(160deg, #120e04, #0b0804);
+  border: 1px solid rgba(245, 200, 66, 0.22);
+  border-radius: 18px;
+  width: min(96vw, 480px);
+  max-height: var(--modal-max-h);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modal-pop 0.22s ease-out;
+  box-shadow: 0 0 32px rgba(180, 130, 0, 0.10), 0 8px 32px rgba(0, 0, 0, 0.65);
+}
+
+.pill-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+.pill-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #f5c842;
+  letter-spacing: 0.03em;
+  flex: 1;
+}
+
+.pill-modal-count-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(245, 200, 66, 0.7);
+  background: rgba(245, 200, 66, 0.09);
+  border: 1px solid rgba(245, 200, 66, 0.2);
+  border-radius: 20px;
+  padding: 2px 10px;
+  flex-shrink: 0;
+}
+
+.pill-modal-tab-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px 8px;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
 
 .pill-drawer-tabs {
   display: flex;
   gap: 4px;
-  padding: 8px 12px 0;
-  border-bottom: 1px solid rgba(245, 200, 66, 0.12);
-}
-.pill-drawer-tab {
   flex: 1;
+}
+
+.pill-modal-consume-all {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 200, 66, 0.38);
+  background: rgba(180, 130, 0, 0.14);
+  color: #f5c842;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+  margin-bottom: 8px;
+}
+.pill-modal-consume-all:hover {
+  background: rgba(180, 130, 0, 0.28);
+  border-color: rgba(245, 200, 66, 0.60);
+}
+
+.pill-drawer-tab {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 6px;
-  border: none;
-  border-bottom: 2px solid transparent;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
   background: transparent;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.5);
   font-family: inherit;
-  font-size: 0.75rem;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .pill-drawer-tab:hover {
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(245, 200, 66, 0.06);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.8);
 }
 .pill-drawer-tab.active {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
+  background: rgba(245, 200, 66, 0.14);
+  border-color: rgba(245, 200, 66, 0.40);
+  color: #f5c842;
 }
 .pill-drawer-tab-count {
-  padding: 0 6px;
+  padding: 0 5px;
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.08);
-  font-size: 0.64rem;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 0.62rem;
   font-weight: 700;
 }
 .pill-drawer-tab.active .pill-drawer-tab-count {
-  background: rgba(245, 200, 66, 0.22);
-  color: var(--gold);
+  background: rgba(245, 200, 66, 0.18);
+  color: #f5c842;
 }
 
 .pill-drawer-body {
   flex: 1;
   overflow-y: auto;
   padding: 12px 14px 18px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 200, 66, 0.12) transparent;
 }
 .pill-drawer-empty {
   text-align: center;
@@ -7242,9 +7505,16 @@ html, body, * {
   flex-direction: column;
   gap: 6px;
   padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 3px solid var(--rarity-color, #9ca3af);
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(180, 130, 0, 0.06);
+  transition: border-color 0.15s, background 0.15s;
+}
+.pill-drawer-card:hover {
+  border-color: rgba(255, 255, 255, 0.10);
+  border-left-color: var(--rarity-color, #9ca3af);
+  background: rgba(180, 130, 0, 0.10);
 }
 .pill-drawer-card-head {
   display: flex;
@@ -7257,7 +7527,7 @@ html, body, * {
 }
 .pill-drawer-card-qty {
   font-size: 0.72rem;
-  color: var(--text-muted);
+  color: rgba(245, 200, 66, 0.65);
   font-weight: 600;
 }
 .pill-drawer-card-effects {
@@ -7267,30 +7537,28 @@ html, body, * {
 }
 .pill-drawer-card-effect {
   font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.5);
   line-height: 1.3;
 }
 .pill-drawer-card-use {
   margin-top: 4px;
-  padding: 6px 0;
-  border: 1px solid var(--gold);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--gold);
+  padding: 7px 0;
+  border: 1px solid rgba(245, 200, 66, 0.38);
+  border-radius: 8px;
+  background: rgba(180, 130, 0, 0.14);
+  color: #f5c842;
   font-family: inherit;
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, border-color 0.15s;
 }
 .pill-drawer-card-use:hover {
-  background: var(--gold);
-  color: #1a1511;
+  background: rgba(180, 130, 0, 0.30);
+  border-color: rgba(245, 200, 66, 0.60);
 }
 .pill-drawer-card-use:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
@@ -9206,7 +9474,7 @@ html, body, * {
 .et-node {
   position: absolute;
   width: 108px; height: 108px;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) translateZ(0);
   border-radius: 50%;
   border: 2px solid rgba(var(--branch-rgb, 168,85,247), 0.28);
   background: rgba(var(--branch-rgb, 168,85,247), 0.07);
@@ -9219,6 +9487,7 @@ html, body, * {
   transition: transform 0.13s, box-shadow 0.13s;
   box-sizing: border-box;
   cursor: pointer;
+  will-change: transform;
 }
 
 /* Root */
@@ -9260,15 +9529,25 @@ html, body, * {
   border-color: rgba(var(--branch-rgb), 0.85);
   background: rgba(var(--branch-rgb), 0.16);
   cursor: pointer;
+}
+.et-node-affordable::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 22px rgba(var(--branch-rgb), 0.52);
+  opacity: 0.3;
   animation: et-node-glow 2.4s ease-in-out infinite;
+  pointer-events: none;
+  will-change: opacity;
 }
 .et-node-affordable:hover {
-  transform: translate(-50%, -50%) scale(1.07);
+  transform: translate(-50%, -50%) scale(1.07) translateZ(0);
   box-shadow: 0 0 26px rgba(var(--branch-rgb), 0.55);
 }
 @keyframes et-node-glow {
-  0%,100% { box-shadow: 0 0 10px rgba(var(--branch-rgb), 0.22); }
-  50%      { box-shadow: 0 0 22px rgba(var(--branch-rgb), 0.52); }
+  0%,100% { opacity: 0.3; }
+  50%      { opacity: 1; }
 }
 
 /* Locked — can reach but not enough karma */
@@ -9277,7 +9556,7 @@ html, body, * {
   background: rgba(var(--branch-rgb), 0.04);
   opacity: 0.6;
 }
-.et-node-locked-cost:hover { transform: translate(-50%, -50%) scale(1.03); }
+.et-node-locked-cost:hover { transform: translate(-50%, -50%) scale(1.03) translateZ(0); }
 
 /* Locked — prereq not met */
 .et-node-locked-prereq {
@@ -9305,12 +9584,13 @@ html, body, * {
 .et-node-keystone.et-node-purchased {
   box-shadow: 0 0 18px rgba(var(--branch-rgb), 0.35), 0 0 36px rgba(var(--branch-rgb), 0.14);
 }
-.et-node-keystone.et-node-affordable {
+.et-node-keystone.et-node-affordable::after {
+  box-shadow: 0 0 28px rgba(var(--branch-rgb), 0.6), 0 0 56px rgba(var(--branch-rgb), 0.25);
   animation: et-keystone-glow 2s ease-in-out infinite;
 }
 @keyframes et-keystone-glow {
-  0%,100% { box-shadow: 0 0 14px rgba(var(--branch-rgb), 0.3), 0 0 28px rgba(var(--branch-rgb), 0.12); }
-  50%      { box-shadow: 0 0 28px rgba(var(--branch-rgb), 0.6), 0 0 56px rgba(var(--branch-rgb), 0.25); }
+  0%,100% { opacity: 0.25; }
+  50%      { opacity: 1; }
 }
 .et-keystone-star {
   position: absolute;
@@ -9487,4 +9767,150 @@ html, body, * {
 .et-editor-save:hover { background: rgba(0, 200, 100, 0.28); }
 
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMBAT — no-scroll at all breakpoints
+   The screen-container locks to viewport height.  The stage is capped so
+   the bottom section always fits:
+     max-height: 45vh  — stage never taller than 45% of viewport
+     max-width:  90vh  — = 2 × 45vh, preserves the 2:1 aspect ratio
+   DOM order: CombatLog first (left on desktop), tech-icon-grid second (right).
+   Mobile: order:-1 on the grid pulls it above the log in column layout.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Screen container: locks to viewport, no scroll ─────────────────────── */
+.screen-container:has(.combat-screen) {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Combat screen fills container, consistent 4px gap between children ──── */
+.combat-screen {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+/* Zero default margins — only the flex gap provides spacing here */
+.combat-screen > .back-btn,
+.combat-screen > h1,
+.combat-screen > .subtitle {
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+
+/* Stage + bottom share the same width constraint so the bottom section
+   never exceeds the stage width.  align-self: center keeps both centered
+   inside the wider screen-container (same max-width as every other page). */
+.combat-screen > .combat-stage,
+.combat-screen > .combat-bottom {
+  width: min(100%, 80vh);
+  align-self: center;
+}
+
+.combat-screen > .combat-stage {
+  flex-shrink: 0;
+  margin-bottom: 0;   /* override the 12px default */
+}
+
+/* ── Bottom section: fills all remaining height ──────────────────────────── */
+.combat-bottom {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+}
+
+/* Override the fixed 160px height from the global .combat-log rule.
+   overflow-anchor: none — we handle scroll compensation manually in
+   CombatLog's useLayoutEffect so the browser doesn't fight us. */
+.combat-bottom .combat-log {
+  height: auto;
+  overflow-anchor: none;
+}
+
+.combat-bottom .tech-icon-grid {
+  margin-bottom: 0;
+}
+
+/* ── Mobile: tech grid above log ─────────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Pull tech grid above the log (DOM order has log first) */
+  .combat-bottom .tech-icon-grid {
+    order: -1;
+    flex-shrink: 0;
+  }
+
+  /* Log fills the rest */
+  .combat-bottom .combat-log {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+/* ── Desktop: log left (flex:1), technique bars stacked on the right ─────── */
+@media (min-width: 768px) {
+  .combat-bottom {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  /* Log: fills all available width, scrolls internally */
+  .combat-bottom .combat-log {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* Technique action-bar: vertical column of horizontal bars */
+  .combat-bottom .tech-icon-grid {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    width: 210px;
+    gap: 4px;               /* tight so 4 bars fit at any reasonable height */
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+
+  /* Each slot: compact horizontal bar — [icon] [name] */
+  .combat-bottom .tech-icon-slot {
+    flex-direction: row;
+    width: 100%;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 10px;      /* tighter vertical padding vs default 8/6px */
+  }
+
+  /* Icon: fixed 40×40 square; override the aspect-ratio default */
+  .combat-bottom .tech-icon-top {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    aspect-ratio: unset;
+  }
+
+  /* Name: left-aligned, fills remaining space, wraps naturally */
+  .combat-bottom .tech-icon-name {
+    flex: 1;
+    text-align: left;
+    font-size: 0.68rem;
+    padding: 0;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+}
+
+@media (min-width: 1200px) {
+  .combat-bottom .tech-icon-grid {
+    width: 230px;
+  }
+}
 

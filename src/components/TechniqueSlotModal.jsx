@@ -64,10 +64,10 @@ function TechniqueCard({ tech, equipped, locked, onClick }) {
 
       {tech.passives?.length > 0 && (
         <ul className="tech-item-passives">
-          {tech.passives.map(p => {
+          {tech.passives.map((p, i) => {
             const desc = tGame(`techniques.${tech.id}.passives.${p.name}`, { defaultValue: p.description });
             return (
-              <li key={p.name}><strong>{p.name}:</strong> {desc}</li>
+              <li key={`${p.name}-${i}`}><strong>{p.name}:</strong> {desc}</li>
             );
           })}
         </ul>

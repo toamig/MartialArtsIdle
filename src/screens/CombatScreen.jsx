@@ -1,5 +1,5 @@
 // @refresh reset
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TYPE_COLOR } from '../data/techniques';
 
@@ -25,6 +25,59 @@ const LOG_COLOR = {
   technique:      '#c084fc',
   system:         'var(--text-muted)',
 };
+
+function CombatLog({ log }) {
+  const ref  = useRef(null);
+
+  // Snapshot captured in the render body — runs before React commits DOM
+  // changes, giving us the scroll state we need to compute compensation.
+  const snap = useRef({ top: 0, height: 0 });
+  if (ref.current) {
+    snap.current = { top: ref.current.scrollTop, height: ref.current.scrollHeight };
+  }
+
+  // Runs synchronously after each DOM commit (before paint) so the user
+  // never sees a frame with the wrong scroll position.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const { top: prevTop, height: prevHeight } = snap.current;
+    if (!prevHeight) return;               // first render — nothing to adjust yet
+
+    const newHeight = el.scrollHeight;
+    const added     = newHeight - prevHeight;   // net height change from this update
+    const clientH   = el.clientHeight;
+
+    if (prevTop <= 5) {
+      // ── Following newest (at top) ──────────────────────────────────────
+      // Override overflow-anchor: keep the newest entry visible.
+      el.scrollTop = 0;
+    } else if (prevHeight - prevTop - clientH <= 5) {
+      // ── At the "end" (bottom) ──────────────────────────────────────────
+      // Stay pinned to the bottom as older entries scroll through and despawn.
+      el.scrollTop = newHeight - clientH;
+    } else if (added) {
+      // ── Reading history (middle) ───────────────────────────────────────
+      // Compensate for content added at the top so the user's view doesn't move.
+      el.scrollTop = prevTop + added;
+    }
+  }, [log]);
+
+  return (
+    <div ref={ref} className="combat-log">
+      {log.length === 0
+        ? <p className="combat-log-empty">Awaiting combat…</p>
+        : log.map((entry, i) => (
+            <p key={i} className={entry.kind === 'divider' ? 'combat-log-divider' : undefined}
+               style={entry.kind !== 'divider' ? { color: LOG_COLOR[entry.kind] ?? 'var(--text-secondary)' } : undefined}>
+              {entry.msg}
+            </p>
+          ))
+      }
+    </div>
+  );
+}
 
 function CombatScreen({ cultivation, techniques, combat, inventory, region = null, onBack = null, getFullStats, onRegionCleared = null }) {
   const { t }        = useTranslation('ui');
@@ -132,53 +185,51 @@ function CombatScreen({ cultivation, techniques, combat, inventory, region = nul
       />
 
 
-      {/* ── Technique icons ──────────────────────────────────────────────── */}
-      <div className="tech-icon-grid">
-        {equippedTechniques.filter(Boolean).map((tech, i) => {
-          const color = TYPE_COLOR[tech.type];
-          const techName = tGame(`techniques.${tech.id}.name`, { defaultValue: tech.name });
-          return (
-            <div
-              key={i}
-              className="tech-icon-slot"
-            >
+      {/* ── Bottom section: log + techniques ───────────────────────────────
+           DOM order: log first (→ left on desktop), tech grid second (→ right).
+           On mobile, CSS `order: -1` pulls the tech grid above the log.       */}
+      <div className="combat-bottom">
+
+        {/* Combat log */}
+        <CombatLog log={log} />
+
+        {/* Technique icons */}
+        <div className="tech-icon-grid">
+          {equippedTechniques.filter(Boolean).map((tech, i) => {
+            const color = TYPE_COLOR[tech.type];
+            const techName = tGame(`techniques.${tech.id}.name`, { defaultValue: tech.name });
+            return (
               <div
-                className="tech-icon-top"
-                style={{ background: tech ? `${color}28` : undefined }}
+                key={i}
+                className="tech-icon-slot"
+                style={{ '--tech-color': color }}
               >
-                <img
-                  src={`${BASE}sprites/techniques/${tech?.type?.toLowerCase() ?? 'empty'}.png`}
-                  className="tech-icon-img"
-                  alt=""
-                />
-                <span className="tech-icon-glyph" style={{ color }}>
-                  {TECH_GLYPH[tech?.type] ?? '—'}
-                </span>
                 <div
-                  className="tech-icon-clock"
-                  ref={el => { combat.cdBarRefs.current[i] = el; }}
-                />
+                  className="tech-icon-top"
+                  style={{ background: tech ? `${color}22` : undefined }}
+                >
+                  <img
+                    src={`${BASE}sprites/techniques/${tech?.type?.toLowerCase() ?? 'empty'}.png`}
+                    className="tech-icon-img"
+                    alt=""
+                  />
+                  <span className="tech-icon-glyph" style={{ color }}>
+                    {TECH_GLYPH[tech?.type] ?? '—'}
+                  </span>
+                  <span
+                    className="tech-icon-clock"
+                    ref={el => { combat.cdBarRefs.current[i] = el; }}
+                  />
+                </div>
+                <span className="tech-icon-name" style={{ color }}>
+                  {techName}
+                </span>
               </div>
-              <span className="tech-icon-name" style={{ color }}>
-                {techName}
-              </span>
-              <img className="tech-icon-frame" src={`${BASE}ui/card_frame.png`} alt="" />
-            </div>
-          );
-        })}
-      </div>
-
-
-      {/* ── Combat log ───────────────────────────────────────────────────── */}
-      {log.length > 0 && (
-        <div className="combat-log">
-          {log.map((entry, i) => (
-            <p key={i} style={{ color: LOG_COLOR[entry.kind] ?? 'var(--text-secondary)' }}>
-              {entry.msg}
-            </p>
-          ))}
+            );
+          })}
         </div>
-      )}
+
+      </div>
     </div>
   );
 }

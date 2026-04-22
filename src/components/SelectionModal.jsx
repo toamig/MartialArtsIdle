@@ -43,12 +43,12 @@ function AugmentCard({ optionId, index, onPick, onRerollOne, rerollCost, hasFree
         )}
       </div>
       <button
-        className={`augment-reroll${!canAffordReroll ? ' augment-reroll-disabled' : ''}`}
+        className={`augment-reroll${hasFreeReroll ? ' augment-reroll-free' : ''}${!canAffordReroll ? ' augment-reroll-disabled' : ''}`}
         onClick={e => { e.stopPropagation(); canAffordReroll && onRerollOne(index); }}
         disabled={!canAffordReroll}
         title={hasFreeReroll ? 'Reroll (free)' : `Reroll (${rerollCost} Blood Lotus)`}
       >
-        ↺{hasFreeReroll ? '' : ` ${rerollCost}`}
+        ↺ {hasFreeReroll ? 'Free' : rerollCost}
       </button>
     </div>
   );
@@ -156,17 +156,17 @@ function LawSelectionBody({ selection, bloodLotusBalance, onPickLaw, onSkipLaw, 
         ))}
       </div>
 
-      <div className="save-buttons" style={{ marginTop: '12px', justifyContent: 'center', display: 'flex', gap: '10px' }}>
+      <div className="sel-footer">
         <button
-          className={`save-btn${canAffordReroll ? '' : ' save-btn-disabled'}`}
+          className={`sel-reroll-btn${hasFreeReroll ? ' sel-reroll-btn-free' : ''}${!canAffordReroll ? ' sel-reroll-btn-disabled' : ''}`}
           disabled={!canAffordReroll}
           onClick={() => canAffordReroll && onRerollLaw?.(id)}
           title={hasFreeReroll ? 'Reroll all offers (free)' : `Reroll all offers (${rerollCost} Blood Lotus)`}
         >
-          ↺ Reroll {hasFreeReroll ? '(free)' : `(${rerollCost} Blood Lotus)`}
+          ↺ Reroll{hasFreeReroll ? ' (free)' : ` (${rerollCost})`}
         </button>
         {!isFirst && (
-          <button className="save-btn" onClick={() => onSkipLaw?.(id)}>
+          <button className="sel-skip-btn" onClick={() => onSkipLaw?.(id)}>
             Skip
           </button>
         )}

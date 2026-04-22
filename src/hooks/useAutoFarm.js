@@ -33,7 +33,7 @@ import {
   hasGains,
 } from '../systems/autoFarm';
 
-const TICK_INTERVAL_MS  = 5_000; // background tick rate
+const TICK_INTERVAL_MS  = 1_000; // background tick rate
 const MIN_OFFLINE_SEC   = 5 * 60; // skip offline calc if away less than 5 minutes
 
 // ─── Empty gains shape ────────────────────────────────────────────────────────

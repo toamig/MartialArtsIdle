@@ -48,7 +48,7 @@ function rollDrops(drops) {
  * Attack speed stat (TODO): will scale the inter-turn delay once connected.
  */
 
-const MAX_LOG = 20;
+const MAX_LOG = 100;
 
 export default function useCombat() {
   // ─── All mutable fight state in one ref ──────────────────────────────────
@@ -121,15 +121,14 @@ export default function useCombat() {
     for (let i = 0; i < s.cds.length; i++) {
       const el = cdBarRefs.current[i];
       if (!el) continue;
-      const cd = s.cds[i], maxCd = s.maxCds[i];
-      if (!isFinite(cd) || !isFinite(maxCd) || maxCd === 0) {
-        el.style.background = 'transparent';
-        continue;
+      const cd = s.cds[i];
+      if (!isFinite(cd) || cd <= 0) {
+        el.textContent = '';
+        el.style.opacity = '0';
+      } else {
+        el.textContent = cd < 10 ? cd.toFixed(1) : Math.ceil(cd).toString();
+        el.style.opacity = '1';
       }
-      const angle = Math.min(cd / maxCd, 1) * 360;
-      el.style.background = angle <= 0
-        ? 'transparent'
-        : `conic-gradient(from -90deg, rgba(0,0,0,0.72) ${angle}deg, transparent ${angle}deg)`;
     }
   };
 
@@ -204,7 +203,11 @@ export default function useCombat() {
     lastTRef.current = performance.now();
     setEnemy({ name: eName, maxHp: eMaxHp });
     setPhase('fighting');
-    setLog([{ msg: `${eName} appears!`, kind: 'system' }]);
+    setLog(prev => [
+      { msg: `${eName} appears!`, kind: 'system' },
+      ...(prev.length ? [{ msg: '───────────────', kind: 'divider' }] : []),
+      ...prev,
+    ].slice(0, MAX_LOG));
     // Give both fighters a brief idle window before the first exchange
     setTimeout(() => {
       if (stateRef.current.phase === 'fighting')

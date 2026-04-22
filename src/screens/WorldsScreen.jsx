@@ -7,6 +7,8 @@ import ENEMIES from '../data/enemies';
 import { preloadEnemySprites } from '../utils/preload';
 import { isWorldUnlocked, getWorldLockHint } from '../data/featureGates';
 import LockTooltip from '../components/LockTooltip';
+import EnemyTooltip from '../components/EnemyTooltip';
+import { useTooltipPos } from '../components/ArtefactTooltip';
 import { ALL_MATERIALS } from '../data/materials';
 
 const BASE = import.meta.env.BASE_URL;
@@ -14,8 +16,9 @@ const BASE = import.meta.env.BASE_URL;
 // Shows the first idle frame of an enemy sprite as a small card.
 // The idle sheet is 512×128 (4 frames). We clip to the first 128×128
 // by setting the img width to 4× the display size and anchoring left.
-function EnemyChip({ enemyId }) {
+function EnemyChip({ enemyId, regionIndex }) {
   const { t: tGame } = useTranslation('game');
+  const { pos, handlers } = useTooltipPos();
   const def = ENEMIES[enemyId];
   if (!def?.sprite) return null;
 
@@ -24,7 +27,7 @@ function EnemyChip({ enemyId }) {
   const enemyName   = tGame(`enemies.${enemyId}.name`, { defaultValue: def.name });
 
   return (
-    <div className="enemy-chip">
+    <div className="enemy-chip" {...handlers}>
       <div
         className="enemy-chip-sprite"
         style={{ width: displaySize, height: displaySize }}
@@ -36,6 +39,13 @@ function EnemyChip({ enemyId }) {
         />
       </div>
       <span className="enemy-chip-name">{enemyName}</span>
+      {pos && (
+        <EnemyTooltip
+          enemyDef={def}
+          regionIndex={regionIndex}
+          style={{ position: 'fixed', left: pos.x, top: pos.y }}
+        />
+      )}
     </div>
   );
 }
@@ -175,7 +185,9 @@ function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, wo
 
       {!locked && isWorld && enemyIds.length > 0 && (
         <div className="enemy-chip-row">
-          {enemyIds.map(id => <EnemyChip key={id} enemyId={id} />)}
+          {enemyIds.map(id => (
+            <EnemyChip key={id} enemyId={id} regionIndex={region.minRealmIndex} />
+          ))}
         </div>
       )}
 

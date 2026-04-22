@@ -4,12 +4,10 @@ import { useTranslation } from 'react-i18next';
 import SpriteAnimator from '../components/SpriteAnimator';
 import RealmProgressBar from '../components/RealmProgressBar';
 import OfflineEarningsModal from '../components/OfflineEarningsModal';
-import PillDrawer from '../components/PillDrawer';
 import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
 import CrystalFeedModal from '../components/CrystalFeedModal';
 import DailyBonusWidget from '../components/DailyBonusWidget';
-import { PILLS_BY_ID } from '../data/pills';
 import { FEATURE_GATES } from '../data/featureGates';
 import WORLDS from '../data/worlds';
 const BASE = import.meta.env.BASE_URL;
@@ -66,9 +64,11 @@ function QiRateReadout({ rateRef, focusMultRef, boosting, adBoostActive, maxed }
   );
 }
 
-/** Current / target qi — single chip updated via rAF. */
-function QiProgressChip({ qiRef, costRef, maxed }) {
+/** Current / target qi — single chip updated via rAF.
+ *  During a major-realm gate, switches to showing Qi/s current / required. */
+function QiProgressChip({ qiRef, costRef, gateRef, rateRef, maxed }) {
   const textRef = useRef(null);
+  const divRef  = useRef(null);
   useEffect(() => {
     const fmt = (n) => {
       if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
@@ -76,20 +76,33 @@ function QiProgressChip({ qiRef, costRef, maxed }) {
       if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
       return String(Math.floor(n));
     };
+    const fmtRate = (n) => {
+      if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      if (n >= 10)  return n.toFixed(0);
+      return n.toFixed(1);
+    };
     let raf;
     const update = () => {
+      const gate = gateRef?.current;
+      if (divRef.current)  divRef.current.classList.toggle('qi-rate-gated', !!gate);
       if (textRef.current) {
-        textRef.current.textContent = maxed
-          ? 'Peak Qi'
-          : `${fmt(qiRef.current)} / ${fmt(costRef.current)}`;
+        if (maxed) {
+          textRef.current.textContent = 'Peak Qi';
+        } else if (gate) {
+          const r = rateRef ? rateRef.current : gate.current;
+          textRef.current.textContent = `${fmtRate(r)} / ${fmtRate(gate.required)}  Qi/s`;
+        } else {
+          textRef.current.textContent = `${fmt(qiRef.current)} / ${fmt(costRef.current)}`;
+        }
       }
       raf = requestAnimationFrame(update);
     };
     raf = requestAnimationFrame(update);
     return () => cancelAnimationFrame(raf);
-  }, [qiRef, costRef, maxed]);
+  }, [qiRef, costRef, gateRef, rateRef, maxed]);
   return (
-    <div className="qi-rate">
+    <div ref={divRef} className="qi-rate">
       <span ref={textRef}>—</span>
     </div>
   );
@@ -247,42 +260,56 @@ function KeyCrystal({ crystal, isUnlocked, onOpen, particleColors }) {
 
 // ── PC-only left info panel ──────────────────────────────────────────────────
 
-/** Compact qi text updated via rAF — avoids a React re-render every frame. */
-function PCQiProgressText({ qiRef, costRef, maxed }) {
-  const ref = useRef(null);
+/** Compact qi text updated via rAF — avoids a React re-render every frame.
+ *  During a major-realm gate, switches to showing Qi/s current / required. */
+function PCQiProgressText({ qiRef, costRef, gateRef, rateRef, maxed }) {
+  const textRef = useRef(null);
+  const divRef  = useRef(null);
   useEffect(() => {
-    if (maxed) {
-      if (ref.current) ref.current.textContent = 'Peak Qi';
-      return;
-    }
     const fmt = (n) => {
       if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
       if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
       if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
       return String(Math.floor(n));
     };
+    const fmtRate = (n) => {
+      if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      if (n >= 10)  return n.toFixed(0);
+      return n.toFixed(1);
+    };
     let raf;
     const tick = () => {
-      if (ref.current)
-        ref.current.textContent = `${fmt(qiRef.current)} / ${fmt(costRef.current)} Qi`;
+      const gate = gateRef?.current;
+      if (divRef.current)  divRef.current.classList.toggle('qi-rate-gated', !!gate);
+      if (textRef.current) {
+        if (maxed) {
+          textRef.current.textContent = 'Peak Qi';
+        } else if (gate) {
+          const r = rateRef ? rateRef.current : gate.current;
+          textRef.current.textContent = `${fmtRate(r)} / ${fmtRate(gate.required)}  Qi/s`;
+        } else {
+          textRef.current.textContent = `${fmt(qiRef.current)} / ${fmt(costRef.current)} Qi`;
+        }
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [qiRef, costRef, maxed]);
-  return <div className="qi-rate"><span ref={ref}>—</span></div>;
+  }, [qiRef, costRef, gateRef, rateRef, maxed]);
+  return <div ref={divRef} className="qi-rate"><span ref={textRef}>—</span></div>;
 }
 
 /** Left panel — visible only at wide (≥ 900 px) breakpoints.
  *  Shows cultivation stats so the player doesn't have to look at the bar. */
-function HomePCLeftPanel({ realmName, realmStage, qiRef, costRef, rateRef, focusMultRef, boosting, adBoostActive, maxed }) {
+function HomePCLeftPanel({ realmName, realmStage, qiRef, costRef, rateRef, gateRef, focusMultRef, boosting, adBoostActive, maxed }) {
   const { t } = useTranslation('ui');
   return (
     <div className="home-pc-left">
       <div className="home-pc-section-label">Cultivation</div>
       <div className="home-pc-realm-name">{realmName.split(' - ')[0]}</div>
       {realmStage && <div className="home-pc-realm-stage">{realmStage}</div>}
-      <PCQiProgressText qiRef={qiRef} costRef={costRef} maxed={maxed} />
+      <PCQiProgressText qiRef={qiRef} costRef={costRef} gateRef={gateRef} rateRef={rateRef} maxed={maxed} />
       <QiRateReadout rateRef={rateRef} focusMultRef={focusMultRef} boosting={boosting} adBoostActive={adBoostActive} maxed={maxed} />
     </div>
   );
@@ -302,12 +329,15 @@ function QiParticles({ colors }) {
 
 // ── Main screen ──────────────────────────────────────────────────────────────
 function HomeScreen({
-  cultivation, pills, inventory,
+  cultivation, inventory,
   selections, onOpenSelections,
   onNavigate,
   crystal, isCrystalUnlocked,
   dailyBonus, onOpenDailyBonus,
   lastIdleAssignment,
+  openCrystal,
+  onOpenPills,
+  totalOwnedPills,
 }) {
   const { t } = useTranslation('ui');
   const {
@@ -365,12 +395,7 @@ function HomeScreen({
 
   // ── Crystal feed modal ───────────────────────────────────────────────────
   const [crystalModalOpen, setCrystalModalOpen] = useState(false);
-
-  // ── Pill drawer ──────────────────────────────────────────────────────────
-  const [pillDrawerOpen, setPillDrawerOpen] = useState(false);
-  const totalOwnedPills = pills
-    ? Object.keys(PILLS_BY_ID).reduce((n, id) => n + pills.getOwnedCount(id), 0)
-    : 0;
+  useEffect(() => { if (openCrystal && isCrystalUnlocked) setCrystalModalOpen(true); }, [openCrystal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const idleTimerRef = useRef(null);
   const resetIdleTimer = useCallback(() => {
@@ -378,6 +403,10 @@ function HomeScreen({
     idleTimerRef.current = setTimeout(() => setShowHoldHint(true), HOLD_HINT_IDLE_MS);
   }, []);
   useEffect(() => { resetIdleTimer(); return () => clearTimeout(idleTimerRef.current); }, [resetIdleTimer]);
+
+  // Release hold state whenever a breakthrough fires — the modal that follows
+  // would steal the pointer and stopBoost() would never be called otherwise.
+  useEffect(() => { if (majorBreakthrough) stopBoost(); }, [majorBreakthrough]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Pointer handlers ─────────────────────────────────────────────────────
   const handlePointerDown = (e) => {
@@ -431,6 +460,7 @@ function HomeScreen({
           focusMultRef={focusMultRef}
           costRef={costRef}
           rateRef={rateRef}
+          gateRef={gateRef}
           boosting={boosting}
           adBoostActive={adBoostActive}
           maxed={maxed}
@@ -480,6 +510,12 @@ function HomeScreen({
                 </button>
               );
             })()}
+            {totalOwnedPills > 0 && (
+              <button className="home-pill-chip" onClick={onOpenPills}>
+                <span className="home-pill-chip-icon">◈</span>
+                <span className="home-pill-chip-label">{totalOwnedPills} Pills</span>
+              </button>
+            )}
           </div>
 
           {/* ── Top-right chip stack — reserved for timed/seasonal events ── */}
@@ -546,7 +582,7 @@ function HomeScreen({
           {/* Overlay row — hidden on PC (info lives in left panel instead) */}
           <div className="home-scene-overlay-row">
             <div className="home-overlay-half">
-              <QiProgressChip qiRef={qiRef} costRef={costRef} maxed={maxed} />
+              <QiProgressChip qiRef={qiRef} costRef={costRef} gateRef={gateRef} rateRef={rateRef} maxed={maxed} />
             </div>
             <div className="home-overlay-half">
               <QiRateReadout
@@ -563,10 +599,7 @@ function HomeScreen({
             <RealmProgressBar
               qiRef={qiRef}
               costRef={costRef}
-              rateRef={rateRef}
               gateRef={gateRef}
-              currentRealm={realmName}
-              nextRealm={nextRealmName}
               boosting={boosting}
               maxed={maxed}
               realmIndex={cultivation.realmIndex}
@@ -581,28 +614,6 @@ function HomeScreen({
         <div className="home-pc-right" aria-hidden="true" />
 
       </div>{/* end home-scene */}
-
-      {/* ── Pills: floating bottom-right above nav ───────────────────── */}
-      {pills && totalOwnedPills > 0 && (
-        <div className="home-pill-float">
-          <button
-            className="home-pill-btn"
-            onClick={() => setPillDrawerOpen(true)}
-          >
-            <span className="home-pill-btn-icon">◈</span>
-            <span className="home-pill-btn-label">{t('home.pills')}</span>
-            <span className="home-pill-btn-count">{totalOwnedPills}</span>
-          </button>
-        </div>
-      )}
-
-      {/* Pill drawer — tabs by category */}
-      <PillDrawer
-        open={pillDrawerOpen}
-        onClose={() => setPillDrawerOpen(false)}
-        defaultTab="combat"
-        pills={pills}
-      />
 
       {/* Crystal feed modal */}
       {crystalModalOpen && isCrystalUnlocked && (

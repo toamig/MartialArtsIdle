@@ -68,18 +68,6 @@ export function hasGains(gains) {
   );
 }
 
-/** Weighted random pick from a drop array (uses `chance` as weight). */
-function pickWeighted(drops) {
-  if (!drops?.length) return null;
-  const total = drops.reduce((s, d) => s + d.chance, 0);
-  let roll = Math.random() * total;
-  for (const d of drops) {
-    roll -= d.chance;
-    if (roll <= 0) return d;
-  }
-  return drops[drops.length - 1];
-}
-
 /** Random integer in [min, max] inclusive. */
 function rollQty([min, max]) {
   return min + Math.floor(Math.random() * (max - min + 1));
@@ -90,17 +78,14 @@ function rollQty([min, max]) {
 /**
  * Simulate auto-gathering for `seconds` in the given region.
  *
- * Uses region.gatherDrops (array of { itemId, chance, qty }) instead of
- * the old herb name string. Primary drops (herbs) are selected by weight;
- * cultivation/bonus drops are rolled independently each cycle.
+ * Uses an independent-rate model: each item's expected yield is derived
+ * from its share of the drop pool and its gather cost, then realised with a
+ * floor + fractional-probability roll. This makes the simulation tick-size
+ * independent — changing TICK_INTERVAL_MS does not affect long-run rates.
  *
  * Player stats applied:
  *   - harvestSpeed: ADDED to BASE_GATHER_SPEED (pts/sec).
- *   - harvestLuck:  percent (0–100) chance per primary to roll a bonus duplicate.
- *
- * Partial-gather: when the tick window is shorter than one full gather cycle,
- * the item is yielded probabilistically (remaining/tCost chance) so rare/slow
- * items still accumulate at the correct long-run rate.
+ *   - harvestLuck:  percent (0–100) chance per primary cycle for a bonus qty.
  *
  * @param {number} seconds
  * @param {object} region  — world region with a `gatherDrops` array field
@@ -115,54 +100,52 @@ export function simulateGathering(seconds, region, stats = null) {
   const bonusDrops   = gatherDrops.filter(d => (ALL_MATERIALS[d.itemId]?.type ?? '') === 'cultivation');
   const activePools  = primaryDrops.length ? primaryDrops : gatherDrops;
 
-  const speed   = BASE_GATHER_SPEED + Math.max(0, stats?.harvestSpeed ?? 0);
-  const luckPct = Math.min(100, Math.max(0, stats?.harvestLuck ?? 0));
+  const speed        = BASE_GATHER_SPEED + Math.max(0, stats?.harvestSpeed ?? 0);
+  const luckPct      = Math.min(100, Math.max(0, stats?.harvestLuck ?? 0));
+  const tierUpChance = stats?.gatherMineRarityUpChance ?? 0;
+  const capped       = Math.min(seconds, (stats?.maxOfflineHours ?? MAX_OFFLINE_HOURS) * 3600);
+  const totalW       = activePools.reduce((s, d) => s + d.chance, 0);
 
-  const result  = {};
-  let remaining = Math.min(seconds, (stats?.maxOfflineHours ?? MAX_OFFLINE_HOURS) * 3600);
+  const result = {};
+  let cyclesPerSec = 0; // accumulated for bonus-drop rate
 
-  while (remaining > 0) {
-    const primary = pickWeighted(activePools);
-    if (!primary) break;
+  // cb_ts Veteran's Hunt — one-shot rarity bump applied to the first primary
+  // item that gets at least one cycle. Caller is responsible for clearing the flag.
+  let killBumpRemaining = stats?.regionKillBumpPending ? 1 : 0;
 
-    const cost  = getGatherCost(primary.itemId);
-    const tCost = cost / speed;
+  for (const drop of activePools) {
+    const rate       = (drop.chance / totalW) * (speed / getGatherCost(drop.itemId));
+    cyclesPerSec    += rate;
+    const expected   = capped * rate;
+    const fullCycles = Math.floor(expected);
+    const frac       = expected - fullCycles;
+    const cycles     = fullCycles + (Math.random() < frac ? 1 : 0);
+    if (cycles === 0) continue;
 
-    if (remaining >= tCost) {
-      remaining -= tCost;
-
-      // Give primary herb
-      const qty = rollQty(primary.qty ?? [1, 1])
+    for (let i = 0; i < cycles; i++) {
+      const qty = rollQty(drop.qty ?? [1, 1])
                 + (luckPct > 0 && Math.random() * 100 < luckPct ? 1 : 0);
-      // fp_2 Heavenly Nose — 10% chance the primary drop swaps to its
-      // next-rarity equivalent. cb_ts Veteran's Hunt is a one-shot bump
-      // consumed below.
-      const tierUpChance = stats?.gatherMineRarityUpChance ?? 0;
-      let dropId = primary.itemId;
-      if (stats?.regionKillBumpPending) {
+      let dropId = drop.itemId;
+      if (killBumpRemaining > 0) {
         dropId = nextRarityItemId(dropId);
-        // Caller is responsible for clearing the flag after consuming.
+        killBumpRemaining = 0;
       } else if (tierUpChance > 0 && Math.random() < tierUpChance) {
         dropId = nextRarityItemId(dropId);
       }
       result[dropId] = (result[dropId] ?? 0) + qty;
-
-      // Roll bonus drops (cultivation / QI stones)
-      for (const bd of bonusDrops) {
-        if (Math.random() < bd.chance) {
-          const bqty = rollQty(bd.qty ?? [1, 1]);
-          result[bd.itemId] = (result[bd.itemId] ?? 0) + bqty;
-        }
-      }
-    } else {
-      // Partial gather — probabilistic yield so slow/rare items still produce
-      // at the correct long-run rate regardless of tick window size.
-      if (Math.random() < remaining / tCost) {
-        const qty = rollQty(primary.qty ?? [1, 1]);
-        result[primary.itemId] = (result[primary.itemId] ?? 0) + qty;
-      }
-      break;
     }
+  }
+
+  // Bonus drops (cultivation / QI stones) fire at: cyclesPerSec × bd.chance
+  for (const bd of bonusDrops) {
+    const expected   = capped * cyclesPerSec * bd.chance;
+    const fullCycles = Math.floor(expected);
+    const frac       = expected - fullCycles;
+    const count      = fullCycles + (Math.random() < frac ? 1 : 0);
+    if (count === 0) continue;
+    let total = 0;
+    for (let i = 0; i < count; i++) total += rollQty(bd.qty ?? [1, 1]);
+    result[bd.itemId] = (result[bd.itemId] ?? 0) + total;
   }
 
   return result;
@@ -186,7 +169,7 @@ function nextRarityItemId(itemId) {
 
 /**
  * Simulate auto-mining for `seconds` in the given region.
- * Same stat semantics as simulateGathering but reads miningSpeed/miningLuck.
+ * Same independent-rate model as simulateGathering; reads miningSpeed/miningLuck.
  *
  * @param {number} seconds
  * @param {object} region  — world region with a `mineDrops` array field
@@ -201,49 +184,48 @@ export function simulateMining(seconds, region, stats = null) {
   const bonusDrops   = mineDrops.filter(d => (ALL_MATERIALS[d.itemId]?.type ?? '') === 'cultivation');
   const activePools  = primaryDrops.length ? primaryDrops : mineDrops;
 
-  const speed   = BASE_MINE_SPEED + Math.max(0, stats?.miningSpeed ?? 0);
-  const luckPct = Math.min(100, Math.max(0, stats?.miningLuck ?? 0));
+  const speed        = BASE_MINE_SPEED + Math.max(0, stats?.miningSpeed ?? 0);
+  const luckPct      = Math.min(100, Math.max(0, stats?.miningLuck ?? 0));
+  const tierUpChance = stats?.gatherMineRarityUpChance ?? 0;
+  const capped       = Math.min(seconds, (stats?.maxOfflineHours ?? MAX_OFFLINE_HOURS) * 3600);
+  const totalW       = activePools.reduce((s, d) => s + d.chance, 0);
 
-  const result  = {};
-  let remaining = Math.min(seconds, (stats?.maxOfflineHours ?? MAX_OFFLINE_HOURS) * 3600);
+  const result = {};
+  let cyclesPerSec = 0;
+  let killBumpRemaining = stats?.regionKillBumpPending ? 1 : 0;
 
-  while (remaining > 0) {
-    const primary = pickWeighted(activePools);
-    if (!primary) break;
+  for (const drop of activePools) {
+    const rate       = (drop.chance / totalW) * (speed / getMineCost(drop.itemId));
+    cyclesPerSec    += rate;
+    const expected   = capped * rate;
+    const fullCycles = Math.floor(expected);
+    const frac       = expected - fullCycles;
+    const cycles     = fullCycles + (Math.random() < frac ? 1 : 0);
+    if (cycles === 0) continue;
 
-    const cost  = getMineCost(primary.itemId);
-    const tCost = cost / speed;
-
-    if (remaining >= tCost) {
-      remaining -= tCost;
-
-      // Give primary ore
-      const qty = rollQty(primary.qty ?? [1, 1])
+    for (let i = 0; i < cycles; i++) {
+      const qty = rollQty(drop.qty ?? [1, 1])
                 + (luckPct > 0 && Math.random() * 100 < luckPct ? 1 : 0);
-      // fp_2 / cb_ts — same rarity-bump logic as the gathering branch.
-      const tierUpChance = stats?.gatherMineRarityUpChance ?? 0;
-      let dropId = primary.itemId;
-      if (stats?.regionKillBumpPending) {
+      let dropId = drop.itemId;
+      if (killBumpRemaining > 0) {
         dropId = nextRarityItemId(dropId);
+        killBumpRemaining = 0;
       } else if (tierUpChance > 0 && Math.random() < tierUpChance) {
         dropId = nextRarityItemId(dropId);
       }
       result[dropId] = (result[dropId] ?? 0) + qty;
-
-      // Roll bonus drops (cultivation / QI stones)
-      for (const bd of bonusDrops) {
-        if (Math.random() < bd.chance) {
-          const bqty = rollQty(bd.qty ?? [1, 1]);
-          result[bd.itemId] = (result[bd.itemId] ?? 0) + bqty;
-        }
-      }
-    } else {
-      if (Math.random() < remaining / tCost) {
-        const qty = rollQty(primary.qty ?? [1, 1]);
-        result[primary.itemId] = (result[primary.itemId] ?? 0) + qty;
-      }
-      break;
     }
+  }
+
+  for (const bd of bonusDrops) {
+    const expected   = capped * cyclesPerSec * bd.chance;
+    const fullCycles = Math.floor(expected);
+    const frac       = expected - fullCycles;
+    const count      = fullCycles + (Math.random() < frac ? 1 : 0);
+    if (count === 0) continue;
+    let total = 0;
+    for (let i = 0; i < count; i++) total += rollQty(bd.qty ?? [1, 1]);
+    result[bd.itemId] = (result[bd.itemId] ?? 0) + total;
   }
 
   return result;

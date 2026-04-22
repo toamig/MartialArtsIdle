@@ -5,6 +5,7 @@ import HomeScreen from './screens/HomeScreen';
 import BloodLotusShopModal from './components/BloodLotusShopModal';
 import { addBloodLotus as addBloodLotusBalance } from './systems/bloodLotus';
 import AchievementsModal from './components/AchievementsModal';
+import PillDrawer from './components/PillDrawer';
 import JourneyModal from './components/JourneyModal';
 import DailyBonusModal from './components/DailyBonusModal';
 import { useDailyBonus } from './hooks/useDailyBonus';
@@ -91,6 +92,7 @@ function App() {
   const combat          = useCombat();
   const artefacts       = useArtefacts();
   const pills           = usePills();
+  const totalOwnedPills = Object.values(pills.ownedPills).reduce((s, n) => s + n, 0);
   const crystal         = useQiCrystal({ getQuantity: inventory.getQuantity, removeItem: inventory.removeItem });
   const { clearedRegions, clearRegion } = useClearedRegions();
   const selections      = useSelections({ cultivation, optionCount: tree.modifiers.selectionOptionCount });
@@ -434,10 +436,18 @@ function App() {
     cultivation,
     clearedRegions,
     inventory,
-    onUnlock: (featureId, msg) => notifications.addToast({
-      message: msg,
-      targetScreen: featureId === 'worlds' ? 'worlds' : featureId,
-    }),
+    onUnlock: (featureId, msg) => {
+      const SCREEN = {
+        worlds: 'worlds', gathering: 'worlds', mining: 'worlds',
+        production: 'production', transmutation: 'production',
+        refining: 'production', alchemy: 'production',
+        character: 'character', collection: 'collection',
+        qi_crystal: 'home',
+      };
+      const targetScreen = SCREEN[featureId] ?? null;
+      const targetParam  = featureId === 'qi_crystal' ? { openCrystal: true } : null;
+      notifications.addToast({ message: msg, targetScreen, targetParam });
+    },
   });
 
   // Keep a live ref to all hooks so debug commands always see fresh state.
@@ -529,7 +539,7 @@ function App() {
   const reincarnationUnlocked = karma.unlocked;
 
   const screens = {
-    home:   <HomeScreen cultivation={cultivation} pills={pills} inventory={inventory} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} onNavigate={navigate} crystal={crystal} isCrystalUnlocked={featureFlags.isUnlocked('qi_crystal')} dailyBonus={dailyBonus} onOpenDailyBonus={() => setActiveModal('daily')} lastIdleAssignment={autoFarm.lastIdleAssignment} />,
+    home:   <HomeScreen cultivation={cultivation} inventory={inventory} onOpenPills={() => openModal('pills')} totalOwnedPills={totalOwnedPills} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} onNavigate={navigate} crystal={crystal} isCrystalUnlocked={featureFlags.isUnlocked('qi_crystal')} dailyBonus={dailyBonus} onOpenDailyBonus={() => setActiveModal('daily')} lastIdleAssignment={autoFarm.lastIdleAssignment} openCrystal={screenParam?.openCrystal ?? false} />,
     worlds: <WorldsScreen cultivation={cultivation} onNavigate={navigate} expandWorldId={screenParam?.expandWorldId ?? null} activeTab={screenParam?.activeTab ?? null} clearedRegions={clearedRegions} idleAssignment={idleAssignment} lastIdleAssignment={autoFarm.lastIdleAssignment} onSetIdle={(act, w, r) => autoFarm.setIdleActivity(act, w, r, !!tree.modifiers.dualAutoFarm)} pendingGains={autoFarm.pendingGains} hasPendingGains={autoFarm.hasPendingGains} onCollectGains={(applyFn) => autoFarm.collectGains(applyFn)} inventory={inventory} techniques={techniques} />,
     // Sub-screens launched from the Worlds hub
     'combat-arena': <CombatScreen
@@ -563,10 +573,13 @@ function App() {
   return (
     <div className="app" style={{ '--screen-bg-url': `url(${BASE}backgrounds/ui_screens.png)` }}>
       {currentScreen !== 'home' && (
-        <div
-          className="app-bg"
-          style={{ '--app-bg-url': `url(${BASE}backgrounds/default_bg.png)` }}
-        />
+        <>
+          <div
+            className="app-bg"
+            style={{ '--app-bg-url': `url(${BASE}backgrounds/default_bg.png)` }}
+          />
+          <div className="app-vignette" />
+        </>
       )}
       <TopBar
         bloodLotusBalance={selections.bloodLotusBalance}
@@ -620,6 +633,7 @@ function App() {
       {activeModal === 'shop'         && <BloodLotusShopModal  onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} onBalanceChange={null} />}
       {activeModal === 'journey'      && <JourneyModal   realmIndex={cultivation.realmIndex} onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} />}
       {activeModal === 'achievements' && achievements && <AchievementsModal achievements={achievements} onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} />}
+      {activeModal === 'pills'        && pills        && <PillDrawer open pills={pills} onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} />}
       {activeModal === 'daily' && (
         <DailyBonusModal
           streak={dailyBonus.streak}
