@@ -3715,6 +3715,48 @@ html, body, * {
   margin: 4px 0 8px;
 }
 
+/* ── Collection screen — sectioned layout ────────────────────────────────── */
+.col-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.col-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.col-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(200, 185, 220, 0.65);
+}
+
+.col-section-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(160, 155, 190, 0.55);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.col-section-empty {
+  font-size: 0.78rem;
+  color: rgba(160, 155, 190, 0.3);
+  text-align: center;
+  padding: 14px 0;
+  margin: 0;
+}
+
 /* Item Modal */
 .modal-overlay {
   position: fixed;
@@ -4381,20 +4423,14 @@ html, body, * {
   align-items: center;
   width: 90px;
   position: relative;
-  /* No CSS border/background — the pixel art frame handles all visuals */
-  padding: 20px 15px 17px;
-}
-
-/* Pixel art card frame overlay — covers the whole slot */
-.tech-icon-frame {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-  image-rendering: auto;
-  pointer-events: none;
-  z-index: 10;
+  padding: 8px 8px 6px;
+  background: rgba(8, 6, 20, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 2px 10px rgba(0, 0, 0, 0.5),
+    0 0 14px color-mix(in srgb, var(--tech-color, transparent) 20%, transparent);
 }
 
 .tech-icon-empty {
@@ -4408,6 +4444,8 @@ html, body, * {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 7px;
+  overflow: hidden;
 }
 
 /* Sprite — sits above glyph; if src 404s the glyph shows through */
@@ -4429,12 +4467,24 @@ html, body, * {
   user-select: none;
 }
 
-/* Clock overlay — conic-gradient patched by rAF loop, NO CSS transition */
+/* Countdown number — patched by rAF loop, NO CSS transition */
 .tech-icon-clock {
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow:
+    0 0 6px rgba(0,0,0,1),
+    0 1px 3px rgba(0,0,0,0.9),
+    0 0 14px rgba(0,0,0,0.8);
+  font-variant-numeric: tabular-nums;
+  transition: opacity 0.1s;
 }
 
 .tech-icon-name {
@@ -4835,21 +4885,35 @@ html, body, * {
 
 /* ── Combat log ── */
 .combat-log {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: rgba(8, 6, 20, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
   padding: 10px 12px;
-  max-height: 160px;
+  height: 160px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .combat-log p {
   font-size: 0.72rem;
   line-height: 1.4;
   font-variant-numeric: tabular-nums;
+}
+
+.combat-log-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.combat-log-divider {
+  color: rgba(255, 255, 255, 0.15) !important;
+  font-size: 0.6rem !important;
+  text-align: center;
+  letter-spacing: 0.05em;
+  margin: 3px 0;
+  user-select: none;
 }
 
 /* ── In-stage HP HUD ─────────────────────────────────────────────────────── */
@@ -5463,12 +5527,7 @@ html, body, * {
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   }
 
-  /* ── Combat screen: match cultivation stage width ────────────────────── */
-  .combat-screen {
-    max-width: 730px;
-    margin-left: auto;
-    margin-right: auto;
-  }
+  /* Combat screen fills the container — no artificial width cap */
 
   .hp-bar-track {
     height: 10px;
@@ -5522,10 +5581,7 @@ html, body, * {
   }
 
 
-  /* ── Combat screen: slightly roomier on ultra-wide ────────────────────── */
-  .combat-screen {
-    max-width: 830px;
-  }
+  /* Combat screen: no width cap — fills screen-container */
 
   .hp-bar-track {
     height: 11px;
@@ -9466,4 +9522,147 @@ html, body, * {
 .et-editor-save:hover { background: rgba(0, 200, 100, 0.28); }
 
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMBAT — no-scroll at all breakpoints
+   The screen-container locks to viewport height.  The stage is capped so
+   the bottom section always fits:
+     max-height: 45vh  — stage never taller than 45% of viewport
+     max-width:  90vh  — = 2 × 45vh, preserves the 2:1 aspect ratio
+   DOM order: CombatLog first (left on desktop), tech-icon-grid second (right).
+   Mobile: order:-1 on the grid pulls it above the log in column layout.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Screen container: locks to viewport, no scroll ─────────────────────── */
+.screen-container:has(.combat-screen) {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Combat screen fills container, consistent 4px gap between children ──── */
+.combat-screen {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+/* Zero default margins — only the flex gap provides spacing here */
+.combat-screen > .back-btn,
+.combat-screen > h1,
+.combat-screen > .subtitle {
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+
+/* Stage + bottom share the same width constraint so the bottom section
+   never exceeds the stage width.  align-self: center keeps both centered
+   inside the wider screen-container (same max-width as every other page). */
+.combat-screen > .combat-stage,
+.combat-screen > .combat-bottom {
+  width: min(100%, 80vh);
+  align-self: center;
+}
+
+.combat-screen > .combat-stage {
+  flex-shrink: 0;
+  margin-bottom: 0;   /* override the 12px default */
+}
+
+/* ── Bottom section: fills all remaining height ──────────────────────────── */
+.combat-bottom {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+}
+
+/* Override the fixed 160px height from the global .combat-log rule */
+.combat-bottom .combat-log {
+  height: auto;
+}
+
+.combat-bottom .tech-icon-grid {
+  margin-bottom: 0;
+}
+
+/* ── Mobile: tech grid above log ─────────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Pull tech grid above the log (DOM order has log first) */
+  .combat-bottom .tech-icon-grid {
+    order: -1;
+    flex-shrink: 0;
+  }
+
+  /* Log fills the rest */
+  .combat-bottom .combat-log {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+/* ── Desktop: log left (flex:1), technique bars stacked on the right ─────── */
+@media (min-width: 768px) {
+  .combat-bottom {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  /* Log: fills all available width, scrolls internally */
+  .combat-bottom .combat-log {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* Technique action-bar: vertical column of horizontal bars */
+  .combat-bottom .tech-icon-grid {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    width: 210px;
+    gap: 4px;               /* tight so 4 bars fit at any reasonable height */
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+
+  /* Each slot: compact horizontal bar — [icon] [name] */
+  .combat-bottom .tech-icon-slot {
+    flex-direction: row;
+    width: 100%;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 10px;      /* tighter vertical padding vs default 8/6px */
+  }
+
+  /* Icon: fixed 40×40 square; override the aspect-ratio default */
+  .combat-bottom .tech-icon-top {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    aspect-ratio: unset;
+  }
+
+  /* Name: left-aligned, fills remaining space, wraps naturally */
+  .combat-bottom .tech-icon-name {
+    flex: 1;
+    text-align: left;
+    font-size: 0.68rem;
+    padding: 0;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+}
+
+@media (min-width: 1200px) {
+  .combat-bottom .tech-icon-grid {
+    width: 230px;
+  }
+}
 

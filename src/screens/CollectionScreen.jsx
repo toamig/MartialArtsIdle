@@ -2,13 +2,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HERB_ITEMS, ORE_ITEMS, BLOOD_CORE_ITEMS, CULTIVATION_ITEMS, RARITY, mineralForRarity, ALL_MATERIALS } from '../data/materials';
-
-const MATERIAL_ITEMS = {
-  herbs:       HERB_ITEMS,
-  minerals:    ORE_ITEMS,
-  bloodCores:  BLOOD_CORE_ITEMS,
-  cultivation: CULTIVATION_ITEMS,
-};
 import { QUALITY, ARTEFACTS_BY_ID, getSlotBonuses } from '../data/artefacts';
 import { formatArtefactName } from '../data/artefactNames';
 import { LAW_RARITY } from '../data/laws';
@@ -22,10 +15,13 @@ import ArtefactTooltip, { useTooltipPos } from '../components/ArtefactTooltip';
 
 const BASE = import.meta.env.BASE_URL;
 
-/**
- * Shared dismantle action. Refuses when the hook rejects (equipped /
- * active / missing). On success, grants 1 mineral of matching rarity.
- */
+const MATERIAL_SECTIONS = [
+  { key: 'herbs',       items: HERB_ITEMS,       tKey: 'inventory.tabHerbs'       },
+  { key: 'minerals',    items: ORE_ITEMS,         tKey: 'inventory.tabMinerals'    },
+  { key: 'bloodCores',  items: BLOOD_CORE_ITEMS,  tKey: 'inventory.tabBloodCores'  },
+  { key: 'cultivation', items: CULTIVATION_ITEMS, tKey: 'inventory.tabCultivation' },
+];
+
 function dismantleTo(inventory, rarity) {
   if (!rarity) return null;
   const mineralId = mineralForRarity(rarity);
@@ -34,8 +30,6 @@ function dismantleTo(inventory, rarity) {
 }
 
 function needsDismantleConfirm(rarity, invested) {
-  // Confirm for Silver+ rarity OR if the player has sunk any hone /
-  // replace / add into the item (craftCount > 0, for affix items).
   const rank = { Iron: 1, Bronze: 2, Silver: 3, Gold: 4, Transcendent: 5 }[rarity] ?? 1;
   return rank >= 3 || invested;
 }
@@ -77,202 +71,210 @@ function DismantleButton({ label = 'Dismantle', rarity, invested = false, disabl
   );
 }
 
+function CollectionSection({ title, badge, isEmpty, alwaysShow = false, children }) {
+  if (!alwaysShow && isEmpty) return null;
+  return (
+    <div className="col-section">
+      <div className="col-section-header">
+        <span className="col-section-title">{title}</span>
+        {badge != null && <span className="col-section-badge">{badge}</span>}
+      </div>
+      {isEmpty ? <p className="col-section-empty">Empty</p> : children}
+    </div>
+  );
+}
+
 function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
 
   const { getQuantity } = inventory;
-  const [activeTab, setActiveTab] = useState('herbs');
-  const [selectedItem,      setSelectedItem]      = useState(null);
-  const [selectedArtefact,  setSelectedArtefact]  = useState(null);
+  const [activeTab,         setActiveTab]         = useState('materials');
+  const [selectedItem,      setSelectedItem]       = useState(null);
+  const [selectedArtefact,  setSelectedArtefact]   = useState(null);
   const artTooltip = useTooltipPos();
-  const [hoveredArtUid, setHoveredArtUid] = useState(null);
-  const [selectedTechnique, setSelectedTechnique] = useState(null);
-  const [selectedLaw,       setSelectedLaw]       = useState(null);
+  const [hoveredArtUid,     setHoveredArtUid]      = useState(null);
+  const [selectedTechnique, setSelectedTechnique]  = useState(null);
+  const [selectedLaw,       setSelectedLaw]        = useState(null);
 
-  const ALL_TABS = [
-    { key: 'herbs',       tKey: 'inventory.tabHerbs'      },
-    { key: 'minerals',    tKey: 'inventory.tabMinerals'   },
-    { key: 'bloodCores',  tKey: 'inventory.tabBloodCores' },
-    { key: 'cultivation', tKey: 'inventory.tabCultivation'},
-    { key: 'artefacts',   tKey: 'inventory.tabArtefacts'  },
-    { key: 'techniques',  tKey: 'inventory.tabTechniques' },
-    { key: 'laws',        tKey: 'inventory.tabLaws'       },
-  ];
-
-  const MATERIAL_KEYS = new Set(['herbs', 'minerals', 'bloodCores', 'cultivation']);
+  const artCount  = artefacts?.owned.length ?? 0;
+  const techCount = Object.keys(techniques?.ownedTechniques ?? {}).length;
+  const lawCount  = cultivation?.ownedLaws.length ?? 0;
 
   return (
     <div className="screen inventory-screen">
       <h1>{t('collection.title', { defaultValue: 'Collection' })}</h1>
 
       <div className="inv-tabs">
-        {ALL_TABS.map((tab) => (
+        {[
+          { key: 'materials', label: t('collection.tabMaterials', { defaultValue: 'Materials' }) },
+          { key: 'gear',      label: t('collection.tabGear',      { defaultValue: 'Gear' }) },
+        ].map(tab => (
           <button
             key={tab.key}
             className={`inv-tab ${activeTab === tab.key ? 'inv-tab-active' : ''}`}
             onClick={() => setActiveTab(tab.key)}
           >
-            {t(tab.tKey)}
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {/* ── Materials ────────────────────────────────────────────────────────── */}
-      {MATERIAL_KEYS.has(activeTab) && (
-        <div className="inv-grid">
-          {MATERIAL_ITEMS[activeTab].filter(item => inventory.inventory[item.id] !== undefined).map((item) => {
-            const qty    = getQuantity(item.id);
-            const rarity = RARITY[item.rarity];
-            const itemName = tGame(`items.${item.id}.name`, { defaultValue: item.name });
+      {/* ── Materials ──────────────────────────────────────────────────────────── */}
+      {activeTab === 'materials' && (
+        <div className="col-sections">
+          {MATERIAL_SECTIONS.map(({ key, items, tKey }) => {
+            const owned = items.filter(item => inventory.inventory[item.id] !== undefined);
             return (
-              <button
-                key={item.id}
-                className="inv-slot"
-                style={{ borderColor: qty > 0 ? rarity.color : undefined }}
-                onClick={() => setSelectedItem(item)}
-              >
-                <img
-                  src={`${BASE}sprites/items/${item.id}.png`}
-                  alt={itemName}
-                  className="inv-icon"
-                />
-                <span className="inv-qty">{qty}</span>
-                <span className="inv-name" style={{ color: rarity.color }}>
-                  {itemName}
-                </span>
-              </button>
+              <CollectionSection key={key} title={t(tKey)} isEmpty={owned.length === 0}>
+                <div className="inv-grid">
+                  {owned.map((item) => {
+                    const qty      = getQuantity(item.id);
+                    const rarity   = RARITY[item.rarity];
+                    const itemName = tGame(`items.${item.id}.name`, { defaultValue: item.name });
+                    return (
+                      <button
+                        key={item.id}
+                        className="inv-slot"
+                        style={{ borderColor: qty > 0 ? rarity.color : undefined }}
+                        onClick={() => setSelectedItem(item)}
+                      >
+                        <img src={`${BASE}sprites/items/${item.id}.png`} alt={itemName} className="inv-icon" />
+                        <span className="inv-qty">{qty}</span>
+                        <span className="inv-name" style={{ color: rarity.color }}>{itemName}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </CollectionSection>
             );
           })}
         </div>
       )}
 
-      {/* ── Artefacts ────────────────────────────────────────────────────────── */}
-      {activeTab === 'artefacts' && artefacts && (
-        <>
-          <p className="inv-cap-label">{t('inventory.slots', { count: artefacts.owned.length, max: MAX_ARTEFACTS })}</p>
-          <div className="inv-grid">
-            {[...artefacts.owned]
-              .sort((a, b) => {
-                const aEq = !!artefacts.equippedInSlot(a.uid);
-                const bEq = !!artefacts.equippedInSlot(b.uid);
-                if (aEq === bEq) return 0;
-                return aEq ? -1 : 1;
-              })
-              .map((instance) => {
-                const art = ARTEFACTS_BY_ID[instance.catalogueId];
-                if (!art) return null;
-                const rarity = instance.rarity ?? art.rarity;
-                const q = QUALITY[rarity];
-                const artName = formatArtefactName(instance)
-                  ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
-                const isEquipped = !!artefacts.equippedInSlot(instance.uid);
+      {/* ── Gear ───────────────────────────────────────────────────────────────── */}
+      {activeTab === 'gear' && (
+        <div className="col-sections">
+
+          {/* Artefacts */}
+          <CollectionSection
+            title={t('inventory.tabArtefacts')}
+            badge={`${artCount} / ${MAX_ARTEFACTS}`}
+            isEmpty={artCount === 0}
+            alwaysShow
+          >
+            <div className="inv-grid">
+              {[...artefacts.owned]
+                .sort((a, b) => {
+                  const aEq = !!artefacts.equippedInSlot(a.uid);
+                  const bEq = !!artefacts.equippedInSlot(b.uid);
+                  return aEq === bEq ? 0 : aEq ? -1 : 1;
+                })
+                .map((instance) => {
+                  const art = ARTEFACTS_BY_ID[instance.catalogueId];
+                  if (!art) return null;
+                  const rarity     = instance.rarity ?? art.rarity;
+                  const q          = QUALITY[rarity];
+                  const artName    = formatArtefactName(instance) ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
+                  const isEquipped = !!artefacts.equippedInSlot(instance.uid);
+                  return (
+                    <button
+                      key={instance.uid}
+                      className={`inv-slot${isEquipped ? ' inv-slot-equipped' : ''}`}
+                      style={{ borderColor: q.color }}
+                      onClick={() => setSelectedArtefact(instance)}
+                      onMouseEnter={(e) => { setHoveredArtUid(instance.uid); artTooltip.handlers.onMouseEnter(e); }}
+                      onMouseMove={artTooltip.handlers.onMouseMove}
+                      onMouseLeave={(e) => { setHoveredArtUid(null); artTooltip.handlers.onMouseLeave(e); }}
+                      onTouchStart={(e) => { setHoveredArtUid(instance.uid); artTooltip.handlers.onTouchStart(e); }}
+                      onTouchEnd={(e) => { setHoveredArtUid(null); artTooltip.handlers.onTouchEnd(e); }}
+                      onTouchMove={artTooltip.handlers.onTouchMove}
+                    >
+                      <span className="inv-quality-gem" style={{ color: q.color }}>◆</span>
+                      <span className="inv-name" style={{ color: q.color }}>{artName}</span>
+                      <span className="inv-slot-label">{t(`build.slots.${art.slot}`, { defaultValue: art.slot })}</span>
+                      {isEquipped && <span className="inv-equipped-badge">{t('common.equipped')}</span>}
+                    </button>
+                  );
+                })}
+            </div>
+          </CollectionSection>
+
+          {/* Techniques */}
+          <CollectionSection
+            title={t('inventory.tabTechniques')}
+            badge={`${techCount} / ${MAX_TECHNIQUES}`}
+            isEmpty={techCount === 0}
+            alwaysShow
+          >
+            <div className="inv-grid">
+              {Object.values(techniques.ownedTechniques).map((tech) => {
+                const color    = LAW_RARITY[tech.quality]?.color ?? '#9ca3af';
+                const techName = tGame(`techniques.${tech.id}.name`, { defaultValue: tech.name });
                 return (
                   <button
-                    key={instance.uid}
-                    className={`inv-slot${isEquipped ? ' inv-slot-equipped' : ''}`}
-                    style={{ borderColor: q.color }}
-                    onClick={() => setSelectedArtefact(instance)}
-                    onMouseEnter={(e) => {
-                      setHoveredArtUid(instance.uid);
-                      artTooltip.handlers.onMouseEnter(e);
-                    }}
-                    onMouseMove={artTooltip.handlers.onMouseMove}
-                    onMouseLeave={(e) => {
-                      setHoveredArtUid(null);
-                      artTooltip.handlers.onMouseLeave(e);
-                    }}
-                    onTouchStart={(e) => {
-                      setHoveredArtUid(instance.uid);
-                      artTooltip.handlers.onTouchStart(e);
-                    }}
-                    onTouchEnd={(e) => {
-                      setHoveredArtUid(null);
-                      artTooltip.handlers.onTouchEnd(e);
-                    }}
-                    onTouchMove={artTooltip.handlers.onTouchMove}
+                    key={tech.id}
+                    className="inv-slot"
+                    style={{ borderColor: color }}
+                    onClick={() => setSelectedTechnique(tech)}
                   >
-                    <span className="inv-quality-gem" style={{ color: q.color }}>◆</span>
-                    <span className="inv-name" style={{ color: q.color }}>{artName}</span>
-                    <span className="inv-slot-label">{t(`build.slots.${art.slot}`, { defaultValue: art.slot })}</span>
-                    {isEquipped && <span className="inv-equipped-badge">{t('common.equipped')}</span>}
+                    <span className="inv-quality-gem" style={{ color }}>◆</span>
+                    <span className="inv-name" style={{ color }}>{techName}</span>
+                    <span className="inv-slot-label">{t(`techniqueTypes.${tech.type}`, { defaultValue: tech.type })}</span>
                   </button>
                 );
               })}
-          </div>
-          {artTooltip.pos && hoveredArtUid && (() => {
-            const inst = artefacts.owned.find(o => o.uid === hoveredArtUid);
-            if (!inst) return null;
-            const cat = ARTEFACTS_BY_ID[inst.catalogueId];
-            if (!cat) return null;
-            const rarity = inst.rarity ?? cat.rarity;
-            const name = formatArtefactName(inst) ?? tGame(`artefacts.${cat.id}.name`, { defaultValue: cat.name });
-            return (
-              <ArtefactTooltip
-                artefact={{ ...cat, rarity, name }}
-                affixes={inst.affixes ?? []}
-                style={{ position: 'fixed', left: artTooltip.pos.x, top: artTooltip.pos.y, zIndex: 100 }}
-              />
-            );
-          })()}
-        </>
+            </div>
+          </CollectionSection>
+
+          {/* Laws */}
+          <CollectionSection
+            title={t('inventory.tabLaws')}
+            badge={`${lawCount} / ${MAX_LAWS}`}
+            isEmpty={lawCount === 0}
+            alwaysShow
+          >
+            <div className="inv-grid">
+              {cultivation.ownedLaws.map((law) => {
+                const rarity  = LAW_RARITY[law.rarity];
+                const lawName = tGame(`laws.${law.id}.name`, { defaultValue: law.name });
+                return (
+                  <button
+                    key={law.id}
+                    className="inv-slot"
+                    style={{ borderColor: rarity.color }}
+                    onClick={() => setSelectedLaw(law)}
+                  >
+                    <span className="inv-quality-gem" style={{ color: rarity.color }}>◆</span>
+                    <span className="inv-name" style={{ color: rarity.color }}>{lawName}</span>
+                    <span className="inv-slot-label">{t(`elements.${law.element}`, { defaultValue: law.element })}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </CollectionSection>
+
+        </div>
       )}
 
-      {/* ── Techniques ───────────────────────────────────────────────────────── */}
-      {activeTab === 'techniques' && techniques && (
-        <>
-          <p className="inv-cap-label">
-            {t('inventory.slots', { count: Object.keys(techniques.ownedTechniques).length, max: MAX_TECHNIQUES })}
-          </p>
-          <div className="inv-grid">
-            {Object.values(techniques.ownedTechniques).map((tech) => {
-              const color = LAW_RARITY[tech.quality]?.color ?? '#9ca3af';
-              const techName = tGame(`techniques.${tech.id}.name`, { defaultValue: tech.name });
-              return (
-                <button
-                  key={tech.id}
-                  className="inv-slot"
-                  style={{ borderColor: color }}
-                  onClick={() => setSelectedTechnique(tech)}
-                >
-                  <span className="inv-quality-gem" style={{ color }}>◆</span>
-                  <span className="inv-name" style={{ color }}>{techName}</span>
-                  <span className="inv-slot-label">{t(`techniqueTypes.${tech.type}`, { defaultValue: tech.type })}</span>
-                </button>
-              );
-            })}
-          </div>
-        </>
-      )}
+      {/* Artefact hover tooltip */}
+      {artTooltip.pos && hoveredArtUid && (() => {
+        const inst = artefacts.owned.find(o => o.uid === hoveredArtUid);
+        if (!inst) return null;
+        const cat    = ARTEFACTS_BY_ID[inst.catalogueId];
+        if (!cat) return null;
+        const rarity = inst.rarity ?? cat.rarity;
+        const name   = formatArtefactName(inst) ?? tGame(`artefacts.${cat.id}.name`, { defaultValue: cat.name });
+        return (
+          <ArtefactTooltip
+            artefact={{ ...cat, rarity, name }}
+            affixes={inst.affixes ?? []}
+            style={{ position: 'fixed', left: artTooltip.pos.x, top: artTooltip.pos.y, zIndex: 100 }}
+          />
+        );
+      })()}
 
-      {/* ── Laws ─────────────────────────────────────────────────────────────── */}
-      {activeTab === 'laws' && cultivation && (
-        <>
-          <p className="inv-cap-label">
-            {t('inventory.slots', { count: cultivation.ownedLaws.length, max: MAX_LAWS })}
-          </p>
-          <div className="inv-grid">
-            {cultivation.ownedLaws.map((law) => {
-              const rarity = LAW_RARITY[law.rarity];
-              const lawName = tGame(`laws.${law.id}.name`, { defaultValue: law.name });
-              return (
-                <button
-                  key={law.id}
-                  className="inv-slot"
-                  style={{ borderColor: rarity.color }}
-                  onClick={() => setSelectedLaw(law)}
-                >
-                  <span className="inv-quality-gem" style={{ color: rarity.color }}>◆</span>
-                  <span className="inv-name" style={{ color: rarity.color }}>{lawName}</span>
-                  <span className="inv-slot-label">{t(`elements.${law.element}`, { defaultValue: law.element })}</span>
-                </button>
-              );
-            })}
-          </div>
-        </>
-      )}
-
-      {/* ── Modals ───────────────────────────────────────────────────────────── */}
+      {/* ── Modals ─────────────────────────────────────────────────────────────── */}
       {selectedItem && (
         <ItemModal
           item={selectedItem}
@@ -286,8 +288,7 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
         const rarity = selectedArtefact.rarity ?? art.rarity;
         const q      = QUALITY[rarity];
         const bonuses = getSlotBonuses(art.slot, rarity);
-        const artName = formatArtefactName(selectedArtefact)
-          ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
+        const artName = formatArtefactName(selectedArtefact) ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
         const artDesc = tGame(`artefacts.${art.id}.desc`, { defaultValue: art.description });
         return (
           <div className="modal-overlay" onClick={() => setSelectedArtefact(null)}>
@@ -316,10 +317,7 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
                     disabledReason={isEquipped ? 'Unequip this artefact first.' : undefined}
                     onDismantle={() => {
                       const r = artefacts.dismantleArtefact(selectedArtefact.uid);
-                      if (r) {
-                        dismantleTo(inventory, r);
-                        setSelectedArtefact(null);
-                      }
+                      if (r) { dismantleTo(inventory, r); setSelectedArtefact(null); }
                     }}
                   />
                 );
@@ -330,11 +328,11 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
       })()}
 
       {selectedTechnique && (() => {
-        const tech    = selectedTechnique;
-        const quality = TECHNIQUE_QUALITY[tech.quality] ?? { label: tech.quality, color: '#9ca3af' };
-        const typeCol = TYPE_COLOR[tech.type] ?? '#fff';
-        const cd      = getCooldown(tech.type, tech.quality);
-        const techName = tGame(`techniques.${tech.id}.name`, { defaultValue: tech.name });
+        const tech     = selectedTechnique;
+        const quality  = TECHNIQUE_QUALITY[tech.quality] ?? { label: tech.quality, color: '#9ca3af' };
+        const typeCol  = TYPE_COLOR[tech.type] ?? '#fff';
+        const cd       = getCooldown(tech.type, tech.quality);
+        const techName    = tGame(`techniques.${tech.id}.name`,    { defaultValue: tech.name });
         const techFlavour = tGame(`techniques.${tech.id}.flavour`, { defaultValue: tech.flavour });
         return (
           <div className="modal-overlay" onClick={() => setSelectedTechnique(null)}>
@@ -400,11 +398,7 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
                 <div className="item-stat-block">
                   {tech.passives.map((p, i) => {
                     const passiveDesc = tGame(`techniques.${tech.id}.passives.${p.name}`, { defaultValue: p.description });
-                    return (
-                      <p key={i} className="modal-desc">
-                        <strong>{p.name}:</strong> {passiveDesc}
-                      </p>
-                    );
+                    return <p key={i} className="modal-desc"><strong>{p.name}:</strong> {passiveDesc}</p>;
                   })}
                 </div>
               )}
@@ -419,10 +413,7 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
                     disabledReason={isEquipped ? 'Unequip this technique first.' : undefined}
                     onDismantle={() => {
                       const r = techniques.dismantleTechnique(tech.id);
-                      if (r) {
-                        dismantleTo(inventory, r);
-                        setSelectedTechnique(null);
-                      }
+                      if (r) { dismantleTo(inventory, r); setSelectedTechnique(null); }
                     }}
                   />
                 );
@@ -433,9 +424,9 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
       })()}
 
       {selectedLaw && (() => {
-        const law    = selectedLaw;
-        const rarity = LAW_RARITY[law.rarity];
-        const lawName   = tGame(`laws.${law.id}.name`,   { defaultValue: law.name });
+        const law     = selectedLaw;
+        const rarity  = LAW_RARITY[law.rarity];
+        const lawName    = tGame(`laws.${law.id}.name`,    { defaultValue: law.name });
         const lawFlavour = tGame(`laws.${law.id}.flavour`, { defaultValue: law.flavour });
         return (
           <div className="modal-overlay" onClick={() => setSelectedLaw(null)}>
@@ -475,10 +466,7 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
                     disabledReason={isActive ? 'This is your active law — pick another first.' : undefined}
                     onDismantle={() => {
                       const r = cultivation.dismantleLaw(law.id);
-                      if (r) {
-                        dismantleTo(inventory, r);
-                        setSelectedLaw(null);
-                      }
+                      if (r) { dismantleTo(inventory, r); setSelectedLaw(null); }
                     }}
                   />
                 );
