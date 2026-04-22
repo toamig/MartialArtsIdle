@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Design Evaluation.md",
-                "mode": "preview",
+                "file": "Modifier Implementation Audit.md",
+                "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Design Evaluation"
+              "title": "Modifier Implementation Audit"
             }
           }
         ]
@@ -44,7 +44,7 @@
                 "autoReveal": false
               },
               "icon": "lucide-folder-closed",
-              "title": "Files"
+              "title": "Explorador de ficheiros"
             }
           },
           {
@@ -174,19 +174,23 @@
   },
   "left-ribbon": {
     "hiddenItems": {
-      "switcher:Open quick switcher": false,
-      "graph:Open graph view": false,
-      "canvas:Create new canvas": false,
-      "daily-notes:Open today's daily note": false,
-      "templates:Insert template": false,
-      "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "switcher:Abrir Quick Switcher": false,
+      "graph:Abrir Visualização de diagrama de grafo": false,
+      "canvas:Criar novo Canvas": false,
+      "daily-notes:Abrir nota de hoje": false,
+      "templates:Inserir templates": false,
+      "command-palette:Abrir paleta de comando": false,
+      "bases:Criar nova base": false
     }
   },
   "active": "c3aa73ef4da1bbd1",
   "lastOpenFiles": [
-    "Reincarnation.md",
+    "Modifier Implementation Audit.md.tmp.17168.1776895865583",
+    "Modifier Implementation Audit.md.tmp.17168.1776895856249",
+    "Modifier Implementation Audit.md.tmp.17168.1776895848058",
+    "Modifier Implementation Audit.md.tmp.17168.1776895842165",
     "Design Evaluation.md",
+    "Reincarnation.md",
     "Reincarnation.md.tmp.1432.1776491881863",
     "Stats.md",
     "Unique Modifiers - Review.md",
@@ -202,9 +206,6 @@
     "Combat.md",
     "Combat.md.tmp.32808.1775778005946",
     "Primary Stats.md.tmp.32808.1775778000141",
-    "Items.md.tmp.32808.1775777993269",
-    "Realm Progression.md.tmp.32808.1775777980432",
-    "Cultivation System.md.tmp.32808.1775777970716",
     "Laws & Secret Techniques.md",
     "Game Vision.md",
     "Home.md",
