@@ -8,6 +8,7 @@ import { preloadEnemySprites } from '../utils/preload';
 import { isWorldUnlocked, getWorldLockHint } from '../data/featureGates';
 import LockTooltip from '../components/LockTooltip';
 import EnemyTooltip from '../components/EnemyTooltip';
+import ActivityTooltip from '../components/ActivityTooltip';
 import { useTooltipPos } from '../components/ArtefactTooltip';
 import { ALL_MATERIALS } from '../data/materials';
 
@@ -43,6 +44,26 @@ function EnemyChip({ enemyId, regionIndex }) {
         <EnemyTooltip
           enemyDef={def}
           regionIndex={regionIndex}
+          style={{ position: 'fixed', left: pos.x, top: pos.y }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ActivityInfoBtn({ tab, region, activityStats }) {
+  const { pos, handlers } = useTooltipPos();
+  const drops = tab === 'gather' ? region.gatherDrops : region.mineDrops;
+  if (!drops?.length) return null;
+
+  return (
+    <div className="activity-info-btn-wrap" {...handlers}>
+      <button className="activity-info-btn" onClick={e => e.stopPropagation()}>ⓘ</button>
+      {pos && (
+        <ActivityTooltip
+          tab={tab}
+          drops={drops}
+          activityStats={activityStats}
           style={{ position: 'fixed', left: pos.x, top: pos.y }}
         />
       )}
@@ -88,7 +109,7 @@ const ACTIVITY_ICON = { combat: '⚔', gathering: '🌿', mining: '⛏' };
 
 function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, worldId,
                      canIdle, isIdling, isLastIdle, onSetIdle, onClearIdle,
-                     pendingGains, hasPendingGains, onCollect }) {
+                     pendingGains, hasPendingGains, onCollect, activityStats }) {
   const { t } = useTranslation('ui');
   const { t: tGame }  = useTranslation('game');
 
@@ -191,8 +212,11 @@ function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, wo
         </div>
       )}
 
-      {(!locked && (canIdle || isIdling || isLastIdle)) && (
+      {!locked && (!isWorld || canIdle || isIdling || isLastIdle) && (
         <div className="region-row-actions">
+          {!isWorld && (
+            <ActivityInfoBtn tab={tab} region={region} activityStats={activityStats} />
+          )}
           {isLastIdle && hasPendingGains && onCollect && (
             <button
               className="region-collect-btn"
@@ -217,7 +241,7 @@ function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, wo
 }
 
 function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavigate, expandWorldId, idleAssignment, lastIdleAssignment, onSetIdle,
-                     pendingGains, hasPendingGains, onCollect }) {
+                     pendingGains, hasPendingGains, onCollect, activityStats }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
 
@@ -310,6 +334,7 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
                 pendingGains={pendingGains}
                 hasPendingGains={hasPendingGains}
                 onCollect={onCollect}
+                activityStats={activityStats}
               />
             );
           })}
@@ -320,11 +345,12 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
 }
 
 function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clearedRegions, idleAssignment, lastIdleAssignment, onSetIdle,
-                        pendingGains, hasPendingGains, onCollectGains, inventory, techniques }) {
+                        pendingGains, hasPendingGains, onCollectGains, inventory, techniques, getFullStats }) {
   const { t } = useTranslation('ui');
   const [tab, setTab] = useState(activeTab ?? 'combat');
-  const realmIndex = cultivation.realmIndex;
-  const cleared    = clearedRegions ?? new Set();
+  const realmIndex     = cultivation.realmIndex;
+  const cleared        = clearedRegions ?? new Set();
+  const activityStats  = getFullStats?.() ?? null;
 
   function handleCollect() {
     onCollectGains?.(gains => {
@@ -384,6 +410,7 @@ function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clear
             pendingGains={pendingGains}
             hasPendingGains={hasPendingGains}
             onCollect={handleCollect}
+            activityStats={activityStats}
           />
         ))}
       </div>

@@ -587,54 +587,81 @@ html, body, * {
    a gold top-accent border, warm-tinted background, and a slow sheen.
    Higher rarities escalate the same vocabulary — faster sheen, brighter glow. */
 
-@keyframes law-sheen {
-  0%   { background-position: -200% center; }
-  100% { background-position:  200% center; }
+/* Shimmer sweep — pseudo-element slides across the card, no background-position
+   tiling so there is no visible cut/seam at the loop point. */
+@keyframes law-sheen-sweep {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
 }
 
 .law-card {
   border-top: 2px solid rgba(245, 200, 66, 0.45);
   background: linear-gradient(
-    135deg,
+    160deg,
     rgba(28, 20, 5, 0.92) 0%,
-    rgba(20, 14, 4, 0.88) 50%,
-    rgba(28, 20, 5, 0.92) 100%
+    rgba(20, 14, 4, 0.90) 100%
   );
-  background-size: 200% 200%;
-  animation: law-sheen 8s linear infinite;
+  /* Fixed height — sized to the tallest possible card (long unique description).
+     All cards in the row match this height; content is centred vertically.
+     Prevents layout shift on reroll. */
+  min-height: 200px;
+}
+
+/* Centre body content vertically so shorter cards don't top-align awkwardly */
+.law-card .augment-body {
+  justify-content: center;
+}
+
+/* Sheen streak — absolute, clipped by parent overflow:hidden */
+.law-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 220, 100, 0.07) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  animation: law-sheen-sweep 8s linear infinite;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .augment-card-bronze.law-card {
   border-top-color: rgba(205, 127, 50, 0.65);
+  background: linear-gradient(160deg, rgba(25, 15, 5, 0.92) 0%, rgba(18, 11, 4, 0.90) 100%);
+}
+.augment-card-bronze.law-card::before {
+  background: linear-gradient(105deg, transparent 30%, rgba(205, 127, 50, 0.08) 50%, transparent 70%);
   animation-duration: 6s;
 }
 
 .augment-card-silver.law-card {
   border-top-color: rgba(192, 192, 192, 0.65);
+  background: linear-gradient(160deg, rgba(18, 18, 22, 0.92) 0%, rgba(12, 12, 16, 0.90) 100%);
+}
+.augment-card-silver.law-card::before {
+  background: linear-gradient(105deg, transparent 30%, rgba(192, 192, 192, 0.08) 50%, transparent 70%);
   animation-duration: 5s;
 }
 
 .augment-card-gold.law-card {
   border-top-color: rgba(245, 200, 66, 0.80);
-  background: linear-gradient(
-    135deg,
-    rgba(28, 20, 5, 0.92) 0%,
-    rgba(65, 48, 6, 0.65) 50%,
-    rgba(28, 20, 5, 0.92) 100%
-  );
-  background-size: 200% 200%;
+  background: linear-gradient(160deg, rgba(28, 20, 5, 0.92) 0%, rgba(45, 30, 5, 0.90) 100%);
+}
+.augment-card-gold.law-card::before {
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 220, 100, 0.11) 50%, transparent 70%);
   animation-duration: 4s;
 }
 
 .augment-card-transcendent.law-card {
   border-top-color: rgba(192, 132, 252, 0.80);
-  background: linear-gradient(
-    135deg,
-    rgba(10, 5, 20, 0.92) 0%,
-    rgba(55, 22, 75, 0.65) 50%,
-    rgba(10, 5, 20, 0.92) 100%
-  );
-  background-size: 200% 200%;
+  background: linear-gradient(160deg, rgba(10, 5, 20, 0.92) 0%, rgba(30, 12, 45, 0.90) 100%);
+}
+.augment-card-transcendent.law-card::before {
+  background: linear-gradient(105deg, transparent 30%, rgba(192, 132, 252, 0.10) 50%, transparent 70%);
   animation-duration: 3s;
 }
 
@@ -688,7 +715,8 @@ html, body, * {
 .augment-card:hover {
   transform: translateY(-4px) scale(1.02);
   border-color: var(--cat-color);
-  background: rgba(255,255,255,0.07);
+  /* Keep the card's own rarity gradient — just brighten it slightly */
+  filter: brightness(1.15);
   box-shadow:
     0 8px 28px rgba(0,0,0,0.6),
     0 0 0 1px var(--cat-color),
@@ -710,6 +738,13 @@ html, body, * {
 .augment-card-silver       { border-color: rgba(192,192,192,0.50); box-shadow: 0 0 14px rgba(192,192,192,0.14); }
 .augment-card-gold         { border-color: rgba(245,200,66,0.60);  box-shadow: 0 0 18px rgba(245,200,66,0.22); }
 .augment-card-transcendent { border-color: rgba(192,132,252,0.60); box-shadow: 0 0 22px rgba(192,132,252,0.28); }
+
+/* Category strip and body sit above the ::before sheen layer */
+.augment-cat-strip,
+.augment-body {
+  position: relative;
+  z-index: 1;
+}
 
 /* Category strip at top */
 .augment-cat-strip {
@@ -881,16 +916,17 @@ html, body, * {
   transform: translateY(-1px);
 }
 .sel-reroll-btn:active:not(:disabled) { transform: scale(0.96); }
-/* Free reroll — jade gradient (cultivation energy, no cost) */
+/* Free reroll — brighter gold to signal no cost, stays in the law card palette */
 .sel-reroll-btn-free {
-  background: linear-gradient(135deg, rgba(12, 70, 70, 0.65), rgba(15, 100, 90, 0.65));
-  border-color: rgba(45, 180, 160, 0.55);
-  color: #a7f3e8;
+  background: linear-gradient(135deg, rgba(120, 72, 8, 0.60), rgba(180, 110, 0, 0.60));
+  border-color: rgba(245, 185, 40, 0.70);
+  color: #fef08a;
+  box-shadow: 0 0 10px rgba(217, 160, 20, 0.20);
 }
 .sel-reroll-btn-free:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(15, 90, 85, 0.80), rgba(20, 120, 110, 0.80));
-  border-color: rgba(45, 180, 160, 0.80);
-  box-shadow: 0 0 14px rgba(20, 170, 150, 0.32);
+  background: linear-gradient(135deg, rgba(160, 95, 12, 0.80), rgba(220, 140, 0, 0.80));
+  border-color: rgba(255, 210, 60, 0.90);
+  box-shadow: 0 0 18px rgba(217, 160, 20, 0.45);
   transform: translateY(-1px);
 }
 .sel-reroll-btn-disabled { opacity: 0.30; cursor: not-allowed; }
@@ -4321,6 +4357,155 @@ html, body, * {
 .enemy-tooltip-drop-chance {
   font-size: 0.65rem;
   color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ── Activity Info Button (gather / mine rows) ── */
+.activity-info-btn-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.activity-info-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.activity-info-btn:hover {
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+/* ── Activity Tooltip ── */
+.activity-tooltip {
+  z-index: 1100;
+  pointer-events: none;
+  background: rgba(10, 8, 28, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 210px;
+  max-width: 260px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.65);
+}
+
+.activity-tooltip-header {
+  padding-bottom: 2px;
+}
+
+.activity-tooltip-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.activity-tooltip-section {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 5px;
+}
+
+.activity-tooltip-section-label {
+  font-size: 0.60rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 1px;
+}
+
+.activity-tooltip-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.activity-tooltip-stat-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.activity-tooltip-stat-value {
+  font-size: 0.70rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.activity-tooltip-bonus {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.activity-tooltip-col-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding-bottom: 2px;
+}
+
+.activity-tooltip-col-chance {
+  width: 32px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.activity-tooltip-col-timer {
+  width: 52px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.activity-tooltip-drop-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.activity-tooltip-drop-name {
+  flex: 1;
+  font-size: 0.68rem;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-tooltip-drop-pct {
+  width: 32px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.activity-tooltip-drop-time {
+  width: 52px;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  text-align: right;
   flex-shrink: 0;
 }
 
