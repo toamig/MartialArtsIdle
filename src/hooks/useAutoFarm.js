@@ -35,6 +35,7 @@ import {
 
 const TICK_INTERVAL_MS  = 1_000; // background tick rate
 const MIN_OFFLINE_SEC   = 5 * 60; // skip offline calc if away less than 5 minutes
+const OFFLINE_GAIN_MULT = 0.2;    // offline auto-farm pays 1/5 of live rate
 
 // ─── Empty gains shape ────────────────────────────────────────────────────────
 
@@ -134,6 +135,7 @@ export default function useAutoFarm({ worlds, getStats }) {
 
     const awaySeconds = (Date.now() - saved.lastSeen) / 1000;
     if (awaySeconds < MIN_OFFLINE_SEC) return persisted;
+    const offlineSeconds = awaySeconds * OFFLINE_GAIN_MULT;
 
     const cfg = loadAutoFarmConfig();
     let offline = emptyGains();
@@ -149,9 +151,9 @@ export default function useAutoFarm({ worlds, getStats }) {
       let gained = emptyGains();
 
       if (activity === 'gathering') {
-        gained.items = simulateGathering(awaySeconds, region, null);
+        gained.items = simulateGathering(offlineSeconds, region, null);
       } else if (activity === 'mining') {
-        gained.items = simulateMining(awaySeconds, region, null);
+        gained.items = simulateMining(offlineSeconds, region, null);
       }
 
       offline = mergeFullGains(offline, gained);
