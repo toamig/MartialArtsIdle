@@ -26,6 +26,46 @@ const LOG_COLOR = {
   system:         'var(--text-muted)',
 };
 
+function CombatLog({ log }) {
+  const ref       = useRef(null);
+  // Timestamp of the last user-initiated scroll gesture (wheel OR pointer).
+  // Using a timestamp instead of boolean flags avoids all event-ordering races.
+  const lastInput = useRef(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // Skip the snap when:
+    //   1. User has scrolled far enough to be clearly reading history, OR
+    //   2. They touched the scroll area within the last 1.5 s (covers the
+    //      brief window where their gesture hasn't moved scrollTop past the
+    //      threshold yet, but their intent is clear).
+    if (el.scrollTop > 80 || Date.now() - lastInput.current < 1500) return;
+    el.scrollTop = 0;
+  }, [log]);
+
+  const markInput = () => { lastInput.current = Date.now(); };
+
+  return (
+    <div
+      ref={ref}
+      className="combat-log"
+      onWheel={markInput}
+      onPointerDown={markInput}
+    >
+      {log.length === 0
+        ? <p className="combat-log-empty">Awaiting combat…</p>
+        : log.map((entry, i) => (
+            <p key={i} className={entry.kind === 'divider' ? 'combat-log-divider' : undefined}
+               style={entry.kind !== 'divider' ? { color: LOG_COLOR[entry.kind] ?? 'var(--text-secondary)' } : undefined}>
+              {entry.msg}
+            </p>
+          ))
+      }
+    </div>
+  );
+}
+
 function CombatScreen({ cultivation, techniques, combat, inventory, region = null, onBack = null, getFullStats, onRegionCleared = null }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
@@ -132,53 +172,51 @@ function CombatScreen({ cultivation, techniques, combat, inventory, region = nul
       />
 
 
-      {/* ── Technique icons ──────────────────────────────────────────────── */}
-      <div className="tech-icon-grid">
-        {equippedTechniques.filter(Boolean).map((tech, i) => {
-          const color = TYPE_COLOR[tech.type];
-          const techName = tGame(`techniques.${tech.id}.name`, { defaultValue: tech.name });
-          return (
-            <div
-              key={i}
-              className="tech-icon-slot"
-            >
+      {/* ── Bottom section: log + techniques ───────────────────────────────
+           DOM order: log first (→ left on desktop), tech grid second (→ right).
+           On mobile, CSS `order: -1` pulls the tech grid above the log.       */}
+      <div className="combat-bottom">
+
+        {/* Combat log */}
+        <CombatLog log={log} />
+
+        {/* Technique icons */}
+        <div className="tech-icon-grid">
+          {equippedTechniques.filter(Boolean).map((tech, i) => {
+            const color = TYPE_COLOR[tech.type];
+            const techName = tGame(`techniques.${tech.id}.name`, { defaultValue: tech.name });
+            return (
               <div
-                className="tech-icon-top"
-                style={{ background: tech ? `${color}28` : undefined }}
+                key={i}
+                className="tech-icon-slot"
+                style={{ '--tech-color': color }}
               >
-                <img
-                  src={`${BASE}sprites/techniques/${tech?.type?.toLowerCase() ?? 'empty'}.png`}
-                  className="tech-icon-img"
-                  alt=""
-                />
-                <span className="tech-icon-glyph" style={{ color }}>
-                  {TECH_GLYPH[tech?.type] ?? '—'}
-                </span>
                 <div
-                  className="tech-icon-clock"
-                  ref={el => { combat.cdBarRefs.current[i] = el; }}
-                />
+                  className="tech-icon-top"
+                  style={{ background: tech ? `${color}22` : undefined }}
+                >
+                  <img
+                    src={`${BASE}sprites/techniques/${tech?.type?.toLowerCase() ?? 'empty'}.png`}
+                    className="tech-icon-img"
+                    alt=""
+                  />
+                  <span className="tech-icon-glyph" style={{ color }}>
+                    {TECH_GLYPH[tech?.type] ?? '—'}
+                  </span>
+                  <span
+                    className="tech-icon-clock"
+                    ref={el => { combat.cdBarRefs.current[i] = el; }}
+                  />
+                </div>
+                <span className="tech-icon-name" style={{ color }}>
+                  {techName}
+                </span>
               </div>
-              <span className="tech-icon-name" style={{ color }}>
-                {techName}
-              </span>
-              <img className="tech-icon-frame" src={`${BASE}ui/card_frame.png`} alt="" />
-            </div>
-          );
-        })}
-      </div>
-
-
-      {/* ── Combat log ───────────────────────────────────────────────────── */}
-      {log.length > 0 && (
-        <div className="combat-log">
-          {log.map((entry, i) => (
-            <p key={i} style={{ color: LOG_COLOR[entry.kind] ?? 'var(--text-secondary)' }}>
-              {entry.msg}
-            </p>
-          ))}
+            );
+          })}
         </div>
-      )}
+
+      </div>
     </div>
   );
 }

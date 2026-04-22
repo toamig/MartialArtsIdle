@@ -9279,7 +9279,7 @@ html, body, * {
 .et-node {
   position: absolute;
   width: 108px; height: 108px;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) translateZ(0);
   border-radius: 50%;
   border: 2px solid rgba(var(--branch-rgb, 168,85,247), 0.28);
   background: rgba(var(--branch-rgb, 168,85,247), 0.07);
@@ -9292,6 +9292,7 @@ html, body, * {
   transition: transform 0.13s, box-shadow 0.13s;
   box-sizing: border-box;
   cursor: pointer;
+  will-change: transform;
 }
 
 /* Root */
@@ -9333,15 +9334,25 @@ html, body, * {
   border-color: rgba(var(--branch-rgb), 0.85);
   background: rgba(var(--branch-rgb), 0.16);
   cursor: pointer;
+}
+.et-node-affordable::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 22px rgba(var(--branch-rgb), 0.52);
+  opacity: 0.3;
   animation: et-node-glow 2.4s ease-in-out infinite;
+  pointer-events: none;
+  will-change: opacity;
 }
 .et-node-affordable:hover {
-  transform: translate(-50%, -50%) scale(1.07);
+  transform: translate(-50%, -50%) scale(1.07) translateZ(0);
   box-shadow: 0 0 26px rgba(var(--branch-rgb), 0.55);
 }
 @keyframes et-node-glow {
-  0%,100% { box-shadow: 0 0 10px rgba(var(--branch-rgb), 0.22); }
-  50%      { box-shadow: 0 0 22px rgba(var(--branch-rgb), 0.52); }
+  0%,100% { opacity: 0.3; }
+  50%      { opacity: 1; }
 }
 
 /* Locked — can reach but not enough karma */
@@ -9350,7 +9361,7 @@ html, body, * {
   background: rgba(var(--branch-rgb), 0.04);
   opacity: 0.6;
 }
-.et-node-locked-cost:hover { transform: translate(-50%, -50%) scale(1.03); }
+.et-node-locked-cost:hover { transform: translate(-50%, -50%) scale(1.03) translateZ(0); }
 
 /* Locked — prereq not met */
 .et-node-locked-prereq {
@@ -9378,12 +9389,13 @@ html, body, * {
 .et-node-keystone.et-node-purchased {
   box-shadow: 0 0 18px rgba(var(--branch-rgb), 0.35), 0 0 36px rgba(var(--branch-rgb), 0.14);
 }
-.et-node-keystone.et-node-affordable {
+.et-node-keystone.et-node-affordable::after {
+  box-shadow: 0 0 28px rgba(var(--branch-rgb), 0.6), 0 0 56px rgba(var(--branch-rgb), 0.25);
   animation: et-keystone-glow 2s ease-in-out infinite;
 }
 @keyframes et-keystone-glow {
-  0%,100% { box-shadow: 0 0 14px rgba(var(--branch-rgb), 0.3), 0 0 28px rgba(var(--branch-rgb), 0.12); }
-  50%      { box-shadow: 0 0 28px rgba(var(--branch-rgb), 0.6), 0 0 56px rgba(var(--branch-rgb), 0.25); }
+  0%,100% { opacity: 0.25; }
+  50%      { opacity: 1; }
 }
 .et-keystone-star {
   position: absolute;
