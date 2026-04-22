@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { loadRewardedAd, showRewardedAd } from './adService';
+import AudioManager from '../audio/AudioManager';
 
 /**
  * Manages the full lifecycle of a single rewarded ad slot:
@@ -77,7 +78,13 @@ export function useRewardedAd(onReward, cooldownMs = 30 * 60 * 1000, storageKey 
     if (status !== 'ready') return;
     setStatus('showing');
 
-    const { rewarded } = await showRewardedAd();
+    AudioManager.pauseForAd();
+    let rewarded = false;
+    try {
+      ({ rewarded } = await showRewardedAd());
+    } finally {
+      AudioManager.resumeFromAd();
+    }
 
     if (rewarded) {
       onRewardRef.current();

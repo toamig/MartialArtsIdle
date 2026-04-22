@@ -30,6 +30,7 @@ let settings      = loadAudioSettings();
 let bgmHowl       = null;   // currently active BGM Howl instance
 let bgmTrackId    = null;   // key into BGM_TRACKS
 let bgmPaused     = false;  // true while tab is hidden
+let adPlaying     = false;  // true while an ad has audio focus
 
 // BGM preload cache: { [trackId]: Howl } — keyed instances ready to play
 const bgmCache    = {};
@@ -127,7 +128,7 @@ if (typeof document !== 'undefined') {
     if (document.hidden) {
       bgmHowl.pause();
       bgmPaused = true;
-    } else if (bgmPaused) {
+    } else if (bgmPaused && !adPlaying) {
       bgmHowl.play();
       bgmHowl.fade(bgmHowl.volume(), effectiveBgmVol(), 400);
       bgmPaused = false;
@@ -274,6 +275,26 @@ const AudioManager = {
           console.error(`[Audio] BGM preload "${id}" failed:`, err);
         },
       });
+    }
+  },
+
+  /** Fade out and pause BGM before an ad takes audio focus. */
+  pauseForAd() {
+    if (adPlaying) return;
+    adPlaying = true;
+    if (bgmHowl?.playing()) {
+      bgmHowl.fade(bgmHowl.volume(), 0, 300);
+      setTimeout(() => { try { bgmHowl?.pause(); } catch {} }, 350);
+    }
+  },
+
+  /** Resume BGM after an ad releases audio focus. */
+  resumeFromAd() {
+    if (!adPlaying) return;
+    adPlaying = false;
+    if (bgmHowl && !bgmPaused) {
+      bgmHowl.play();
+      bgmHowl.fade(bgmHowl.volume(), effectiveBgmVol(), 400);
     }
   },
 
