@@ -1,11 +1,10 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  PILLS, PILLS_BY_ID, ITEM_RARITY,
+  PILLS, ITEM_RARITY,
   PILL_CATEGORIES, PILL_CATEGORY_LABEL,
 } from '../data/pills';
 
-// Category key → i18n key
 const CAT_T_KEY = {
   combat:  'pillDrawer.catCombat',
   harvest: 'pillDrawer.catHarvest',
@@ -49,14 +48,10 @@ function DrawerPillCard({ pill, qty, onUse }) {
   }, [onUse, pill.effects, t]);
 
   return (
-    <div className="pill-drawer-card" style={{ borderColor: color, position: 'relative', overflow: 'visible' }}>
-      {/* Floating stat gain animations */}
+    <div className="pill-drawer-card" style={{ '--rarity-color': color, position: 'relative', overflow: 'visible' }}>
       {floats.map(f => (
-        <span key={f.id} className="pill-stat-float" style={{ color }}>
-          {f.text}
-        </span>
+        <span key={f.id} className="pill-stat-float" style={{ color }}>{f.text}</span>
       ))}
-
       <div className="pill-drawer-card-head">
         <span className="pill-drawer-card-name" style={{ color }}>{pillName}</span>
         <span className="pill-drawer-card-qty">×{qty}</span>
@@ -73,15 +68,6 @@ function DrawerPillCard({ pill, qty, onUse }) {
   );
 }
 
-/**
- * Pill drawer — bottom sheet with category tabs.
- *
- * Props:
- *   open          - boolean, show/hide
- *   onClose       - () => void
- *   defaultTab    - initial category (combat | harvest | mining)
- *   pills         - usePills() API (needs getOwnedCount, usePill)
- */
 function PillDrawer({ open, onClose, defaultTab = 'combat', pills }) {
   const { t } = useTranslation('ui');
   const [tab, setTab] = useState(defaultTab);
@@ -98,30 +84,44 @@ function PillDrawer({ open, onClose, defaultTab = 'combat', pills }) {
 
   if (!open) return null;
 
-  const visible = byCategory[tab] ?? [];
+  const totalOwned = Object.values(pills?.ownedPills ?? {}).reduce((s, n) => s + n, 0);
+  const visible    = byCategory[tab] ?? [];
+  const tabTotal   = visible.reduce((sum, e) => sum + e.owned, 0);
+
+  const handleConsumeAll = () => {
+    const ids = [...new Set(visible.map(e => e.pill.id))];
+    pills?.consumeAll?.(ids);
+  };
 
   return (
-    <div className="pill-drawer-backdrop" onClick={onClose}>
-      <div className="pill-drawer" onClick={(e) => e.stopPropagation()}>
-        <div className="pill-drawer-header">
-          <span className="pill-drawer-title">{t('pillDrawer.title')}</span>
-          <button className="pill-drawer-close" onClick={onClose} aria-label="Close">×</button>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="pill-modal" onClick={e => e.stopPropagation()}>
+        <div className="pill-modal-header">
+          <span className="pill-modal-title">◈ {t('pillDrawer.title')}</span>
+          <span className="pill-modal-count-badge">{totalOwned} owned</span>
+          <button className="journey-close" onClick={onClose} aria-label="Close">✕</button>
         </div>
-
-        <div className="pill-drawer-tabs">
-          {PILL_CATEGORIES.map((cat) => {
-            const count = byCategory[cat].reduce((sum, e) => sum + e.owned, 0);
-            return (
-              <button
-                key={cat}
-                className={`pill-drawer-tab${tab === cat ? ' active' : ''}`}
-                onClick={() => setTab(cat)}
-              >
-                <span>{t(CAT_T_KEY[cat], { defaultValue: PILL_CATEGORY_LABEL[cat] })}</span>
-                <span className="pill-drawer-tab-count">{count}</span>
-              </button>
-            );
-          })}
+        <div className="pill-modal-tab-row">
+          <div className="pill-drawer-tabs">
+            {PILL_CATEGORIES.map((cat) => {
+              const count = byCategory[cat].reduce((sum, e) => sum + e.owned, 0);
+              return (
+                <button
+                  key={cat}
+                  className={`pill-drawer-tab${tab === cat ? ' active' : ''}`}
+                  onClick={() => setTab(cat)}
+                >
+                  <span>{t(CAT_T_KEY[cat], { defaultValue: PILL_CATEGORY_LABEL[cat] })}</span>
+                  <span className="pill-drawer-tab-count">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+          {tabTotal > 0 && (
+            <button className="pill-modal-consume-all" onClick={handleConsumeAll}>
+              Consume All ({tabTotal})
+            </button>
+          )}
         </div>
 
         <div className="pill-drawer-body">

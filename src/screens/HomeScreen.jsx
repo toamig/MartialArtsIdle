@@ -4,12 +4,10 @@ import { useTranslation } from 'react-i18next';
 import SpriteAnimator from '../components/SpriteAnimator';
 import RealmProgressBar from '../components/RealmProgressBar';
 import OfflineEarningsModal from '../components/OfflineEarningsModal';
-import PillDrawer from '../components/PillDrawer';
 import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
 import CrystalFeedModal from '../components/CrystalFeedModal';
 import DailyBonusWidget from '../components/DailyBonusWidget';
-import { PILLS_BY_ID } from '../data/pills';
 import { FEATURE_GATES } from '../data/featureGates';
 import WORLDS from '../data/worlds';
 const BASE = import.meta.env.BASE_URL;
@@ -331,13 +329,15 @@ function QiParticles({ colors }) {
 
 // ── Main screen ──────────────────────────────────────────────────────────────
 function HomeScreen({
-  cultivation, pills, inventory,
+  cultivation, inventory,
   selections, onOpenSelections,
   onNavigate,
   crystal, isCrystalUnlocked,
   dailyBonus, onOpenDailyBonus,
   lastIdleAssignment,
   openCrystal,
+  onOpenPills,
+  totalOwnedPills,
 }) {
   const { t } = useTranslation('ui');
   const {
@@ -396,12 +396,6 @@ function HomeScreen({
   // ── Crystal feed modal ───────────────────────────────────────────────────
   const [crystalModalOpen, setCrystalModalOpen] = useState(false);
   useEffect(() => { if (openCrystal && isCrystalUnlocked) setCrystalModalOpen(true); }, [openCrystal]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Pill drawer ──────────────────────────────────────────────────────────
-  const [pillDrawerOpen, setPillDrawerOpen] = useState(false);
-  const totalOwnedPills = pills
-    ? Object.keys(PILLS_BY_ID).reduce((n, id) => n + pills.getOwnedCount(id), 0)
-    : 0;
 
   const idleTimerRef = useRef(null);
   const resetIdleTimer = useCallback(() => {
@@ -516,6 +510,12 @@ function HomeScreen({
                 </button>
               );
             })()}
+            {totalOwnedPills > 0 && (
+              <button className="home-pill-chip" onClick={onOpenPills}>
+                <span className="home-pill-chip-icon">◈</span>
+                <span className="home-pill-chip-label">{totalOwnedPills} Pills</span>
+              </button>
+            )}
           </div>
 
           {/* ── Top-right chip stack — reserved for timed/seasonal events ── */}
@@ -614,28 +614,6 @@ function HomeScreen({
         <div className="home-pc-right" aria-hidden="true" />
 
       </div>{/* end home-scene */}
-
-      {/* ── Pills: floating bottom-right above nav ───────────────────── */}
-      {pills && totalOwnedPills > 0 && (
-        <div className="home-pill-float">
-          <button
-            className="home-pill-btn"
-            onClick={() => setPillDrawerOpen(true)}
-          >
-            <span className="home-pill-btn-icon">◈</span>
-            <span className="home-pill-btn-label">{t('home.pills')}</span>
-            <span className="home-pill-btn-count">{totalOwnedPills}</span>
-          </button>
-        </div>
-      )}
-
-      {/* Pill drawer — tabs by category */}
-      <PillDrawer
-        open={pillDrawerOpen}
-        onClose={() => setPillDrawerOpen(false)}
-        defaultTab="combat"
-        pills={pills}
-      />
 
       {/* Crystal feed modal */}
       {crystalModalOpen && isCrystalUnlocked && (

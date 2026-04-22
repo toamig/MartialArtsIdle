@@ -129,6 +129,28 @@ export default function usePills() {
     return ownedPills[pillId] || 0;
   }, [ownedPills]);
 
+  const consumeAll = useCallback((pillIds) => {
+    const toConsume = pillIds.filter(id => (ownedPills[id] || 0) > 0);
+    if (!toConsume.length) return;
+    setOwnedPills(prev => {
+      const next = { ...prev };
+      for (const id of toConsume) next[id] = 0;
+      return next;
+    });
+    setPermanentStats(prev => {
+      const next = { ...prev };
+      for (const id of toConsume) {
+        const pill = PILLS_BY_ID[id];
+        if (!pill) continue;
+        const qty = ownedPills[id] || 0;
+        for (const eff of pill.effects) {
+          next[eff.stat] = (next[eff.stat] ?? 0) + eff.value * qty;
+        }
+      }
+      return next;
+    });
+  }, [ownedPills]);
+
   /**
    * Returns { [stat]: [{type, value}] } for permanent pill stats.
    * qi_speed is excluded (handled via getQiMult).
@@ -157,6 +179,7 @@ export default function usePills() {
     discoveredPills,
     craftPill,
     usePill,
+    consumeAll,
     getOwnedCount,
     isDiscovered,
     getStatModifiers,
