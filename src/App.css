@@ -1354,7 +1354,8 @@ html, body, * {
 }
 
 .build-law-section-locked {
-  cursor: default;
+  position: relative;
+  cursor: default !important;
 }
 .build-law-section-locked:hover .lock-tooltip {
   opacity: 1;
