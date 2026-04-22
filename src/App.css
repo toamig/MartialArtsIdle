@@ -9631,9 +9631,12 @@ html, body, * {
   overflow: hidden;
 }
 
-/* Override the fixed 160px height from the global .combat-log rule */
+/* Override the fixed 160px height from the global .combat-log rule.
+   overflow-anchor: none — we handle scroll compensation manually in
+   CombatLog's useLayoutEffect so the browser doesn't fight us. */
 .combat-bottom .combat-log {
   height: auto;
+  overflow-anchor: none;
 }
 
 .combat-bottom .tech-icon-grid {

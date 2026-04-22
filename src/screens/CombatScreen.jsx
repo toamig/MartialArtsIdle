@@ -1,5 +1,5 @@
 // @refresh reset
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TYPE_COLOR } from '../data/techniques';
 
@@ -27,32 +27,45 @@ const LOG_COLOR = {
 };
 
 function CombatLog({ log }) {
-  const ref       = useRef(null);
-  // Timestamp of the last user-initiated scroll gesture (wheel OR pointer).
-  // Using a timestamp instead of boolean flags avoids all event-ordering races.
-  const lastInput = useRef(0);
+  const ref  = useRef(null);
 
-  useEffect(() => {
+  // Snapshot captured in the render body — runs before React commits DOM
+  // changes, giving us the scroll state we need to compute compensation.
+  const snap = useRef({ top: 0, height: 0 });
+  if (ref.current) {
+    snap.current = { top: ref.current.scrollTop, height: ref.current.scrollHeight };
+  }
+
+  // Runs synchronously after each DOM commit (before paint) so the user
+  // never sees a frame with the wrong scroll position.
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    // Skip the snap when:
-    //   1. User has scrolled far enough to be clearly reading history, OR
-    //   2. They touched the scroll area within the last 1.5 s (covers the
-    //      brief window where their gesture hasn't moved scrollTop past the
-    //      threshold yet, but their intent is clear).
-    if (el.scrollTop > 80 || Date.now() - lastInput.current < 1500) return;
-    el.scrollTop = 0;
+
+    const { top: prevTop, height: prevHeight } = snap.current;
+    if (!prevHeight) return;               // first render — nothing to adjust yet
+
+    const newHeight = el.scrollHeight;
+    const added     = newHeight - prevHeight;   // net height change from this update
+    const clientH   = el.clientHeight;
+
+    if (prevTop <= 5) {
+      // ── Following newest (at top) ──────────────────────────────────────
+      // Override overflow-anchor: keep the newest entry visible.
+      el.scrollTop = 0;
+    } else if (prevHeight - prevTop - clientH <= 5) {
+      // ── At the "end" (bottom) ──────────────────────────────────────────
+      // Stay pinned to the bottom as older entries scroll through and despawn.
+      el.scrollTop = newHeight - clientH;
+    } else if (added) {
+      // ── Reading history (middle) ───────────────────────────────────────
+      // Compensate for content added at the top so the user's view doesn't move.
+      el.scrollTop = prevTop + added;
+    }
   }, [log]);
 
-  const markInput = () => { lastInput.current = Date.now(); };
-
   return (
-    <div
-      ref={ref}
-      className="combat-log"
-      onWheel={markInput}
-      onPointerDown={markInput}
-    >
+    <div ref={ref} className="combat-log">
       {log.length === 0
         ? <p className="combat-log-empty">Awaiting combat…</p>
         : log.map((entry, i) => (
