@@ -627,7 +627,7 @@ function App() {
                       getFullStats={getFullStats}
                       onRegionCleared={clearRegion}
                     />,
-    character:  <CharacterScreen cultivation={cultivation} techniques={techniques} artefacts={artefacts} selections={selections} pills={pills} />,
+    character:  <CharacterScreen cultivation={cultivation} techniques={techniques} artefacts={artefacts} selections={selections} pills={pills} tree={tree} />,
     collection: <CollectionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} />,
     production: <ProductionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} pills={pills} tree={tree} isUnlocked={featureFlags.isUnlocked} getHint={featureFlags.getHint} getDesc={featureFlags.getDesc} />,
     settings:   null,
@@ -695,6 +695,8 @@ function App() {
           onPickLaw={selections.pickLaw}
           onSkipLaw={selections.skipLaw}
           onRerollLaw={selections.rerollLaw}
+          onRerollLawOne={selections.rerollLawOne}
+          onOpenShop={() => openModal('shop')}
           ownedLaws={cultivation.ownedLaws}
           activeLawId={cultivation.activeLaw?.id ?? null}
           onDismantleLaw={(lawId) => {

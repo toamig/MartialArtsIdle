@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import REALMS, { getMajorBreakthroughRate, isMajorTransition } from '../data/realms';
+import REALMS, { getMajorBreakthroughRate, getPeakBreakthroughRate, isMajorTransition, isPeakTransition } from '../data/realms';
 import AudioManager from '../audio/AudioManager';
 // DEFAULT_LAW / THREE_HARMONY_MANUAL no longer auto-seed the library.
 // Laws enter via major-breakthrough selections (see useSelections).
@@ -49,6 +49,10 @@ export default function useCultivation() {
   // Transient event set whenever a MAJOR realm transition fires — the home
   // screen renders a celebratory banner keyed on this id. Null otherwise.
   const [majorBreakthrough, setMajorBreakthrough] = useState(null);
+  // Set permanently after the final breakthrough (Open Heaven Layer 6 filled).
+  // Qi accumulates freely from 0 with no ceiling after this point.
+  const [ascended, setAscended] = useState(() => saved?.ascended ?? false);
+  const ascendedRef = useRef(saved?.ascended ?? false);
   const [adBoostEndsAt, setAdBoostEndsAt] = useState(() => {
     const endsAt = saved?.adBoostEndsAt ?? 0;
     return endsAt > Date.now() ? endsAt : 0;
@@ -276,46 +280,64 @@ export default function useCultivation() {
       const dt = (now - lastTickRef.current) / 1000;
       lastTickRef.current = now;
 
-      if (!maxedRef.current) {
-        const law = activeLawRef.current;
-        // Unequipped laws cultivate at base rate — no law multiplier, no
-        // unique modifiers, no realm-requirement gate.
-        const lawMult = (law && indexRef.current >= (law.realmRequirement ?? 0))
-          ? (law.cultivationSpeedMult ?? 1)
-          : 1;
-        // Apply law-unique qi_speed modifiers (INCREASED, MORE, REDUCED, etc.)
-        let qiUniqueMult = 1;
-        if (law?.uniques) {
-          const ctx = buildContext({
-            inCombat: false,
-            realmIndex: indexRef.current,
-            focusing: boostRef.current,
-          });
-          const bundle = evaluateLawUniques(law, ctx);
-          const qiMods = bundle.statMods.qi_speed ?? [];
-          qiUniqueMult = computeStat(1, qiMods);
-        }
-        // Boost multiplier: focusMult is in %, fall back to legacy 3× if unset.
-        const boostMult = boostRef.current
-          ? Math.max(1, (focusMultRef.current ?? 300) / 100)
-          : 1;
-        // Heavenly QI extras — only apply while the ad boost is live. Two
-        // independent multiplicative sources: the reincarnation tree node
-        // and the artefact heavenly_qi_mult stat.
-        const heavenlyTree = adBoostRef.current > 1 ? treeHeavenlyMultRef.current : 1;
-        const heavenlyArt  = adBoostRef.current > 1 ? (1 + heavenlyQiMultRef.current) : 1;
-        const rate = (BASE_RATE + crystalQiBonusRef.current) * lawMult * qiUniqueMult *
-          artefactQiMultRef.current *
-          boostMult *
-          adBoostRef.current * heavenlyTree * heavenlyArt *
-          pillQiMultRef.current * selectionQiMultRef.current *
-          treeQiMultRef.current * rebirthCultBuffRef.current *
-          debugQiMultRef.current;
-        rateRef.current = rate;
-        qiRef.current += rate * dt;
+      // Rate calculation runs in all states — qi always accumulates.
+      const law = activeLawRef.current;
+      // Unequipped laws cultivate at base rate — no law multiplier, no
+      // unique modifiers, no realm-requirement gate.
+      const lawMult = (law && indexRef.current >= (law.realmRequirement ?? 0))
+        ? (law.cultivationSpeedMult ?? 1)
+        : 1;
+      // Apply law-unique qi_speed modifiers (INCREASED, MORE, REDUCED, etc.)
+      let qiUniqueMult = 1;
+      if (law?.uniques) {
+        const ctx = buildContext({
+          inCombat: false,
+          realmIndex: indexRef.current,
+          focusing: boostRef.current,
+        });
+        const bundle = evaluateLawUniques(law, ctx);
+        const qiMods = bundle.statMods.qi_speed ?? [];
+        qiUniqueMult = computeStat(1, qiMods);
+      }
+      // Boost multiplier: focusMult is in %, fall back to legacy 3× if unset.
+      const boostMult = boostRef.current
+        ? Math.max(1, (focusMultRef.current ?? 300) / 100)
+        : 1;
+      // Heavenly QI extras — only apply while the ad boost is live. Two
+      // independent multiplicative sources: the reincarnation tree node
+      // and the artefact heavenly_qi_mult stat.
+      const heavenlyTree = adBoostRef.current > 1 ? treeHeavenlyMultRef.current : 1;
+      const heavenlyArt  = adBoostRef.current > 1 ? (1 + heavenlyQiMultRef.current) : 1;
+      const rate = (BASE_RATE + crystalQiBonusRef.current) * lawMult * qiUniqueMult *
+        artefactQiMultRef.current *
+        boostMult *
+        adBoostRef.current * heavenlyTree * heavenlyArt *
+        pillQiMultRef.current * selectionQiMultRef.current *
+        treeQiMultRef.current * rebirthCultBuffRef.current *
+        debugQiMultRef.current;
+      rateRef.current = rate;
+      qiRef.current += rate * dt;
 
+      if (ascendedRef.current) {
+        // Post-ascension free mode: qi grows without bound — nothing to check.
+      } else if (maxedRef.current) {
+        // Final realm: fill to cost, then fire the last ever breakthrough.
         if (qiRef.current >= costRef.current) {
-          const requiredRate = getMajorBreakthroughRate(indexRef.current);
+          qiRef.current = 0;
+          ascendedRef.current = true;
+          setAscended(true);
+          try { AudioManager.playSfx('cult_breakthrough'); } catch {}
+          setMajorBreakthrough({
+            id:      Date.now(),
+            label:   REALMS[indexRef.current].name,
+            isFinal: true,
+          });
+        }
+      } else {
+        // Normal realm progression.
+        if (qiRef.current >= costRef.current) {
+          const majorRate    = getMajorBreakthroughRate(indexRef.current);
+          const requiredRate = majorRate > 0 ? majorRate : getPeakBreakthroughRate(indexRef.current);
           if (requiredRate > 0 && rate < requiredRate) {
             // Major-realm gate: hold qi at cost until sustained qi/s is enough.
             qiRef.current = costRef.current;
@@ -325,6 +347,7 @@ export default function useCultivation() {
             const fromIndex = indexRef.current;
             const nextIndex = fromIndex + 1;
             const isMajor = isMajorTransition(fromIndex);
+            const isPeak  = !isMajor && isPeakTransition(fromIndex);
             indexRef.current  = nextIndex;
             costRef.current   = REALMS[nextIndex].cost;
             maxedRef.current  = !REALMS[nextIndex + 1];
@@ -337,17 +360,20 @@ export default function useCultivation() {
               qiRef.current += costRef.current * reservoir;
             }
             setRealmIndex(nextIndex);
-            if (isMajor) {
+            if (isMajor || isPeak) {
               try { AudioManager.playSfx('cult_breakthrough'); } catch {}
-              setMajorBreakthrough({ id: Date.now(), label: REALMS[nextIndex].name });
+              setMajorBreakthrough({
+                id:    Date.now(),
+                label: isPeak
+                  ? `${REALMS[nextIndex].name} — ${REALMS[nextIndex].stage}`
+                  : REALMS[nextIndex].name,
+                isPeak,
+              });
             }
           }
         } else if (gateRef.current) {
           gateRef.current = null;
         }
-      } else {
-        rateRef.current = 0;
-        gateRef.current = null;
       }
 
       raf = requestAnimationFrame(tick);
@@ -366,6 +392,7 @@ export default function useCultivation() {
         realmIndex:    indexRef.current,
         qi:            Math.floor(qiRef.current),
         adBoostEndsAt: adBoostEndsAtRef.current,
+        ascended:      ascendedRef.current,
       });
     }, 2000);
     return () => clearInterval(interval);
@@ -415,6 +442,8 @@ export default function useCultivation() {
     gateRef,
     majorBreakthrough,
     clearMajorBreakthrough: () => setMajorBreakthrough(null),
+    ascended,
+    isInPeakStage: !!(REALMS[realmIndex]?.stage?.includes('Peak')) || !REALMS[realmIndex + 1],
     setRealmIndex,
     activeLaw,
     setActiveLaw,

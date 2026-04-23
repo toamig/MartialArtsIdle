@@ -1,5 +1,6 @@
 // @refresh reset
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { computeAllStats, mergeModifiers } from '../data/stats';
 import { evaluateLawUniques, buildContext } from '../systems/lawEngine';
@@ -169,6 +170,63 @@ function DetailPanel({ stat, value, realmIndex }) {
   );
 }
 
+// ─── Stat breakdown tooltip ───────────────────────────────────────────────────
+
+function summarizeMods(mods) {
+  let flat = 0, baseFlat = 0, incrBase = 0, incr = 0, more = 1;
+  let hasMore = false;
+  for (const m of mods) {
+    switch (m.type) {
+      case 'flat':           flat     += m.value; break;
+      case 'base_flat':      baseFlat += m.value; break;
+      case 'increased_base': incrBase += m.value; break;
+      case 'increased':      incr     += m.value; break;
+      case 'more':           more     *= m.value; hasMore = true; break;
+    }
+  }
+  const parts = [];
+  const sign  = (v) => (v >= 0 ? '+' : '');
+  if (flat !== 0)     parts.push(`${sign(flat)}${fmt(Math.round(flat))}`);
+  if (baseFlat !== 0) parts.push(`${sign(baseFlat)}${fmt(Math.round(baseFlat))} (base)`);
+  if (incrBase !== 0) parts.push(`${sign(incrBase)}${(incrBase * 100).toFixed(0)}% of base`);
+  if (incr !== 0)     parts.push(`${sign(incr)}${(incr * 100).toFixed(0)}%`);
+  if (hasMore)        parts.push(`×${more.toFixed(2)}`);
+  return parts.join('  ·  ');
+}
+
+function StatBreakdownTooltip({ breakdown, style }) {
+  const { base, sources, total, unit = '' } = breakdown;
+  const activeSources = (sources ?? []).filter(s => s.mods?.length > 0);
+  if (!base && activeSources.length === 0) return null;
+
+  return createPortal(
+    <div className="stat-breakdown-tooltip" style={style}>
+      {base && (
+        <div className="sbt-row sbt-base">
+          <span className="sbt-src">{base.label}</span>
+          <span className="sbt-val">{fmt(Math.round(base.value))}</span>
+        </div>
+      )}
+      {activeSources.map(src => {
+        const text = summarizeMods(src.mods);
+        if (!text) return null;
+        return (
+          <div key={src.name} className="sbt-row">
+            <span className="sbt-src">{src.name}</span>
+            <span className="sbt-val sbt-bonus">{text}</span>
+          </div>
+        );
+      })}
+      <div className="sbt-divider" />
+      <div className="sbt-row sbt-total">
+        <span className="sbt-src">Total</span>
+        <span className="sbt-val">{fmt(total)}{unit}</span>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // ─── Stat table helpers ───────────────────────────────────────────────────────
 function StatGroup({ title, children }) {
   return (
@@ -179,10 +237,24 @@ function StatGroup({ title, children }) {
   );
 }
 
-function StatRow({ label, hint, value, unit = '', locked = false }) {
+function StatRow({ label, hint, value, unit = '', locked = false, breakdown = null }) {
   const { t } = useTranslation('ui');
+  const [tooltipStyle, setTooltipStyle] = useState(null);
+
+  function handleEnter(e) {
+    if (!breakdown || locked) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(rect.right + 8, window.innerWidth - 260);
+    const y = rect.top - 4;
+    setTooltipStyle({ position: 'fixed', left: x, top: y });
+  }
+
   return (
-    <div className="secondary-stat-row">
+    <div
+      className={`secondary-stat-row${breakdown && !locked ? ' secondary-stat-row-interactive' : ''}`}
+      onMouseEnter={handleEnter}
+      onMouseLeave={() => setTooltipStyle(null)}
+    >
       <span className="secondary-stat-label">{label}</span>
       {hint && <span className="secondary-stat-formula">{hint}</span>}
       <span
@@ -191,12 +263,15 @@ function StatRow({ label, hint, value, unit = '', locked = false }) {
       >
         {locked ? t('common.locked') : `${fmt(value)}${unit}`}
       </span>
+      {tooltipStyle && breakdown && !locked && (
+        <StatBreakdownTooltip breakdown={breakdown} style={tooltipStyle} />
+      )}
     </div>
   );
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-function StatsContent({ cultivation, artefacts, pills, selections }) {
+function StatsContent({ cultivation, artefacts, pills, selections, tree }) {
   const { t } = useTranslation('ui');
   const { qiRef, costRef, activeLaw, realmName, realmIndex } = cultivation;
 
@@ -208,22 +283,27 @@ function StatsContent({ cultivation, artefacts, pills, selections }) {
     return () => clearInterval(id);
   }, [qiRef, costRef]);
 
-  // Evaluate active law uniques for their out-of-combat stat contribution.
-  // Combat-only conditionals (like "while below 50% HP") are inactive here.
   const lawCtx = buildContext({
     inCombat: false, realmIndex, lawElement: activeLaw?.element,
     isAtPeak: realmIndex >= 46,
     equippedArtefactCount: artefacts?.owned.filter(o => Object.values(artefacts.equipped ?? {}).includes(o.uid)).length ?? 0,
   });
   const lawBundle = evaluateLawUniques(activeLaw, lawCtx);
-  // Merge every modifier source the central getFullStats already uses, so
-  // the Stats tab reflects pill-consumption bonuses and perk picks in
-  // addition to artefacts + law uniques.
+
+  // Per-source modifier bundles — kept separate so breakdown tooltips can
+  // attribute each contribution to its origin system.
+  const artefactModBundle  = artefacts?.getStatModifiers?.()  ?? {};
+  const pillModBundle      = pills?.getStatModifiers?.()      ?? {};
+  const selectionModBundle = selections?.getStatModifiers?.() ?? {};
+  const treeModBundle      = tree?.getStatModifiers?.()       ?? {};
+  const lawModBundle       = lawBundle.statMods               ?? {};
+
   const mergedMods = mergeModifiers(
-    artefacts?.getStatModifiers?.(),
-    pills?.getStatModifiers?.(),
-    lawBundle.statMods,
-    selections?.getStatModifiers?.(),
+    artefactModBundle,
+    pillModBundle,
+    lawModBundle,
+    selectionModBundle,
+    treeModBundle,
   );
   const { meta, primary, combat, activity } = computeAllStats(qi, activeLaw, realmIndex, mergedMods);
   const { soulUnlocked } = meta;
@@ -231,6 +311,37 @@ function StatsContent({ cultivation, artefacts, pills, selections }) {
   const toggle = (stat) => setActive((s) => (s === stat ? null : stat));
   const enter  = (stat) => setActive(stat);
   const leave  = ()     => setActive(null);
+
+  // ── Breakdown helpers ──────────────────────────────────────────────────────
+  const SOURCE_BUNDLES = [
+    { name: 'Artefacts',  bundle: artefactModBundle  },
+    { name: 'Pills',      bundle: pillModBundle       },
+    { name: 'Law',        bundle: lawModBundle        },
+    { name: 'Selections', bundle: selectionModBundle  },
+    { name: 'Tree',       bundle: treeModBundle       },
+  ];
+
+  function mkBd(statId, baseVal, baseLabel, total, unit = '') {
+    const isPrimary = statId === 'essence' || statId === 'body' || statId === 'soul';
+    const sources = SOURCE_BUNDLES.map(({ name, bundle }) => ({
+      name,
+      mods: isPrimary
+        ? [...(bundle[statId] ?? []), ...(bundle.all_primary_stats ?? [])]
+        : (bundle[statId] ?? []),
+    }));
+    return { base: baseLabel ? { label: baseLabel, value: baseVal } : null, sources, total, unit };
+  }
+
+  const healthBase = (primary.essence + primary.body) * 12 + primary.soul * 4;
+
+  const qiSpeedBreakdown = {
+    base: { label: 'Base', value: 1 },
+    sources: (activeLaw?.cultivationSpeedMult ?? 1) !== 1
+      ? [{ name: 'Law', mods: [{ type: 'more', value: activeLaw.cultivationSpeedMult }] }]
+      : [],
+    total: activity.qiSpeed,
+    unit: '/s',
+  };
 
   return (
     <div className="stats-content">
@@ -291,24 +402,84 @@ function StatsContent({ cultivation, artefacts, pills, selections }) {
       {/* ── Combat + Utility stats: stacked on mobile, side by side on PC ── */}
       <div className="secondary-stats-grid">
         <StatGroup title={t('stats.groupCombat')}>
-          <StatRow label={t('statNames.health')}           hint="(Essence + Body) × 12"  value={combat.health} />
-          <StatRow label={t('statNames.defense')}          hint="from Body"              value={combat.defense} />
-          <StatRow label={t('statNames.elemental_defense')} hint="from Essence"           value={combat.elemDef} />
-          <StatRow label={t('statNames.soul_toughness')}   hint="from Soul"               value={combat.soulTough}    locked={!soulUnlocked} />
-          <StatRow label={t('statNames.physical_damage')}  hint="bonus"                   value={combat.physDmg} />
-          <StatRow label={t('statNames.elemental_damage')} hint="bonus"                   value={combat.elemDmg} />
-          <StatRow label={t('statNames.psychic_damage')}   hint="bonus"                   value={combat.psychDmg}     locked={!soulUnlocked} />
-          <StatRow label={t('statNames.exploit_chance')}   hint=""                        value={combat.exploitChance} unit="%" />
-          <StatRow label={t('statNames.exploit_mult')}     hint=""                        value={combat.exploitMult}   unit="%" />
+          <StatRow
+            label={t('statNames.health')}            hint="(Essence + Body) × 12"
+            value={combat.health}
+            breakdown={mkBd('health', healthBase, `Primary stats (${fmt(healthBase)})`, combat.health)}
+          />
+          <StatRow
+            label={t('statNames.defense')}           hint="from Body"
+            value={combat.defense}
+            breakdown={mkBd('defense', primary.body, `Body (${primary.body})`, combat.defense)}
+          />
+          <StatRow
+            label={t('statNames.elemental_defense')} hint="from Essence"
+            value={combat.elemDef}
+            breakdown={mkBd('elemental_defense', primary.essence, `Essence (${primary.essence})`, combat.elemDef)}
+          />
+          <StatRow
+            label={t('statNames.soul_toughness')}   hint="from Soul"
+            value={combat.soulTough}    locked={!soulUnlocked}
+            breakdown={mkBd('soul_toughness', primary.soul, `Soul (${primary.soul})`, combat.soulTough)}
+          />
+          <StatRow
+            label={t('statNames.physical_damage')}  hint="bonus"
+            value={combat.physDmg}
+            breakdown={mkBd('physical_damage', 0, null, combat.physDmg)}
+          />
+          <StatRow
+            label={t('statNames.elemental_damage')} hint="bonus"
+            value={combat.elemDmg}
+            breakdown={mkBd('elemental_damage', 0, null, combat.elemDmg)}
+          />
+          <StatRow
+            label={t('statNames.psychic_damage')}   hint="bonus"
+            value={combat.psychDmg}     locked={!soulUnlocked}
+            breakdown={mkBd('psychic_damage', 0, null, combat.psychDmg)}
+          />
+          <StatRow
+            label={t('statNames.exploit_chance')}   hint=""
+            value={combat.exploitChance} unit="%"
+            breakdown={mkBd('exploit_chance', 0, null, combat.exploitChance, '%')}
+          />
+          <StatRow
+            label={t('statNames.exploit_mult')}     hint=""
+            value={combat.exploitMult}   unit="%"
+            breakdown={mkBd('exploit_attack_mult', 150, 'Base (150%)', combat.exploitMult, '%')}
+          />
         </StatGroup>
 
         <StatGroup title={t('stats.groupUtility')}>
-          <StatRow label={t('statNames.qi_speed')}         hint="base × law mult"         value={activity.qiSpeed}      unit="/s" />
-          <StatRow label={t('statNames.focus_mult')}       hint="while boosting"          value={activity.focusMult}    unit="%" />
-          <StatRow label={t('statNames.harvest_speed')}    hint="from Soul"               value={activity.harvestSpeed} locked={!soulUnlocked} />
-          <StatRow label={t('statNames.harvest_luck')}     hint=""                        value={activity.harvestLuck} />
-          <StatRow label={t('statNames.mining_speed')}     hint="from Body"               value={activity.miningSpeed} />
-          <StatRow label={t('statNames.mining_luck')}      hint=""                        value={activity.miningLuck} />
+          <StatRow
+            label={t('statNames.qi_speed')}         hint="base × law mult"
+            value={activity.qiSpeed}      unit="/s"
+            breakdown={qiSpeedBreakdown}
+          />
+          <StatRow
+            label={t('statNames.focus_mult')}       hint="while boosting"
+            value={activity.focusMult}    unit="%"
+            breakdown={mkBd('qi_focus_mult', 300, 'Base (300%)', activity.focusMult, '%')}
+          />
+          <StatRow
+            label={t('statNames.harvest_speed')}    hint="from Soul"
+            value={activity.harvestSpeed} locked={!soulUnlocked}
+            breakdown={mkBd('harvest_speed', Math.floor(primary.soul * 0.1), `Soul/10 (${Math.floor(primary.soul * 0.1)})`, activity.harvestSpeed)}
+          />
+          <StatRow
+            label={t('statNames.harvest_luck')}     hint=""
+            value={activity.harvestLuck}
+            breakdown={mkBd('harvest_luck', 0, null, activity.harvestLuck)}
+          />
+          <StatRow
+            label={t('statNames.mining_speed')}     hint="from Body"
+            value={activity.miningSpeed}
+            breakdown={mkBd('mining_speed', Math.floor(primary.body * 0.1), `Body/10 (${Math.floor(primary.body * 0.1)})`, activity.miningSpeed)}
+          />
+          <StatRow
+            label={t('statNames.mining_luck')}      hint=""
+            value={activity.miningLuck}
+            breakdown={mkBd('mining_luck', 0, null, activity.miningLuck)}
+          />
         </StatGroup>
       </div>
     </div>

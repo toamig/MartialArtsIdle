@@ -109,6 +109,22 @@ export function isMajorTransition(fromIndex) {
 }
 
 /**
+ * Is the transition `fromIndex → fromIndex+1` a "peak" event?
+ * Two cases:
+ *   1. Entering a Peak Stage within the same realm (name unchanged).
+ *   2. Entering the absolute last realm in the array (no entry after it) —
+ *      that layer is the endgame pinnacle before the final ascension.
+ */
+export function isPeakTransition(fromIndex) {
+  const a = REALMS[fromIndex];
+  const b = REALMS[fromIndex + 1];
+  if (!a || !b) return false;
+  if (a.name === b.name && (b.stage?.includes('Peak') ?? false)) return true;
+  if (!REALMS[fromIndex + 2]) return true; // entering the very last realm
+  return false;
+}
+
+/**
  * Returns the 0-based ordinal of the major transition starting from `fromIndex`
  * (i.e. how many major transitions precede this one), or -1 if the transition
  * is not a major one.
@@ -120,6 +136,24 @@ export function majorTransitionOrdinal(fromIndex) {
     if (isMajorTransition(i)) ord++;
   }
   return ord;
+}
+
+/**
+ * Required qi/s to pass a Peak transition at `fromIndex → fromIndex+1`.
+ * Uses the same exponential-decay formula as major breakthroughs, ordinal
+ * based on how many major transitions have already occurred before fromIndex.
+ * Returns 0 if this is not a peak transition.
+ */
+export function getPeakBreakthroughRate(fromIndex) {
+  if (!isPeakTransition(fromIndex)) return 0;
+  const next = REALMS[fromIndex + 1];
+  if (!next) return 0;
+  let ord = 0;
+  for (let i = 0; i <= fromIndex; i++) {
+    if (isMajorTransition(i)) ord++;
+  }
+  const pct = MAJOR_BREAKTHROUGH_BASE_PCT * Math.pow(MAJOR_BREAKTHROUGH_DECAY, ord);
+  return next.cost * pct;
 }
 
 /**
