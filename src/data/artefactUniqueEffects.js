@@ -32,12 +32,12 @@ const M = MOD.MORE;
 
 export const ARTEFACT_UNIQUE_EFFECTS = {
   // ─── Weapon ────────────────────────────────────────────────────────────────
-  a_keen_edge:        [{ kind: 'stat', stat: 'crit_chance',          mod: F, value: 'rolled_pct' }],
+  a_keen_edge:        [{ kind: 'stat', stat: 'exploit_chance',       mod: F, value: 'rolled_pct' }],
   a_blood_drinker:    [{ kind: 'stat', stat: 'lifesteal',            mod: F, value: 'rolled_pct' }],
   a_executioner:      [{ kind: 'flag', flag: 'executeBonusPct',      value: 'rolled_pct' }],
   a_void_cleaver:     [{ kind: 'stat', stat: 'ignore_defense_pct',   mod: F, value: 'rolled_pct' }],
   a_perfect_balance:  [{ kind: 'flag', flag: 'damagePerArtefactPct', value: 'rolled_pct' }],
-  a_phantom_edge:     [{ kind: 'stat', stat: 'attack_cd_reduction',  mod: F, value: 'rolled' }],
+  a_phantom_edge:     [{ kind: 'stat', stat: 'technique_cd_reduction', mod: F, value: 'rolled' }],
   a_void_pierce:      [{ kind: 'stat', stat: 'ignore_defense_chance', mod: F, value: 'rolled_pct' }],
   a_savage_grip:      [{ kind: 'stat', stat: 'body',                 mod: I, value: 'rolled' }],
   a_ethereal_blade:   [{ kind: 'stat', stat: 'soul',                 mod: I, value: 'rolled' }],
@@ -46,10 +46,10 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
 
   // ─── Head ──────────────────────────────────────────────────────────────────
   a_clear_mind:        [{ kind: 'stat', stat: 'technique_cd_reduction', mod: F, value: 'rolled' }],
-  a_focused_will:      [{ kind: 'stat', stat: 'crit_chance',            mod: F, value: 'rolled_pct' }],
+  a_focused_will:      [{ kind: 'stat', stat: 'exploit_chance',         mod: F, value: 'rolled_pct' }],
   a_serene_face:       [{ kind: 'stat', stat: 'healing_received',       mod: F, value: 'rolled' }],
   a_warmind:           [{ kind: 'flag', flag: 'damageIfSoulGtBodyPct',  value: 'rolled_pct' }],
-  a_seeker_eye:        [{ kind: 'stat', stat: 'crit_damage',            mod: F, value: 'rolled_pct' }],
+  a_seeker_eye:        [{ kind: 'stat', stat: 'exploit_attack_mult',    mod: F, value: 'rolled_pct' }],
   a_oracles_insight:   [{ kind: 'stat', stat: 'dodge_fatal_chance',     mod: F, value: 'rolled_pct' }],
   a_clarity_storm:     [{ kind: 'flag', flag: 'postDodgeCdReductionPct', value: 'rolled_pct' }],
   a_crown_focus:       [{ kind: 'stat', stat: 'crit_twice_chance',      mod: F, value: 'rolled_pct' }],
@@ -57,7 +57,7 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
   a_visionary_mind:    [{ kind: 'stat', stat: 'offline_qi_mult',        mod: I, value: 'rolled' }],
   a_warmask:           [{ kind: 'flag', flag: 'damageIf3TechsPct',      value: 'rolled_pct' }],
   a_silent_crown:      [{ kind: 'flag', flag: 'firstAttackGuaranteedCrit', value: true }],
-  a_dao_helm:          [{ kind: 'stat', stat: 'qi_speed',               mod: I, value: 'rolled' }],
+  a_dao_helm:          [{ kind: 'stat', stat: 'qi_speed',               mod: M, value: 'rolled_as_more' }],
 
   // ─── Body ──────────────────────────────────────────────────────────────────
   a_titan_chest:       [{ kind: 'stat', stat: 'health',                 mod: I, value: 'rolled' }],
@@ -100,12 +100,12 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
     { kind: 'stat', stat: 'damage_all', mod: I, value: 'rolled' },
     { kind: 'stat', stat: 'defense',    mod: I, value: 'rolled' },
   ],
-  a_qi_palms:          [{ kind: 'stat', stat: 'qi_speed',              mod: I, value: 'rolled' }],
+  a_qi_palms:          [{ kind: 'stat', stat: 'qi_speed',              mod: M, value: 'rolled_as_more' }],
   a_destruction_grip:  [{ kind: 'stat', stat: 'damage_all',            mod: I, value: 'rolled_quarter' }],
   a_phoenix_palms:     [{ kind: 'flag', flag: 'fireHealPct',           value: 'rolled_pct' }],
 
   // ─── Waist ─────────────────────────────────────────────────────────────────
-  a_qi_storage:        [{ kind: 'stat', stat: 'qi_speed',              mod: I, value: 'rolled' }],
+  a_qi_storage:        [{ kind: 'stat', stat: 'qi_speed',              mod: M, value: 'rolled_as_more' }],
   a_sage_belt:         [{ kind: 'stat', stat: 'pill_effect_mult',      mod: F, value: 'rolled' }],
   a_essence_belt:      [{ kind: 'flag', flag: 'bodyToEssencePct',      value: 'rolled_pct' }],
   a_battle_sash:       [{ kind: 'flag', flag: 'damagePerKill5sPct',    value: 'rolled_pct' }],
@@ -145,7 +145,7 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
   a_seer_locket:       [{ kind: 'stat', stat: 'all_loot_bonus',        mod: F, value: 'rolled' }],
   a_void_pendant:      [{ kind: 'stat', stat: 'ignore_defense_pct',    mod: F, value: 'rolled_pct' }],
   a_blood_amulet:      [{ kind: 'stat', stat: 'lifesteal',             mod: F, value: 'rolled_pct' }],
-  a_qi_amulet:         [{ kind: 'stat', stat: 'qi_speed',              mod: I, value: 'rolled' }],
+  a_qi_amulet:         [{ kind: 'stat', stat: 'qi_speed',              mod: M, value: 'rolled_as_more' }],
   a_warlords_amulet:   [
     { kind: 'stat', stat: 'damage_all', mod: I, value: 'rolled' },
     { kind: 'stat', stat: 'defense',    mod: I, value: 'rolled' },
@@ -189,6 +189,7 @@ export function resolveUniqueValue(spec, rolled) {
     case 'rolled_third':    return r / 300;
     case 'rolled_quarter':  return r / 400;
     case 'rolled_neg':      return -r / 100;
+    case 'rolled_as_more':  return 1 + r / 100;
     default:                return 0;
   }
 }

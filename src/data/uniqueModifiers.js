@@ -22,12 +22,12 @@
 export const ARTEFACT_UNIQUES = [
 
   // ── Weapon-specific ──
-  { id: 'a_keen_edge',         name: 'Keen Edge', slot: 'weapon', range: { min: 5, max: 15 }, description: '+{value}% crit chance on weapon attacks.' },
+  { id: 'a_keen_edge',         name: 'Keen Edge', slot: 'weapon', range: { min: 5, max: 15 }, description: '+{value}% exploit chance.' },
   { id: 'a_blood_drinker',     name: 'Blood Drinker', slot: 'weapon', range: { min: 1, max: 5 }, description: 'Heal {value}% of damage dealt.' },
   { id: 'a_executioner',       name: 'Executioner', slot: 'weapon', range: { min: 50, max: 150 }, description: '+{value}% damage to enemies below 25% HP.' },
   { id: 'a_void_cleaver',      name: 'Void Cleaver', slot: 'weapon', range: { min: 10, max: 25 }, description: 'Ignore {value}% of enemy defense.' },
   { id: 'a_perfect_balance',   name: 'Perfect Balance', slot: 'weapon', range: { min: 5, max: 15 }, description: '+{value}% damage per equipped artefact.' },
-  { id: 'a_phantom_edge',      name: 'Phantom Edge', slot: 'weapon', range: { min: 10, max: 30 }, description: 'Attack cooldowns -{value}%.' },
+  { id: 'a_phantom_edge',      name: 'Phantom Edge', slot: 'weapon', range: { min: 10, max: 30 }, description: 'All technique cooldowns -{value}%.' },
   { id: 'a_void_pierce',       name: 'Void Pierce', slot: 'weapon', range: { min: 5, max: 15 }, description: '+{value}% chance to ignore all defense.' },
   { id: 'a_savage_grip',       name: 'Savage Grip', slot: 'weapon', range: { min: 5, max: 15 }, description: '+{value}% damage from Body stat.' },
   { id: 'a_ethereal_blade',    name: 'Ethereal Blade', slot: 'weapon', range: { min: 20, max: 50 }, description: '+{value}% damage from Soul stat.' },
@@ -36,10 +36,10 @@ export const ARTEFACT_UNIQUES = [
 
   // ── Head-specific ──
   { id: 'a_clear_mind',        name: 'Clear Mind', slot: 'head', range: { min: 5, max: 15 }, description: 'All technique cooldowns -{value}%.' },
-  { id: 'a_focused_will',      name: 'Focused Will', slot: 'head', range: { min: 5, max: 15 }, description: '+{value}% crit chance.' },
+  { id: 'a_focused_will',      name: 'Focused Will', slot: 'head', range: { min: 5, max: 15 }, description: '+{value}% exploit chance.' },
   { id: 'a_serene_face',       name: 'Serene Face', slot: 'head', range: { min: 5, max: 15 }, description: '+{value}% healing received.' },
   { id: 'a_warmind',           name: 'Warmind', slot: 'head', range: { min: 20, max: 60 }, description: '+{value}% damage if Soul > Body.' },
-  { id: 'a_seeker_eye',        name: 'Seeker\'s Eye', slot: 'head', range: { min: 5, max: 15 }, description: '+{value}% crit damage.' },
+  { id: 'a_seeker_eye',        name: 'Seeker\'s Eye', slot: 'head', range: { min: 5, max: 15 }, description: '+{value}% exploit damage.' },
   { id: 'a_oracles_insight',   name: 'Oracle\'s Insight', slot: 'head', range: { min: 5, max: 15 }, description: '+{value}% chance to dodge fatal blows.' },
   { id: 'a_clarity_storm',     name: 'Clarity Storm', slot: 'head', range: { min: 5, max: 15 }, description: 'After dodging, cooldowns -{value}% for 3s.' },
   { id: 'a_crown_focus',       name: 'Crown of Focus', slot: 'head', range: { min: 5, max: 15 }, description: '+{value}% chance to crit twice.' },
@@ -47,7 +47,7 @@ export const ARTEFACT_UNIQUES = [
   { id: 'a_visionary_mind',    name: 'Visionary Mind', slot: 'head', range: { min: 30, max: 80 }, description: '+{value}% offline qi gain.' },
   { id: 'a_warmask',           name: 'Warmask', slot: 'head', range: { min: 20, max: 60 }, description: '+{value}% damage if 3+ techniques equipped.' },
   { id: 'a_silent_crown',      name: 'Silent Crown', slot: 'head',range: { min: 30, max: 80 }, description: 'First attack each combat is a guaranteed crit.' },
-  { id: 'a_dao_helm',          name: 'Dao Helm', slot: 'head', range: { min: 5, max: 15 }, description: '+{value}% cultivation speed.' },
+  { id: 'a_dao_helm',          name: 'Dao Helm', slot: 'head', range: { min: 5, max: 15 }, description: '{value}% more qi/s.' },
 
   // ── Body-specific ──
   { id: 'a_titan_chest',       name: 'Titan\'s Chest', slot: 'body', range: { min: 10, max: 30 }, description: '+{value}% max HP.' },
@@ -75,12 +75,12 @@ export const ARTEFACT_UNIQUES = [
   { id: 'a_alchemist_hands',   name: 'Alchemist\'s Hands',slot: 'hands', range: { min: 10, max: 30 }, description: 'Pill effects +{value}%.' },
   { id: 'a_combo_grip',        name: 'Combo Grip', slot: 'hands', range: { min: 5, max: 15 }, description: '+{value}% per consecutive hit.' },
   { id: 'a_warriors_grip',     name: 'Warrior\'s Grip', slot: 'hands', range: { min: 5, max: 15 }, description: '+{value}% damage and defense.' },
-  { id: 'a_qi_palms',          name: 'Qi Palms', slot: 'hands', range: { min: 5, max: 15 }, description: '+{value}% qi gain.' },
+  { id: 'a_qi_palms',          name: 'Qi Palms', slot: 'hands', range: { min: 5, max: 15 }, description: '{value}% more qi/s.' },
   { id: 'a_destruction_grip',  name: 'Destruction Grip', slot: 'hands', range: { min: 30, max: 80 }, description: '+{value}% damage to objects and constructs.' },
   { id: 'a_phoenix_palms',     name: 'Phoenix Palms', slot: 'hands', range: { min: 5, max: 15 }, description: 'Fire damage heals {value}% of dealt damage.' },
 
   // ── Waist-specific ──
-  { id: 'a_qi_storage',        name: 'Qi Storage', slot: 'waist', range: { min: 10, max: 30 }, description: '+{value}% qi gain.' },
+  { id: 'a_qi_storage',        name: 'Qi Storage', slot: 'waist', range: { min: 10, max: 30 }, description: '{value}% more qi/s.' },
   { id: 'a_sage_belt',         name: 'Sage\'s Belt', slot: 'waist', range: { min: 5, max: 15 }, description: '+{value}% pill effects.' },
   { id: 'a_essence_belt',      name: 'Essence Belt', slot: 'waist', range: { min: 5, max: 15 }, description: 'Convert {value}% body to essence.' },
   { id: 'a_battle_sash',       name: 'Battle Sash', slot: 'waist', range: { min: 5, max: 15 }, description: '+{value}% damage per kill in last 5s.' },
@@ -111,7 +111,7 @@ export const ARTEFACT_UNIQUES = [
   { id: 'a_seer_locket',       name: 'Seer Locket', slot: 'neck', range: { min: 5, max: 15 }, description: '+{value}% all loot.' },
   { id: 'a_void_pendant',      name: 'Void Pendant', slot: 'neck', range: { min: 5, max: 15 }, description: 'Ignore {value}% enemy defense.' },
   { id: 'a_blood_amulet',      name: 'Blood Amulet', slot: 'neck', range: { min: 1, max: 4 }, description: '+{value}% lifesteal.' },
-  { id: 'a_qi_amulet',         name: 'Qi Amulet', slot: 'neck', range: { min: 5, max: 15 }, description: '+{value}% qi gain.' },
+  { id: 'a_qi_amulet',         name: 'Qi Amulet', slot: 'neck', range: { min: 5, max: 15 }, description: '{value}% more qi/s.' },
   { id: 'a_warlords_amulet',   name: 'Warlord\'s Amulet', slot: 'neck', range: { min: 5, max: 15 }, description: '+{value}% damage and defense.' },
   { id: 'a_oracle_amulet',     name: 'Oracle Amulet', slot: 'neck', range: { min: 1, max: 5 }, description: '+{value}% chance to dodge fatal blows.' },
   { id: 'a_assassin_pendant',  name: 'Assassin Pendant', slot: 'neck', range: { min: 5, max: 15 }, description: '+{value}% crit chance.' },
