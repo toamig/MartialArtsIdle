@@ -7082,6 +7082,14 @@ html, body, * {
 .region-row {
   position: relative;
   padding: 12px 16px;
+  /* border-box so that adding border-left: 3px when idling doesn't grow
+     the row's total dimensions and shift surrounding content. */
+  box-sizing: border-box;
+  /* Lock row height so the pending-slot text appearing, the collect
+     button appearing, or the idling border-left toggling never changes
+     the list's overall vertical layout. Matches the full-state natural
+     height (padding + title + min-realm + pending-slot + padding). */
+  min-height: 88px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -7218,8 +7226,18 @@ html, body, * {
 }
 
 .region-pending-slot {
-  min-height: 18px;
+  /* FIXED height (not min-height) so the span inside can't push this slot
+     taller — keeps the row height perfectly stable whether the slot is
+     empty, holds short text, or holds an overflowing long drop list. */
+  height: 18px;
   margin-top: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  /* Reserve space to the right so the absolute collect button never visually
+     overlaps the pending text (button is ~90px wide at right: 16px). */
+  padding-right: 90px;
+  min-width: 0;
 }
 
 .region-pending-items {
@@ -7229,6 +7247,11 @@ html, body, * {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* inline-block gives text-overflow:ellipsis something to clip against
+     and prevents any edge-case line-box height growth. */
+  display: inline-block;
+  max-width: 100%;
+  line-height: 18px;
 }
 
 /* ── Enemy chip row (world tab region cards) ───────────────────────────────── */
