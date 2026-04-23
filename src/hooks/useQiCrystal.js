@@ -130,9 +130,11 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
    * Used by the redesigned feed modal that lets the player set an RQI target
    * and auto-consumes stones (cheapest-first) to hit it.
    *
-   * Stops auto-leveling at the FIRST visual-tier boundary crossed, so the
-   * player always gets a dramatic evolution moment for each tier. Any RQI not
-   * spent stays in `refinedQi` as partial progress for the next refine.
+   * Consumes the full RQI and levels up all the way — the player always gets
+   * every level they paid for. If ANY visual-tier boundary was crossed in the
+   * process, the returned info describes the START → END tier jump so the
+   * caller can play one evolution overlay (even when multiple tiers were
+   * crossed in a single feed).
    *
    * @param {Array<{id: string, qty: number}>} plan
    * @returns {{ tierChanged: boolean, previousTier: number, newTier: number, newLevel: number }}
@@ -157,23 +159,19 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     // Compute the transition eagerly from current state so the return value is
     // populated before this function returns (setState updaters are not
     // guaranteed to run synchronously).
-    let level     = state.level;
-    let refinedQi = state.refinedQi + totalRqi;
+    let level       = state.level;
+    let refinedQi   = state.refinedQi + totalRqi;
     const startTier = getCrystalTier(level);
-    const result = { ...empty };
     while (true) {
       const needed = getRequiredRefinedQi(level + 1);
       if (refinedQi < needed) break;
       refinedQi -= needed;
       level += 1;
-      if (getCrystalTier(level) !== startTier) {
-        result.tierChanged  = true;
-        result.previousTier = startTier;
-        result.newTier      = getCrystalTier(level);
-        result.newLevel     = level;
-        break;
-      }
     }
+    const endTier = getCrystalTier(level);
+    const result  = endTier !== startTier
+      ? { tierChanged: true, previousTier: startTier, newTier: endTier, newLevel: level }
+      : empty;
     applyState({ level, refinedQi });
     return result;
   }, [state.level, state.refinedQi, getQuantity, removeItem, applyState]);
