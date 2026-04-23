@@ -210,60 +210,146 @@ const CRYSTAL_TIER_NAMES = {
  * advances. Mirrors BreakthroughBanner's auto-dismiss pattern — keyed on the
  * event id so every evolution remounts and replays.
  */
+// Stage size in CSS px — overlay artwork native size. We scale down to the
+// origin rect at the start/end of the animation, so the "picked-up" crystal
+// appears identical in size to the one sitting in the anchor.
+const CES_STAGE_SIZE = 220;
+const CES_PLAY_MS    = 3800;  // pickup + shatter + settle at centre
+const CES_RETURN_MS  = 500;   // tap → shrink back to anchor + unmount
+
 function CrystalEvolutionOverlay({ event, onDone }) {
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
+  // Phase state — overlay waits at 'settled' for a tap before 'returning'.
+  const [phase, setPhase] = useState('playing');
+
+  // Play phase → settled (after transition finishes)
   useEffect(() => {
-    if (!event) return undefined;
-    const id = setTimeout(() => onDoneRef.current?.(), 3200);
+    if (!event || phase !== 'playing') return undefined;
+    const id = setTimeout(() => setPhase('settled'), CES_PLAY_MS);
     return () => clearTimeout(id);
-  }, [event]);
+  }, [event, phase]);
+
+  // Tap anywhere → begin returning
+  useEffect(() => {
+    if (phase !== 'settled') return undefined;
+    const handler = () => setPhase('returning');
+    window.addEventListener('pointerdown', handler, { once: true });
+    return () => window.removeEventListener('pointerdown', handler);
+  }, [phase]);
+
+  // Return phase → unmount
+  useEffect(() => {
+    if (phase !== 'returning') return undefined;
+    const id = setTimeout(() => onDoneRef.current?.(), CES_RETURN_MS);
+    return () => clearTimeout(id);
+  }, [phase]);
+
   if (!event) return null;
-  const { glowA, glowB } = CRYSTAL_COLORS[event.newTier] ?? CRYSTAL_COLORS[1];
+  const variant = event.variant ?? 'shatter';
+  const { glowA, glowB, textName } = CRYSTAL_COLORS[event.newTier] ?? CRYSTAL_COLORS[1];
   const oldSrc = event.previousTier > 0
     ? `${BASE}crystals/crystal_${event.previousTier}.png`
     : `${BASE}crystals/crystal_locked.png`;
   const newSrc = `${BASE}crystals/crystal_${event.newTier}.png`;
   const tierName = CRYSTAL_TIER_NAMES[event.newTier] ?? `Tier ${event.newTier}`;
+  const card = (
+    <div className="crystal-evolve-card">
+      <div className="crystal-evolve-kicker">Evolution</div>
+      <div className="crystal-evolve-name">{tierName}</div>
+      <div className="crystal-evolve-sub">Tier {event.newTier} · Level {event.newLevel}</div>
+    </div>
+  );
+
+  // Lift-and-return geometry — overlay stage starts at the home crystal's
+  // rect and returns there at the end. Falls back to screen centre if no
+  // origin was captured (e.g. gd trigger while crystal was off-screen).
+  const originX     = event.origin?.x ?? (typeof window !== 'undefined' ? window.innerWidth  / 2 - CES_STAGE_SIZE / 2 : 0);
+  const originY     = event.origin?.y ?? (typeof window !== 'undefined' ? window.innerHeight / 2 - CES_STAGE_SIZE / 2 : 0);
+  const originScale = event.origin?.w ? event.origin.w / CES_STAGE_SIZE : 1;
+  const stageStyle  = {
+    '--ce-a':         glowA,
+    '--ce-b':         glowB,
+    '--ce-text-name': textName,
+    '--origin-x':     `${originX}px`,
+    '--origin-y':     `${originY}px`,
+    '--origin-scale': originScale,
+  };
+
+  if (variant === 'shatter') {
+    // 8 shards around the center — varied distance so the ring feels alive.
+    const shards = Array.from({ length: 8 }, (_, i) => ({
+      angle:    i * 45,
+      distance: 170 + (i % 3) * 18,
+      spin:     i % 2 === 0 ? 1 : -1,
+    }));
+    return (
+      <div
+        className={`crystal-evolve-overlay crystal-evolve-overlay-shatter ces-phase-${phase}`}
+        aria-live="assertive"
+        style={stageStyle}
+      >
+        <div className="ces-flash" />
+        <div className="ces-stage">
+          <div className="ces-stack">
+            <img src={oldSrc} className="ces-old" alt="" draggable="false" />
+            {shards.map((s, i) => (
+              <span
+                key={i}
+                className="ces-shard"
+                style={{
+                  '--shard-angle':    `${s.angle}deg`,
+                  '--shard-distance': `${s.distance}px`,
+                  '--shard-spin':     `${s.spin * 1080}deg`,
+                }}
+              />
+            ))}
+            <div className="ces-shockwave" />
+            <img src={newSrc} className="ces-new" alt="" draggable="false" />
+          </div>
+        </div>
+        {card}
+        {phase === 'settled' && (
+          <div className="ces-tap-hint">Tap to continue</div>
+        )}
+      </div>
+    );
+  }
+
+  // Fallback: original flash-swap variant (kept for A/B comparison)
   return (
-    <div
-      className="crystal-evolve-overlay"
-      aria-live="assertive"
-      style={{ '--ce-a': glowA, '--ce-b': glowB }}
-    >
+    <div className="crystal-evolve-overlay" aria-live="assertive" style={stageStyle}>
       <div className="crystal-evolve-flash" />
       <div className="crystal-evolve-stack">
         <img src={oldSrc} className="crystal-evolve-old"  alt="" draggable="false" />
         <img src={newSrc} className="crystal-evolve-new"  alt="" draggable="false" />
         <div className="crystal-evolve-burst" />
       </div>
-      <div className="crystal-evolve-card">
-        <div className="crystal-evolve-kicker">Evolution</div>
-        <div className="crystal-evolve-name">{tierName}</div>
-        <div className="crystal-evolve-sub">Tier {event.newTier} · Level {event.newLevel}</div>
-      </div>
+      {card}
     </div>
   );
 }
 
 // Glow and particle colors per visual tier.
-// glowA = inner/bright,  glowB = outer/dim,  particles = 5 shades for the stream.
+// glowA = inner/bright,  glowB = outer/dim,
+// textName = deeper saturated tier hue used for the evolution name/kicker,
+// particles = 5 shades for the stream.
 const CRYSTAL_COLORS = {
-  locked: { glowA: 'rgba(80,80,100,0)',    glowB: 'rgba(50,50,70,0)',     particles: ['#555566','#444455','#666677','#333344','#777788'] },
-  1:      { glowA: 'rgba(136,153,187,0.9)',glowB: 'rgba(100,120,160,0.5)',particles: ['#8899bb','#aabbcc','#99aacc','#778899','#bbccdd'] },
-  2:      { glowA: 'rgba(68,136,187,1)',   glowB: 'rgba(50,100,150,0.55)',particles: ['#4488bb','#88bbdd','#66aacc','#3377aa','#99ccee'] },
-  3:      { glowA: 'rgba(0,187,204,1)',    glowB: 'rgba(0,150,160,0.55)', particles: ['#00bbcc','#aaffee','#00ccdd','#00aaaa','#88eeff'] },
-  4:      { glowA: 'rgba(17,85,204,1)',    glowB: 'rgba(10,60,160,0.55)', particles: ['#1155cc','#55ddff','#2266dd','#0044bb','#66ccff'] },
-  5:      { glowA: 'rgba(34,51,170,1)',    glowB: 'rgba(20,40,140,0.55)', particles: ['#2233aa','#6699ff','#3344cc','#1122bb','#7788ff'] },
-  6:      { glowA: 'rgba(102,0,204,1)',    glowB: 'rgba(80,0,160,0.55)',  particles: ['#6600cc','#9966ff','#7711dd','#5500bb','#aa88ff'] },
-  7:      { glowA: 'rgba(136,0,221,1)',    glowB: 'rgba(100,0,180,0.55)', particles: ['#8800dd','#aaddff','#9911ee','#7700cc','#bbaaff'] },
-  8:      { glowA: 'rgba(204,153,255,1)',  glowB: 'rgba(170,100,240,0.55)',particles: ['#cc99ff','#eeddff','#bb88ee','#aa77dd','#ddbfff'] },
-  9:      { glowA: 'rgba(255,204,68,1)',   glowB: 'rgba(220,160,40,0.55)',particles: ['#ffcc44','#fffacc','#ffdd66','#ffbb22','#fff0aa'] },
-  10:     { glowA: 'rgba(255,170,34,1)',   glowB: 'rgba(220,120,0,0.55)', particles: ['#ffaa22','#ffe566','#ffbb44','#ff9900','#fff0aa'] },
+  locked: { glowA: 'rgba(80,80,100,0)',    glowB: 'rgba(50,50,70,0)',     textName: '#aaaabb', particles: ['#555566','#444455','#666677','#333344','#777788'] },
+  1:      { glowA: 'rgba(136,153,187,0.9)',glowB: 'rgba(100,120,160,0.5)',textName: '#c8d4e4', particles: ['#8899bb','#aabbcc','#99aacc','#778899','#bbccdd'] },
+  2:      { glowA: 'rgba(68,136,187,1)',   glowB: 'rgba(50,100,150,0.55)',textName: '#8fc2e6', particles: ['#4488bb','#88bbdd','#66aacc','#3377aa','#99ccee'] },
+  3:      { glowA: 'rgba(0,187,204,1)',    glowB: 'rgba(0,150,160,0.55)', textName: '#6ee0e8', particles: ['#00bbcc','#aaffee','#00ccdd','#00aaaa','#88eeff'] },
+  4:      { glowA: 'rgba(17,85,204,1)',    glowB: 'rgba(10,60,160,0.55)', textName: '#8ab1f2', particles: ['#1155cc','#55ddff','#2266dd','#0044bb','#66ccff'] },
+  5:      { glowA: 'rgba(34,51,170,1)',    glowB: 'rgba(20,40,140,0.55)', textName: '#9aa2ed', particles: ['#2233aa','#6699ff','#3344cc','#1122bb','#7788ff'] },
+  6:      { glowA: 'rgba(102,0,204,1)',    glowB: 'rgba(80,0,160,0.55)',  textName: '#be92f0', particles: ['#6600cc','#9966ff','#7711dd','#5500bb','#aa88ff'] },
+  7:      { glowA: 'rgba(136,0,221,1)',    glowB: 'rgba(100,0,180,0.55)', textName: '#d094f5', particles: ['#8800dd','#aaddff','#9911ee','#7700cc','#bbaaff'] },
+  8:      { glowA: 'rgba(204,153,255,1)',  glowB: 'rgba(170,100,240,0.55)',textName: '#e0c0ff', particles: ['#cc99ff','#eeddff','#bb88ee','#aa77dd','#ddbfff'] },
+  9:      { glowA: 'rgba(255,204,68,1)',   glowB: 'rgba(220,160,40,0.55)',textName: '#ffd674', particles: ['#ffcc44','#fffacc','#ffdd66','#ffbb22','#fff0aa'] },
+  10:     { glowA: 'rgba(255,170,34,1)',   glowB: 'rgba(220,120,0,0.55)', textName: '#ffb860', particles: ['#ffaa22','#ffe566','#ffbb44','#ff9900','#fff0aa'] },
 };
 
 /** Qi Crystal — locked (dim, greyscale) or unlocked (glowing, tappable). */
-function KeyCrystal({ crystal, isUnlocked, onOpen, particleColors }) {
+function KeyCrystal({ crystal, isUnlocked, onOpen, particleColors, hidden }) {
   const unlockHint = FEATURE_GATES.qi_crystal?.hint ?? 'Reach a higher realm';
 
   if (!isUnlocked) {
@@ -292,7 +378,10 @@ function KeyCrystal({ crystal, isUnlocked, onOpen, particleColors }) {
   const tier = getCrystalTier(level);
   const { glowA, glowB } = CRYSTAL_COLORS[tier];
   return (
-    <div className="home-crystal-anchor" onClick={onOpen}>
+    <div
+      className={`home-crystal-anchor${hidden ? ' home-crystal-anchor-lifted' : ''}`}
+      onClick={onOpen}
+    >
       <div className="home-crystal-float" style={{ '--cg-a': glowA, '--cg-b': glowB }}>
         <span className="home-crystal-tag">Qi Crystal</span>
         <span className="home-crystal-evolve">Lv {level}</span>
@@ -459,13 +548,24 @@ function HomeScreen({
   useEffect(() => { if (openCrystal && isCrystalUnlocked) setCrystalModalOpen(true); }, [openCrystal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Crystal evolution overlay ────────────────────────────────────────────
-  // `event` is null when idle; set to {id, previousTier, newTier, newLevel}
+  // `event` is null when idle; set to {id, previousTier, newTier, newLevel, origin}
   // when the modal reports a tier crossing. Incrementing id ensures remount.
   const [crystalEvolution, setCrystalEvolution] = useState(null);
   const evolutionIdRef = useRef(0);
   const handleCrystalEvolve = useCallback((info) => {
+    // Measure the home crystal's on-screen rect so the overlay starts at its
+    // position (lift-and-return illusion). Query lazily — the DOM always has
+    // only one .home-crystal-img, and it's cheap enough to read per trigger.
+    let origin = info?.origin ?? null;
+    if (!origin && typeof document !== 'undefined') {
+      const el = document.querySelector('.home-crystal-img');
+      if (el) {
+        const r = el.getBoundingClientRect();
+        origin = { x: r.left, y: r.top, w: r.width, h: r.height };
+      }
+    }
     evolutionIdRef.current += 1;
-    setCrystalEvolution({ id: evolutionIdRef.current, ...info });
+    setCrystalEvolution({ id: evolutionIdRef.current, ...info, origin });
   }, []);
 
   // Debug bridge — gd.crystalEvolve(newTier, previousTier?) fires this event.
@@ -622,6 +722,7 @@ function HomeScreen({
             isUnlocked={isCrystalUnlocked}
             onOpen={() => setCrystalModalOpen(true)}
             particleColors={isCrystalUnlocked && crystal ? CRYSTAL_COLORS[getCrystalTier(crystal.level)] : CRYSTAL_COLORS[1]}
+            hidden={!!crystalEvolution}
           />
 
           {/* Character + hold-hint group — grounded at scene bottom */}

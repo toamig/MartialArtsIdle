@@ -252,13 +252,26 @@ export function initDebug(hooksRef) {
     },
 
     /**
+     * Tune the crystal evolution background flash intensity at runtime.
+     * Multiplies the keyframed flash opacity — 0 disables the flash entirely,
+     * 1 is the default, values > 1 have no visual effect (filter clamps).
+     * @param {number} [intensity=1]  0 → 1 recommended; persists until reset.
+     */
+    crystalFx(intensity = 1) {
+      const clamped = Math.max(0, Number(intensity) || 0);
+      document.documentElement.style.setProperty('--ce-flash-intensity', clamped);
+      console.log(`[debug] Crystal flash intensity → ${clamped} (call gd.crystalFx(1) to reset)`);
+    },
+
+    /**
      * Fire the crystal evolution overlay directly (for animation iteration).
      * Must be on the Home screen for the overlay to render.
      * @param {number} newTier       Target visual tier (1–10).
      * @param {number} [previousTier=newTier-1]  Previous tier (defaults to newTier − 1).
      * @param {number} [newLevel]    Displayed level on the overlay card.
+     * @param {string} [variant]     Animation variant: 'shatter' (default) | 'current'.
      */
-    crystalEvolve(newTier, previousTier, newLevel) {
+    crystalEvolve(newTier, previousTier, newLevel, variant) {
       const TIER_LEVELS = { 1:1, 2:10, 3:25, 4:50, 5:100, 6:200, 7:350, 8:500, 9:750, 10:1000 };
       if (!TIER_LEVELS[newTier]) {
         console.warn(`[debug] Invalid tier ${newTier} — use 1–10`);
@@ -267,9 +280,9 @@ export function initDebug(hooksRef) {
       const prev = previousTier ?? Math.max(0, newTier - 1);
       const lvl  = newLevel      ?? TIER_LEVELS[newTier];
       window.dispatchEvent(new CustomEvent('mai:crystal-evolve', {
-        detail: { previousTier: prev, newTier, newLevel: lvl },
+        detail: { previousTier: prev, newTier, newLevel: lvl, variant },
       }));
-      console.log(`[debug] Crystal evolution overlay — tier ${prev} → ${newTier} (lv ${lvl})`);
+      console.log(`[debug] Crystal evolution overlay — tier ${prev} → ${newTier} (lv ${lvl}, variant=${variant ?? 'shatter'})`);
     },
 
     // ── General ────────────────────────────────────────────────────────────
@@ -322,7 +335,8 @@ export function initDebug(hooksRef) {
       console.log('  gd.setCrystalLevel(n)     — set crystal to level n');
       console.log('  gd.setCrystalTier(t)      — jump to visual tier t (1–10)');
       console.log('  gd.crystalLevelUp(n=1)    — increment crystal level by n');
-      console.log('  gd.crystalEvolve(newTier, prevTier?, lvl?) — fire evolution overlay (home screen only)');
+      console.log('  gd.crystalEvolve(newTier, prevTier?, lvl?, variant?) — fire evolution overlay (home screen only)');
+      console.log('  gd.crystalFx(intensity=1)         — tune evolution flash intensity (0 = off)');
       console.log('%cGeneral', 'font-weight: bold');
       console.log('  gd.state()                — print current game state summary');
       console.log('  gd.help()                 — show this message');
