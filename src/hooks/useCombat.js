@@ -173,11 +173,13 @@ export default function useCombat() {
   // playerAttackRef / enemyAttackRef: called by useCombat → CombatStage plays animation
   // playerAnimDoneRef / enemyAnimDoneRef: called by CombatStage → useCombat advances turn
   // spawnDamageNumberRef: registered by CombatStage; called here on each damage event
+  // spawnDropsRef: registered by CombatStage; called here with material drops on kill
   const playerAttackRef       = useRef(null);
   const enemyAttackRef        = useRef(null);
   const playerAnimDoneRef     = useRef(null);
   const enemyAnimDoneRef      = useRef(null);
   const spawnDamageNumberRef  = useRef(null);
+  const spawnDropsRef         = useRef(null);
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
   const patchBars = (s) => {
@@ -513,6 +515,8 @@ export default function useCombat() {
               lootMult !== 1 ? { ...d, qty: Math.max(1, Math.floor(d.qty * lootMult)) } : d);
             if (dropped.length > 0) {
               onDropsRef.current?.(dropped);
+              // Spawn drop orbs in the stage — visual-only, fires before Victory overlay
+              spawnDropsRef.current?.(dropped);
               const dropMsg = dropped
                 .map(d => `${d.qty}× ${ALL_MATERIALS[d.itemId]?.name ?? d.itemId}`)
                 .join(', ');
@@ -709,6 +713,7 @@ export default function useCombat() {
     playerAnimDoneRef,
     enemyAnimDoneRef,
     spawnDamageNumberRef,
+    spawnDropsRef,
     // cb_ts Veteran's Hunt — read by App.jsx getFullStats so the next
     // gather/mine tick consumes a pending bump.
     huntBumpsPendingRef,

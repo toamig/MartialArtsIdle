@@ -3,6 +3,7 @@ import SpriteAnimator from './SpriteAnimator';
 import DamageNumber from './DamageNumber';
 import { getSprites, FW, FH } from '../sprites/spriteGen';
 import { preloadEnemySprites } from '../utils/preload';
+import { ALL_MATERIALS, RARITY } from '../data/materials';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -15,6 +16,55 @@ const PLAYER_IDLE_FH    = 128;
 
 // Canvas-generated sprites: 32×40, displayed at 3×
 const GEN_SCALE = 3;
+
+// Separate counter so drop orb ids don't collide with dmgId
+let dropOrbId = 0;
+
+// Per-rarity dark tinted backgrounds — gives each tier its own jewel tone
+// so the player immediately reads the item's value before looking at the icon.
+const RARITY_ORB_BG = {
+  Iron:         'rgba(26, 29, 36, 0.94)',
+  Bronze:       'rgba(40, 18,  3, 0.94)',
+  Silver:       'rgba(20, 24, 40, 0.94)',
+  Gold:         'rgba(44, 30,  2, 0.94)',
+  Transcendent: 'rgba(26,  5, 46, 0.94)',
+};
+
+/**
+ * A single material-drop orb — jewel-style circle with item sprite inside.
+ * Pops at the enemy's feet, hovers briefly, then arcs to the player.
+ *
+ * `collectDx/Dy` are pixel deltas from spawn origin to player center so
+ * the arc always lands on the character regardless of screen size.
+ */
+function DropOrb({ itemId, qty, left, top, collectDx, collectDy, delay }) {
+  const mat   = ALL_MATERIALS[itemId];
+  const color = RARITY[mat?.rarity]?.color ?? '#9ca3af';
+  const bg    = RARITY_ORB_BG[mat?.rarity]  ?? 'rgba(8, 6, 16, 0.94)';
+  return (
+    <div
+      className="combat-drop-orb"
+      style={{
+        left:            `${left}px`,
+        top:             `${top}px`,
+        '--drop-color':  color,
+        '--drop-bg':     bg,
+        '--collect-dx':  `${collectDx}px`,
+        '--collect-dy':  `${collectDy}px`,
+        animationDelay:  `${delay}ms`,
+      }}
+    >
+      <img
+        className="combat-drop-img"
+        src={`${BASE}sprites/items/${itemId}.png`}
+        alt=""
+        draggable="false"
+        onError={e => { e.currentTarget.style.opacity = '0'; }}
+      />
+      {qty > 1 && <span className="combat-drop-qty-badge">{qty}</span>}
+    </div>
+  );
+}
 
 /**
  * Resolve enemy sprite src for a given animation.
@@ -47,6 +97,7 @@ export default function CombatStage({
   playerAnimDoneRef,
   enemyAnimDoneRef,
   spawnDamageNumberRef,
+  spawnDropsRef,
   pHpBarRef,
   pHpTextRef,
   eHpBarRef,
@@ -72,7 +123,8 @@ export default function CombatStage({
 
   const [pAnim, setPAnim] = useState('idle');
   const [eAnim, setEAnim] = useState('idle');
-  const [dmgNums, setDmgNums] = useState([]);
+  const [dmgNums,  setDmgNums]  = useState([]);
+  const [dropOrbs, setDropOrbs] = useState([]);
   const dmgTimersRef = useRef([]);
 
   const pRef      = useRef(null);
@@ -185,6 +237,52 @@ export default function CombatStage({
       dmgTimersRef.current = [];
     };
   }, [spawnDamageNumberRef]);
+
+  // Register drop-orb spawn callback. Called by useCombat with the material
+  // drops array when the enemy dies, before the Victory overlay appears.
+  useEffect(() => {
+    if (!spawnDropsRef) return;
+    spawnDropsRef.current = (drops) => {
+      if (!drops?.length) return;
+      const stage = stageRef.current;
+      const { width: W, height: H } = stage?.getBoundingClientRect() ?? { width: 360, height: 180 };
+
+      // Player character center — left ~18% of stage, ~45% down.
+      // The collect arc ends here so the orb visually flies into the player.
+      const playerX = W * 0.18;
+      const playerY = H * 0.45;
+
+      // Orb is 46px tall; no fall in the animation, just a pop in place.
+      // Bottom edge must stay inside stage (overflow:hidden): top + 46 <= H.
+      const orbSafeMaxTop = Math.max(0, H - 46);
+      const orbs = drops.map((drop, i) => {
+        // Spawn in the bottom 25% of the stage — right at the enemy's feet.
+        const left   = Math.round(W * (0.58 + Math.random() * 0.18));
+        const topMin = H * 0.75;                          // bottom-quarter start
+        const topMax = Math.min(orbSafeMaxTop, H * 0.90); // no lower than safe max
+        const top    = Math.round(topMin + Math.random() * Math.max(0, topMax - topMin));
+        return {
+          id:        ++dropOrbId,
+          itemId:    drop.itemId,
+          qty:       drop.qty,
+          left,
+          top,
+          // Pixel deltas from spawn origin to player center.
+          // At 100% of the CSS animation the orb is at its spawn origin
+          // (transform starts fresh), so these are total deltas.
+          collectDx: Math.round(playerX - left),
+          collectDy: Math.round(playerY - top),
+          delay:     i * 120,
+        };
+      });
+      setDropOrbs(orbs);
+      // 1.45 s per orb + stagger + small buffer
+      const totalMs = 1450 + (drops.length - 1) * 120 + 100;
+      const t = setTimeout(() => setDropOrbs([]), totalMs);
+      dmgTimersRef.current.push(t);
+    };
+    return () => { spawnDropsRef.current = null; };
+  }, [spawnDropsRef]);
 
   const onPlayerAttackDone = () => {
     setPAnim('idle');
@@ -303,6 +401,20 @@ export default function CombatStage({
           fontSize={n.fontSize}
           exploit={n.exploit}
           style={{ left: n.x, top: n.y }}
+        />
+      ))}
+
+      {/* ── Drop orbs — pop from enemy, fall to ground, arc to player ─── */}
+      {dropOrbs.map(orb => (
+        <DropOrb
+          key={orb.id}
+          itemId={orb.itemId}
+          qty={orb.qty}
+          left={orb.left}
+          top={orb.top}
+          collectDx={orb.collectDx}
+          collectDy={orb.collectDy}
+          delay={orb.delay}
         />
       ))}
 

@@ -71,14 +71,19 @@ let selCounter = 0;
 export default function useSelections({ cultivation, optionCount = 3 }) {
   const [pending, setPending] = useState(loadPending);
   const [active,  setActive]  = useState(loadActive);
+  // Mirror of pending used to read current state outside setPending updaters.
+  // Side effects (spendBloodLotus, random generation) must NOT live inside
+  // setPending(prev => …) because React 18 Strict Mode double-invokes those
+  // updaters in development to detect impurity.
+  const pendingRef = useRef(pending);
   const [bloodLotusBalance, setBloodLotusBalance] = useState(() => {
     try { return getBloodLotusBalance(); } catch { return 0; }
   });
 
   const prevRealmIndex = useRef(cultivation.realmIndex);
 
-  // Persist on change
-  useEffect(() => { savePending(pending); }, [pending]);
+  // Persist on change and keep ref in sync
+  useEffect(() => { savePending(pending); pendingRef.current = pending; }, [pending]);
   useEffect(() => { saveActive(active);   }, [active]);
 
   // Keep balance in sync — bloodLotus.js fires 'blood-lotus-changed' on every add/spend.
@@ -192,38 +197,57 @@ export default function useSelections({ cultivation, optionCount = 3 }) {
 
   /** Reroll all 3 law offers. Free first time, then BLOOD_LOTUS_COSTS.reroll_law_extra. */
   const rerollLaw = useCallback((selectionId) => {
-    setPending(prev => prev.map(sel => {
-      if (sel.id !== selectionId || sel.kind !== 'law') return sel;
-      const hasFree = sel.rerollsUsed < sel.freeRerolls;
-      if (!hasFree) {
-        if (!spendBloodLotus(BLOOD_LOTUS_COSTS.reroll_law_extra)) return sel;
-        refreshBloodLotus();
-      }
-      const fresh = sel.isFirst
-        ? Array.from({ length: THREE_LAW_OFFERS }, () => generateLaw('Iron', sel.realmIndex))
-        : rollLawOffers(sel.realmIndex);
-      return { ...sel, lawOptions: fresh, rerollsUsed: sel.rerollsUsed + 1 };
+    // Side effects (spend + random generation) must live outside setPending so
+    // React 18 Strict Mode's double-invocation of updaters doesn't double-spend.
+    const sel = pendingRef.current.find(s => s.id === selectionId && s.kind === 'law');
+    if (!sel) return;
+    const hasFree = sel.rerollsUsed < sel.freeRerolls;
+    if (!hasFree) {
+      if (!spendBloodLotus(BLOOD_LOTUS_COSTS.reroll_law_extra)) return;
+      refreshBloodLotus();
+    }
+    const fresh = sel.isFirst
+      ? Array.from({ length: THREE_LAW_OFFERS }, () => generateLaw('Iron', sel.realmIndex))
+      : rollLawOffers(sel.realmIndex);
+    setPending(prev => prev.map(s => {
+      if (s.id !== selectionId || s.kind !== 'law') return s;
+      return { ...s, lawOptions: fresh, rerollsUsed: s.rerollsUsed + 1 };
+    }));
+  }, [refreshBloodLotus]);
+
+  /** Reroll a single law offer at cardIndex. Shares the same free-reroll counter. */
+  const rerollLawOne = useCallback((selectionId, cardIndex) => {
+    const sel = pendingRef.current.find(s => s.id === selectionId && s.kind === 'law');
+    if (!sel) return;
+    const hasFree = sel.rerollsUsed < sel.freeRerolls;
+    if (!hasFree) {
+      if (!spendBloodLotus(BLOOD_LOTUS_COSTS.reroll_law_extra)) return;
+      refreshBloodLotus();
+    }
+    const band = lawOfferRaritiesForRealm(sel.realmIndex);
+    const rarity = sel.isFirst ? 'Iron' : band[Math.floor(Math.random() * band.length)];
+    const freshLaw = generateLaw(rarity, sel.realmIndex);
+    setPending(prev => prev.map(s => {
+      if (s.id !== selectionId || s.kind !== 'law') return s;
+      const newOptions = s.lawOptions.map((l, i) => i === cardIndex ? freshLaw : l);
+      return { ...s, lawOptions: newOptions, rerollsUsed: s.rerollsUsed + 1 };
     }));
   }, [refreshBloodLotus]);
 
   /** Reroll the options for a selection. Costs Blood Lotus unless free rerolls remain. */
   const rerollOptions = useCallback((selectionId) => {
-    setPending(prev => prev.map(sel => {
-      if (sel.id !== selectionId) return sel;
-
-      const hasFree = sel.rerollsUsed < sel.freeRerolls;
-      if (!hasFree) {
-        const cost = sel.tier === 'breakthrough' ? BLOOD_LOTUS_COSTS.reroll_extra : BLOOD_LOTUS_COSTS.reroll_minor;
-        if (!spendBloodLotus(cost)) return sel; // not enough Blood Lotus
-        refreshBloodLotus();
-      }
-
-      const newOptions = rollOptions(cultivation.realmIndex, active, sel.tier, optionCount);
-      return {
-        ...sel,
-        options:     newOptions,
-        rerollsUsed: sel.rerollsUsed + 1,
-      };
+    const sel = pendingRef.current.find(s => s.id === selectionId);
+    if (!sel) return;
+    const hasFree = sel.rerollsUsed < sel.freeRerolls;
+    if (!hasFree) {
+      const cost = sel.tier === 'breakthrough' ? BLOOD_LOTUS_COSTS.reroll_extra : BLOOD_LOTUS_COSTS.reroll_minor;
+      if (!spendBloodLotus(cost)) return;
+      refreshBloodLotus();
+    }
+    const newOptions = rollOptions(cultivation.realmIndex, active, sel.tier, optionCount);
+    setPending(prev => prev.map(s => {
+      if (s.id !== selectionId) return s;
+      return { ...s, options: newOptions, rerollsUsed: s.rerollsUsed + 1 };
     }));
   }, [cultivation.realmIndex, active, refreshBloodLotus]);
 
@@ -292,41 +316,39 @@ export default function useSelections({ cultivation, optionCount = 3 }) {
 
   /** Reroll a single card at optionIndex, keeping the other two. */
   const rerollOne = useCallback((selectionId, optionIndex) => {
-    setPending(prev => prev.map(sel => {
-      if (sel.id !== selectionId) return sel;
-
-      const hasFree = sel.rerollsUsed < sel.freeRerolls;
-      if (!hasFree) {
-        const cost = sel.tier === 'breakthrough' ? BLOOD_LOTUS_COSTS.reroll_extra : BLOOD_LOTUS_COSTS.reroll_minor;
-        if (!spendBloodLotus(cost)) return sel;
-        refreshBloodLotus();
+    const sel = pendingRef.current.find(s => s.id === selectionId);
+    if (!sel) return;
+    const hasFree = sel.rerollsUsed < sel.freeRerolls;
+    if (!hasFree) {
+      const cost = sel.tier === 'breakthrough' ? BLOOD_LOTUS_COSTS.reroll_extra : BLOOD_LOTUS_COSTS.reroll_minor;
+      if (!spendBloodLotus(cost)) return;
+      refreshBloodLotus();
+    }
+    const weights  = sel.tier === 'breakthrough' ? BREAKTHROUGH_WEIGHTS : MINOR_WEIGHTS;
+    const keep     = sel.options.filter((_, i) => i !== optionIndex);
+    const eligible = SELECTION_POOL.filter(opt => {
+      const stacks = active[opt.id] ?? 0;
+      return (
+        cultivation.realmIndex >= opt.minRealmIndex &&
+        stacks < opt.maxStacks &&
+        !keep.includes(opt.id)
+      );
+    });
+    let replacement = keep[0]; // fallback
+    if (eligible.length > 0) {
+      const total = eligible.reduce((s, o) => s + (weights[o.rarity] ?? 10), 0);
+      let r = Math.random() * total;
+      for (const opt of eligible) {
+        r -= weights[opt.rarity] ?? 10;
+        if (r <= 0) { replacement = opt.id; break; }
       }
-
-      const weights = sel.tier === 'breakthrough' ? BREAKTHROUGH_WEIGHTS : MINOR_WEIGHTS;
-      const keep    = sel.options.filter((_, i) => i !== optionIndex);
-      const eligible = SELECTION_POOL.filter(opt => {
-        const stacks = active[opt.id] ?? 0;
-        return (
-          cultivation.realmIndex >= opt.minRealmIndex &&
-          stacks < opt.maxStacks &&
-          !keep.includes(opt.id)
-        );
-      });
-
-      let replacement = keep[0]; // fallback
-      if (eligible.length > 0) {
-        const total = eligible.reduce((s, o) => s + (weights[o.rarity] ?? 10), 0);
-        let r = Math.random() * total;
-        for (const opt of eligible) {
-          r -= weights[opt.rarity] ?? 10;
-          if (r <= 0) { replacement = opt.id; break; }
-        }
-        if (replacement === keep[0]) replacement = eligible[eligible.length - 1].id;
-      }
-
-      const newOptions = [...sel.options];
+      if (replacement === keep[0]) replacement = eligible[eligible.length - 1].id;
+    }
+    setPending(prev => prev.map(s => {
+      if (s.id !== selectionId) return s;
+      const newOptions = [...s.options];
       newOptions[optionIndex] = replacement;
-      return { ...sel, options: newOptions, rerollsUsed: sel.rerollsUsed + 1 };
+      return { ...s, options: newOptions, rerollsUsed: s.rerollsUsed + 1 };
     }));
   }, [cultivation.realmIndex, active, refreshBloodLotus]);
 
@@ -341,6 +363,7 @@ export default function useSelections({ cultivation, optionCount = 3 }) {
     pickLaw,
     skipLaw,
     rerollLaw,
+    rerollLawOne,
     getStatModifiers,
     getQiSpeedMult,
     getOfflineQiMult,

@@ -110,6 +110,46 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     });
   }, [getQuantity, removeItem]);
 
+  /**
+   * Feed multiple stone types in a single atomic operation.
+   * Used by the redesigned feed modal that lets the player set an RQI target
+   * and auto-consumes stones (cheapest-first) to hit it.
+   *
+   * @param {Array<{id: string, qty: number}>} plan
+   */
+  const feedMultiple = useCallback((plan) => {
+    if (!Array.isArray(plan) || plan.length === 0) return;
+
+    // Remove items from inventory and tally the RQI gain
+    let totalRqi = 0;
+    for (const { id, qty } of plan) {
+      const rqi   = getRefinedQi(id);
+      if (rqi <= 0 || qty <= 0) continue;
+      const owned = getQuantity?.(id) ?? 0;
+      const used  = Math.min(qty, owned);
+      if (used <= 0) continue;
+      removeItem?.(id, used);
+      totalRqi += used * rqi;
+    }
+    if (totalRqi <= 0) return;
+
+    setState(prev => {
+      let { level, refinedQi } = prev;
+      refinedQi += totalRqi;
+      while (true) {
+        const needed = getRequiredRefinedQi(level + 1);
+        if (refinedQi >= needed) {
+          refinedQi -= needed;
+          level += 1;
+        } else break;
+      }
+      const next = { level, refinedQi };
+      crystalQiBonusRef.current = (level * (level + 3)) / 2;
+      saveState(next);
+      return next;
+    });
+  }, [getQuantity, removeItem]);
+
   const requiredForNext = getRequiredRefinedQi(state.level + 1);
 
   return {
@@ -119,6 +159,7 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     crystalQiBonus:   (state.level * (state.level + 3)) / 2,
     crystalQiBonusRef,
     feed,
+    feedMultiple,
     _setLevel:        (n) => applyState({ level: n, refinedQi: 0 }),
   };
 }

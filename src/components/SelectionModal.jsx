@@ -17,7 +17,7 @@ const CATEGORY = {
 
 // ── Augment card (existing) ──────────────────────────────────────────────────
 
-function AugmentCard({ optionId, index, onPick, onRerollOne, rerollCost, hasFreeReroll, canAffordReroll }) {
+function AugmentCard({ optionId, onPick }) {
   const opt    = SELECTION_BY_ID[optionId];
   if (!opt) return null;
 
@@ -42,14 +42,6 @@ function AugmentCard({ optionId, index, onPick, onRerollOne, rerollCost, hasFree
           <span className="augment-stacks">Max ×{opt.maxStacks}</span>
         )}
       </div>
-      <button
-        className={`augment-reroll${hasFreeReroll ? ' augment-reroll-free' : ''}${!canAffordReroll ? ' augment-reroll-disabled' : ''}`}
-        onClick={e => { e.stopPropagation(); canAffordReroll && onRerollOne(index); }}
-        disabled={!canAffordReroll}
-        title={hasFreeReroll ? 'Reroll (free)' : `Reroll (${rerollCost} Blood Lotus)`}
-      >
-        ↺ {hasFreeReroll ? 'Free' : rerollCost}
-      </button>
     </div>
   );
 }
@@ -103,7 +95,7 @@ function LawCard({ law, onPick, disabled }) {
 
 // ── Law variant — modal body ─────────────────────────────────────────────────
 
-function LawSelectionBody({ selection, bloodLotusBalance, onPickLaw, onSkipLaw, onRerollLaw, ownedLaws, activeLawId, onDismantleLaw }) {
+function LawSelectionBody({ selection, bloodLotusBalance, onPickLaw, onSkipLaw, onRerollLawOne, ownedLaws, activeLawId, onDismantleLaw }) {
   const { id, realmLabel, lawOptions, freeRerolls, rerollsUsed, isFirst } = selection;
   const hasFreeReroll = rerollsUsed < freeRerolls;
   const rerollCost = hasFreeReroll ? 0 : BLOOD_LOTUS_COSTS.reroll_law_extra;
@@ -118,9 +110,7 @@ function LawSelectionBody({ selection, bloodLotusBalance, onPickLaw, onSkipLaw, 
   return (
     <>
       <div className="sel-header">
-        <span className="sel-breakthrough-badge sel-breakthrough-badge-law">☯ {isFirst ? 'First Law' : 'Law Reward'}</span>
         <h2 className="sel-title">{isFirst ? 'Choose your first Cultivation Law' : 'New Cultivation Law'}</h2>
-        <p className="sel-realm">{realmLabel}</p>
       </div>
 
       {libraryFull && (
@@ -145,32 +135,50 @@ function LawSelectionBody({ selection, bloodLotusBalance, onPickLaw, onSkipLaw, 
         </div>
       )}
 
-      <div className="augment-row">
+      <div className="card-pair-grid">
         {(lawOptions ?? []).map((law, i) => (
-          <LawCard
-            key={`${law.id}-${i}`}
-            law={law}
-            disabled={libraryFull}
-            onPick={() => !libraryFull && onPickLaw?.(id, i)}
-          />
+          <div key={`${law.id}-${i}`} className="card-pair">
+            <LawCard
+              law={law}
+              disabled={libraryFull}
+              onPick={() => !libraryFull && onPickLaw?.(id, i)}
+            />
+            <div className="augment-reroll-cell">
+              <button
+                className={[
+                  'augment-reroll-btn',
+                  hasFreeReroll    ? 'augment-reroll-free'   : '',
+                  !canAffordReroll ? 'augment-reroll-locked' : '',
+                ].filter(Boolean).join(' ')}
+                disabled={!canAffordReroll}
+                onClick={() => canAffordReroll && onRerollLawOne?.(id, i)}
+                title={
+                  hasFreeReroll    ? 'Reroll — free!'
+                  : !canAffordReroll ? `Need ${rerollCost} Blood Lotus`
+                  :                   `Reroll — costs ${rerollCost} Blood Lotus`
+                }
+              >
+                {!canAffordReroll ? '⊘' : '↺'}
+              </button>
+              <span className={[
+                'augment-reroll-cost',
+                hasFreeReroll    ? 'augment-reroll-cost-free'  : '',
+                !canAffordReroll ? 'augment-reroll-cost-short' : '',
+              ].filter(Boolean).join(' ')}>
+                {hasFreeReroll ? 'Free' : `${rerollCost} BL`}
+              </span>
+            </div>
+          </div>
         ))}
       </div>
 
-      <div className="sel-footer">
-        <button
-          className={`sel-reroll-btn${hasFreeReroll ? ' sel-reroll-btn-free' : ''}${!canAffordReroll ? ' sel-reroll-btn-disabled' : ''}`}
-          disabled={!canAffordReroll}
-          onClick={() => canAffordReroll && onRerollLaw?.(id)}
-          title={hasFreeReroll ? 'Reroll all offers (free)' : `Reroll all offers (${rerollCost} Blood Lotus)`}
-        >
-          ↺ Reroll{hasFreeReroll ? ' (free)' : ` (${rerollCost})`}
-        </button>
-        {!isFirst && (
+      {!isFirst && (
+        <div className="sel-footer">
           <button className="sel-skip-btn" onClick={() => onSkipLaw?.(id)}>
             Skip
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }
@@ -185,7 +193,8 @@ function SelectionModal({
   onClose,
   onPickLaw,
   onSkipLaw,
-  onRerollLaw,
+  onRerollLawOne,
+  onOpenShop,
   ownedLaws,
   activeLawId,
   onDismantleLaw,
@@ -205,7 +214,7 @@ function SelectionModal({
             bloodLotusBalance={bloodLotusBalance}
             onPickLaw={onPickLaw}
             onSkipLaw={onSkipLaw}
-            onRerollLaw={onRerollLaw}
+            onRerollLawOne={onRerollLawOne}
             ownedLaws={ownedLaws}
             activeLawId={activeLawId}
             onDismantleLaw={onDismantleLaw}
@@ -230,26 +239,44 @@ function SelectionModal({
         onClick={e => e.stopPropagation()}
       >
         <div className="sel-header">
-          {isBreakthrough && <span className="sel-breakthrough-badge">⚡ Breakthrough</span>}
           <h2 className="sel-title">
             {isBreakthrough ? 'Breakthrough Reward' : 'Level-Up Reward'}
           </h2>
-          <p className="sel-realm">{realmLabel}</p>
         </div>
 
-        <div className="augment-row">
-          {options.map((optId, i) => (
-            <AugmentCard
-              key={optId}
-              optionId={optId}
-              index={i}
-              onPick={(oId) => onPick(id, oId)}
-              onRerollOne={(idx) => onRerollOne(id, idx)}
-              hasFreeReroll={hasFreeReroll}
-              rerollCost={rerollCost}
-              canAffordReroll={canAffordReroll}
-            />
-          ))}
+        <div className="card-pair-grid">
+          {options.map((optId, i) => {
+            const locked = !canAffordReroll;
+            return (
+              <div key={optId} className="card-pair">
+                <AugmentCard optionId={optId} onPick={(oId) => onPick(id, oId)} />
+                <div className="augment-reroll-cell">
+                  <button
+                    className={[
+                      'augment-reroll-btn',
+                      hasFreeReroll ? 'augment-reroll-free' : '',
+                      locked        ? 'augment-reroll-locked' : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => locked ? onOpenShop?.() : onRerollOne(id, i)}
+                    title={
+                      hasFreeReroll ? 'Reroll — free!'
+                      : locked      ? `Need ${rerollCost} Blood Lotus · tap to open Shop`
+                      :               `Reroll — costs ${rerollCost} Blood Lotus`
+                    }
+                  >
+                    {locked ? '⊘' : '↺'}
+                  </button>
+                  <span className={[
+                    'augment-reroll-cost',
+                    hasFreeReroll ? 'augment-reroll-cost-free'  : '',
+                    locked        ? 'augment-reroll-cost-short' : '',
+                  ].filter(Boolean).join(' ')}>
+                    {hasFreeReroll ? 'Free' : `${rerollCost} BL`}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
       </div>

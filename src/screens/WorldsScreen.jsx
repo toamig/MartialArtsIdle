@@ -8,6 +8,7 @@ import { preloadEnemySprites } from '../utils/preload';
 import { isWorldUnlocked, getWorldLockHint } from '../data/featureGates';
 import LockTooltip from '../components/LockTooltip';
 import EnemyTooltip from '../components/EnemyTooltip';
+import ActivityTooltip from '../components/ActivityTooltip';
 import { useTooltipPos } from '../components/ArtefactTooltip';
 import { ALL_MATERIALS } from '../data/materials';
 
@@ -43,6 +44,26 @@ function EnemyChip({ enemyId, regionIndex }) {
         <EnemyTooltip
           enemyDef={def}
           regionIndex={regionIndex}
+          style={{ position: 'fixed', left: pos.x, top: pos.y }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ActivityInfoBtn({ tab, region, activityStats }) {
+  const { pos, handlers } = useTooltipPos();
+  const drops = tab === 'gather' ? region.gatherDrops : region.mineDrops;
+  if (!drops?.length) return null;
+
+  return (
+    <div className="activity-info-btn-wrap" {...handlers}>
+      <button className="activity-info-btn" onClick={e => e.stopPropagation()}>ⓘ</button>
+      {pos && (
+        <ActivityTooltip
+          tab={tab}
+          drops={drops}
+          activityStats={activityStats}
           style={{ position: 'fixed', left: pos.x, top: pos.y }}
         />
       )}
@@ -88,48 +109,31 @@ const ACTIVITY_ICON = { combat: '⚔', gathering: '🌿', mining: '⛏' };
 
 function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, worldId,
                      canIdle, isIdling, isLastIdle, onSetIdle, onClearIdle,
-                     pendingGains, hasPendingGains, onCollect }) {
-  const { t } = useTranslation('ui');
-  const { t: tGame }  = useTranslation('game');
+                     pendingGains, hasPendingGains, onCollect, activityStats }) {
+  const { t: tGame } = useTranslation('game');
 
   const isWorld = tab === 'combat';
 
-  // Deduplicate enemy IDs (a pool may have the same enemy at different weights).
   const enemyIds = isWorld
     ? [...new Set((region.enemyPool ?? []).map(e => e.enemyId))]
     : [];
 
-  // Resolve a list of drop entries ({ itemId }) into human-readable, deduped
-  // material names using the game-items i18n namespace.
-  const dropNames = (entries) => {
-    const seen = new Set();
-    const names = [];
-    for (const e of entries ?? []) {
-      if (!e?.itemId || seen.has(e.itemId)) continue;
-      seen.add(e.itemId);
-      const mat = ALL_MATERIALS[e.itemId];
-      const name = mat
-        ? tGame(`items.${e.itemId}.name`, { defaultValue: mat.name })
-        : e.itemId;
-      names.push(name);
-    }
-    return names;
-  };
-
-  // Combat drops are per-enemy (enemies.js); gather/mine drops live on
-  // the region itself. Build the right list depending on the active tab.
-  const tabDropNames = isWorld
-    ? dropNames(enemyIds.flatMap(id => ENEMIES[id]?.drops ?? []))
-    : tab === 'gather'
-    ? dropNames(region.gatherDrops)
-    : dropNames(region.mineDrops);
-
-  const content = { secondary: tabDropNames.length
-    ? `${t('worlds.drops')} ${tabDropNames.join(', ')}`
-    : null };
-
   const regionName    = locked ? '???' : tGame(`regions.${region.name}.name`, { defaultValue: region.name });
   const minRealmLabel = tGame(`stages.${region.minRealm}.name`, { defaultValue: region.minRealm });
+
+  const pendingText = isLastIdle && hasPendingGains && pendingGains
+    ? [
+        ...Object.entries(pendingGains.items ?? {})
+          .filter(([, qty]) => qty > 0)
+          .map(([id, qty]) => {
+            const mat = ALL_MATERIALS[id];
+            return `${mat?.name ?? id} ×${qty}`;
+          }),
+        ...(pendingGains.techniques?.length > 0
+          ? [`+${pendingGains.techniques.length} Technique${pendingGains.techniques.length > 1 ? 's' : ''}`]
+          : []),
+      ].join(' · ')
+    : null;
 
   function handleClick() {
     if (!isWorld) return;
@@ -155,30 +159,20 @@ function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, wo
     >
       <div className="region-row-left">
         <div className="region-row-info">
-          <span className="region-name">{regionName}</span>
+          <div className="region-info-title-row">
+            <span className="region-name">{regionName}</span>
+            {!locked && !isWorld && (
+              <ActivityInfoBtn tab={tab} region={region} activityStats={activityStats} />
+            )}
+          </div>
           <span className="region-min-realm">{minRealmLabel}</span>
         </div>
-        {!locked && content.secondary && (
-          <div className="region-row-detail">
-            <span className="region-detail-secondary">{content.secondary}</span>
-          </div>
-        )}
         {combatLocked && (
           <div className="region-combat-gate">⚔ Clear combat first</div>
         )}
-        {isLastIdle && hasPendingGains && pendingGains && (
-          <div className="region-pending-summary">
-            {[
-              ...Object.entries(pendingGains.items ?? {})
-                .filter(([, qty]) => qty > 0)
-                .map(([id, qty]) => {
-                  const mat = ALL_MATERIALS[id];
-                  return `${mat?.name ?? id} ×${qty}`;
-                }),
-              ...(pendingGains.techniques?.length > 0
-                ? [`+${pendingGains.techniques.length} Technique${pendingGains.techniques.length > 1 ? 's' : ''}`]
-                : []),
-            ].join(' · ')}
+        {!locked && !isWorld && (
+          <div className="region-pending-slot">
+            {pendingText && <span className="region-pending-items">{pendingText}</span>}
           </div>
         )}
       </div>
@@ -191,33 +185,30 @@ function RegionRow({ region, tab, locked, lockHint, combatLocked, onNavigate, wo
         </div>
       )}
 
-      {(!locked && (canIdle || isIdling || isLastIdle)) && (
-        <div className="region-row-actions">
-          {isLastIdle && hasPendingGains && onCollect && (
-            <button
-              className="region-collect-btn"
-              onClick={e => { e.stopPropagation(); AudioManager.playSfx('ui_confirm'); onCollect(); }}
-            >
-              Collect
-            </button>
-          )}
-          {(canIdle || isIdling) && (
-            <button
-              className={`region-idle-btn${isIdling ? ' region-idle-btn-active' : ''}`}
-              onClick={handleIdleClick}
-              title={isIdling ? 'Stop idling here' : 'Idle here automatically'}
-            >
-              {isIdling ? '◉ Idling' : '◎ Idle'}
-            </button>
-          )}
-        </div>
+      {!locked && !isWorld && (canIdle || isIdling) && (
+        <button
+          className={`region-idle-btn${isIdling ? ' region-idle-btn-active' : ''}`}
+          onClick={handleIdleClick}
+          title={isIdling ? 'Stop idling here' : 'Idle here automatically'}
+        >
+          {isIdling ? '◉ Idling' : '◎ Idle'}
+        </button>
+      )}
+
+      {!locked && !isWorld && isLastIdle && hasPendingGains && onCollect && (
+        <button
+          className="region-collect-btn"
+          onClick={e => { e.stopPropagation(); AudioManager.playSfx('ui_confirm'); onCollect(); }}
+        >
+          Collect
+        </button>
       )}
     </div>
   );
 }
 
 function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavigate, expandWorldId, idleAssignment, lastIdleAssignment, onSetIdle,
-                     pendingGains, hasPendingGains, onCollect }) {
+                     pendingGains, hasPendingGains, onCollect, activityStats }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
 
@@ -261,9 +252,10 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
           <span className="world-name">{worldName}</span>
         </div>
         <div className="world-header-right">
-          {hasPendingGains && lastIdleAssignment?.worldIndex === worldIndex && (
-            <span className="world-header-badge" />
-          )}
+          <span
+            className="world-header-badge"
+            style={{ visibility: hasPendingGains && lastIdleAssignment?.worldIndex === worldIndex ? 'visible' : 'hidden' }}
+          />
           <span className="world-realms-tag">{world.realms}</span>
           {worldLocked
             ? <span className="world-lock-icon">&#x1F512;</span>
@@ -310,6 +302,7 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
                 pendingGains={pendingGains}
                 hasPendingGains={hasPendingGains}
                 onCollect={onCollect}
+                activityStats={activityStats}
               />
             );
           })}
@@ -320,11 +313,12 @@ function WorldCard({ world, worldIndex, tab, realmIndex, clearedRegions, onNavig
 }
 
 function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clearedRegions, idleAssignment, lastIdleAssignment, onSetIdle,
-                        pendingGains, hasPendingGains, onCollectGains, inventory, techniques }) {
+                        pendingGains, hasPendingGains, onCollectGains, inventory, techniques, getFullStats }) {
   const { t } = useTranslation('ui');
   const [tab, setTab] = useState(activeTab ?? 'combat');
-  const realmIndex = cultivation.realmIndex;
-  const cleared    = clearedRegions ?? new Set();
+  const realmIndex     = cultivation.realmIndex;
+  const cleared        = clearedRegions ?? new Set();
+  const activityStats  = getFullStats?.() ?? null;
 
   function handleCollect() {
     onCollectGains?.(gains => {
@@ -384,6 +378,7 @@ function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clear
             pendingGains={pendingGains}
             hasPendingGains={hasPendingGains}
             onCollect={handleCollect}
+            activityStats={activityStats}
           />
         ))}
       </div>

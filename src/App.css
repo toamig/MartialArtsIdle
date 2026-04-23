@@ -552,15 +552,25 @@ html, body, * {
   gap: 14px;
 }
 
+/* Wider modal on desktop so cards have room to breathe */
+@media (min-width: 768px) {
+  .sel-modal { width: min(720px, calc(100vw - 48px)); }
+}
+@media (min-width: 1200px) {
+  .sel-modal { width: min(860px, calc(100vw - 64px)); }
+}
+
 .sel-modal-breakthrough {
   border-color: rgba(192, 132, 252, 0.4);
   box-shadow: 0 0 32px rgba(192, 132, 252, 0.15);
 }
 
-/* Law selection modal — subtle gold ambient on the header only (no border so
-   it doesn't read as a fourth card on mobile) */
-.sel-modal-law .sel-header {
-  box-shadow: 0 0 24px rgba(245, 200, 66, 0.12);
+/* Law selection modal — gold title glow. Box-shadow on a transparent element
+   gets clipped by the modal's overflow:auto, so use text-shadow (ink overflow,
+   never clipped) to carry the gold ambient instead. */
+.sel-modal-law .sel-title {
+  color: #f5c842;
+  text-shadow: 0 0 18px rgba(245, 200, 66, 0.55), 0 0 40px rgba(245, 200, 66, 0.2);
 }
 
 .sel-breakthrough-badge {
@@ -587,64 +597,86 @@ html, body, * {
    a gold top-accent border, warm-tinted background, and a slow sheen.
    Higher rarities escalate the same vocabulary — faster sheen, brighter glow. */
 
-@keyframes law-sheen {
-  0%   { background-position: -200% center; }
-  100% { background-position:  200% center; }
+/* Shimmer sweep — pseudo-element slides across the card, no background-position
+   tiling so there is no visible cut/seam at the loop point. */
+@keyframes law-sheen-sweep {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
 }
 
 .law-card {
   border-top: 2px solid rgba(245, 200, 66, 0.45);
   background: linear-gradient(
-    135deg,
+    160deg,
     rgba(28, 20, 5, 0.92) 0%,
-    rgba(20, 14, 4, 0.88) 50%,
-    rgba(28, 20, 5, 0.92) 100%
+    rgba(20, 14, 4, 0.90) 100%
   );
-  background-size: 200% 200%;
-  animation: law-sheen 8s linear infinite;
+  /* Fixed height — sized to the tallest possible card (long unique description).
+     All cards in the row match this height; content is centred vertically.
+     Prevents layout shift on reroll. */
+  min-height: 200px;
+}
+
+.law-card .augment-body {
+  justify-content: center;
+}
+
+/* Sheen streak — absolute, clipped by parent overflow:hidden */
+.law-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 220, 100, 0.07) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  animation: law-sheen-sweep 8s linear infinite;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .augment-card-bronze.law-card {
   border-top-color: rgba(205, 127, 50, 0.65);
+  background: linear-gradient(160deg, rgba(25, 15, 5, 0.92) 0%, rgba(18, 11, 4, 0.90) 100%);
+}
+.augment-card-bronze.law-card::before {
+  background: linear-gradient(105deg, transparent 30%, rgba(205, 127, 50, 0.08) 50%, transparent 70%);
   animation-duration: 6s;
 }
 
 .augment-card-silver.law-card {
   border-top-color: rgba(192, 192, 192, 0.65);
+  background: linear-gradient(160deg, rgba(18, 18, 22, 0.92) 0%, rgba(12, 12, 16, 0.90) 100%);
+}
+.augment-card-silver.law-card::before {
+  background: linear-gradient(105deg, transparent 30%, rgba(192, 192, 192, 0.08) 50%, transparent 70%);
   animation-duration: 5s;
 }
 
 .augment-card-gold.law-card {
   border-top-color: rgba(245, 200, 66, 0.80);
-  background: linear-gradient(
-    135deg,
-    rgba(28, 20, 5, 0.92) 0%,
-    rgba(65, 48, 6, 0.65) 50%,
-    rgba(28, 20, 5, 0.92) 100%
-  );
-  background-size: 200% 200%;
+  background: linear-gradient(160deg, rgba(28, 20, 5, 0.92) 0%, rgba(45, 30, 5, 0.90) 100%);
+}
+.augment-card-gold.law-card::before {
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 220, 100, 0.11) 50%, transparent 70%);
   animation-duration: 4s;
 }
 
 .augment-card-transcendent.law-card {
   border-top-color: rgba(192, 132, 252, 0.80);
-  background: linear-gradient(
-    135deg,
-    rgba(10, 5, 20, 0.92) 0%,
-    rgba(55, 22, 75, 0.65) 50%,
-    rgba(10, 5, 20, 0.92) 100%
-  );
-  background-size: 200% 200%;
+  background: linear-gradient(160deg, rgba(10, 5, 20, 0.92) 0%, rgba(30, 12, 45, 0.90) 100%);
+}
+.augment-card-transcendent.law-card::before {
+  background: linear-gradient(105deg, transparent 30%, rgba(192, 132, 252, 0.10) 50%, transparent 70%);
   animation-duration: 3s;
 }
 
 .sel-header {
   text-align: center;
-  background: rgba(8, 6, 20, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 12px;
-  padding: 10px 16px;
+  padding: 4px 0;
 }
 
 .sel-title {
@@ -659,14 +691,88 @@ html, body, * {
   color: var(--accent);
 }
 
-/* ── Augment cards row ──────────────────────────────────────────────────────── */
-.augment-row {
+/* ── Card pair grid — cards paired with their reroll buttons ─────────────── */
+/* Desktop: pairs sit side by side; each pair is card above, button below.   */
+/* Mobile:  pairs stack vertically; within each pair card is left, btn right. */
+.card-pair-grid {
   display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.card-pair {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
+.card-pair > .sel-reroll-btn {
+  width: 100%;
+  text-align: center;
+  padding: 7px 10px;
+}
+
 @media (max-width: 440px) {
-  .augment-row { flex-direction: column; }
+  .card-pair-grid { flex-direction: column; }
+
+  .card-pair {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  /* Card expands to fill remaining width, fixed height so stretch can't override */
+  .card-pair > .augment-card {
+    flex: 1;
+    min-width: 0;
+    height: 140px;
+    min-height: 0; /* reset so height: 140px wins over base min-height */
+    align-self: flex-start;
+  }
+
+  /* Law cards have one extra content row (unique description) so need slightly
+     more height than augment cards. Also reset min-height so this value wins. */
+  .card-pair > .law-card {
+    height: 165px;
+    min-height: 0;
+  }
+
+  /* Law / augment reroll button — narrow vertical strip on the right */
+  .card-pair > .sel-reroll-btn {
+    flex: none;
+    width: 54px;
+    padding: 8px 6px;
+    border-radius: 8px;
+    white-space: normal;
+    word-break: break-word;
+    text-align: center;
+    line-height: 1.4;
+    font-size: 0.68rem;
+  }
+
+  .card-pair > .augment-reroll-cell {
+    flex: none;
+    width: 44px;
+    justify-content: center;
+    gap: 6px;
+    align-self: stretch;
+  }
+
+  /* Compact card height on narrow screens (~20px shorter) */
+  .augment-cat-strip {
+    padding: 3px 8px;
+  }
+  .augment-body {
+    padding: 5px 8px 4px;
+    gap: 3px;
+  }
+}
+
+/* ── Augment cards row (legacy, kept for reference) ──────────────────────── */
+.augment-row {
+  display: flex;
+  gap: 8px;
 }
 
 /* Card — entire surface is clickable to pick */
@@ -675,20 +781,29 @@ html, body, * {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  min-height: 160px;
   border-radius: 12px;
   overflow: hidden;
   border: 1.5px solid rgba(255,255,255,0.07);
-  background: rgba(8, 6, 20, 0.82);
+  border-top: 2px solid color-mix(in srgb, var(--cat-color) 55%, transparent);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--cat-color) 7%, rgba(8, 6, 20, 0.92)) 0%,
+    rgba(8, 6, 20, 0.90) 100%
+  );
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   cursor: pointer;
   position: relative;
   transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background 0.15s;
 }
+
+
 .augment-card:hover {
   transform: translateY(-4px) scale(1.02);
   border-color: var(--cat-color);
-  background: rgba(255,255,255,0.07);
+  /* Keep the card's own rarity gradient — just brighten it slightly */
+  filter: brightness(1.15);
   box-shadow:
     0 8px 28px rgba(0,0,0,0.6),
     0 0 0 1px var(--cat-color),
@@ -710,6 +825,13 @@ html, body, * {
 .augment-card-silver       { border-color: rgba(192,192,192,0.50); box-shadow: 0 0 14px rgba(192,192,192,0.14); }
 .augment-card-gold         { border-color: rgba(245,200,66,0.60);  box-shadow: 0 0 18px rgba(245,200,66,0.22); }
 .augment-card-transcendent { border-color: rgba(192,132,252,0.60); box-shadow: 0 0 22px rgba(192,132,252,0.28); }
+
+/* Category strip and body sit above the ::before sheen layer */
+.augment-cat-strip,
+.augment-body {
+  position: relative;
+  z-index: 1;
+}
 
 /* Category strip at top */
 .augment-cat-strip {
@@ -750,6 +872,7 @@ html, body, * {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   padding: 10px 10px 6px;
   text-align: center;
@@ -758,7 +881,7 @@ html, body, * {
 .augment-name {
   font-size: 13px;
   font-weight: 800;
-  color: #fff;
+  color: var(--cat-color);
   line-height: 1.2;
 }
 
@@ -829,6 +952,114 @@ html, body, * {
 }
 .augment-reroll-disabled { opacity: 0.28; cursor: not-allowed; }
 
+/* ── Law per-card reroll row (gold buttons, one per law card) ───────────────── */
+.card-reroll-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.card-reroll-row .sel-reroll-btn {
+  flex: 1;
+  min-width: 0;
+  max-width: 180px;
+  padding: 7px 10px;
+  font-size: 0.80rem;
+}
+
+/* ── Augment per-card reroll row — small circles with cost label ─────────────── */
+.augment-reroll-row {
+  display: flex;
+  gap: 8px; /* matches .augment-row gap */
+  width: 100%;
+  margin-top: 6px;
+}
+
+.augment-reroll-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Circle button */
+.augment-reroll-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.40), 0 2px 6px rgba(0,0,0,0.50);
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.augment-reroll-btn:hover {
+  background: rgba(255,255,255,0.26);
+  border-color: rgba(255,255,255,0.80);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.40), 0 0 12px rgba(255,255,255,0.22);
+  transform: rotate(-25deg);
+}
+.augment-reroll-btn:active {
+  transform: scale(0.88) rotate(-30deg);
+}
+
+/* Free reroll — gold tint */
+.augment-reroll-btn.augment-reroll-free {
+  border-color: rgba(245,185,40,0.90);
+  color: #fef08a;
+  background: rgba(140,84,10,0.45);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.40), 0 0 10px rgba(217,160,20,0.35);
+}
+.augment-reroll-btn.augment-reroll-free:hover {
+  border-color: #f5c842;
+  background: rgba(180,110,10,0.60);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.40), 0 0 18px rgba(217,160,20,0.55);
+  transform: rotate(-25deg);
+}
+
+/* Locked — not enough Blood Lotus; click opens shop */
+.augment-reroll-btn.augment-reroll-locked {
+  border-color: rgba(239,68,68,0.80);
+  color: #fca5a5;
+  background: rgba(120,15,15,0.45);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.40), 0 0 10px rgba(239,68,68,0.25);
+}
+.augment-reroll-btn.augment-reroll-locked:hover {
+  border-color: #ef4444;
+  background: rgba(160,25,25,0.60);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.40), 0 0 16px rgba(239,68,68,0.45);
+  transform: scale(1.10);
+}
+.augment-reroll-btn.augment-reroll-locked:active {
+  transform: scale(0.92);
+}
+
+/* Tiny cost label under the circle */
+.augment-reroll-cost {
+  font-size: 0.60rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.65);
+  margin-top: 4px;
+  text-align: center;
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.70);
+}
+.augment-reroll-cost-free  { color: #fde68a; }
+.augment-reroll-cost-short { color: #fca5a5; }
+
+
 /* ── Footer ─────────────────────────────────────────────────────────────────── */
 .sel-footer {
   display: flex;
@@ -881,16 +1112,17 @@ html, body, * {
   transform: translateY(-1px);
 }
 .sel-reroll-btn:active:not(:disabled) { transform: scale(0.96); }
-/* Free reroll — jade gradient (cultivation energy, no cost) */
+/* Free reroll — brighter gold to signal no cost, stays in the law card palette */
 .sel-reroll-btn-free {
-  background: linear-gradient(135deg, rgba(12, 70, 70, 0.65), rgba(15, 100, 90, 0.65));
-  border-color: rgba(45, 180, 160, 0.55);
-  color: #a7f3e8;
+  background: linear-gradient(135deg, rgba(120, 72, 8, 0.60), rgba(180, 110, 0, 0.60));
+  border-color: rgba(245, 185, 40, 0.70);
+  color: #fef08a;
+  box-shadow: 0 0 10px rgba(217, 160, 20, 0.20);
 }
 .sel-reroll-btn-free:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(15, 90, 85, 0.80), rgba(20, 120, 110, 0.80));
-  border-color: rgba(45, 180, 160, 0.80);
-  box-shadow: 0 0 14px rgba(20, 170, 150, 0.32);
+  background: linear-gradient(135deg, rgba(160, 95, 12, 0.80), rgba(220, 140, 0, 0.80));
+  border-color: rgba(255, 210, 60, 0.90);
+  box-shadow: 0 0 18px rgba(217, 160, 20, 0.45);
   transform: translateY(-1px);
 }
 .sel-reroll-btn-disabled { opacity: 0.30; cursor: not-allowed; }
@@ -2560,7 +2792,10 @@ html, body, * {
   border: 1px solid rgba(139, 92, 246, 0.35);
   border-radius: 18px;
   width: min(96vw, 380px);
-  max-height: var(--modal-max-h);
+  /* Fixed-ish height so the refine button never shifts between taps.
+     Height is clamped to a value that fits the fullest possible content
+     while still respecting small viewports via var(--modal-max-h). */
+  height: min(var(--modal-max-h), 600px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2635,6 +2870,14 @@ html, body, * {
   white-space: nowrap;
   box-shadow: 0 0 8px rgba(139, 92, 246, 0.25);
 }
+
+/* Hidden but still occupying its slot — keeps the header height stable so
+   the rest of the modal doesn't shift when a level-up becomes imminent. */
+.cfm-bonus-next-hidden { visibility: hidden; }
+
+/* Level-0 state of the current-bonus line — keeps the same height as when
+   level > 0 but visually muted so "+0 Qi/s" doesn't grab attention. */
+.cfm-bonus-current-zero { opacity: 0.35; }
 
 .cfm-bonus-gem {
   font-size: 9px;
@@ -2862,8 +3105,262 @@ html, body, * {
   padding: 2px 8px;
 }
 
-.cfm-refine-btn {
+/* ── Section meta (inline trailing text on the label row) ─────────────────── */
+.cfm-section-label { display: flex; justify-content: space-between; align-items: baseline; }
+.cfm-section-meta {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  color: rgba(200, 190, 240, 0.65);
+  font-size: 11px;
+}
+.cfm-section-meta strong { color: #e0d8ff; }
+
+/* Level-preview chip in the section label row — ALWAYS rendered so its
+   space is reserved; visual changes happen inline without layout shift. */
+.cfm-level-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(200, 190, 240, 0.7);
+  transition: color 0.2s;
+}
+.cfm-level-preview strong {
+  color: #f5c842;
+  font-size: 13px;
+  transition: color 0.2s;
+}
+/* Idle state — no level gained. Keep the span visible but dim it so the
+   player clearly reads "no level change" instead of a glowing promise. */
+.cfm-level-preview-idle { color: rgba(200, 190, 240, 0.35); }
+.cfm-level-preview-idle strong { color: rgba(200, 190, 240, 0.45); }
+.cfm-level-preview-idle .cfm-level-arrow { opacity: 0.4; }
+
+.cfm-level-delta {
+  background: rgba(245, 200, 66, 0.18);
+  border: 1px solid rgba(245, 200, 66, 0.4);
+  color: #f5c842;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  letter-spacing: 0;
+  min-width: 28px;
+  text-align: center;
+}
+/* Hidden but still occupying space — no layout shift when levels gained = 0 */
+.cfm-level-delta-hidden { visibility: hidden; }
+
+/* ── Stone Reserves — rarity-aggregated pills ─────────────────────────────── */
+.cfm-reserves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 16px 14px;
+  flex-shrink: 0;
+  /* Reserve space for up to 2 rows of chips so the section doesn't collapse
+     when the player has only 1-2 rarities in inventory. Prevents the button
+     from shifting up when rarities deplete. */
+  min-height: 72px;
+  align-content: flex-start;
+}
+
+.cfm-reserve-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid var(--rarity-color, #9ca3af);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  transition: opacity 0.2s;
+}
+
+/* Dim state — rarity in inventory is empty. Chip stays in the layout
+   so the reserves section height doesn't change when stones run out. */
+.cfm-reserve-dim {
+  opacity: 0.28;
+  filter: saturate(0.4);
+}
+
+.cfm-reserve-label {
+  color: var(--rarity-color, #fff);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.cfm-reserve-qty {
+  color: rgba(255, 255, 255, 0.90);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.cfm-reserve-rqi {
+  color: rgba(167, 139, 250, 0.65);
+  font-size: 10px;
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+/* ── Amount control: slider + +/- row + quick presets + consumption ──────── */
+.cfm-amount-ctl {
+  padding: 0 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.cfm-slider {
   width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 8px;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+  /* track fills up to the current value — driven by --slider-pct from JS */
+  background: linear-gradient(
+    to right,
+    #a855f7 0%,
+    #7c3aed var(--slider-pct, 0%),
+    rgba(139, 92, 246, 0.14) var(--slider-pct, 0%),
+    rgba(139, 92, 246, 0.14) 100%
+  );
+}
+.cfm-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e9d5ff, #a855f7);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.65);
+  cursor: pointer;
+}
+.cfm-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e9d5ff, #a855f7);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.65);
+  cursor: pointer;
+}
+.cfm-slider:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cfm-amount-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cfm-amount-val {
+  min-width: 140px;
+  text-align: center;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+}
+.cfm-amount-val strong {
+  font-size: 20px;
+  font-weight: 800;
+  color: #e0d8ff;
+}
+.cfm-amount-unit {
+  font-size: 11px;
+  color: rgba(167, 139, 250, 0.6);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.cfm-quick-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cfm-quick-btn {
+  flex: 1 0 auto;
+  min-width: 48px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  background: rgba(139, 92, 246, 0.08);
+  color: #c4b5fd;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.cfm-quick-btn:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(139, 92, 246, 0.45);
+}
+.cfm-quick-max {
+  background: rgba(245, 200, 66, 0.10);
+  border-color: rgba(245, 200, 66, 0.35);
+  color: #f5c842;
+}
+.cfm-quick-max:hover:not(:disabled) {
+  background: rgba(245, 200, 66, 0.18);
+  border-color: rgba(245, 200, 66, 0.55);
+}
+
+/* ── Consumption preview ("Will consume: 30 Iron, 12 Bronze") ─────────────── */
+.cfm-consumption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(10, 8, 20, 0.45);
+  border: 1px dashed rgba(139, 92, 246, 0.25);
+  font-size: 11px;
+  /* Always render (empty state uses placeholder text) so the layout doesn't
+     reflow when the player drags the slider to 0 or maxes out the feed. */
+  min-height: 36px;
+}
+
+.cfm-consumption-empty {
+  color: rgba(200, 190, 240, 0.30);
+  font-size: 11px;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+.cfm-consumption-label {
+  color: rgba(200, 190, 240, 0.55);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.cfm-consumption-pill {
+  background: color-mix(in srgb, var(--rarity-color, #9ca3af) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--rarity-color, #9ca3af) 35%, transparent);
+  color: var(--rarity-color, #fff);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.cfm-refine-btn {
   padding: 12px;
   border-radius: 10px;
   border: 1px solid rgba(139, 92, 246, 0.4);
@@ -2876,9 +3373,21 @@ html, body, * {
   font-family: inherit;
   letter-spacing: 0.03em;
   -webkit-tap-highlight-color: transparent;
+  /* margin-top: auto pushes this button to the bottom of the flex column,
+     anchoring it at a stable Y position so repeated taps always hit the
+     same spot regardless of changes to the content above. */
+  margin: auto 16px 16px;
+  flex-shrink: 0;
 }
 
-.cfm-refine-btn:hover { opacity: 0.9; }
+.cfm-refine-btn:hover:not(:disabled) { opacity: 0.9; }
+.cfm-refine-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: rgba(139, 92, 246, 0.15);
+  box-shadow: none;
+  animation: none;
+}
 
 .cfm-refine-levelup {
   background: linear-gradient(135deg, #7c3aed, #a855f7, #f5c842);
@@ -3055,6 +3564,54 @@ html, body, * {
 .realm-fill-boosted {
   background: linear-gradient(to right, #ff6a00, #ffd700, #ff6a00);
   box-shadow: 0 0 10px rgba(255, 200, 0, 0.6);
+}
+
+/* Peak Stage — persistent crimson-gold while sitting at the pinnacle */
+.realm-fill-peak-stage {
+  background: linear-gradient(to right, #991b1b, #ffd700, #991b1b);
+  box-shadow:
+    0 0 10px rgba(255, 50,  50,  0.55),
+    0 0 22px rgba(255, 180, 0,   0.35);
+  animation: realmPeakStagePulse 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes realmPeakStagePulse {
+  from {
+    box-shadow:
+      0 0 8px  rgba(255, 50,  50,  0.45),
+      0 0 16px rgba(255, 180, 0,   0.28);
+    filter: brightness(1.0);
+  }
+  to {
+    box-shadow:
+      0 0 18px rgba(255, 50,  50,  0.80),
+      0 0 36px rgba(255, 180, 0,   0.55);
+    filter: brightness(1.22);
+  }
+}
+
+/* Major breakthrough — white-violet transcendence pulse */
+.realm-fill-breakthrough {
+  background: linear-gradient(to right, #7c3aed, #ffffff, #a78bfa);
+  box-shadow:
+    0 0 14px rgba(255, 255, 255, 0.85),
+    0 0 32px rgba(167, 139, 250, 0.70);
+  animation: realmBreakthroughPulse 0.85s ease-in-out infinite alternate;
+}
+
+@keyframes realmBreakthroughPulse {
+  from {
+    box-shadow:
+      0 0 10px rgba(255, 255, 255, 0.65),
+      0 0 22px rgba(167, 139, 250, 0.50);
+    filter: brightness(1.0);
+  }
+  to {
+    box-shadow:
+      0 0 28px rgba(255, 255, 255, 1.00),
+      0 0 55px rgba(167, 139, 250, 0.90);
+    filter: brightness(1.40);
+  }
 }
 
 .realm-center-badge {
@@ -3479,6 +4036,70 @@ html, body, * {
   .secondary-stat-row:hover {
     border-color: rgba(255, 255, 255, 0.15);
   }
+  .secondary-stat-row-interactive:hover {
+    border-color: rgba(167, 243, 232, 0.25);
+    cursor: default;
+  }
+}
+
+/* ── Stat breakdown tooltip ── */
+.stat-breakdown-tooltip {
+  z-index: 1200;
+  background: rgba(12, 10, 28, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 190px;
+  max-width: 270px;
+  pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.sbt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 2px 0;
+}
+
+.sbt-src {
+  font-size: 0.70rem;
+  color: rgba(160, 155, 190, 0.65);
+  white-space: nowrap;
+}
+
+.sbt-base .sbt-src {
+  color: rgba(180, 175, 210, 0.5);
+  font-style: italic;
+}
+
+.sbt-val {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(235, 230, 255, 0.88);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sbt-bonus {
+  color: #a7f3e8;
+}
+
+.sbt-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  margin: 4px 0;
+}
+
+.sbt-total .sbt-src {
+  color: rgba(235, 230, 255, 0.7);
+  font-weight: 600;
+  font-style: normal;
+}
+
+.sbt-total .sbt-val {
+  color: rgba(245, 200, 66, 0.9);
 }
 
 .secondary-stat-label {
@@ -3499,6 +4120,8 @@ html, body, * {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--gold);
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 /* Combat + Utility grid — stacked on mobile, side-by-side on PC.
@@ -4321,6 +4944,155 @@ html, body, * {
 .enemy-tooltip-drop-chance {
   font-size: 0.65rem;
   color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ── Activity Info Button (gather / mine rows) ── */
+.activity-info-btn-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.activity-info-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.activity-info-btn:hover {
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+/* ── Activity Tooltip ── */
+.activity-tooltip {
+  z-index: 1100;
+  pointer-events: none;
+  background: rgba(10, 8, 28, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 210px;
+  max-width: 260px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.65);
+}
+
+.activity-tooltip-header {
+  padding-bottom: 2px;
+}
+
+.activity-tooltip-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.activity-tooltip-section {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 5px;
+}
+
+.activity-tooltip-section-label {
+  font-size: 0.60rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 1px;
+}
+
+.activity-tooltip-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.activity-tooltip-stat-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.activity-tooltip-stat-value {
+  font-size: 0.70rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.activity-tooltip-bonus {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.activity-tooltip-col-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding-bottom: 2px;
+}
+
+.activity-tooltip-col-chance {
+  width: 32px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.activity-tooltip-col-timer {
+  width: 52px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.activity-tooltip-drop-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.activity-tooltip-drop-name {
+  flex: 1;
+  font-size: 0.68rem;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-tooltip-drop-pct {
+  width: 32px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.activity-tooltip-drop-time {
+  width: 52px;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  text-align: right;
   flex-shrink: 0;
 }
 
@@ -5252,6 +6024,78 @@ html, body, * {
   0%   { opacity: 0; transform: scale(0.45) translateY(10px); }
   70%  { opacity: 1; transform: scale(1.08) translateY(-2px); }
   100% { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+/* ── Drop Orbs — jewel-style loot icons at enemy feet, arc to player ─────── */
+@keyframes combat-drop-orb {
+  /* materialise at feet — small upward bounce like bouncing off the floor */
+  0%   { transform: translate(0,  6px) scale(0);    opacity: 0; }
+  10%  { transform: translate(0,  0)   scale(1.32); opacity: 1; }
+  18%  { transform: translate(0,  4px) scale(0.90); opacity: 1; }
+  26%  { transform: translate(0,  0)   scale(1.05); opacity: 1; }
+  34%  { transform: translate(0,  0)   scale(1);    opacity: 1; }
+  /* rest — player reads icon, glow pulses via box-shadow in the rule */
+  72%  { transform: translate(0,  0)   scale(1);    opacity: 1; }
+  /* arc toward the player character center and vanish (collected) */
+  100% {
+    transform: translate(var(--collect-dx, -200px), var(--collect-dy, -60px)) scale(0.06);
+    opacity: 0;
+  }
+}
+
+.combat-drop-orb {
+  position:      absolute;
+  width:         46px;
+  height:        46px;
+  border-radius: 50%;
+  /* gem-shine highlight at top-left over the per-rarity dark tinted base */
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,0.30) 0%, transparent 50%),
+    var(--drop-bg, rgba(8, 6, 16, 0.94));
+  border:        2.5px solid var(--drop-color, #9ca3af);
+  box-shadow:
+    /* outer glow — wide halo */
+    0 0 22px var(--drop-color, #9ca3af),
+    /* tight inner ring */
+    0 0 8px  var(--drop-color, #9ca3af),
+    /* subtle inset so the icon pops off the background */
+    inset 0 0 10px rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+  z-index:        30;
+  overflow:       visible; /* qty badge overflows the circle boundary */
+  animation:      combat-drop-orb 1.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.combat-drop-img {
+  width:           100%;
+  height:          100%;
+  object-fit:      contain;
+  padding:         5px;
+  border-radius:   50%;
+  image-rendering: pixelated;
+  display:         block;
+  /* slight brightness boost so pixel-art icons read clearly on dark bg */
+  filter:          brightness(1.10) drop-shadow(0 1px 2px rgba(0,0,0,0.6));
+}
+
+/* Quantity badge — bottom-right, only rendered when qty > 1 */
+.combat-drop-qty-badge {
+  position:      absolute;
+  bottom:        -6px;
+  right:         -7px;
+  background:    rgba(4, 2, 10, 0.97);
+  border:        1.5px solid var(--drop-color, #9ca3af);
+  color:         var(--drop-color, #fff);
+  font-size:     10px;
+  font-weight:   800;
+  line-height:   1;
+  padding:       2px 5px;
+  border-radius: 9px;
+  min-width:     18px;
+  text-align:    center;
+  white-space:   nowrap;
+  /* match the orb's glow so the badge feels part of the same object */
+  box-shadow:    0 0 6px var(--drop-color, #9ca3af);
 }
 
 /* ── Combat Stage ─────────────────────────────────────────────────────────── */
@@ -6236,8 +7080,22 @@ html, body, * {
 }
 
 .region-row {
+  position: relative;
   padding: 12px 16px;
+  /* border-box so that adding border-left: 3px when idling doesn't grow
+     the row's total dimensions and shift surrounding content. */
+  box-sizing: border-box;
+  /* Lock row height so the pending-slot text appearing, the collect
+     button appearing, or the idling border-left toggling never changes
+     the list's overall vertical layout. Matches the full-state natural
+     height (padding + title + min-realm + pending-slot + padding). */
+  min-height: 88px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Reserve space on the right so content never slides behind the absolute buttons */
+.region-row:not(.region-row-world) {
+  padding-right: 80px;
 }
 
 .region-row:last-child {
@@ -6249,14 +7107,15 @@ html, body, * {
 }
 
 .region-row.region-row-idling {
-  border-left: 3px solid rgba(120, 200, 100, 0.7);
-  background: rgba(60, 140, 60, 0.05);
+  border-left: 3px solid rgba(245, 200, 66, 0.55);
+  background: rgba(180, 140, 0, 0.05);
 }
 
-/* Idle toggle button inside a region row */
+/* Idle toggle — pinned to top-right corner of the card */
 .region-idle-btn {
-  flex-shrink: 0;
-  margin-left: auto;
+  position: absolute;
+  top: 12px;
+  right: 16px;
   padding: 4px 10px;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -6270,15 +7129,25 @@ html, body, * {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Hovering idle-able region — green: start idling */
 .region-idle-btn:hover {
-  border-color: rgba(120, 200, 100, 0.5);
-  color: rgba(150, 220, 130, 0.9);
-}
-
-.region-idle-btn.region-idle-btn-active {
   border-color: rgba(120, 200, 100, 0.6);
   background: rgba(60, 140, 60, 0.12);
   color: rgba(150, 220, 130, 1);
+}
+
+/* Currently idling — yellow */
+.region-idle-btn.region-idle-btn-active {
+  border-color: rgba(245, 200, 66, 0.55);
+  background: rgba(180, 140, 0, 0.12);
+  color: rgba(245, 200, 66, 0.9);
+}
+
+/* Hovering while idling — red: cancel */
+.region-idle-btn.region-idle-btn-active:hover {
+  border-color: rgba(233, 69, 96, 0.6);
+  background: rgba(180, 30, 60, 0.15);
+  color: rgba(240, 100, 120, 1);
 }
 
 .region-row:not(.region-locked) {
@@ -6298,17 +7167,11 @@ html, body, * {
   background: rgba(255, 255, 255, 0.07);
 }
 
-/* Right-side action column (idle toggle + collect) */
-.region-row-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-/* Inline collect button inside the idling region row */
+/* Collect — pinned to bottom-right corner of the card */
 .region-collect-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 16px;
   padding: 5px 14px;
   border-radius: 6px;
   border: 1px solid rgba(120, 200, 100, 0.5);
@@ -6356,21 +7219,39 @@ html, body, * {
   color: rgba(160, 155, 190, 0.5);
 }
 
-.region-row-detail {
+.region-info-title-row {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: 6px;
+  align-items: center;
+  gap: 6px;
 }
 
-.region-detail-primary {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+.region-pending-slot {
+  /* FIXED height (not min-height) so the span inside can't push this slot
+     taller — keeps the row height perfectly stable whether the slot is
+     empty, holds short text, or holds an overflowing long drop list. */
+  height: 18px;
+  margin-top: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  /* Reserve space to the right so the absolute collect button never visually
+     overlaps the pending text (button is ~90px wide at right: 16px). */
+  padding-right: 90px;
+  min-width: 0;
 }
 
-.region-detail-secondary {
-  font-size: 0.75rem;
-  color: var(--text-muted);
+.region-pending-items {
+  font-size: 0.72rem;
+  color: #4ade80;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* inline-block gives text-overflow:ellipsis something to clip against
+     and prevents any edge-case line-box height growth. */
+  display: inline-block;
+  max-width: 100%;
+  line-height: 18px;
 }
 
 /* ── Enemy chip row (world tab region cards) ───────────────────────────────── */
@@ -6391,18 +7272,6 @@ html, body, * {
 
 .region-row-world:not(.region-locked):active {
   background: rgba(233, 69, 96, 0.1);
-}
-
-/* ── Pending gains summary line ── */
-.region-pending-summary {
-  margin-top: 4px;
-  font-size: 0.72rem;
-  color: #4ade80;
-  opacity: 0.85;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
 }
 
 /* ── Combat-gate badge on locked gather/mine regions ── */

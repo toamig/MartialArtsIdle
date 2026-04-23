@@ -14,7 +14,7 @@ const TECH_GLYPH = {
 import ENEMIES, { pickEnemy } from '../data/enemies';
 import CombatStage from '../components/CombatStage';
 
-const AUTO_RESTART_MS = 1500;
+const AUTO_RESTART_MS = 2000;
 
 const LOG_COLOR = {
   damage:         'var(--accent)',
@@ -179,6 +179,7 @@ function CombatScreen({ cultivation, techniques, combat, inventory, artefacts = 
         playerAnimDoneRef={combat.playerAnimDoneRef}
         enemyAnimDoneRef={combat.enemyAnimDoneRef}
         spawnDamageNumberRef={combat.spawnDamageNumberRef}
+        spawnDropsRef={combat.spawnDropsRef}
         pHpBarRef={combat.pHpBarRef}
         pHpTextRef={combat.pHpTextRef}
         eHpBarRef={combat.eHpBarRef}
