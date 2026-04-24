@@ -7,6 +7,7 @@ import {
 import { generateArtefactName, formatArtefactName } from '../data/artefactNames';
 import { rerollArtefactUniqueValue } from '../data/uniqueModifiers';
 import { evaluateArtefactUniques } from '../systems/artefactEngine';
+import { rollElementAndSet } from '../data/artefactSets';
 
 const SAVE_KEY = 'mai_artefacts';
 // Bump whenever the artefact schema changes in a way existing saves can't
@@ -40,6 +41,9 @@ function resolveInstance(o) {
     secondName: o.secondName,
     upgraded:   Boolean(o.upgraded),
     craftCount: o.craftCount ?? 0,
+    // Element + set membership (rolled at drop time, frozen afterwards).
+    element:    o.element ?? null,
+    setIds:     Array.isArray(o.setIds) ? o.setIds : [],
     // Generated name overrides the catalog name when present; fall back
     // to the catalog name for legacy instances without rolled parts.
     name:       displayName ?? cat.name,
@@ -71,6 +75,15 @@ function ensureAffixes(owned) {
     // Back-fill hidden craft counter (drives geometric cost ramp on transmutes).
     if (typeof next.craftCount !== 'number') {
       next = { ...next, craftCount: 0 };
+      changed = true;
+    }
+    // Back-fill element + setIds (added in Stage 8 of the overhaul). Legacy
+    // drops roll one on first load so set-counting always has something to work
+    // with. The roll uses the instance's current rarity.
+    if (!next.element || !Array.isArray(next.setIds) || next.setIds.length === 0) {
+      const rarity = next.rarity ?? art.rarity ?? 'Iron';
+      const { element, setIds } = rollElementAndSet(rarity);
+      next = { ...next, element, setIds };
       changed = true;
     }
     return next;
@@ -122,7 +135,8 @@ export default function useArtefacts() {
       const rarity  = art?.rarity ?? 'Iron';
       const affixes = generateAffixes(art?.slot ?? 'weapon', rarity);
       const { firstName, secondName } = generateArtefactName(rarity);
-      const instance = { uid, catalogueId, affixes, firstName, secondName, upgraded: false, craftCount: 0 };
+      const { element, setIds } = rollElementAndSet(rarity);
+      const instance = { uid, catalogueId, affixes, firstName, secondName, element, setIds, upgraded: false, craftCount: 0 };
       const next = { ...prev, owned: [...prev.owned, instance] };
       save(next);
       return next;
