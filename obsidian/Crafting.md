@@ -1,8 +1,10 @@
 # Crafting
 
-The system for transforming [[Artefacts]], [[Secret Techniques]], and [[Laws]] you already own. Inspired by Slormancer's affix-manipulation crafting: you never create items from scratch — you modify what you have.
+The system for transforming [[Secret Techniques]] and [[Laws]] you already own. Inspired by Slormancer's affix-manipulation crafting: you never create items from scratch — you modify what you have.
 
 Crafting is performed at the **Transmutation** station (Production tab), unlocked at **Qi Transformation** realm.
+
+> **Overhaul note (2026-04-24):** **Artefacts no longer participate in this system.** Refining was removed for artefacts during the Damage & Element System Overhaul. Artefacts now drop fully-rolled from combat and are improved exclusively via the **upgrade ladder** in the Collection tab — see [[Artefact Upgrades]]. Technique and Law transmutation paths described below remain available pending separate review.
 
 ---
 

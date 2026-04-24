@@ -2,12 +2,9 @@
 
 Build-enabling rare modifiers for Laws, Artefacts, and Techniques. Designed in the spirit of Path of Exile uniques, Slormancer legendaries, and Diablo set bonuses — combinations of unique modifiers should enable distinct playstyles.
 
-> **Status:** Law uniques and artefact uniques are LIVE. Law uniques live in
-> `src/data/lawUniques.js` and are evaluated each tick by `lawEngine.js`.
-> Artefact uniques live in `src/data/uniqueModifiers.js → ARTEFACT_UNIQUES`
-> and roll on Iron slots at a 2% chance per item, plus on the Transcendent
-> slot's reroll pool (see [[Artefacts]] for the integration rules).
-> Technique uniques are still presentation-only.
+> **Overhaul note (2026-04-24):** all ~350 prior uniques (laws, artefacts, techniques) were **wiped** during the Damage & Element System Overhaul. Pools are now empty; the archive lives at [[Deprecated_Unique_Modifiers]]. The effect-schema documented below is preserved for reference — the next iteration will refill pools targeting the new 5-element / 2-damage-bucket model. **Effects must not reference `essence` / `soul` / `body`, `psychic_damage`, or `soul_toughness`** — those stats are gone.
+>
+> New unique pools: `LAW_UNIQUE_POOLS = ['fire', 'water', 'earth', 'wood', 'metal', 'general']`. Artefact uniques are not auto-rolled for now (artefacts spawn with their full modifier complement and no unique slot — see [[Artefacts]]).
 
 ---
 

@@ -2,107 +2,70 @@
 
 Elemental cultivation arts unlocked at [[Realm Progression#Qi Transformation|Qi Transformation]].
 
-Laws define the cultivator's elemental specialisation and provide a package of passives and cultivation-speed bonuses. Primary stats (Essence, Soul, Body) are no longer derived from Qi through a Law — see [[Primary Stats]].
+Laws define the cultivator's elemental specialisation and provide a package of passives and cultivation-speed bonuses. **Primary stats are gone** — see [[Primary Stats]] for the deprecation note.
+
+> **Overhaul note (2026-04-24):** the prior law catalogue and unique-modifier pools were wiped during the Damage & Element System Overhaul. Element list collapsed from 8 (Fire / Water / Stone / Air / Metal / Wood / Normal / Ice) to **5** (`fire / water / earth / wood / metal`). Type system collapsed from 9 pools to the same **5 + `general`**. `typeMults` removed entirely (no primary stats to multiply). All ~119 prior law uniques live in [[Deprecated_Unique_Modifiers]].
 
 ---
 
 ## Requirements
 
-- **Minimum Major Realm** — the higher the realm requirement, the better the multipliers and passives the law can roll.
+- **Minimum Major Realm** — the higher the realm requirement, the better the passives the law can roll.
 
 ---
 
 ## Element
 
-Laws are tied to one element. Each element flavours the default attack and passive pool available to that law.
+Laws are tied to exactly one of the five elements. The element flavours the default attack and the passive pool the law draws from.
 
-| Element | Notes |
-|---|---|
-| Fire | — |
-| Water | — |
-| Stone | — |
-| Air | — |
-| Metal | — |
-| Wood | — |
-| Normal | No elemental bonus, but broader passive pool |
-| Ice | — |
+| Element |
+|---|
+| `fire` |
+| `water` |
+| `earth` |
+| `wood` |
+| `metal` |
 
-> Elemental combinations possible at advanced realms (TBD).
+Authoritative constant: `ELEMENTS` in `src/data/elements.js` (added in Stage 5 of the overhaul). See [[Elements]] for the global element model.
 
 ---
 
 ## Types & Unique Pools
 
-Each law also has a `types: [...]` array which controls **which unique-modifier pools** the law can roll from. Unique pools are balanced 3/3/3 around the three primary stats:
+Each law has a `types: [...]` array — one or more of the five elements plus optional `general`. The array selects which unique-modifier pools the law can roll from. Every law implicitly draws from `general` regardless of its `types`.
 
-| Anchor stat | Pools |
-|---|---|
-| Body (martial) | physical, sword, fist |
-| Essence (elemental) | fire, water, earth |
-| Soul (mystical) | spirit, void, dao |
+```
+LAW_UNIQUE_POOLS = ['fire', 'water', 'earth', 'wood', 'metal', 'general']
+```
 
-Every law additionally draws from the implicit **`general`** pool regardless of its types. Uniques with no strong thematic fit live in `general`.
+All six pools start **empty** after the overhaul. The designer fills them by porting / rewriting entries from [[Deprecated_Unique_Modifiers]] (effects must be rewritten — no `essence`/`soul`/`body`, no `psychic_damage`, no `soul_toughness`).
 
 - Authoritative pool list: `LAW_UNIQUE_POOLS` in `src/data/lawUniques.js`.
-- Pool assignments per unique: `POOL_ASSIGNMENTS` map in the same file (~40 uniques are typed today; the other ~90 default to `general` — edit the map to curate further).
-- Generated-law element-to-types mapping: `ELEMENT_TO_TYPES` in `src/data/affixPools.js` (Fire → fire, Water/Frost/Ice → water, Earth/Stone → earth, Void → void; others → `['general']`).
-- The starter law **Three Harmony Manual** has `types: ['physical']` — thematic neutrality plus the martial pool.
+- Generated-law element-to-types mapping: see `src/data/affixPools.js` (typically `<element> → [<element>]`).
 
-The designer panel now exposes a read-only **Law Uniques** viewer (Progression section) that lists every unique grouped by its pool so designers can audit coverage.
+The designer panel still exposes a read-only **Law Uniques** viewer (Progression section) that lists every unique grouped by its pool — currently empty until the pools are refilled.
 
-### Types Are Damage Types
+### Types and Damage
 
-The same 9 types also classify **damage**: each type folds into exactly one of the three base damage buckets, mirroring its primary-stat anchor.
+`law.types` no longer maps to a damage bucket. **Damage routing is per-technique now** (see [[Damage Types]] and [[Secret Techniques]]). Basic attacks are always physical. Secret techniques carry their own `damageType`.
 
-| Anchor | Types | Damage bucket |
-|---|---|---|
-| Body | physical, sword, fist | `physical_damage` |
-| Essence | fire, water, earth | `elemental_damage` |
-| Soul | spirit, void, dao | `psychic_damage` |
-
-When an attack resolves, its damage category is derived from the active law's `types` array via `TYPE_TO_DAMAGE_CATEGORY` (in `src/data/lawUniques.js`):
-
-- **Single category law** (e.g. `['fire']` or `['fire', 'water', 'earth']`) — the full flat bonus from the bucket's `*_damage` stat is applied.
-- **Multi-category law** (e.g. `['fire', 'sword']`) — the attack is considered to be split evenly across the UNIQUE categories, and each category contributes its flat bonus proportionally. A `[fire, sword]` attack adds `0.5 × elemental_damage + 0.5 × physical_damage`.
-
-This is applied inside `calcDamage()` in `src/data/techniques.js`. Previously the three `*_damage` stats were only displayed; they now actually modify attack output.
+`law.types` controls only the unique-modifier pool draw — it does not split or scale damage.
 
 ---
 
-## Default Attack Multipliers (`typeMults`)
+## Default Attack
 
-The **basic attack** (fires when no secret technique is ready) is scaled by a new `typeMults: { essence, body, soul }` field on every law. Each slot is **0 by default** — only categories the law actually covers via its `types` get a non-zero value.
+The previous `typeMults: { essence, body, soul }` field is **removed** along with the primary stats it multiplied. Basic-attack damage is now scaled by realm index alone (placeholder formula until a new stat axis is designed):
 
-Mapping (same as damage categories, just expressed as primary stats):
-
-| Anchor | Types | Primary stat slot |
-|---|---|---|
-| Body | physical, sword, fist | `typeMults.body` |
-| Essence | fire, water, earth | `typeMults.essence` |
-| Soul | spirit, void, dao | `typeMults.soul` |
-
-Formula (in `src/hooks/useCombat.js` and `src/systems/autoFarm.js`):
 ```
-basicDmg = max(5, floor(E * typeMults.essence + B * typeMults.body + S * typeMults.soul))
+basicDmg = max(5, K_basic × realmIndex × arteMult)
 ```
 
-### Roll ranges per rarity
+See [[Primary Stats#Placeholder formulas]].
 
-The total multiplier rolls **once per covered category**. Adding a second type in the same category (e.g. `['fire', 'water']` → both Essence) does NOT stack — it just means more pool options for the shared slot.
+### Starter law
 
-| Rarity | Roll range (per covered category) |
-|---|---|
-| Iron | 1.10 … 1.30 |
-| Bronze | 1.20 … 1.60 |
-| Silver | 1.40 … 2.00 |
-| Gold | 1.70 … 2.60 |
-| Transcendent | 2.20 … 3.50 |
-
-Authoritative: `LAW_TYPE_MULT_RANGES` + `rollLawTypeMults()` in `src/data/affixPools.js`.
-
-### Soul-type generation gate
-
-Soul-anchored types (`spirit`, `void`, `dao`) cannot appear on a law generated before the player has reached Saint realm (`realmIndex >= SAINT_INDEX = 24`). `generateLaw` strips them from the rolled `types` array and falls back to `['general']` if nothing remains. Secret techniques and the starter law are unaffected.
+Players no longer start with an equipped law. A fresh save's library is empty; the first **major-realm breakthrough** fires a "First Law" selection that offers three Iron rolls (no skip). The picked law lands in the library — the player equips it manually from the Character tab.
 
 ### Starter law
 
@@ -208,23 +171,21 @@ rarity (see [[Crafting#Operations]]).
 
 ## Example Law
 
-### Three Harmony Manual *(Normal · Iron · Qi Transformation)*
+### Unyielding Fist Manual *(metal · Iron · Qi Transformation)*
 
-> *"The ancient text speaks of no fire, no storm, no mountain — only the even breath between all things."*
+> *"A drill-book of Tempered Body strikes — the disciple's first hundred blows, repeated until the bones remember them."*
 
-A beginner's law found early in the world. Makes no elemental specialisation. Ideal for new cultivators who haven't yet committed to a combat style.
+The starter law assigned to every fresh save. Single-element (metal), Iron rarity, one passive slot.
 
 | Property | Value |
 |---|---|
-| **Element** | Normal |
+| **Element** | `metal` |
+| **Types** | `['metal']` |
 | **Rarity** | Iron |
 | **Realm Requirement** | Qi Transformation (Early Stage) |
 | **Cultivation Speed** | ×1.0 (baseline) |
 
-**Passive (1 slot — Iron):**
-- *Steady Breath:* Cultivation is not interrupted when taking damage below 10% of max DEF.
-
-**Character:** No elemental attack bonus and only a single passive, but a broadly useful passive and zero realm gating beyond the unlock threshold. A solid starting law that becomes obsolete once elemental or specialised laws are discovered.
+**Passive (1 slot — Iron):** rolled from the `metal` and `general` pools. Both pools are empty until the designer refills them post-overhaul.
 
 ---
 

@@ -2,13 +2,17 @@
 
 Full catalogue of enemy types, stat profiles, technique pools, and region assignments. Every enemy in [[Worlds/World|the World map]] is derived from one of the 12 types below.
 
+> **Overhaul note (2026-04-24):** the **Element Variants** prefix table (Fire / Frost / Lightning / Stone / Wind / Shadow / Blood / Void / Ancient / Corrupted / Primal) was **removed** as part of the Damage & Element System Overhaul. Variants and their stat-multiplier bundles are no longer part of the design. Enemies now optionally carry a single `element` field drawn from the new five (`fire / water / earth / wood / metal`) — defaulting to `'none'`. See [[Elements]] and [[Damage Types]].
+>
+> The per-archetype stat tables below still list **Psychic Attack** and **Soul Toughness** rows — these are **deprecated**. The damage system now has only physical and elemental buckets; the psychic bucket and the soul_toughness defense are gone. Treat any psychic/soul row as zero pending a content rewrite. Technique entries that target the psychic bucket (`Soul Spike`, `Mind Crush`, `Soul Drain`) are likewise deprecated.
+
 > **Implementation note (2026-04):** the code path in `data/enemies.js` +
 > `useCombat.startFight` uses a simpler model than the power-roll /
-> rank / element-variant design below. Today each enemy entry has a
+> rank design below. Today each enemy entry has a
 > fixed `statMult: { hp, atk }` and HP is anchored to the region index
 > via `150 × 1.12^regionIndex × hp_mult` (see [[Combat#Enemy Stats]]).
-> The richer system in this doc is the **target design** — the rank,
-> power-roll, and elemental-variant tables are not yet wired in.
+> The richer system in this doc is the **target design** — the rank
+> and power-roll tables are not yet wired in.
 
 ---
 
@@ -49,24 +53,11 @@ Bosses are always drawn from the **hardest** enemy type in the region's pool.
 
 ---
 
-## Element Variants
+## Element Tag (replaces Element Variants)
 
-Many types support element variants. Applying an element prefix to a base type modifies the stat profile as follows:
+The pre-overhaul Element Variants prefix system (Fire / Frost / Lightning / Stone / Wind / Shadow / Blood / Void / Ancient / Corrupted / Primal) is **removed**. Enemies now optionally carry a single `element` field from the new five — `fire / water / earth / wood / metal` — defaulting to `'none'`. The element is a **content tag** (drives future affinity / drop weighting). It does not modify the enemy's stat profile.
 
-| Prefix | Elemental Attack | Elemental Defense | Other |
-|---|---|---|---|
-| *(none)* | — | — | — |
-| **Fire** | +0.6 Elemental | +0.3 Elem Def | — |
-| **Frost** | +0.6 Elemental | +0.3 Elem Def | −0.1 Physical |
-| **Lightning** | +0.7 Elemental | +0.2 Elem Def | +0.1 Dodge |
-| **Stone** | +0.3 Elemental | +0.5 Elem Def | +0.2 DEF, −0.1 Physical |
-| **Wind** | +0.4 Elemental | +0.2 Elem Def | +0.15 Dodge |
-| **Shadow** | +0.3 Psychic | +0.2 Soul Toughness | +0.1 Dodge |
-| **Blood** | — | — | +0.2 Physical, HP ×1.1 |
-| **Void** | +0.3 Psychic, +0.3 Elemental | +0.2 both defenses | +0.2 Dodge |
-| **Ancient** | — | — | HP ×1.2, all attacks ×1.1 |
-| **Corrupted** | +0.4 Psychic | +0.1 Soul Toughness | HP ×1.1, unstable (can Berserk spontaneously) |
-| **Primal** | — | — | HP ×1.3, Physical ×1.15 |
+See [[Elements]] for the global element model and [[Damage Types]] for damage routing.
 
 ---
 
