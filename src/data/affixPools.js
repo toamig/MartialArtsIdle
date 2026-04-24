@@ -17,11 +17,7 @@ import { MOD } from './stats';
 import { pickRandomUnique } from './lawUniques';
 import { rollArtefactUnique, ARTEFACT_UNIQUES } from './uniqueModifiers';
 import { mergeSingleton } from './config/loader';
-
-// Realm index at which Soul unlocks — mirrors SAINT_INDEX in src/data/stats.js.
-// Soul-anchored law types (spirit/void/dao) may not roll before this realm.
-const SAINT_INDEX = 24;
-const SOUL_ANCHORED_TYPES = new Set(['spirit', 'void', 'dao']);
+import { ELEMENTS } from './elements';
 
 // ─── Slot counts ──────────────────────────────────────────────────────────────
 
@@ -420,7 +416,7 @@ export function pickRandomLawPassive(excludeNames = []) {
 
 // ─── Law generator ───────────────────────────────────────────────────────────
 
-const LAW_ELEMENTS = ['Normal', 'Fire', 'Water', 'Stone', 'Air', 'Metal', 'Wood', 'Ice'];
+const LAW_ELEMENTS = ELEMENTS;
 const LAW_RARITIES = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
 const LAW_REALM_LABELS = {
   Iron: 'Tempered Body', Bronze: 'Qi Transformation', Silver: 'True Element',
@@ -456,33 +452,19 @@ const LAW_FLAVOURS = [
  *   Transcendent law: all 5
  */
 // Map a generated law's element to the unique-pool types it can draw from.
-// Elements we don't explicitly map to a pool fall through to just `general`.
-const ELEMENT_TO_TYPES = {
-  Fire:      ['fire'],
-  Water:     ['water'],
-  Frost:     ['water'],
-  Ice:       ['water'],
-  Earth:     ['earth'],
-  Stone:     ['earth'],
-  Void:      ['void'],
-  // Unmapped elements (Normal, Metal, Wood, Wind, Lightning, …) stay on
-  // general-only. Designer can edit law records to override.
-};
+// Trivial 1:1 post-Stage-5 since element names == pool names. `general` is
+// implicitly added by pickRandomUnique for every law.
+const ELEMENT_TO_TYPES = Object.fromEntries(ELEMENTS.map(e => [e, [e]]));
 
 // typeMults removed in Stage 4 of the Damage & Element Overhaul —
 // basic-attack damage is now scaled by realm index alone. The previous
 // LAW_TYPE_MULT_RANGES table and rollLawTypeMults helper are gone.
 
+// eslint-disable-next-line no-unused-vars
 export function generateLaw(forcedRarity, realmIndex = Infinity) {
   const rarity  = forcedRarity ?? pick(LAW_RARITIES);
   const element = pick(LAW_ELEMENTS);
-  let types     = ELEMENT_TO_TYPES[element] ?? ['general'];
-
-  // Soul-anchored types only drop once Soul is unlocked.
-  if (realmIndex < SAINT_INDEX) {
-    const filtered = types.filter(t => !SOUL_ANCHORED_TYPES.has(t));
-    types = filtered.length ? filtered : ['general'];
-  }
+  const types   = ELEMENT_TO_TYPES[element] ?? ['general'];
 
   const rarityTiers = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
   const rarityIdx = rarityTiers.indexOf(rarity);

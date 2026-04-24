@@ -1,5 +1,3 @@
-import { TYPE_TO_DAMAGE_CATEGORY } from './lawUniques';
-
 // ─── Quality tiers ────────────────────────────────────────────────────────────
 export const TECHNIQUE_QUALITY = {
   Iron:         { label: 'Iron',         color: '#9ca3af', cdMult: 1.00 },
@@ -79,18 +77,15 @@ export function getK(rank, quality) {
 /**
  * Attack damage formula:
  *   K * (Essence + Soul + Body + artefactFlat) * arteMult * elemBonus + bonus
- *   + damage-category flat bonus (split across the law's types)
+ *   + damage-bucket flat bonus (single bucket per technique)
  *
  * elemBonus only applies when the active Law's element matches the technique's.
  *
- * Category-flat bonus: each law type maps to one of the two damage
- * categories (physical / elemental) via damageCategoryForType().
- * The attack is treated as dealing an even share across the UNIQUE categories
- * covered by law.types, and each category contributes its flat damage stat
- * proportionally. Example: a law with types [fire, sword] splits 50/50, so
- * half of stats.elemental_damage plus half of stats.physical_damage is added.
- * A law with types [fire, water, earth] collapses to one category (elemental)
- * and gets the full elemental_damage flat bonus.
+ * Damage-bucket flat bonus (Stage 5 onward): each technique carries a single
+ * `damageType` field — 'physical' or 'elemental'. The technique adds the
+ * matching flat stat (physical_damage or elemental_damage) once. The prior
+ * 9-pool split-across-law.types behaviour is gone along with the 9-pool
+ * type system.
  *
  * @param {object} tech
  * @param {number} essence
@@ -113,29 +108,11 @@ export function calcDamage(tech, essence, soul, body, lawOrElement = 'Normal', a
           * elemBonus
           + (tech.bonus ?? 0);
 
-  // Damage-category flat bonus + per-pool flat bonus + universal damage_all.
-  // All gated on having a law object + stats + at least one law type.
-  if (law && damageStats && Array.isArray(law.types) && law.types.length > 0) {
-    const totalTypes = law.types.length;
-    const catCounts  = new Map();
-    const poolCounts = new Map();
-    for (const t of law.types) {
-      poolCounts.set(t, (poolCounts.get(t) ?? 0) + 1);
-      const cat = TYPE_TO_DAMAGE_CATEGORY[t];
-      if (cat) catCounts.set(cat, (catCounts.get(cat) ?? 0) + 1);
-    }
-
-    let bonus = 0;
-    // Category flat: shared between law types in the same category.
-    for (const [cat, count] of catCounts) {
-      bonus += (damageStats[cat] ?? 0) * (count / totalTypes);
-    }
-    // Pool-specific flat: each pool contributes its own portion.
-    const pools = damageStats.pools ?? {};
-    for (const [pool, count] of poolCounts) {
-      bonus += (pools[pool] ?? 0) * (count / totalTypes);
-    }
-    dmg += bonus;
+  // Damage-bucket flat bonus. Untagged techniques default to physical so
+  // pre-overhaul drops keep contributing until a content-pass retags them.
+  if (damageStats) {
+    const bucket = tech.damageType === 'elemental' ? 'elemental' : 'physical';
+    dmg += damageStats[bucket] ?? 0;
   }
 
   // Universal damage_all flat bonus (whole-attack, no share).

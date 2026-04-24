@@ -317,16 +317,10 @@ function App() {
       return computeStat(0, list);
     };
 
-    // Per-pool damage flats (each pool stat goes through the same 5-layer
-    // pipeline — the result is the additive flat each pool contributes
-    // when its share of the law's types resolves in calcDamage).
-    const POOL_KEYS = [
-      'physical', 'sword', 'fist',
-      'fire', 'water', 'earth',
-      'spirit', 'void', 'dao',
-    ];
-    const poolDamage = {};
-    for (const k of POOL_KEYS) poolDamage[k] = collapseFlat(`dmg_${k}`);
+    // Per-pool damage flats were read by the 9-pool calcDamage split
+    // (removed in Stage 5). The `dmg_<pool>` affixes and STAT_META entries
+    // still exist and roll harmlessly until the Stage-6 cleanup; they
+    // simply don't feed into damage anymore.
 
     return {
       // Combat-shaped (existing fields)
@@ -334,18 +328,17 @@ function App() {
       soul:       bundle.primary.soul,
       body:       bundle.primary.body,
       lawElement: law?.element ?? 'Normal',
-      // Full active law — calcDamage reads law.types to split damage
-      // between categories (physical / elemental).
+      // Full active law — calcDamage still reads law.element for the
+      // elem-match bonus. law.types drives unique-pool selection only.
       law: lawForCompute,
-      // Flat damage bonuses + pool-specific bonuses + the source-gated
-      // multipliers, all consumed by calcDamage and useCombat's basic-attack.
+      // Flat damage bonuses + source-gated multipliers, all consumed by
+      // calcDamage and useCombat's basic-attack.
       damageStats: {
-        physical:               bundle.combat.physDmg,
-        elemental:              bundle.combat.elemDmg,
-        damage_all:             collapseFlat('damage_all'),
+        physical:                bundle.combat.physDmg,
+        elemental:               bundle.combat.elemDmg,
+        damage_all:              collapseFlat('damage_all'),
         secret_technique_damage: collapsePct('secret_technique_damage'),
-        default_attack_damage:  collapsePct('default_attack_damage'),
-        pools:                  poolDamage,
+        default_attack_damage:   collapsePct('default_attack_damage'),
       },
       // Activity stats — needed by autoFarm + Gathering/Mining screens.
       // Artefact `loot_luck` (a_lucky_ring) boosts both luck pools equally

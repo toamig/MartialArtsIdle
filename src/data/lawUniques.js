@@ -29,39 +29,9 @@
 // import { MOD } from './stats';
 
 // ─── Pools ───────────────────────────────────────────────────────────────────
-// Stage 2 intentionally leaves the legacy 9-pool list in place; Stage 5
-// replaces this with the new 5-element + general layout.
-export const LAW_UNIQUE_POOLS = [
-  'physical', 'sword', 'fist',
-  'fire', 'water', 'earth',
-  'spirit', 'void', 'dao',
-  'general',
-];
-
-// ─── Damage categories (LEGACY — removed in Stage 3) ─────────────────────────
-// Stage 3 collapses physical/elemental/psychic to physical/elemental and
-// removes the typeMults primary-stat anchor. These exports are kept for
-// the Stage 2 commit so module imports do not break.
-export const TYPE_TO_DAMAGE_CATEGORY = {
-  physical: 'physical', sword: 'physical', fist: 'physical',
-  fire:     'elemental', water: 'elemental', earth: 'elemental',
-  spirit:   'psychic',   void:  'psychic',   dao:   'psychic',
-};
-
-export function damageCategoryForType(type) {
-  return TYPE_TO_DAMAGE_CATEGORY[type] ?? null;
-}
-
-export const DAMAGE_CATEGORY_TO_PRIMARY_STAT = {
-  physical:  'body',
-  elemental: 'essence',
-  psychic:   'soul',
-};
-
-export function primaryStatForType(type) {
-  const cat = TYPE_TO_DAMAGE_CATEGORY[type];
-  return cat ? DAMAGE_CATEGORY_TO_PRIMARY_STAT[cat] : null;
-}
+// Stage 5 collapses the legacy 9-pool list to the 5 elements + `general`.
+// Authoritative definition lives in src/data/elements.js.
+export { LAW_UNIQUE_POOLS } from './elements';
 
 // ─── Unique modifier pool ────────────────────────────────────────────────────
 
