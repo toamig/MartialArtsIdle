@@ -8,6 +8,7 @@ import { LAW_RARITY } from '../data/laws';
 import { formatUniqueDescription } from '../data/lawUniques';
 import { TECHNIQUE_QUALITY, TYPE_COLOR, getCooldown, getK } from '../data/techniques';
 import { MAX_ARTEFACTS } from '../hooks/useArtefacts';
+import { MAX_UPGRADE_BY_RARITY } from '../data/artefactUpgrades';
 import { MAX_TECHNIQUES } from '../hooks/useTechniques';
 import { MAX_LAWS } from '../hooks/useCultivation';
 import ItemModal from '../components/ItemModal';
@@ -284,19 +285,28 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
       )}
 
       {selectedArtefact && (() => {
-        const art    = ARTEFACTS_BY_ID[selectedArtefact.catalogueId];
-        const rarity = selectedArtefact.rarity ?? art.rarity;
+        // Live snapshot — so UI reflects level-ups without re-opening the modal.
+        const live   = artefacts.owned.find(o => o.uid === selectedArtefact.uid) ?? selectedArtefact;
+        const art    = ARTEFACTS_BY_ID[live.catalogueId];
+        const rarity = live.rarity ?? art.rarity;
         const q      = QUALITY[rarity];
         const bonuses = getSlotBonuses(art.slot, rarity);
-        const artName = formatArtefactName(selectedArtefact) ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
+        const artName = formatArtefactName(live) ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
         const artDesc = tGame(`artefacts.${art.id}.desc`, { defaultValue: art.description });
+        const level  = live.upgradeLevel ?? 0;
+        const cap    = MAX_UPGRADE_BY_RARITY[rarity] ?? 0;
+        const cost   = level < cap ? (artefacts.getUpgradeCost?.(live.uid) ?? null) : null;
+        const canAfford = !!cost && cost.every(c => getQuantity(c.itemId) >= c.qty);
         return (
           <div className="modal-overlay" onClick={() => setSelectedArtefact(null)}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
               <button className="modal-close" onClick={() => setSelectedArtefact(null)}>x</button>
-              <h2 className="modal-title">{artName}</h2>
+              <h2 className="modal-title">
+                {artName}{level > 0 && <span style={{ color: q.color, marginLeft: 8 }}>+{level}</span>}
+              </h2>
               <span className="modal-rarity" style={{ color: q.color }}>
                 {t(`quality.${rarity}`, { defaultValue: q.label })} · {t(`build.slots.${art.slot}`, { defaultValue: art.slot })}
+                {live.element && <> · {t(`elements.${live.element}`, { defaultValue: live.element })}</>}
               </span>
               <p className="modal-desc">{artDesc}</p>
               <div className="item-stat-block">
@@ -307,16 +317,63 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
                   </div>
                 ))}
               </div>
+
+              {/* ── Upgrade panel ───────────────────────────────────────── */}
+              <div className="item-stat-block" style={{ marginTop: 12, padding: 10, border: `1px solid ${q.color}55`, borderRadius: 6 }}>
+                <div className="item-stat-row">
+                  <span className="item-stat-label">{t('collection.upgradeLevel', { defaultValue: 'Upgrade' })}</span>
+                  <span className="item-stat-value" style={{ color: q.color }}>+{level} / +{cap}</span>
+                </div>
+                {level < cap && cost && (
+                  <>
+                    <div className="item-stat-row" style={{ marginTop: 6, opacity: 0.85 }}>
+                      <span className="item-stat-label">{t('collection.upgradeCost', { defaultValue: 'Next level cost' })}</span>
+                    </div>
+                    {cost.map((c, i) => {
+                      const have = getQuantity(c.itemId);
+                      const short = have < c.qty;
+                      const matName = ALL_MATERIALS[c.itemId]?.name ?? c.itemId;
+                      return (
+                        <div key={i} className="item-stat-row" style={{ paddingLeft: 12 }}>
+                          <span className="item-stat-label">{tGame(`materials.${c.itemId}.name`, { defaultValue: matName })}</span>
+                          <span className="item-stat-value" style={{ color: short ? '#f87171' : '#a3e635' }}>
+                            {have} / {c.qty}
+                          </span>
+                        </div>
+                      );
+                    })}
+                    <button
+                      className="save-btn"
+                      style={{ marginTop: 8, width: '100%' }}
+                      disabled={!canAfford}
+                      title={canAfford ? '' : 'Not enough materials.'}
+                      onClick={() => {
+                        if (!canAfford) return;
+                        for (const c of cost) inventory.removeItem(c.itemId, c.qty);
+                        artefacts.levelUpArtefact(live.uid);
+                      }}
+                    >
+                      {t('collection.upgradeBtn', { defaultValue: 'Upgrade +1' })}
+                    </button>
+                  </>
+                )}
+                {level >= cap && (
+                  <div className="item-stat-row" style={{ marginTop: 6, opacity: 0.7 }}>
+                    <span className="item-stat-label">{t('collection.upgradeMaxed', { defaultValue: 'Fully upgraded' })}</span>
+                  </div>
+                )}
+              </div>
+
               {(() => {
-                const isEquipped = !!artefacts.equippedInSlot(selectedArtefact.uid);
+                const isEquipped = !!artefacts.equippedInSlot(live.uid);
                 return (
                   <DismantleButton
                     rarity={rarity}
-                    invested={(selectedArtefact.craftCount ?? 0) > 0}
+                    invested={(live.craftCount ?? 0) > 0 || level > 0}
                     disabled={isEquipped}
                     disabledReason={isEquipped ? 'Unequip this artefact first.' : undefined}
                     onDismantle={() => {
-                      const r = artefacts.dismantleArtefact(selectedArtefact.uid);
+                      const r = artefacts.dismantleArtefact(live.uid);
                       if (r) { dismantleTo(inventory, r); setSelectedArtefact(null); }
                     }}
                   />

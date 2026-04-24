@@ -30,7 +30,11 @@
     "perksEmptyDesc": "Perks are rewards earned at each realm level-up and breakthrough. They will appear here once you've earned some."
   },
   "collection": {
-    "title": "Collection"
+    "title": "Collection",
+    "upgradeLevel": "Upgrade",
+    "upgradeCost": "Next level cost",
+    "upgradeBtn": "Upgrade +1",
+    "upgradeMaxed": "Fully upgraded"
   },
   "home": {
     "holdToCultivate": "Hold to cultivate faster",
