@@ -39,8 +39,8 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
   a_perfect_balance:  [{ kind: 'flag', flag: 'damagePerArtefactPct', value: 'rolled_pct' }],
   a_phantom_edge:     [{ kind: 'stat', stat: 'technique_cd_reduction', mod: F, value: 'rolled' }],
   a_void_pierce:      [{ kind: 'stat', stat: 'ignore_defense_chance', mod: F, value: 'rolled_pct' }],
-  a_savage_grip:      [{ kind: 'stat', stat: 'body',                 mod: I, value: 'rolled' }],
-  a_ethereal_blade:   [{ kind: 'stat', stat: 'soul',                 mod: I, value: 'rolled' }],
+  a_savage_grip:      [{ kind: 'stat', stat: 'physical_damage',     mod: I, value: 'rolled' }],
+  a_ethereal_blade:   [{ kind: 'stat', stat: 'elemental_damage',    mod: I, value: 'rolled' }],
   a_sky_breaker:      [{ kind: 'flag', flag: 'damagePerMajorRealmPct', value: 'rolled_pct' }],
   a_combo_blade:      [{ kind: 'flag', flag: 'comboDamagePerHitPct', value: 'rolled_pct' }],
 
@@ -48,7 +48,9 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
   a_clear_mind:        [{ kind: 'stat', stat: 'technique_cd_reduction', mod: F, value: 'rolled' }],
   a_focused_will:      [{ kind: 'stat', stat: 'exploit_chance',         mod: F, value: 'rolled_pct' }],
   a_serene_face:       [{ kind: 'stat', stat: 'healing_received',       mod: F, value: 'rolled' }],
-  a_warmind:           [{ kind: 'flag', flag: 'damageIfSoulGtBodyPct',  value: 'rolled_pct' }],
+  // a_warmind: retuned in stage 16 — legacy effect keyed off soul > body.
+  // New payload: flat crit_chance bonus (similar power curve).
+  a_warmind:           [{ kind: 'stat', stat: 'crit_chance',           mod: F, value: 'rolled_pct' }],
   a_seeker_eye:        [{ kind: 'stat', stat: 'exploit_attack_mult',    mod: F, value: 'rolled_pct' }],
   a_oracles_insight:   [{ kind: 'stat', stat: 'dodge_fatal_chance',     mod: F, value: 'rolled_pct' }],
   a_clarity_storm:     [{ kind: 'flag', flag: 'postDodgeCdReductionPct', value: 'rolled_pct' }],
@@ -72,14 +74,16 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
     { kind: 'stat', stat: 'defense',    mod: I, value: 'rolled_half' },
   ],
   a_silken_robe:       [
-    { kind: 'stat', stat: 'soul', mod: I, value: 'rolled' },
-    { kind: 'stat', stat: 'body', mod: I, value: -0.05 },
+    { kind: 'stat', stat: 'elemental_damage', mod: I, value: 'rolled' },
+    { kind: 'stat', stat: 'defense',          mod: I, value: -0.05 },
   ],
   a_iron_carapace_pro: [
     { kind: 'stat', stat: 'defense',    mod: I, value: 'rolled' },
     { kind: 'stat', stat: 'damage_all', mod: I, value: -0.10 },
   ],
-  a_ancestral_robe:    [{ kind: 'flag', flag: 'allStatsPerMajorRealmPct', value: 'rolled_pct' }],
+  // a_ancestral_robe: legacy flag scaled all primary stats per major realm.
+  // Remapped to the same damagePerMajorRealmPct flag that a_sky_breaker uses.
+  a_ancestral_robe:    [{ kind: 'flag', flag: 'damagePerMajorRealmPct', value: 'rolled_pct' }],
   a_battle_mail:       [{ kind: 'flag', flag: 'damageFirst10sPct',      value: 'rolled_pct' }],
   a_serpent_skin:      [
     { kind: 'stat', stat: 'dodge_chance', mod: F, value: 'rolled_pct' },
@@ -90,7 +94,7 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
 
   // ─── Hands ─────────────────────────────────────────────────────────────────
   a_dragon_claws:      [{ kind: 'stat', stat: 'crit_damage',           mod: F, value: 'rolled_pct' }],
-  a_qi_channeler:      [{ kind: 'stat', stat: 'essence',               mod: I, value: 'rolled' }],
+  a_qi_channeler:      [{ kind: 'stat', stat: 'elemental_damage',      mod: I, value: 'rolled' }],
   a_void_grip:         [{ kind: 'stat', stat: 'ignore_defense_pct',    mod: F, value: 'rolled_pct' }],
   a_blood_palms:       [{ kind: 'stat', stat: 'lifesteal',             mod: F, value: 'rolled_pct' }],
   a_smith_hands:       [{ kind: 'stat', stat: 'crafting_cost_reduction', mod: F, value: 'rolled' }],
@@ -107,7 +111,9 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
   // ─── Waist ─────────────────────────────────────────────────────────────────
   a_qi_storage:        [{ kind: 'stat', stat: 'qi_speed',              mod: M, value: 'rolled_as_more' }],
   a_sage_belt:         [{ kind: 'stat', stat: 'pill_effect_mult',      mod: F, value: 'rolled' }],
-  a_essence_belt:      [{ kind: 'flag', flag: 'bodyToEssencePct',      value: 'rolled_pct' }],
+  // a_essence_belt: legacy body→essence conversion flag. Retuned in
+  // stage 16 to a straight increased elemental_damage bonus.
+  a_essence_belt:      [{ kind: 'stat', stat: 'elemental_damage',    mod: I, value: 'rolled' }],
   a_battle_sash:       [{ kind: 'flag', flag: 'damagePerKill5sPct',    value: 'rolled_pct' }],
   a_eternal_sash:      [{ kind: 'stat', stat: 'hp_regen_in_combat',    mod: F, value: 'rolled' }],
   a_iron_belt:         [
@@ -119,8 +125,10 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
     { kind: 'stat', stat: 'damage_all', mod: I, value: 'rolled' },
     { kind: 'stat', stat: 'defense',    mod: M, value: 0.75 },
   ],
-  a_blessed_belt:      [{ kind: 'stat', stat: 'all_primary_stats',     mod: I, value: 'rolled' }],
-  a_emperor_belt:      [{ kind: 'flag', flag: 'allStatsPerRealmPct',   value: 'rolled_pct' }],
+  a_blessed_belt:      [{ kind: 'stat', stat: 'damage_all',            mod: I, value: 'rolled' }],
+  // a_emperor_belt: legacy allStatsPerRealmPct flag → share damagePerRealmPct
+  // with the emperor amulet/ring so there's a single realm-scaling hook.
+  a_emperor_belt:      [{ kind: 'flag', flag: 'damagePerRealmPct',     value: 'rolled_pct' }],
   a_thirsty_belt:      [{ kind: 'stat', stat: 'lifesteal',             mod: F, value: 'rolled_pct' }],
   a_assassin_belt:     [{ kind: 'stat', stat: 'crit_chance',           mod: F, value: 'rolled_pct' }],
 
@@ -130,7 +138,7 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
   a_phoenix_boots:     [{ kind: 'stat', stat: 'hp_regen_in_combat',    mod: F, value: 'rolled' }],
   a_dancers_boots:     [{ kind: 'flag', flag: 'damagePostDodgePct',    value: 'rolled_pct' }],
   a_voidstep:          [{ kind: 'flag', flag: 'voidstepCdReset',       value: true }],
-  a_dragon_treaders:   [{ kind: 'stat', stat: 'body',                  mod: I, value: 'rolled' }],
+  a_dragon_treaders:   [{ kind: 'stat', stat: 'physical_damage',      mod: I, value: 'rolled' }],
   a_silent_steps:      [{ kind: 'flag', flag: 'firstAttackGuaranteedCrit', value: true }],
   a_iron_treads:       [
     { kind: 'stat', stat: 'defense', mod: I, value: 'rolled' },
@@ -140,7 +148,7 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
   a_eternal_treads:    [{ kind: 'stat', stat: 'hp_regen_out_combat',   mod: F, value: 'rolled' }],
 
   // ─── Neck ──────────────────────────────────────────────────────────────────
-  a_jade_pendant:      [{ kind: 'stat', stat: 'soul',                  mod: I, value: 'rolled' }],
+  a_jade_pendant:      [{ kind: 'stat', stat: 'elemental_damage',     mod: I, value: 'rolled' }],
   a_dragon_amulet:     [{ kind: 'stat', stat: 'damage_all',            mod: I, value: 'rolled' }],
   a_seer_locket:       [{ kind: 'stat', stat: 'all_loot_bonus',        mod: F, value: 'rolled' }],
   a_void_pendant:      [{ kind: 'stat', stat: 'ignore_defense_pct',    mod: F, value: 'rolled_pct' }],
@@ -158,9 +166,9 @@ export const ARTEFACT_UNIQUE_EFFECTS = {
   a_combat_amulet:     [{ kind: 'flag', flag: 'damageFirst5sPct',      value: 'rolled_pct' }],
 
   // ─── Ring ──────────────────────────────────────────────────────────────────
-  a_essence_ring:      [{ kind: 'stat', stat: 'essence',               mod: I, value: 'rolled' }],
-  a_soul_ring:         [{ kind: 'stat', stat: 'soul',                  mod: I, value: 'rolled' }],
-  a_body_ring:         [{ kind: 'stat', stat: 'body',                  mod: I, value: 'rolled' }],
+  a_essence_ring:      [{ kind: 'stat', stat: 'elemental_damage',      mod: I, value: 'rolled' }],
+  a_soul_ring:         [{ kind: 'stat', stat: 'elemental_defense',     mod: I, value: 'rolled' }],
+  a_body_ring:         [{ kind: 'stat', stat: 'physical_damage',       mod: I, value: 'rolled' }],
   a_crit_ring:         [{ kind: 'stat', stat: 'crit_chance',           mod: F, value: 'rolled_pct' }],
   a_speed_ring:        [{ kind: 'stat', stat: 'cooldown_reduction_all', mod: F, value: 'rolled' }],
   a_blood_ring:        [{ kind: 'stat', stat: 'lifesteal',             mod: F, value: 'rolled_pct' }],

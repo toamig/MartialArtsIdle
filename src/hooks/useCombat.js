@@ -54,8 +54,7 @@ function computeArtefactDamageBonus(s) {
   if (flags.damagePerRealmPct)            bonus += (flags.damagePerRealmPct / 100) * realmIdx;
   if (flags.damagePerMajorRealmPct)       bonus += (flags.damagePerMajorRealmPct / 100) * majorR;
   if (flags.damagePerArtefactPct)         bonus += (flags.damagePerArtefactPct / 100) * eqArt;
-  if (flags.damageIfSoulGtBodyPct && (s.stats.soul ?? 0) > (s.stats.body ?? 0))
-    bonus += flags.damageIfSoulGtBodyPct / 100;
+  // damageIfSoulGtBodyPct retired in stage 16 — primary-stat layer is gone.
   if (flags.damageIf3TechsPct && techCount >= 3) bonus += flags.damageIf3TechsPct / 100;
   if (flags.damagePostDodgePct && nowSec - (s.lastDodgeAtSec ?? -Infinity) <= 3)
     bonus += flags.damagePostDodgePct / 100;
@@ -222,7 +221,6 @@ export default function useCombat() {
     if (stateRef.current.phase === 'fighting') return;
     // Primary-stat layer retired in stage 15 — pMaxHp flows through the
     // `health` stat bundle now (stats.js placeholder formula).
-    const total  = 0;
 
     const hpMult  = enemyDef?.statMult?.hp  ?? 1;
     const atkMult = enemyDef?.statMult?.atk ?? 1;
@@ -239,8 +237,7 @@ export default function useCombat() {
     const hpBase = 150 * Math.pow(1.12, Math.max(0, regionIndex ?? 0));
     const eMaxHp = Math.max(100, Math.floor(hpBase * hpMult));
     // Enemy attack is anchored to region index (not to player stats) so the
-    // hit is a FIXED value per-region rather than scaling with the player's
-    // Essence+Soul+Body total. Base 18 × 1.12^index puts W1 R1 ≈ 18,
+    // hit is a FIXED value per-region. Base 18 × 1.12^index puts W1 R1 ≈ 18,
     // W2 R1 ≈ 117, W3 R1 ≈ 219, W6 R4 ≈ 5520 before the per-enemy atkMult.
     // Mitigated in the enemy-turn tick via the player's matching defence stat.
     const atkBase = 18 * Math.pow(1.12, Math.max(0, regionIndex ?? 0));
@@ -401,12 +398,11 @@ export default function useCombat() {
           s.cds[i]   = isFree ? 0 : s.maxCds[i];
 
           if (tech.type === 'Attack') {
-            // Prefer the full law object so calcDamage can apply the
-            // damage-category flat bonus (physical / elemental)
-            // derived from law.types. Falls back to lawElement string.
+            // calcDamage keeps its essence/soul/body signature for
+            // backward-compat — all zero after stage 15.
             let dmg = calcDamage(
               tech,
-              s.stats.essence, s.stats.soul, s.stats.body,
+              0, 0, 0,
               s.stats.law ?? s.stats.lawElement,
               0,
               s.stats.damageStats ?? null,
@@ -590,13 +586,11 @@ export default function useCombat() {
         } else {
           const defMult = defActive ? s.defBuff.mult : 1;
           // Pick the defence stat that matches this enemy's damage type.
-          // Fallback to the legacy essence+body blend when combat stats were
-          // built before the defence fields existed (e.g. debug flows).
           let rawDef;
           if (s.eDmgType === 'elemental') {
-            rawDef = s.stats.elementalDefense ?? (s.stats.essence ?? 0);
+            rawDef = s.stats.elementalDefense ?? 0;
           } else {
-            rawDef = s.stats.defense ?? ((s.stats.essence ?? 0) + (s.stats.body ?? 0));
+            rawDef = s.stats.defense ?? 0;
           }
           const def = Math.max(1, rawDef * defMult);
           // Scale-independent formula: dmg = eAtk² / (eAtk + def)
