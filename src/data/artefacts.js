@@ -19,7 +19,7 @@ export function getSlotBonuses(slot, rarity) {
   const m = QUALITY[rarity]?.mult ?? 1;
   switch (slot) {
     case 'weapon': return [{ stat: 'physical_damage',  type: MOD.FLAT, value: B * 2 * m }];
-    case 'head':   return [{ stat: 'soul_toughness',   type: MOD.FLAT, value: B * m }];
+    case 'head':   return [{ stat: 'elemental_defense', type: MOD.FLAT, value: B * m }];
     case 'body':   return [{ stat: 'defense',           type: MOD.FLAT, value: B * 2 * m }];
     case 'hands':  return [{ stat: 'physical_damage',  type: MOD.FLAT, value: B * m }];
     case 'waist':  return [{ stat: 'health',            type: MOD.FLAT, value: B * 5 * m }];

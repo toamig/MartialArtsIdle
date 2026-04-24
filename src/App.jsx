@@ -340,15 +340,14 @@ function App() {
       body:       bundle.primary.body,
       lawElement: law?.element ?? 'Normal',
       // Full active law — calcDamage reads law.types to split damage
-      // between categories (physical / elemental / psychic). Pass the
-      // cb_is-scaled clone so the +25% typeMults bonus reaches combat.
+      // between categories (physical / elemental). Pass the cb_is-scaled
+      // clone so the +25% typeMults bonus reaches combat.
       law: lawForCompute,
       // Flat damage bonuses + pool-specific bonuses + the source-gated
       // multipliers, all consumed by calcDamage and useCombat's basic-attack.
       damageStats: {
         physical:               bundle.combat.physDmg,
         elemental:              bundle.combat.elemDmg,
-        psychic:                bundle.combat.psychDmg,
         damage_all:             collapseFlat('damage_all'),
         secret_technique_damage: collapsePct('secret_technique_damage'),
         default_attack_damage:  collapsePct('default_attack_damage'),
@@ -370,7 +369,6 @@ function App() {
       // type when computing mitigation.
       defense:          bundle.combat.defense,
       elementalDefense: bundle.combat.elemDef,
-      soulToughness:    bundle.combat.soulTough,
       // Scales the attack-count of Defend / Dodge buffs at cast time.
       buffDurationMult: 1 + collapsePct('buff_duration'),
       // Scales magnitude (defMult / dodgeChance) at cast time.

@@ -282,10 +282,8 @@
   "statNames": {
     "physical_damage":  "Dano Físico",
     "elemental_damage": "Dano Elemental",
-    "psychic_damage":   "Dano Psíquico",
     "defense":          "Defesa",
     "elemental_defense":"Defesa Elemental",
-    "soul_toughness":   "Resistência da Alma",
     "health":           "Vida",
     "essence":          "Essência",
     "soul":             "Alma",
@@ -307,10 +305,8 @@
   "statNamesShort": {
     "physical_damage":  "Dano Físico",
     "elemental_damage": "Dano Elemental",
-    "psychic_damage":   "Dano Psíquico",
     "defense":          "Defesa",
     "elemental_defense":"Defesa Elemental",
-    "soul_toughness":   "Resistência da Alma",
     "health":           "Vida",
     "essence":          "Essência",
     "soul":             "Alma",

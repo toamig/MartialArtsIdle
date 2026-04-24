@@ -34,10 +34,8 @@ const PILL_DEFS_RAW = [
   { id: 'iron_body_pill',    name: 'Iron Body Pill',    rarity: 'Iron', effects: [{ stat: 'body',    type: 'flat', value: 3 }] },
   { id: 'iron_fist_pill',    name: 'Iron Fist Pill',    rarity: 'Iron', effects: [{ stat: 'physical_damage',  type: 'flat', value: 5 }] },
   { id: 'iron_ember_pill',   name: 'Iron Ember Pill',   rarity: 'Iron', effects: [{ stat: 'elemental_damage', type: 'flat', value: 5 }] },
-  { id: 'iron_mind_pill',    name: 'Iron Mind Pill',    rarity: 'Iron', effects: [{ stat: 'psychic_damage',   type: 'flat', value: 5 }] },
   { id: 'iron_skin_pill',    name: 'Iron Skin Pill',    rarity: 'Iron', effects: [{ stat: 'defense',           type: 'flat', value: 5 }] },
   { id: 'iron_ward_pill',    name: 'Iron Ward Pill',    rarity: 'Iron', effects: [{ stat: 'elemental_defense', type: 'flat', value: 5 }] },
-  { id: 'iron_anchor_pill',  name: 'Iron Anchor Pill',  rarity: 'Iron', effects: [{ stat: 'soul_toughness',    type: 'flat', value: 5 }] },
   { id: 'iron_vigor_pill',   name: 'Iron Vigor Pill',   rarity: 'Iron', effects: [{ stat: 'health',            type: 'flat', value: 40 }] },
 
   // ── Bronze (+6 primary, +10 damage, +10 defense, +100 health) ─────────────
@@ -46,10 +44,8 @@ const PILL_DEFS_RAW = [
   { id: 'bronze_body_pill',    name: 'Bronze Body Pill',    rarity: 'Bronze', effects: [{ stat: 'body',    type: 'flat', value: 6 }] },
   { id: 'bronze_fist_pill',    name: 'Bronze Fist Pill',    rarity: 'Bronze', effects: [{ stat: 'physical_damage',  type: 'flat', value: 10 }] },
   { id: 'bronze_ember_pill',   name: 'Bronze Ember Pill',   rarity: 'Bronze', effects: [{ stat: 'elemental_damage', type: 'flat', value: 10 }] },
-  { id: 'bronze_mind_pill',    name: 'Bronze Mind Pill',    rarity: 'Bronze', effects: [{ stat: 'psychic_damage',   type: 'flat', value: 10 }] },
   { id: 'bronze_skin_pill',    name: 'Bronze Skin Pill',    rarity: 'Bronze', effects: [{ stat: 'defense',           type: 'flat', value: 10 }] },
   { id: 'bronze_ward_pill',    name: 'Bronze Ward Pill',    rarity: 'Bronze', effects: [{ stat: 'elemental_defense', type: 'flat', value: 10 }] },
-  { id: 'bronze_anchor_pill',  name: 'Bronze Anchor Pill',  rarity: 'Bronze', effects: [{ stat: 'soul_toughness',    type: 'flat', value: 10 }] },
   { id: 'bronze_vigor_pill',   name: 'Bronze Vigor Pill',   rarity: 'Bronze', effects: [{ stat: 'health',            type: 'flat', value: 100 }] },
 
   // ── Silver (+12 primary, +20 damage, +20 defense, +250 health) ────────────
@@ -58,10 +54,8 @@ const PILL_DEFS_RAW = [
   { id: 'silver_body_pill',    name: 'Silver Body Pill',    rarity: 'Silver', effects: [{ stat: 'body',    type: 'flat', value: 12 }] },
   { id: 'silver_fist_pill',    name: 'Silver Fist Pill',    rarity: 'Silver', effects: [{ stat: 'physical_damage',  type: 'flat', value: 20 }] },
   { id: 'silver_ember_pill',   name: 'Silver Ember Pill',   rarity: 'Silver', effects: [{ stat: 'elemental_damage', type: 'flat', value: 20 }] },
-  { id: 'silver_mind_pill',    name: 'Silver Mind Pill',    rarity: 'Silver', effects: [{ stat: 'psychic_damage',   type: 'flat', value: 20 }] },
   { id: 'silver_skin_pill',    name: 'Silver Skin Pill',    rarity: 'Silver', effects: [{ stat: 'defense',           type: 'flat', value: 20 }] },
   { id: 'silver_ward_pill',    name: 'Silver Ward Pill',    rarity: 'Silver', effects: [{ stat: 'elemental_defense', type: 'flat', value: 20 }] },
-  { id: 'silver_anchor_pill',  name: 'Silver Anchor Pill',  rarity: 'Silver', effects: [{ stat: 'soul_toughness',    type: 'flat', value: 20 }] },
   { id: 'silver_vigor_pill',   name: 'Silver Vigor Pill',   rarity: 'Silver', effects: [{ stat: 'health',            type: 'flat', value: 250 }] },
 
   // ── Gold (+25 primary, +40 damage, +40 defense, +600 health) ──────────────
@@ -70,10 +64,8 @@ const PILL_DEFS_RAW = [
   { id: 'gold_body_pill',    name: 'Gold Body Pill',    rarity: 'Gold', effects: [{ stat: 'body',    type: 'flat', value: 25 }] },
   { id: 'gold_fist_pill',    name: 'Gold Fist Pill',    rarity: 'Gold', effects: [{ stat: 'physical_damage',  type: 'flat', value: 40 }] },
   { id: 'gold_ember_pill',   name: 'Gold Ember Pill',   rarity: 'Gold', effects: [{ stat: 'elemental_damage', type: 'flat', value: 40 }] },
-  { id: 'gold_mind_pill',    name: 'Gold Mind Pill',    rarity: 'Gold', effects: [{ stat: 'psychic_damage',   type: 'flat', value: 40 }] },
   { id: 'gold_skin_pill',    name: 'Gold Skin Pill',    rarity: 'Gold', effects: [{ stat: 'defense',           type: 'flat', value: 40 }] },
   { id: 'gold_ward_pill',    name: 'Gold Ward Pill',    rarity: 'Gold', effects: [{ stat: 'elemental_defense', type: 'flat', value: 40 }] },
-  { id: 'gold_anchor_pill',  name: 'Gold Anchor Pill',  rarity: 'Gold', effects: [{ stat: 'soul_toughness',    type: 'flat', value: 40 }] },
   { id: 'gold_vigor_pill',   name: 'Gold Vigor Pill',   rarity: 'Gold', effects: [{ stat: 'health',            type: 'flat', value: 600 }] },
 
   // ── Transcendent (premium: all-primary, utility, big bundles) ─────────────
@@ -93,14 +85,12 @@ const PILL_DEFS_RAW = [
     { stat: 'mining_luck',   type: 'flat',      value: 30 },
   ]},
   { id: 'cataclysm_pill', name: 'Cataclysm Pill', rarity: 'Transcendent', effects: [
-    { stat: 'physical_damage',  type: 'flat', value: 75 },
-    { stat: 'elemental_damage', type: 'flat', value: 75 },
-    { stat: 'psychic_damage',   type: 'flat', value: 75 },
+    { stat: 'physical_damage',  type: 'flat', value: 110 },
+    { stat: 'elemental_damage', type: 'flat', value: 110 },
   ]},
   { id: 'dao_bulwark_pill', name: 'Dao Bulwark Pill', rarity: 'Transcendent', effects: [
-    { stat: 'defense',           type: 'flat', value: 75 },
-    { stat: 'elemental_defense', type: 'flat', value: 75 },
-    { stat: 'soul_toughness',    type: 'flat', value: 75 },
+    { stat: 'defense',           type: 'flat', value: 110 },
+    { stat: 'elemental_defense', type: 'flat', value: 110 },
   ]},
   { id: 'eternal_vigor_pill', name: 'Eternal Vigor Pill', rarity: 'Transcendent', effects: [
     { stat: 'health', type: 'flat', value: 2000 },
@@ -129,11 +119,9 @@ const STAT_TO_CATEGORY = {
   // Damage
   physical_damage:      'combat',
   elemental_damage:     'combat',
-  psychic_damage:       'combat',
   // Defense
   defense:              'combat',
   elemental_defense:    'combat',
-  soul_toughness:       'combat',
   health:               'combat',
   // Exploit / crit-style
   exploit_chance:       'combat',
@@ -201,13 +189,15 @@ for (let i = 0; i < herbIds.length; i++) {
 allCombos.sort((a, b) => a.tierSum - b.tierSum || a.key.localeCompare(b.key));
 
 // Assign combos to pills by tier sum ranges (round-robin within each band).
-// Band pill counts: 10 / 10 / 10 / 10 / 6 — matches PILL_DEFS_RAW above.
+// Band pill counts: 8 / 8 / 8 / 8 / 6 — matches PILL_DEFS_RAW above.
+// (Stage 3 of the overhaul removed the mind / anchor pills tied to the
+// deprecated psychic_damage / soul_toughness stats.)
 const BAND_CONFIG = [
-  { sumRange: [3, 5],   pillCount: 10, offset: 0  },  // Iron: pills 0-9
-  { sumRange: [6, 7],   pillCount: 10, offset: 10 },  // Bronze: pills 10-19
-  { sumRange: [8, 9],   pillCount: 10, offset: 20 },  // Silver: pills 20-29
-  { sumRange: [10, 11], pillCount: 10, offset: 30 },  // Gold: pills 30-39
-  { sumRange: [12, 15], pillCount: 6,  offset: 40 },  // Transcendent: pills 40-45
+  { sumRange: [3, 5],   pillCount: 8, offset: 0  },  // Iron: pills 0-7
+  { sumRange: [6, 7],   pillCount: 8, offset: 8  },  // Bronze: pills 8-15
+  { sumRange: [8, 9],   pillCount: 8, offset: 16 },  // Silver: pills 16-23
+  { sumRange: [10, 11], pillCount: 8, offset: 24 },  // Gold: pills 24-31
+  { sumRange: [12, 15], pillCount: 6, offset: 32 },  // Transcendent: pills 32-37
 ];
 
 export const RECIPE_MAP = {};

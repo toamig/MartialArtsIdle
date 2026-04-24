@@ -5,13 +5,11 @@ import { ALL_MATERIALS, RARITY } from '../data/materials';
 const DAMAGE_COLOR = {
   physical:  '#fb923c',
   elemental: '#22d3ee',
-  psychic:   '#a78bfa',
 };
 
 const DAMAGE_ICON = {
   physical:  '⚔',
   elemental: '✦',
-  psychic:   '◈',
 };
 
 function formatNum(n) {

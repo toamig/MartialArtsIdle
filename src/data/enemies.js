@@ -641,8 +641,7 @@ const ENEMIES_RAW = {
 
 // ── Damage type per enemy ───────────────────────────────────────────────────
 // Every enemy deals exactly one damage type. The player's matching defence
-// stat (defense / elemental_defense / soul_toughness) mitigates the hit.
-// Psychic damage is restricted to Saint-realm and later zones (world 3+).
+// stat (defense / elemental_defense) mitigates the hit.
 const DAMAGE_TYPE_BY_ID = {
   // World 1 — pre-Saint (physical / elemental only)
   outer_sect_disciple: 'physical',
@@ -660,12 +659,12 @@ const DAMAGE_TYPE_BY_ID = {
   immortal_shade:      'elemental',
   corrupted_cultivator:'elemental',
   blood_leviathan:     'physical',
-  // World 3 — Saint+ (psychic unlocks)
+  // World 3 — Saint+
   burial_guardian:       'physical',
   saint_corpse_soldier:  'physical',
-  ancient_war_spirit:    'psychic',
+  ancient_war_spirit:    'elemental',
   saint_bone_sovereign:  'physical',
-  void_shade:            'psychic',
+  void_shade:            'elemental',
   forbidden_construct:   'physical',
   void_rift_predator:    'elemental',
   rift_stalker:          'elemental',
@@ -673,31 +672,31 @@ const DAMAGE_TYPE_BY_ID = {
   origin_crystal_golem:  'elemental',
   origin_guardian:       'physical',
   primordial_serpent:    'physical',
-  cavern_elder_demon:    'psychic',
+  cavern_elder_demon:    'elemental',
   root_sovereign:        'elemental',
   deep_earth_titan:      'elemental',
   ancient_beast:         'physical',
-  world_root_wraith:     'psychic',
+  world_root_wraith:     'elemental',
   // World 5
   forest_spirit:             'elemental',
   spatial_fissure_beast:     'elemental',
   void_elemental:            'elemental',
   qi_beast:                  'elemental',
   void_sea_leviathan:        'elemental',
-  dao_inscription_guardian:  'psychic',
-  dao_inscription_revenant:  'psychic',
-  star_sea_drifter:          'psychic',
+  dao_inscription_guardian:  'elemental',
+  dao_inscription_revenant:  'elemental',
+  star_sea_drifter:          'elemental',
   // World 6
-  petrified_dao_lord:     'psychic',
-  emperor_will_fragment:  'psychic',
-  boundary_wraith:        'psychic',
+  petrified_dao_lord:     'elemental',
+  emperor_will_fragment:  'elemental',
+  boundary_wraith:        'elemental',
   heaven_pillar_guardian: 'elemental',
   open_heaven_beast:      'physical',
   star_sea_leviathan:     'elemental',
   eternal_storm_titan:    'elemental',
-  celestial_sovereign:    'psychic',
+  celestial_sovereign:    'elemental',
   void_apex_predator:     'elemental',
-  open_heaven_sovereign:  'psychic',
+  open_heaven_sovereign:  'elemental',
 };
 
 // Merge damageType into each enemy before override-patching. Anything not in

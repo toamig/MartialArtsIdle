@@ -410,7 +410,7 @@ export default function useCombat() {
 
           if (tech.type === 'Attack') {
             // Prefer the full law object so calcDamage can apply the
-            // damage-category flat bonus (physical / elemental / psychic)
+            // damage-category flat bonus (physical / elemental)
             // derived from law.types. Falls back to lawElement string.
             let dmg = calcDamage(
               tech,
@@ -603,8 +603,6 @@ export default function useCombat() {
           let rawDef;
           if (s.eDmgType === 'elemental') {
             rawDef = s.stats.elementalDefense ?? (s.stats.essence ?? 0);
-          } else if (s.eDmgType === 'psychic') {
-            rawDef = s.stats.soulToughness ?? 0;
           } else {
             rawDef = s.stats.defense ?? ((s.stats.essence ?? 0) + (s.stats.body ?? 0));
           }

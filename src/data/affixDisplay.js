@@ -6,7 +6,6 @@ export const AFFIX_STAT_LABELS = {
   // Damage categories
   physical_damage:        'Physical Damage',
   elemental_damage:       'Elemental Damage',
-  psychic_damage:         'Psychic Damage',
   damage_all:             'All Damage',
   // Per-pool damage
   dmg_physical:           'Physical-pool Damage',
@@ -24,7 +23,6 @@ export const AFFIX_STAT_LABELS = {
   // Defensive
   defense:                'Defense',
   elemental_defense:      'Elemental Defense',
-  soul_toughness:         'Soul Toughness',
   health:                 'Health',
   // Primary
   essence:                'Essence',

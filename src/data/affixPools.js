@@ -69,9 +69,9 @@ export const RARITY_TIER = {
 // ─── Per-slot affix pools ────────────────────────────────────────────────────
 // Modifier guidelines:
 //   - Primary stats (essence/soul/body) and stats DERIVED from them
-//     (health, defense, elemental_defense, soul_toughness) NEVER use FLAT —
+//     (health, defense, elemental_defense) NEVER use FLAT —
 //     only INCREASED/MORE, because they scale from Qi via law multipliers.
-//   - Stats with base 0 (physical_damage, elemental_damage, psychic_damage)
+//   - Stats with base 0 (physical_damage, elemental_damage)
 //     and additive percentages (exploit_chance) can use FLAT.
 //   - INCREASED stores additive % (0.10 = +10%); MORE stores multiplier (1.10 = ×1.10).
 
@@ -113,11 +113,9 @@ const STAT_META = {
   health:                  { incr: 'INCR_BASIC', flat: 'FLAT_HP' },
   defense:                 { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
   elemental_defense:       { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
-  soul_toughness:          { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
   // Damage categories (existing engine consumers)
   physical_damage:         { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
   elemental_damage:        { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
-  psychic_damage:          { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
   damage_all:              { incr: 'INCR_LARGE', flat: 'FLAT_DMG', aggregate: true },
   // Per-pool damage (gated by law.types share at calcDamage time)
   dmg_physical:            { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
@@ -153,18 +151,18 @@ const STAT_META = {
 // generated at module load by buildSlotPool().
 const SLOT_STATS = {
   weapon: [
-    'damage_all', 'physical_damage', 'elemental_damage', 'psychic_damage',
+    'damage_all', 'physical_damage', 'elemental_damage',
     'dmg_physical', 'dmg_sword', 'dmg_fist',
     'dmg_fire', 'dmg_water', 'dmg_earth',
     'dmg_spirit', 'dmg_void', 'dmg_dao',
     'default_attack_damage', 'secret_technique_damage',
   ],
-  head:   ['elemental_defense', 'defense', 'soul_toughness', 'health', 'soul'],
-  body:   ['elemental_defense', 'defense', 'soul_toughness', 'health', 'body'],
+  head:   ['elemental_defense', 'defense', 'health', 'soul'],
+  body:   ['elemental_defense', 'defense', 'health', 'body'],
   hands:  ['qi_speed', 'harvest_luck', 'mining_luck', 'elemental_defense',
-           'defense', 'soul_toughness', 'health', 'exploit_chance', 'exploit_attack_mult'],
-  waist:  ['elemental_defense', 'defense', 'soul_toughness', 'health', 'essence'],
-  feet:   ['elemental_defense', 'defense', 'soul_toughness', 'health',
+           'defense', 'health', 'exploit_chance', 'exploit_attack_mult'],
+  waist:  ['elemental_defense', 'defense', 'health', 'essence'],
+  feet:   ['elemental_defense', 'defense', 'health',
            'exploit_chance', 'exploit_attack_mult', 'mining_speed', 'harvest_speed', 'qi_speed'],
   neck:   ['essence', 'soul', 'body', 'all_primary_stats', 'buff_effect'],
   ring:   ['qi_speed', 'harvest_speed', 'harvest_luck', 'mining_speed', 'mining_luck',

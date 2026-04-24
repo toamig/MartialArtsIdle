@@ -83,8 +83,8 @@ export function getK(rank, quality) {
  *
  * elemBonus only applies when the active Law's element matches the technique's.
  *
- * Category-flat bonus: each law type maps to one of the three damage
- * categories (physical / elemental / psychic) via damageCategoryForType().
+ * Category-flat bonus: each law type maps to one of the two damage
+ * categories (physical / elemental) via damageCategoryForType().
  * The attack is treated as dealing an even share across the UNIQUE categories
  * covered by law.types, and each category contributes its flat damage stat
  * proportionally. Example: a law with types [fire, sword] splits 50/50, so
@@ -99,7 +99,7 @@ export function getK(rank, quality) {
  * @param {object|string|null} lawOrElement  — full law object, or legacy
  *                                             lawElement string for backcompat.
  * @param {number} artefactFlat
- * @param {{physical:number, elemental:number, psychic:number}|null} damageStats
+ * @param {{physical:number, elemental:number}|null} damageStats
  */
 export function calcDamage(tech, essence, soul, body, lawOrElement = 'Normal', artefactFlat = 0, damageStats = null) {
   const law = (lawOrElement && typeof lawOrElement === 'object') ? lawOrElement : null;

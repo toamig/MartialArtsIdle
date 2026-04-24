@@ -101,10 +101,8 @@ export function computeAllStats(qi, law, realmIndex, modifiers = {}) {
   const health      = Math.max(100, Math.floor(computeStat((essence + body) * 12 + soul * 4, mods('health'))));
   const physDmg     = Math.floor(computeStat(0,             mods('physical_damage')));
   const elemDmg     = Math.floor(computeStat(0,             mods('elemental_damage')));
-  const psychDmg    = Math.floor(computeStat(0,             mods('psychic_damage')));
   const defense     = Math.floor(computeStat(body, mods('defense')));
   const elemDef     = Math.floor(computeStat(essence,        mods('elemental_defense')));
-  const soulTough   = Math.floor(computeStat(soul,           mods('soul_toughness')));
   const exploitChance  = Math.round(computeStat(0,   mods('exploit_chance')));   // 0–100
   const exploitMult    = Math.round(computeStat(150, mods('exploit_attack_mult'))); // %
 
@@ -121,7 +119,7 @@ export function computeAllStats(qi, law, realmIndex, modifiers = {}) {
   return {
     meta:     { soulUnlocked },
     primary:  { essence, soul, body },
-    combat:   { health, physDmg, elemDmg, psychDmg, defense, elemDef, soulTough, exploitChance, exploitMult },
+    combat:   { health, physDmg, elemDmg, defense, elemDef, exploitChance, exploitMult },
     activity: { qiSpeed, focusMult, harvestSpeed, harvestLuck, miningSpeed, miningLuck },
   };
 }

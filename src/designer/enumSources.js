@@ -108,11 +108,9 @@ export const STAT_IDS = [
   // Combat damage
   'physical_damage',
   'elemental_damage',
-  'psychic_damage',
   // Combat defense
   'defense',
   'elemental_defense',
-  'soul_toughness',
   // Combat exploit (crit)
   'exploit_chance',
   'exploit_attack_mult',
@@ -134,10 +132,8 @@ export const STAT_LABEL = {
   health:              'Health',
   physical_damage:     'Physical Damage',
   elemental_damage:    'Elemental Damage',
-  psychic_damage:      'Psychic Damage',
   defense:             'Defense',
   elemental_defense:   'Elemental Defense',
-  soul_toughness:      'Soul Toughness',
   exploit_chance:      'Exploit Chance (%)',
   exploit_attack_mult: 'Exploit Damage (%)',
   qi_speed:            'Qi Speed (×)',

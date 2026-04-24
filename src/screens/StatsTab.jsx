@@ -418,11 +418,6 @@ function StatsContent({ cultivation, artefacts, pills, selections, tree }) {
             breakdown={mkBd('elemental_defense', primary.essence, `Essence (${primary.essence})`, combat.elemDef)}
           />
           <StatRow
-            label={t('statNames.soul_toughness')}   hint="from Soul"
-            value={combat.soulTough}    locked={!soulUnlocked}
-            breakdown={mkBd('soul_toughness', primary.soul, `Soul (${primary.soul})`, combat.soulTough)}
-          />
-          <StatRow
             label={t('statNames.physical_damage')}  hint="bonus"
             value={combat.physDmg}
             breakdown={mkBd('physical_damage', 0, null, combat.physDmg)}
@@ -431,11 +426,6 @@ function StatsContent({ cultivation, artefacts, pills, selections, tree }) {
             label={t('statNames.elemental_damage')} hint="bonus"
             value={combat.elemDmg}
             breakdown={mkBd('elemental_damage', 0, null, combat.elemDmg)}
-          />
-          <StatRow
-            label={t('statNames.psychic_damage')}   hint="bonus"
-            value={combat.psychDmg}     locked={!soulUnlocked}
-            breakdown={mkBd('psychic_damage', 0, null, combat.psychDmg)}
           />
           <StatRow
             label={t('statNames.exploit_chance')}   hint=""
