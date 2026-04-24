@@ -2,8 +2,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HERB_ITEMS, ORE_ITEMS, BLOOD_CORE_ITEMS, CULTIVATION_ITEMS, RARITY, mineralForRarity, ALL_MATERIALS } from '../data/materials';
-import { QUALITY, ARTEFACTS_BY_ID, getSlotBonuses } from '../data/artefacts';
+import { QUALITY, ARTEFACTS_BY_ID } from '../data/artefacts';
 import { formatArtefactName } from '../data/artefactNames';
+import { formatAffixValue, AFFIX_UNIQUE_COLOR } from '../data/affixDisplay';
+import { effectiveAffixValue } from '../data/artefactUpgrades';
 import { LAW_RARITY } from '../data/laws';
 import { formatUniqueDescription } from '../data/lawUniques';
 import { TECHNIQUE_QUALITY, TYPE_COLOR, getCooldown, getK } from '../data/techniques';
@@ -294,7 +296,8 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
         const art    = ARTEFACTS_BY_ID[live.catalogueId];
         const rarity = live.rarity ?? art.rarity;
         const q      = QUALITY[rarity];
-        const bonuses = getSlotBonuses(art.slot, rarity);
+        const affixes = live.affixes ?? [];
+        const affixBonuses = live.affixBonuses ?? {};
         const artName = formatArtefactName(live) ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name });
         const artDesc = tGame(`artefacts.${art.id}.desc`, { defaultValue: art.description });
         const level  = live.upgradeLevel ?? 0;
@@ -313,14 +316,34 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
                 {live.element && <> · {t(`elements.${live.element}`, { defaultValue: live.element })}</>}
               </span>
               <p className="modal-desc">{artDesc}</p>
-              <div className="item-stat-block">
-                {bonuses.map((b, i) => (
-                  <div key={i} className="item-stat-row">
-                    <span className="item-stat-label">{t(`statNames.${b.stat}`, { defaultValue: b.stat.replace(/_/g, ' ') })}</span>
-                    <span className="item-stat-value" style={{ color: q.color }}>+{b.value}</span>
-                  </div>
-                ))}
-              </div>
+
+              {/* ── Rolled affixes (level-scaled) ───────────────────────── */}
+              {affixes.length > 0 && (
+                <div className="item-stat-block">
+                  {affixes.map((a, i) => {
+                    const bonus = affixBonuses[i] ?? 0;
+                    const effValue = effectiveAffixValue(a, level, bonus);
+                    const display = { ...a, value: effValue };
+                    const line = formatAffixValue(display);
+                    return (
+                      <div
+                        key={i}
+                        className="item-stat-row"
+                        style={a.unique ? { color: AFFIX_UNIQUE_COLOR } : undefined}
+                      >
+                        <span className="item-stat-label">
+                          {a.unique && '★ '}{line}
+                        </span>
+                        {bonus > 0 && (
+                          <span className="item-stat-value" style={{ opacity: 0.6, fontSize: 11 }}>
+                            (bonus +{bonus.toFixed(3).replace(/\.?0+$/, '')})
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* ── Set membership ──────────────────────────────────────── */}
               {Array.isArray(live.setIds) && live.setIds.length > 0 && (

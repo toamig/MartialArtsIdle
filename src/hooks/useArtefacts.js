@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { ARTEFACTS_BY_ID, getSlotBonuses } from '../data/artefacts';
+import { ARTEFACTS_BY_ID } from '../data/artefacts';
 import { generateAffixes, AFFIX_POOL_BY_SLOT } from '../data/affixPools';
 import { generateArtefactName, formatArtefactName } from '../data/artefactNames';
 import { evaluateArtefactUniques } from '../systems/artefactEngine';
@@ -310,9 +310,8 @@ export default function useArtefacts() {
     for (const instance of equippedInstances) {
       const art = resolveInstance(instance);
       if (!art) continue;
-      for (const bonus of getSlotBonuses(art.slot, art.rarity)) {
-        (mods[bonus.stat] ??= []).push({ type: bonus.type, value: bonus.value });
-      }
+      // Slot base bonuses removed — artefact stats are now exactly the
+      // rolled affixes (1–5 per rarity). See obsidian/Artefacts.md.
       const level    = instance.upgradeLevel ?? 0;
       const bonuses  = instance.affixBonuses ?? {};
       const affixArr = instance.affixes ?? [];

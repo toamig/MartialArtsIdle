@@ -13,6 +13,7 @@ import { PILLS_BY_ID } from '../data/pills';
 import REALMS from '../data/realms';
 import { generateTechnique } from '../data/techniqueDrops';
 import { generateLaw } from '../data/affixPools';
+import { pickRandomArtefact } from '../data/artefactDrops';
 
 const ITEMS_BY_ID = { ...ALL_MATERIALS, ...PILLS_BY_ID };
 
@@ -212,6 +213,26 @@ export function initDebug(hooksRef) {
         techs.addOwnedTechnique(generateTechnique(worldId));
       }
       console.log(`[debug] +${count} random techniques (world ${worldId})`);
+    },
+
+    /**
+     * Generate and add random artefacts. Rarity rolls off the world-tier
+     * bias (same weights as combat drops) — each one goes through the full
+     * useArtefacts.addArtefact flow so element, setIds, upgradeLevel,
+     * affixBonuses, and rolled affixes are all populated.
+     * @param {number} [count=10]
+     * @param {number} [worldId=1]  World tier 1–6
+     */
+    giveArtefacts(count = 10, worldId = 1) {
+      const arts = g().artefacts;
+      let added = 0;
+      for (let i = 0; i < count; i++) {
+        const catId = pickRandomArtefact(worldId);
+        if (!catId) continue;
+        arts.addArtefact(catId);
+        added += 1;
+      }
+      console.log(`[debug] +${added} random artefacts (world ${worldId})`);
     },
 
     /**
@@ -429,6 +450,7 @@ export function initDebug(hooksRef) {
       console.log('  gd.listMaterials()        — show all material IDs and rarities');
       console.log('%cTechniques & Laws', 'font-weight: bold');
       console.log('  gd.giveTechniques(n=10, world=1) — generate n random techniques');
+      console.log('  gd.giveArtefacts(n=10, world=1)  — generate n random artefacts');
       console.log('  gd.giveLaws(n=10)                — generate n random laws');
       console.log('%cQi Crystal', 'font-weight: bold');
       console.log('  gd.setCrystalLevel(n)     — set crystal to level n');

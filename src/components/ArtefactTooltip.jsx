@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { QUALITY, getSlotBonuses } from '../data/artefacts';
+import { QUALITY } from '../data/artefacts';
 import { AFFIX_UNIQUE_COLOR, formatAffixValue } from '../data/affixDisplay';
 import { ARTEFACT_SETS } from '../data/artefactSets';
+import { effectiveAffixValue } from '../data/artefactUpgrades';
 
 /**
  * Shared artefact tooltip — renders the item name, quality badge, derived
@@ -11,18 +12,18 @@ import { ARTEFACT_SETS } from '../data/artefactSets';
  * Collection tab, and the Transmutation panel so hover previews stay in
  * sync across screens.
  */
-export default function ArtefactTooltip({ artefact, affixes, style, element, setIds, upgradeLevel }) {
+export default function ArtefactTooltip({ artefact, affixes, style, element, setIds, upgradeLevel, affixBonuses }) {
   const { t } = useTranslation('ui');
   if (!artefact) return null;
   const quality = QUALITY[artefact.rarity];
-  const baseBonuses = getSlotBonuses(artefact.slot, artefact.rarity);
   const artName = artefact.name;
   // Prefer prop-level fields so call sites can pass instance data without
   // having to graft it onto the `artefact` object. Fall back to artefact.*
   // for older wirings.
-  const elem   = element   ?? artefact.element;
-  const sets   = setIds    ?? artefact.setIds;
-  const level  = upgradeLevel ?? artefact.upgradeLevel ?? 0;
+  const elem     = element      ?? artefact.element;
+  const sets     = setIds       ?? artefact.setIds;
+  const level    = upgradeLevel ?? artefact.upgradeLevel ?? 0;
+  const bonuses  = affixBonuses ?? artefact.affixBonuses ?? {};
 
   // Portal to document.body so ancestors using `transform` / `filter` (the
   // mobile bottom-sheet picker) don't trap a position:fixed tooltip inside
@@ -55,24 +56,24 @@ export default function ArtefactTooltip({ artefact, affixes, style, element, set
           })}
         </div>
       )}
-      {baseBonuses.length > 0 && (
-        <div className="art-tooltip-section">
-          {baseBonuses.map((b, i) => (
-            <span key={i} className="art-tooltip-line">{formatAffixValue(b)}</span>
-          ))}
-        </div>
-      )}
       {affixes && affixes.length > 0 && (
         <div className="art-tooltip-section art-tooltip-affixes">
-          {affixes.map((a, i) => (
-            <span
-              key={i}
-              className={`art-tooltip-line art-tooltip-affix${a.unique ? ' art-tooltip-affix-unique' : ''}`}
-              style={a.unique ? { color: AFFIX_UNIQUE_COLOR } : undefined}
-            >
-              {a.unique && '★ '}{formatAffixValue(a)}
-            </span>
-          ))}
+          {affixes.map((a, i) => {
+            const bonus = bonuses[i] ?? 0;
+            const effValue = level > 0 || bonus > 0
+              ? effectiveAffixValue(a, level, bonus)
+              : a.value;
+            const display = { ...a, value: effValue };
+            return (
+              <span
+                key={i}
+                className={`art-tooltip-line art-tooltip-affix${a.unique ? ' art-tooltip-affix-unique' : ''}`}
+                style={a.unique ? { color: AFFIX_UNIQUE_COLOR } : undefined}
+              >
+                {a.unique && '★ '}{formatAffixValue(display)}
+              </span>
+            );
+          })}
         </div>
       )}
     </div>
