@@ -32,9 +32,10 @@ export const TIER_SLOT_COUNT = {
 };
 
 // Per-tier slot limits for ARTEFACTS ONLY.
-// An artefact has 2 Iron slots + 1 per higher rarity = 6 total at Transcendent.
+// One slot per rarity tier unlocked, matching the DD (Iron=1, Bronze=2,
+// Silver=3, Gold=4, Transcendent=5 total at spawn — see obsidian/Artefacts.md).
 export const ARTEFACT_TIER_SLOTS = {
-  Iron: 2, Bronze: 1, Silver: 1, Gold: 1, Transcendent: 1,
+  Iron: 1, Bronze: 1, Silver: 1, Gold: 1, Transcendent: 1,
 };
 
 // The rarities an artefact of this rarity has unlocked, lowest to highest.
