@@ -218,7 +218,7 @@ function StatsContent({ cultivation, artefacts, pills, selections, tree }) {
           <StatRow
             label={t('statNames.exploit_chance')}   hint=""
             value={combat.exploitChance} unit="%"
-            breakdown={mkBd('exploit_chance', 0, null, combat.exploitChance, '%')}
+            breakdown={mkBd('exploit_chance', 5, 'Base (5%)', combat.exploitChance, '%')}
           />
           <StatRow
             label={t('statNames.exploit_mult')}     hint=""

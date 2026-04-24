@@ -81,7 +81,7 @@ export function computeAllStats(qi, law, realmIndex, modifiers = {}) {
   const elemDmg       = Math.floor(computeStat(0, mods('elemental_damage')));
   const defense       = Math.floor(computeStat(r * 5,  mods('defense')));
   const elemDef       = Math.floor(computeStat(r * 5,  mods('elemental_defense')));
-  const exploitChance = Math.round(computeStat(0,   mods('exploit_chance')));
+  const exploitChance = Math.round(computeStat(5,   mods('exploit_chance')));
   const exploitMult   = Math.round(computeStat(150, mods('exploit_attack_mult')));
 
   // ── Activity ───────────────────────────────────────────────────────────────
