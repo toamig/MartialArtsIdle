@@ -15,11 +15,11 @@ import { findPill, PILLS, PILLS_BY_ID, RECIPES_BY_PILL } from '../data/pills';
 
 const ITEMS_BY_ID = { ...ALL_MATERIALS, ...PILLS_BY_ID };
 import { formatUniqueDescription } from '../data/lawUniques';
-import { ARTEFACTS } from '../data/artefacts';
 import { generateTechnique } from '../data/techniqueDrops';
 // generateLaw moved out of the refining flow — laws now drop from major
-// breakthroughs via useSelections.
-import { ARTEFACT_NEXT_RARITY, MAX_ARTEFACTS } from '../hooks/useArtefacts';
+// breakthroughs via useSelections. ARTEFACTS / ARTEFACT_NEXT_RARITY /
+// MAX_ARTEFACTS no longer needed here — artefact crafting moved to the
+// Collection tab (stage 13 of the overhaul).
 import { TECH_NEXT_QUALITY, MAX_TECHNIQUES } from '../hooks/useTechniques';
 import { LAW_NEXT_RARITY } from '../hooks/useCultivation';
 import {
@@ -281,72 +281,10 @@ function UpgradeSection({ rarity, nextQ, inventory, onUpgrade, kind = 'artefact'
 
 // ─── Detail panels ─────────────────────────────────────────────────────────
 
-function ArtefactDetail({ inst, artefacts, inventory }) {
-  const { t }        = useTranslation('ui');
-  const { t: tGame } = useTranslation('game');
-  const art    = ARTEFACTS_BY_ID[inst.catalogueId];
-  const rarity = inst.rarity ?? art?.rarity ?? 'Iron';
-  const q      = artQuality(rarity);
-  const affixes  = inst.affixes ?? [];
-  const brackets = buildBracketSlots(affixes, rarity, getActiveArtefactBrackets);
-
-  const totalFilled = affixes.length;
-  const totalCapacity = getActiveArtefactBrackets(rarity).reduce((s, b) => s + b.count, 0);
-  const nextRar     = ARTEFACT_NEXT_RARITY[rarity];
-  const nextQ       = nextRar ? artQuality(nextRar) : null;
-
-  return (
-    <div className="tx-detail-panel">
-      <div className="tx-detail-header">
-        <div>
-          <span className="tx-item-name">{art ? (formatArtefactName(inst) ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name })) : inst.catalogueId}</span>
-          <span className="tx-item-sub">{art?.slot ? t(`build.slots.${art.slot}`, { defaultValue: art.slot }) : ''}</span>
-        </div>
-        <span className="tx-quality-badge" style={{ color: q.color, borderColor: q.color }}>{t(`quality.${rarity}`, { defaultValue: q.label })}</span>
-      </div>
-
-      <div className="tx-section-title">{t('production.modifiers', { filled: totalFilled, capacity: totalCapacity })}</div>
-      {brackets.map((b, bi) => (
-        <BracketSection
-          key={bi}
-          bracket={b}
-          renderFilled={(slot, i) => (
-            <AffixRow
-              key={`f-${bi}-${i}`}
-              affix={slot.item}
-              gIdx={slot.gIdx}
-              color={b.color}
-              mineralStat={b.mineralStat}
-              mineralMod={b.mineralMod}
-              craftCount={inst.craftCount ?? 0}
-              inventory={inventory}
-              onHone={(idx)    => artefacts.honeAffix(inst.uid, idx)}
-              onReplace={(idx) => artefacts.replaceAffix(inst.uid, idx)}
-            />
-          )}
-          renderEmpty={(i) => (
-            <EmptySlotRow
-              key={`e-${bi}-${i}`}
-              color={b.color}
-              mineralStat={b.mineralStat}
-              craftCount={inst.craftCount ?? 0}
-              inventory={inventory}
-              onAdd={() => artefacts.addAffix(inst.uid, b.label)}
-            />
-          )}
-        />
-      ))}
-
-      <div className="tx-section-title">{t('production.upgradeQuality')}</div>
-      <UpgradeSection
-        rarity={rarity}
-        nextQ={nextQ}
-        inventory={inventory}
-        onUpgrade={() => artefacts.upgradeArtefact(inst.uid)}
-      />
-    </div>
-  );
-}
+// ArtefactDetail removed in stage 13 of the Damage & Element Overhaul.
+// Artefacts no longer participate in refining / honing / replacing / adding
+// / rarity-upgrading. Their upgrade UI lives in the Collection tab — see
+// CollectionScreen's selected-artefact modal (stages 9–10).
 
 function TechniqueDetail({ tech, techniques, inventory }) {
   const { t }        = useTranslation('ui');
@@ -549,13 +487,13 @@ function LawDetail({ law, cultivation, inventory }) {
 function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
-  const [itemTab,  setItemTab]  = useState('artefacts');
+  const [itemTab,  setItemTab]  = useState('techniques');
   const [selected, setSelected] = useState(null);
-  const artTooltip = useTooltipPos();
-  const [hoveredArtUid, setHoveredArtUid] = useState(null);
 
+  // Artefact refining / transmutation was removed in the Damage & Element
+  // Overhaul. Artefacts drop fully-rolled and are upgraded in the Collection
+  // tab (see obsidian/Artefacts.md). Only techniques + laws remain here.
   const ITEM_TABS = [
-    { key: 'artefacts',  tKey: 'inventory.tabArtefacts'  },
     { key: 'techniques', tKey: 'inventory.tabTechniques' },
     { key: 'laws',       tKey: 'inventory.tabLaws'       },
   ];
@@ -564,7 +502,6 @@ function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
 
   let selectedInst = null;
   if (selected) {
-    if (itemTab === 'artefacts')  selectedInst = artefacts.owned.find(o => o.uid === selected) ?? null;
     if (itemTab === 'techniques') selectedInst = techniques.ownedTechniques[selected] ?? null;
     if (itemTab === 'laws')       selectedInst = cultivation.ownedLaws.find(l => l.id === selected) ?? null;
   }
@@ -584,51 +521,6 @@ function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
       </div>
 
       <div className="inv-grid tx-item-grid">
-        {itemTab === 'artefacts' && [...artefacts.owned]
-          .sort((a, b) => {
-            const aEq = !!artefacts.equippedInSlot(a.uid);
-            const bEq = !!artefacts.equippedInSlot(b.uid);
-            if (aEq === bEq) return 0;
-            return aEq ? -1 : 1;
-          })
-          .map(inst => {
-            const art    = ARTEFACTS_BY_ID[inst.catalogueId];
-            const rarity = inst.rarity ?? art?.rarity ?? 'Iron';
-            const q      = artQuality(rarity);
-            const isEquipped = !!artefacts.equippedInSlot(inst.uid);
-            return (
-              <button
-                key={inst.uid}
-                className={`inv-slot tx-slot${selected === inst.uid ? ' tx-slot-selected' : ''}${isEquipped ? ' inv-slot-equipped' : ''}`}
-                style={{ borderColor: q.color }}
-                onClick={() => setSelected(inst.uid === selected ? null : inst.uid)}
-                onMouseEnter={(e) => {
-                  setHoveredArtUid(inst.uid);
-                  artTooltip.handlers.onMouseEnter(e);
-                }}
-                onMouseMove={artTooltip.handlers.onMouseMove}
-                onMouseLeave={(e) => {
-                  setHoveredArtUid(null);
-                  artTooltip.handlers.onMouseLeave(e);
-                }}
-                onTouchStart={(e) => {
-                  setHoveredArtUid(inst.uid);
-                  artTooltip.handlers.onTouchStart(e);
-                }}
-                onTouchEnd={(e) => {
-                  setHoveredArtUid(null);
-                  artTooltip.handlers.onTouchEnd(e);
-                }}
-                onTouchMove={artTooltip.handlers.onTouchMove}
-              >
-                <span className="inv-quality-gem" style={{ color: q.color }}>◆</span>
-                <span className="inv-name" style={{ color: q.color }}>{art ? (formatArtefactName(inst) ?? tGame(`artefacts.${art.id}.name`, { defaultValue: art.name })) : inst.catalogueId}</span>
-                <span className="inv-slot-label">{art?.slot ? t(`build.slots.${art.slot}`, { defaultValue: art.slot }) : ''}</span>
-                {isEquipped && <span className="inv-equipped-badge">{t('common.equipped')}</span>}
-              </button>
-            );
-          })}
-
         {itemTab === 'techniques' && Object.values(techniques.ownedTechniques).map(tech => {
           const q = techQuality(tech.quality);
           return (
@@ -662,28 +554,6 @@ function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
         })}
       </div>
 
-      {itemTab === 'artefacts' && artTooltip.pos && hoveredArtUid && (() => {
-        const inst = artefacts.owned.find(o => o.uid === hoveredArtUid);
-        if (!inst) return null;
-        const cat = ARTEFACTS_BY_ID[inst.catalogueId];
-        if (!cat) return null;
-        const rarity = inst.rarity ?? cat.rarity;
-        const name = formatArtefactName(inst) ?? tGame(`artefacts.${cat.id}.name`, { defaultValue: cat.name });
-        return (
-          <ArtefactTooltip
-            artefact={{ ...cat, rarity, name }}
-            affixes={inst.affixes ?? []}
-            element={inst.element}
-            setIds={inst.setIds}
-            upgradeLevel={inst.upgradeLevel ?? 0}
-            style={{ position: 'fixed', left: artTooltip.pos.x, top: artTooltip.pos.y, zIndex: 100 }}
-          />
-        );
-      })()}
-
-      {selectedInst && itemTab === 'artefacts' && (
-        <ArtefactDetail inst={selectedInst} artefacts={artefacts} inventory={inventory} />
-      )}
       {selectedInst && itemTab === 'techniques' && (
         <TechniqueDetail tech={selectedInst} techniques={techniques} inventory={inventory} />
       )}
@@ -742,12 +612,6 @@ function getRefineCost(type, rarity, costMult = 1) {
 }
 
 const REFINE_ICONS = { artefact: '⚔', technique: '✦', law: '☯' };
-
-// Group artefacts by rarity for random picking
-const ARTEFACTS_BY_RARITY = {};
-for (const a of ARTEFACTS) {
-  (ARTEFACTS_BY_RARITY[a.rarity] ??= []).push(a);
-}
 
 // Map rarity to worldId for technique generation (1-5 tier scaling)
 const RARITY_TO_WORLD = { Iron: 1, Bronze: 2, Silver: 3, Gold: 4, Transcendent: 5 };
@@ -860,13 +724,9 @@ function RefiningPanel({ inventory, artefacts, techniques, cultivation, tree }) 
     }
 
     let resultName = '';
-    if (type === 'artefact') {
-      const pool = ARTEFACTS_BY_RARITY[outRarity] ?? ARTEFACTS_BY_RARITY[rarity] ?? [];
-      if (pool.length === 0) return;
-      const cat = pickRandom(pool);
-      artefacts.addArtefact(cat.id);
-      resultName = cat.name;
-    } else if (type === 'technique') {
+    // Artefact refining removed in stage 13 of the Damage & Element Overhaul
+    // — artefacts now drop fully-rolled from combat (see Artefacts.md).
+    if (type === 'technique') {
       // md_4 stacks on top of fp_1 — bump rarity once more if owned.
       const finalRarity = techQualityBump > 0 ? bumpRarity(outRarity) : outRarity;
       const worldId = RARITY_TO_WORLD[finalRarity] ?? RARITY_TO_WORLD[rarity] ?? 1;
@@ -884,12 +744,10 @@ function RefiningPanel({ inventory, artefacts, techniques, cultivation, tree }) 
   // Cap checks — refining is refused at the cap (button grey-out +
   // tooltip). The player must dismantle something from the Collection
   // screen before rolling another item.
-  const artefactsFull  = (artefacts?.owned?.length ?? 0) >= MAX_ARTEFACTS;
   const techniquesFull = Object.keys(techniques?.ownedTechniques ?? {}).length >= MAX_TECHNIQUES;
 
   return (
     <div className="refining-panel">
-      <RefineCard type="artefact"  inventory={inventory} onRefine={refine} inventoryFull={artefactsFull} refineCostMult={refineCostMult} />
       <RefineCard type="technique" inventory={inventory} onRefine={refine} inventoryFull={techniquesFull} refineCostMult={refineCostMult} />
       {flashMsg && <div className="refine-flash">{flashMsg}</div>}
     </div>
