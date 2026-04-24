@@ -422,12 +422,18 @@ function BuildContent({ cultivation, techniques, artefacts }) {
                   {t('build.activeSets', { defaultValue: 'Active sets' })}
                 </div>
                 {active.map(([sid, n]) => {
-                  const s   = ARTEFACT_SETS[sid];
-                  const tag = n >= 4 ? '4-piece' : '2-piece';
+                  const s = ARTEFACT_SETS[sid];
+                  if (!s) return null;
                   return (
-                    <div key={sid} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>◆ {s?.name ?? sid}</span>
-                      <span style={{ opacity: 0.8 }}>{tag} ({n})</span>
+                    <div key={sid} style={{ marginTop: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>◆ {s.name}</span>
+                        <span style={{ opacity: 0.8 }}>{n}-piece</span>
+                      </div>
+                      <div style={{ paddingLeft: 10, opacity: 0.75 }}>· {s.twoPiece?.description}</div>
+                      {n >= 4 && (
+                        <div style={{ paddingLeft: 10, opacity: 0.75 }}>· {s.fourPiece?.description}</div>
+                      )}
                     </div>
                   );
                 })}

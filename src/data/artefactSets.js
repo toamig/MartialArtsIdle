@@ -21,17 +21,42 @@ const SET_NAMES = {
   metal: ['Iron Bastion',   'Razor Hierarchy',  'Sovereign Plate'],
 };
 
+// Placeholder 2-piece stat per element — a single increased bonus themed to
+// the element's role. All three sets of an element share the same payload
+// for now; designer tunes per-set later. 4-piece is a universal +10% MORE
+// damage_all to give every set a meaningful power spike while content is
+// still pending.
+const TWO_PIECE_STAT = {
+  fire:  { stat: 'physical_damage',   type: 'increased', value: 0.10 },
+  water: { stat: 'elemental_defense', type: 'increased', value: 0.15 },
+  earth: { stat: 'defense',           type: 'increased', value: 0.15 },
+  wood:  { stat: 'health',            type: 'increased', value: 0.15 },
+  metal: { stat: 'elemental_damage',  type: 'increased', value: 0.10 },
+};
+
+const FOUR_PIECE_STAT = { stat: 'damage_all', type: 'more', value: 1.10 };
+
+function describeEffect(eff) {
+  if (!eff) return '—';
+  const pct = eff.value;
+  if (eff.type === 'increased') return `+${Math.round(pct * 100)}% increased ${eff.stat.replace(/_/g, ' ')}`;
+  if (eff.type === 'more')      return `×${eff.value.toFixed(2)} more ${eff.stat.replace(/_/g, ' ')}`;
+  if (eff.type === 'flat')      return `+${eff.value} ${eff.stat.replace(/_/g, ' ')}`;
+  return `${eff.stat}: ${eff.value}`;
+}
+
 function buildCatalogue() {
   const out = {};
   for (const el of ELEMENTS) {
+    const two = TWO_PIECE_STAT[el];
     for (let i = 0; i < 3; i++) {
       const id = `set_${el}_${i + 1}`;
       out[id] = {
         id,
         element: el,
         name:      SET_NAMES[el][i],
-        twoPiece:  { description: `${SET_NAMES[el][i]} — 2-piece bonus (placeholder)`, effect: null },
-        fourPiece: { description: `${SET_NAMES[el][i]} — 4-piece bonus (placeholder)`, effect: null },
+        twoPiece:  { description: describeEffect(two), effect: two },
+        fourPiece: { description: describeEffect(FOUR_PIECE_STAT), effect: FOUR_PIECE_STAT },
       };
     }
   }
@@ -72,6 +97,28 @@ export function rollElementAndSet(rarity) {
   }
 
   return { element, setIds };
+}
+
+/**
+ * Aggregate active set-bonus stat modifiers from the equipped loadout.
+ * 2+ pieces applies twoPiece.effect; 4+ pieces layers fourPiece.effect on
+ * top. Returns a `{ stat: [{ type, value }, ...] }` bundle shaped for
+ * mergeModifiers.
+ */
+export function getSetBonusModifiers(equipped, owned) {
+  const counts = countEquippedSets(equipped, owned);
+  const mods   = {};
+  const push = (eff) => {
+    if (!eff) return;
+    (mods[eff.stat] ??= []).push({ type: eff.type, value: eff.value });
+  };
+  for (const [sid, n] of Object.entries(counts)) {
+    const set = ARTEFACT_SETS[sid];
+    if (!set) continue;
+    if (n >= 2) push(set.twoPiece?.effect);
+    if (n >= 4) push(set.fourPiece?.effect);
+  }
+  return mods;
 }
 
 /**

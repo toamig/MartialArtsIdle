@@ -7,7 +7,7 @@ import {
 import { generateArtefactName, formatArtefactName } from '../data/artefactNames';
 import { rerollArtefactUniqueValue } from '../data/uniqueModifiers';
 import { evaluateArtefactUniques } from '../systems/artefactEngine';
-import { rollElementAndSet } from '../data/artefactSets';
+import { rollElementAndSet, getSetBonusModifiers } from '../data/artefactSets';
 import {
   MAX_UPGRADE_BY_RARITY, effectiveAffixValue, upgradeCost, rollUpgradeBonus, isBonusLevel,
 } from '../data/artefactUpgrades';
@@ -447,8 +447,14 @@ export default function useArtefacts() {
     for (const [stat, list] of Object.entries(statMods)) {
       (mods[stat] ??= []).push(...list);
     }
+    // Layer 4: active set bonuses (2-piece / 4-piece). Placeholder payloads
+    // per-element for now — see artefactSets.TWO_PIECE_STAT / FOUR_PIECE_STAT.
+    const setMods = getSetBonusModifiers(state.equipped, state.owned);
+    for (const [stat, list] of Object.entries(setMods)) {
+      (mods[stat] ??= []).push(...list);
+    }
     return mods;
-  }, [collectEquippedInstances]);
+  }, [collectEquippedInstances, state.equipped, state.owned]);
 
   /**
    * Flag bag produced by unique affixes. Combat / cultivation / autofarm

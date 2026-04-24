@@ -332,11 +332,19 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
                     const s = ARTEFACT_SETS[sid];
                     if (!s) return null;
                     return (
-                      <div key={sid} className="item-stat-row" style={{ paddingLeft: 12 }}>
-                        <span className="item-stat-label">◆ {s.name}</span>
-                        <span className="item-stat-value" style={{ opacity: 0.7 }}>
-                          {t(`elements.${s.element}`, { defaultValue: s.element })}
-                        </span>
+                      <div key={sid} style={{ paddingLeft: 12, marginBottom: 4 }}>
+                        <div className="item-stat-row">
+                          <span className="item-stat-label">◆ {s.name}</span>
+                          <span className="item-stat-value" style={{ opacity: 0.7 }}>
+                            {t(`elements.${s.element}`, { defaultValue: s.element })}
+                          </span>
+                        </div>
+                        <div className="item-stat-row" style={{ paddingLeft: 12, opacity: 0.65, fontSize: 12 }}>
+                          <span className="item-stat-label">2p: {s.twoPiece?.description}</span>
+                        </div>
+                        <div className="item-stat-row" style={{ paddingLeft: 12, opacity: 0.65, fontSize: 12 }}>
+                          <span className="item-stat-label">4p: {s.fourPiece?.description}</span>
+                        </div>
                       </div>
                     );
                   })}

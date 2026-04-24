@@ -40,9 +40,18 @@ export default function ArtefactTooltip({ artefact, affixes, style, element, set
         <div className="art-tooltip-section" style={{ opacity: 0.85 }}>
           {sets.map(sid => {
             const s = ARTEFACT_SETS[sid];
-            return s
-              ? <span key={sid} className="art-tooltip-line">◆ {s.name}</span>
-              : <span key={sid} className="art-tooltip-line">◆ {sid}</span>;
+            if (!s) return <span key={sid} className="art-tooltip-line">◆ {sid}</span>;
+            return (
+              <div key={sid}>
+                <span className="art-tooltip-line">◆ {s.name}</span>
+                <span className="art-tooltip-line" style={{ fontSize: 11, opacity: 0.7, paddingLeft: 10 }}>
+                  2p: {s.twoPiece?.description}
+                </span>
+                <span className="art-tooltip-line" style={{ fontSize: 11, opacity: 0.7, paddingLeft: 10 }}>
+                  4p: {s.fourPiece?.description}
+                </span>
+              </div>
+            );
           })}
         </div>
       )}
