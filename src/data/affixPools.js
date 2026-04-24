@@ -113,16 +113,6 @@ const STAT_META = {
   physical_damage:         { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
   elemental_damage:        { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
   damage_all:              { incr: 'INCR_LARGE', flat: 'FLAT_DMG', aggregate: true },
-  // Per-pool damage (gated by law.types share at calcDamage time)
-  dmg_physical:            { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
-  dmg_sword:               { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
-  dmg_fist:                { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
-  dmg_fire:                { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
-  dmg_water:               { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
-  dmg_earth:               { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
-  dmg_spirit:              { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
-  dmg_void:                { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
-  dmg_dao:                 { incr: 'INCR_LARGE', flat: 'FLAT_DMG' },
   // Source-gated damage multipliers
   default_attack_damage:   { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
   secret_technique_damage: { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
@@ -148,9 +138,6 @@ const STAT_META = {
 const SLOT_STATS = {
   weapon: [
     'damage_all', 'physical_damage', 'elemental_damage',
-    'dmg_physical', 'dmg_sword', 'dmg_fist',
-    'dmg_fire', 'dmg_water', 'dmg_earth',
-    'dmg_spirit', 'dmg_void', 'dmg_dao',
     'default_attack_damage', 'secret_technique_damage',
   ],
   head:   ['elemental_defense', 'defense', 'health', 'soul'],
@@ -186,12 +173,8 @@ const MOD_LABEL = {
   [MOD.MORE]:      '(more)',
 };
 
-/** Convert a stat id like 'all_primary_stats' or 'dmg_fire' into a display name. */
+/** Convert a stat id like 'all_primary_stats' into a display name. */
 function statDisplayName(statId) {
-  if (statId.startsWith('dmg_')) {
-    const pool = statId.slice(4);
-    return `${pool[0].toUpperCase()}${pool.slice(1)} Damage`;
-  }
   return statId.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
 }
 

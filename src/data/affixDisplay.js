@@ -7,16 +7,6 @@ export const AFFIX_STAT_LABELS = {
   physical_damage:        'Physical Damage',
   elemental_damage:       'Elemental Damage',
   damage_all:             'All Damage',
-  // Per-pool damage
-  dmg_physical:           'Physical-pool Damage',
-  dmg_sword:              'Sword Damage',
-  dmg_fist:               'Fist Damage',
-  dmg_fire:               'Fire Damage',
-  dmg_water:              'Water Damage',
-  dmg_earth:              'Earth Damage',
-  dmg_spirit:             'Spirit Damage',
-  dmg_void:               'Void Damage',
-  dmg_dao:                'Dao Damage',
   // Source-gated damage
   default_attack_damage:  'Basic Attack Damage',
   secret_technique_damage:'Secret Technique Damage',

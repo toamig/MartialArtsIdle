@@ -180,6 +180,9 @@ export function generateTechnique(worldId) {
       ? parseFloat((1.0 + Math.random() * 0.3).toFixed(2))
       : 1.0;
     typeStats.bonus = 0;
+    // damageType routes the single flat-bucket bonus in calcDamage
+    // (post-Stage-5). Independent of `element`, which is a content tag.
+    typeStats.damageType = Math.random() < 0.5 ? 'physical' : 'elemental';
   } else if (type === 'Heal') {
     typeStats.healPercent = parseFloat((0.15 + Math.random() * 0.20).toFixed(3));
   } else if (type === 'Defend') {
