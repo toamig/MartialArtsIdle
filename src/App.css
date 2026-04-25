@@ -39,9 +39,14 @@ html, body, * {
      Used to keep background art and content from bleeding behind the nav. */
   --nav-h: 48px;
   --top-bar-h: 48px;
-  /* Maximum height available to popups/modals — viewport minus both fixed bars
-     and their safe-area insets, with a small breathing margin. */
-  --modal-max-h: calc(100svh - var(--top-bar-h) - var(--nav-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
+  /* Visible buffer above and below modals so the bars have clear breathing
+     room and the modal's box-shadow doesn't bleed over the bottom nav (which
+     sits below the overlay in the z-stack — top-bar is above and clips its
+     own shadow side). Used by both --modal-max-h and .modal-overlay padding. */
+  --modal-edge-pad: 24px;
+  /* Maximum height available to popups/modals — viewport minus both fixed bars,
+     their safe-area insets, and the buffer applied on each side. */
+  --modal-max-h: calc(100svh - var(--top-bar-h) - var(--nav-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - (var(--modal-edge-pad) * 2));
 }
 
 .app {
@@ -4931,7 +4936,7 @@ html, body, * {
   align-items: center;
   justify-content: center;
   z-index: 200;
-  padding: calc(var(--top-bar-h) + env(safe-area-inset-top) + 8px) 20px calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);
+  padding: calc(var(--top-bar-h) + env(safe-area-inset-top) + var(--modal-edge-pad)) 20px calc(var(--nav-h) + env(safe-area-inset-bottom) + var(--modal-edge-pad));
   animation: fade-in 0.2s ease-out;
 }
 
