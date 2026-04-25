@@ -161,7 +161,9 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     // guaranteed to run synchronously).
     let level       = state.level;
     let refinedQi   = state.refinedQi + totalRqi;
-    const startTier = getCrystalTier(level);
+    // Treat locked (tier 0) as tier 1 for evolution purposes — the locked sprite
+    // is effectively the tier-1 crystal dimmed, so unlocking isn't a true tier jump.
+    const startTier = Math.max(getCrystalTier(level), 1);
     while (true) {
       const needed = getRequiredRefinedQi(level + 1);
       if (refinedQi < needed) break;
