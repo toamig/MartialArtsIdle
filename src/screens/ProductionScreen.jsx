@@ -6,7 +6,7 @@ import { findPill, PILLS, PILLS_BY_ID, RECIPES_BY_PILL } from '../data/pills';
 
 const ITEMS_BY_ID = { ...ALL_MATERIALS, ...PILLS_BY_ID };
 
-// ─── AlchemyPanel ────────────────────────────────────────────────────────────
+// ─── Display helpers ─────────────────────────────────────────────────────────
 
 const STAT_DISPLAY = {
   qi_speed:             'Qi Speed',
@@ -31,59 +31,336 @@ function formatEffect(eff) {
   return `+${eff.value} ${label}`;
 }
 
-function canAffordRecipe(key, inventory) {
+/** Build { itemId: qty } map of herb requirements from a recipe key. */
+function recipeNeed(key) {
   const ids = key.split('|');
   const needed = {};
   for (const id of ids) needed[id] = (needed[id] || 0) + 1;
-  for (const [id, qty] of Object.entries(needed)) {
+  return needed;
+}
+
+function isRecipeAffordable(key, inventory) {
+  for (const [id, qty] of Object.entries(recipeNeed(key))) {
     if (inventory.getQuantity(id) < qty) return false;
   }
   return true;
 }
 
+/** Returns array of { id, missing } for shortfalls; empty if affordable. */
+function recipeShortfall(key, inventory) {
+  const out = [];
+  for (const [id, qty] of Object.entries(recipeNeed(key))) {
+    const have = inventory.getQuantity(id);
+    if (have < qty) out.push({ id, missing: qty - have });
+  }
+  return out;
+}
+
+// ─── Forge — result + brew controls (anchored at top) ────────────────────────
+
+const CRAFT_QTY_OPTIONS = [1, 5, 10];
+
+function ForgeCard({
+  resultPill, rarityColor, allFilled,
+  craftQty, setCraftQty, effectiveQty, canCraft,
+  floatMsgs, onBrew, isDiscoveredFn,
+  t, tGame,
+}) {
+  const showPill   = allFilled && resultPill && isDiscoveredFn(resultPill.id);
+  const isUnknown  = allFilled && resultPill && !isDiscoveredFn(resultPill.id);
+  const isInvalid  = allFilled && !resultPill;
+
+  const brewLabel = canCraft && effectiveQty > 1
+    ? `${t('production.brewBtn')} ×${effectiveQty}`
+    : t('production.brewBtn');
+
+  return (
+    <section className="alc-card alc-forge">
+      <div className="alc-section-title">{t('production.forgeTitle')}</div>
+
+      <div className="alc-forge-body">
+        {showPill && (
+          <>
+            <div className="alc-forge-name" style={{ color: rarityColor }}>
+              {tGame(`items.${resultPill.id}.name`, { defaultValue: resultPill.name })}
+            </div>
+            <ul className="alc-forge-effects">
+              {resultPill.effects.map((eff, i) => (
+                <li key={i} className="alc-forge-effect">{formatEffect(eff)}</li>
+              ))}
+            </ul>
+          </>
+        )}
+        {isUnknown && (
+          <>
+            <div className="alc-forge-name alc-forge-name-unknown">{t('production.unknownRecipe')}</div>
+            <div className="alc-forge-hint">{t('production.unknownRecipeHint')}</div>
+          </>
+        )}
+        {isInvalid && (
+          <>
+            <div className="alc-forge-name alc-forge-name-invalid">{t('production.invalidCombination')}</div>
+            <div className="alc-forge-hint">{t('production.invalidCombinationHint')}</div>
+          </>
+        )}
+        {!allFilled && (
+          <>
+            <div className="alc-forge-name alc-forge-name-idle">—</div>
+            <div className="alc-forge-hint">{t('production.select3Herbs')}</div>
+          </>
+        )}
+
+        {/* Floating "+N Pill" feedback — anchored top-center over the body */}
+        {floatMsgs.map(m => (
+          <span key={m.id} className="alc-float-msg" style={{ color: m.color }}>
+            {m.text}
+          </span>
+        ))}
+      </div>
+
+      <div className="alc-forge-actions">
+        <div className="alc-qty-group" role="group" aria-label="Brew quantity">
+          {CRAFT_QTY_OPTIONS.map(opt => (
+            <button
+              key={opt}
+              type="button"
+              className={`alc-qty-btn ${craftQty === opt ? 'alc-qty-btn-active' : ''}`}
+              onClick={() => setCraftQty(opt)}
+            >×{opt}</button>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="alc-brew-btn"
+          onClick={onBrew}
+          disabled={!canCraft}
+        >
+          {brewLabel}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+// ─── Mixer — slots + cost + herbs (single integrated card) ──────────────────
+
+function MixerCard({
+  slots, activeSlot, setActiveSlot, clearSlot,
+  ownedHerbs, assignHerb, costPreview, allFilled, inventory,
+  t, tGame,
+}) {
+  return (
+    <section className="alc-card alc-mixer">
+      <div className="alc-section-title">{t('production.workshopTitle')}</div>
+
+      <div className="alc-slots-row">
+        {[0, 1, 2].map(i => {
+          const herbId = slots[i];
+          const herb   = herbId ? ITEMS_BY_ID[herbId] : null;
+          const color  = herb ? (RARITY[herb.rarity]?.color ?? '#9ca3af') : null;
+          const active = activeSlot === i;
+          const cls = [
+            'alc-slot',
+            active ? 'alc-slot-active' : '',
+            herb   ? 'alc-slot-filled' : 'alc-slot-empty',
+          ].filter(Boolean).join(' ');
+          return (
+            <button
+              key={i}
+              type="button"
+              className={cls}
+              style={color ? { '--rarity-color': color } : undefined}
+              onClick={() => setActiveSlot(i)}
+            >
+              {herb ? (
+                <>
+                  <span className="alc-slot-name" style={{ color }}>
+                    {tGame(`items.${herb.id}.name`, { defaultValue: herb.name })}
+                  </span>
+                  <span
+                    className="alc-slot-clear"
+                    role="button"
+                    aria-label={t('production.clearSlot')}
+                    onClick={e => { e.stopPropagation(); clearSlot(i); }}
+                  >×</span>
+                </>
+              ) : (
+                <span className="alc-slot-placeholder">+</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Cost line — always rendered, plain text */}
+      <div className="alc-cost-line">
+        <span className="alc-cost-prefix">{t('production.uses')}</span>
+        {allFilled && costPreview.length > 0 ? (
+          costPreview.map((c, i) => {
+            const mat  = ITEMS_BY_ID[c.id];
+            const name = mat ? tGame(`items.${c.id}.name`, { defaultValue: mat.name }) : c.id;
+            const have = inventory.getQuantity(c.id);
+            const ok   = have >= c.qty;
+            return (
+              <span key={c.id} className={ok ? 'alc-cost-item' : 'alc-cost-item alc-cost-item-short'}>
+                {i > 0 ? ', ' : ' '}{c.qty}× {name}
+              </span>
+            );
+          })
+        ) : (
+          <span className="alc-cost-placeholder"> —</span>
+        )}
+      </div>
+
+      <div className="alc-herbs-section">
+        <div className="alc-section-title alc-section-title-quiet">{t('production.herbsTitle')}</div>
+        <div className="alc-herbs-list">
+          {ownedHerbs.length === 0 ? (
+            <div className="alc-herbs-empty">{t('production.noHerbsOwned')}</div>
+          ) : ownedHerbs.map(h => {
+            const color = RARITY[h.rarity]?.color ?? '#9ca3af';
+            return (
+              <button
+                key={h.id}
+                type="button"
+                className="alc-herb"
+                onClick={() => assignHerb(h.id)}
+              >
+                <span className="alc-herb-name" style={{ color }}>
+                  {tGame(`items.${h.id}.name`, { defaultValue: h.name })}
+                </span>
+                <span className="alc-herb-qty">×{inventory.getQuantity(h.id)}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Recipe Codex — pinned/affordable/all browser ───────────────────────────
+
+const CODEX_TABS = [
+  { key: 'pinned',     tKey: 'production.tabPinned' },
+  { key: 'affordable', tKey: 'production.tabAffordable' },
+  { key: 'all',        tKey: 'production.tabAllRecipes' },
+];
+
 function RecipeBrowser({ inventory, pills, onFillSlots }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
 
-  const craftable = useMemo(() => {
+  const allRows = useMemo(() => {
     const rows = [];
     for (const pill of PILLS) {
       if (!pills.isDiscovered(pill.id)) continue;
       const recipes = RECIPES_BY_PILL[pill.id] ?? [];
       for (const key of recipes) {
-        if (canAffordRecipe(key, inventory)) rows.push({ pill, key });
+        const affordable = isRecipeAffordable(key, inventory);
+        const missing    = affordable ? [] : recipeShortfall(key, inventory);
+        rows.push({ pill, key, affordable, missing });
       }
     }
     return rows;
   }, [inventory, pills]);
 
+  const pinnedRows     = useMemo(() => allRows.filter(r => pills.isPinned(r.key)), [allRows, pills]);
+  const affordableRows = useMemo(() => allRows.filter(r => r.affordable),           [allRows]);
+
+  const defaultTab = pinnedRows.length > 0 ? 'pinned' : 'affordable';
+  const [tab, setTab] = useState(defaultTab);
+
+  const visibleRows =
+    tab === 'pinned'     ? pinnedRows :
+    tab === 'affordable' ? affordableRows :
+                           allRows;
+
+  const counts = {
+    pinned:     pinnedRows.length,
+    affordable: affordableRows.length,
+    all:        allRows.length,
+  };
+
+  const emptyText =
+    tab === 'pinned'     ? t('production.noPinned') :
+    tab === 'affordable' ? t('production.noRecipes') :
+                           t('production.noDiscovered');
+
   return (
-    <div className="recipe-browser">
-      <div className="alchemy-section-title">{t('production.craftableRecipes')}</div>
-      <div className="recipe-browser-list">
-        {craftable.length === 0 ? (
-          <p className="recipe-browser-empty">{t('production.noRecipes')}</p>
-        ) : craftable.map(({ pill, key }) => {
+    <section className="alc-card alc-codex">
+      <div className="alc-section-title">{t('production.codexTitle')}</div>
+
+      <div className="alc-codex-tabs" role="tablist">
+        {CODEX_TABS.map(tb => (
+          <button
+            key={tb.key}
+            type="button"
+            role="tab"
+            aria-selected={tab === tb.key}
+            className={`alc-codex-tab ${tab === tb.key ? 'alc-codex-tab-active' : ''}`}
+            onClick={() => setTab(tb.key)}
+          >
+            {t(tb.tKey)} <span className="alc-codex-tab-count">({counts[tb.key]})</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="alc-codex-list">
+        {visibleRows.length === 0 ? (
+          <div className="alc-codex-empty">{emptyText}</div>
+        ) : visibleRows.map(({ pill, key, affordable, missing }) => {
           const herbs      = key.split('|');
           const herbNames  = herbs.map(id => {
             const h = ITEMS_BY_ID[id];
             return h ? tGame(`items.${h.id}.name`, { defaultValue: h.name }) : id;
           });
-          const color    = RARITY[pill.rarity]?.color ?? '#aaa';
+          const color    = RARITY[pill.rarity]?.color ?? '#9ca3af';
           const pillName = tGame(`items.${pill.id}.name`, { defaultValue: pill.name });
+          const pinned   = pills.isPinned(key);
           return (
-            <button key={key} className="recipe-flat-row" onClick={() => onFillSlots(herbs)}>
-              <span className="recipe-flat-herbs">{herbNames.join(' + ')}</span>
-              <span className="recipe-flat-pill" style={{ color }}>→ {pillName}</span>
-            </button>
+            <div
+              key={key}
+              className={`alc-recipe ${affordable ? '' : 'alc-recipe-disabled'}`}
+            >
+              <button
+                type="button"
+                className={`alc-recipe-pin ${pinned ? 'alc-recipe-pin-on' : ''}`}
+                aria-label={pinned ? t('production.unpinRecipe') : t('production.pinRecipe')}
+                aria-pressed={pinned}
+                onClick={(e) => { e.stopPropagation(); pills.togglePin(key); }}
+              >
+                {pinned ? '★' : '☆'}
+              </button>
+              <button
+                type="button"
+                className="alc-recipe-body"
+                onClick={() => onFillSlots(herbs)}
+              >
+                <span className="alc-recipe-herbs">{herbNames.join(' + ')}</span>
+                <span className="alc-recipe-pill" style={{ color }}>{pillName}</span>
+                {!affordable && missing.length > 0 && (
+                  <span className="alc-recipe-missing">
+                    {t('production.missing')}{' '}
+                    {missing.map((m, i) => {
+                      const mat  = ITEMS_BY_ID[m.id];
+                      const name = mat ? tGame(`items.${m.id}.name`, { defaultValue: mat.name }) : m.id;
+                      return (
+                        <span key={m.id}>{i > 0 ? ', ' : ''}{m.missing}× {name}</span>
+                      );
+                    })}
+                  </span>
+                )}
+              </button>
+            </div>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }
 
-const CRAFT_QTY_OPTIONS = [1, 5, 10];
+// ─── AlchemyPanel — orchestrates the three cards ────────────────────────────
 
 function AlchemyPanel({ inventory, pills, tree }) {
   const { t }        = useTranslation('ui');
@@ -121,7 +398,7 @@ function AlchemyPanel({ inventory, pills, tree }) {
 
   const allFilled  = slots[0] && slots[1] && slots[2];
   const resultPill = allFilled ? findPill(slots[0], slots[1], slots[2]) : null;
-  const rarityColor = resultPill ? (RARITY[resultPill.rarity]?.color ?? '#aaa') : null;
+  const rarityColor = resultPill ? (RARITY[resultPill.rarity]?.color ?? '#9ca3af') : null;
 
   const maxAffordable = useMemo(() => {
     if (!allFilled) return 0;
@@ -135,7 +412,15 @@ function AlchemyPanel({ inventory, pills, tree }) {
   }, [slots, allFilled, inventory]);
 
   const effectiveQty = Math.min(craftQty, maxAffordable);
-  const canCraft     = allFilled && resultPill && effectiveQty >= 1;
+  const canCraft     = !!(allFilled && resultPill && effectiveQty >= 1);
+
+  const costPreview = useMemo(() => {
+    if (!allFilled) return [];
+    const perCraft = {};
+    for (const id of slots) perCraft[id] = (perCraft[id] || 0) + 1;
+    const mult = Math.max(1, effectiveQty);
+    return Object.entries(perCraft).map(([id, qty]) => ({ id, qty: qty * mult }));
+  }, [slots, allFilled, effectiveQty]);
 
   const handleCraft = () => {
     if (!canCraft) return;
@@ -157,124 +442,48 @@ function AlchemyPanel({ inventory, pills, tree }) {
       count: n,
       name:  tGame(`items.${resultPill.id}.name`, { defaultValue: resultPill.name }),
     });
-    const color = RARITY[resultPill.rarity]?.color ?? '#aaa';
+    const color = RARITY[resultPill.rarity]?.color ?? '#9ca3af';
     setFloatMsgs(prev => [...prev, { id: msgId, text, color }]);
     setTimeout(() => setFloatMsgs(prev => prev.filter(m => m.id !== msgId)), 1300);
   };
 
   return (
     <div className="alchemy-panel">
-
-      <div className="alchemy-workspace">
-        <div className="alchemy-slots-col">
-          {[0, 1, 2].map(i => {
-            const herb  = slots[i] ? ITEMS_BY_ID[slots[i]] : null;
-            const color = herb ? (RARITY[herb.rarity]?.color ?? '#aaa') : null;
-            return (
-              <button
-                key={i}
-                className={`alchemy-slot-btn${activeSlot === i ? ' alchemy-slot-active' : ''}`}
-                style={color ? { borderColor: color } : undefined}
-                onClick={() => setActiveSlot(i)}
-              >
-                <span className="alchemy-slot-label" style={color ? { color } : undefined}>
-                  {herb
-                    ? tGame(`items.${herb.id}.name`, { defaultValue: herb.name })
-                    : t('production.slot', { n: i + 1 })}
-                </span>
-                {herb && (
-                  <span
-                    className="alchemy-slot-clear"
-                    role="button"
-                    onClick={e => { e.stopPropagation(); clearSlot(i); }}
-                  >×</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="alchemy-herb-picker">
-          {ownedHerbs.length === 0 ? (
-            <div className="alchemy-herb-empty">{t('production.noHerbsOwned')}</div>
-          ) : ownedHerbs.map(h => {
-            const color = RARITY[h.rarity]?.color ?? '#aaa';
-            return (
-              <button key={h.id} className="alchemy-herb-opt" onClick={() => assignHerb(h.id)}>
-                <span className="alchemy-herb-name" style={{ color }}>
-                  {tGame(`items.${h.id}.name`, { defaultValue: h.name })}
-                </span>
-                <span className="alchemy-herb-qty">×{inventory.getQuantity(h.id)}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="alchemy-result">
-        <span className="alchemy-furnace" aria-hidden="true">
-          🔥
-          {floatMsgs.map(m => (
-            <span key={m.id} className="alchemy-float-msg" style={{ color: m.color }}>{m.text}</span>
-          ))}
-        </span>
-        <div className="alchemy-result-body">
-          {allFilled && resultPill && pills.isDiscovered(resultPill.id) && (
-            <div className="alchemy-result-pill">
-              <span className="alchemy-result-name" style={{ color: rarityColor }}>
-                {tGame(`items.${resultPill.id}.name`, { defaultValue: resultPill.name })}
-              </span>
-              <span className="alchemy-result-rarity" style={{ color: rarityColor }}>
-                ({t(`rarity.${resultPill.rarity}`, { defaultValue: resultPill.rarity })})
-              </span>
-              <div className="alchemy-result-effects">
-                {resultPill.effects.map((eff, i) => (
-                  <span key={i} className="alchemy-result-effect">{formatEffect(eff)}</span>
-                ))}
-              </div>
-            </div>
-          )}
-          {allFilled && resultPill && !pills.isDiscovered(resultPill.id) && (
-            <div className="alchemy-result-unknown">{t('production.unknownRecipe')}</div>
-          )}
-          {allFilled && !resultPill && (
-            <div className="alchemy-result-invalid">{t('production.invalidCombination')}</div>
-          )}
-          {!allFilled && (
-            <div className="alchemy-result-hint">{t('production.select3Herbs')}</div>
-          )}
-        </div>
-      </div>
-
-      <div className="alchemy-craft-row">
-        <div className="alchemy-qty-selector" role="group">
-          {CRAFT_QTY_OPTIONS.map(opt => (
-            <button
-              key={opt}
-              className={`alchemy-qty-btn ${craftQty === opt ? 'alchemy-qty-btn-active' : ''}`}
-              onClick={() => setCraftQty(opt)}
-              type="button"
-            >×{opt}</button>
-          ))}
-        </div>
-        <button
-          className={`alchemy-craft-btn ${canCraft ? '' : 'alchemy-craft-btn-disabled'}`}
-          onClick={handleCraft}
-          disabled={!canCraft}
-        >
-          {t('common.craft')}{canCraft && effectiveQty > 1 ? ` ×${effectiveQty}` : ''}
-        </button>
-      </div>
-
+      <ForgeCard
+        resultPill={resultPill}
+        rarityColor={rarityColor}
+        allFilled={allFilled}
+        craftQty={craftQty}
+        setCraftQty={setCraftQty}
+        effectiveQty={effectiveQty}
+        canCraft={canCraft}
+        floatMsgs={floatMsgs}
+        onBrew={handleCraft}
+        isDiscoveredFn={pills.isDiscovered}
+        t={t}
+        tGame={tGame}
+      />
+      <MixerCard
+        slots={slots}
+        activeSlot={activeSlot}
+        setActiveSlot={setActiveSlot}
+        clearSlot={clearSlot}
+        ownedHerbs={ownedHerbs}
+        assignHerb={assignHerb}
+        costPreview={costPreview}
+        allFilled={allFilled}
+        inventory={inventory}
+        t={t}
+        tGame={tGame}
+      />
       <RecipeBrowser inventory={inventory} pills={pills} onFillSlots={fillSlots} />
     </div>
   );
 }
 
-// ─── ProductionScreen ─────────────────────────────────────────────────────────
-// Alchemy is the only production activity now. Artefacts and techniques drop
-// from combat (modified in the Collection screen) and laws drop from major-realm
-// ascension selections.
+// ─── ProductionScreen ───────────────────────────────────────────────────────
+// Alchemy is the only production activity. Artefacts and techniques drop from
+// combat (modified in Collection); laws come from major-realm ascension.
 
 function ProductionScreen({ inventory, pills, tree }) {
   const { t } = useTranslation('ui');

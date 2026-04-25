@@ -22,6 +22,7 @@ import { PILLS_BY_ID } from '../data/pills';
 const SAVE_KEY = 'mai_pills';
 const PERM_KEY = 'mai_permanent_pill_stats';
 const DISC_KEY = 'mai_discovered_pills';
+const PIN_KEY  = 'mai_pinned_recipes';
 
 // Stats that contribute as INCREASED (percentage) type mods.
 // All other stats contribute as FLAT.
@@ -41,6 +42,17 @@ function loadPermanentStats() {
     if (raw) return JSON.parse(raw);
   } catch {}
   return {};
+}
+
+function loadPinned() {
+  try {
+    const raw = localStorage.getItem(PIN_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+  return [];
 }
 
 function loadDiscovered() {
@@ -66,6 +78,7 @@ export default function usePills() {
   const [ownedPills,      setOwnedPills]      = useState(loadOwned);
   const [permanentStats,  setPermanentStats]   = useState(loadPermanentStats);
   const [discoveredPills, setDiscoveredPills]  = useState(loadDiscovered);
+  const [pinnedRecipes,   setPinnedRecipes]   = useState(loadPinned);
 
   // Persist owned pills
   useEffect(() => {
@@ -82,6 +95,11 @@ export default function usePills() {
     try { localStorage.setItem(DISC_KEY, JSON.stringify(discoveredPills)); } catch {}
   }, [discoveredPills]);
 
+  // Persist pinned recipes
+  useEffect(() => {
+    try { localStorage.setItem(PIN_KEY, JSON.stringify(pinnedRecipes)); } catch {}
+  }, [pinnedRecipes]);
+
   const craftPill = useCallback((pillId, n = 1) => {
     if (n <= 0) return;
     setOwnedPills(prev => ({
@@ -92,6 +110,19 @@ export default function usePills() {
   }, []);
 
   const isDiscovered = useCallback((pillId) => !!discoveredPills[pillId], [discoveredPills]);
+
+  const isPinned = useCallback(
+    (recipeKey) => pinnedRecipes.includes(recipeKey),
+    [pinnedRecipes],
+  );
+
+  const togglePin = useCallback((recipeKey) => {
+    setPinnedRecipes(prev =>
+      prev.includes(recipeKey)
+        ? prev.filter(k => k !== recipeKey)
+        : [...prev, recipeKey],
+    );
+  }, []);
 
   /**
    * Consume one pill permanently.
@@ -177,11 +208,14 @@ export default function usePills() {
     ownedPills,
     permanentStats,
     discoveredPills,
+    pinnedRecipes,
     craftPill,
     usePill,
     consumeAll,
     getOwnedCount,
     isDiscovered,
+    isPinned,
+    togglePin,
     getStatModifiers,
     getQiMult,
   };
