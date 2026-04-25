@@ -225,6 +225,7 @@ function CrystalFeedModal({ crystal, inventory, onClose, onEvolve }) {
           <button className="journey-close" onClick={onClose} aria-label="Close">✕</button>
         </div>
 
+        <div className="cfm-modal-body">
         {/* ── Refinement progress ── */}
         <div className="cfm-progress-wrap">
           <div className="cfm-progress-track">
@@ -333,6 +334,7 @@ function CrystalFeedModal({ crystal, inventory, onClose, onEvolve }) {
               </span>
             )}
           </div>
+        </div>
         </div>
 
         <button

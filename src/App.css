@@ -3208,15 +3208,21 @@ html, body, * {
   border: 1px solid rgba(var(--ui-purple-rgb), 0.35);
   border-radius: 18px;
   width: min(96vw, 380px);
-  /* Fixed-ish height so the refine button never shifts between taps.
-     Height is clamped to a value that fits the fullest possible content
-     while still respecting small viewports via var(--modal-max-h). */
-  height: min(var(--modal-max-h), 600px);
+  /* Header + body + refine button laid out as a flex column. The body scrolls
+     when content exceeds the clamp, so the modal always fits between top bar
+     and nav with breathing room from --modal-max-h. */
+  max-height: min(var(--modal-max-h), 600px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: modal-pop 0.22s ease-out;
   box-shadow: 0 0 40px rgba(var(--ui-purple-rgb), 0.15), 0 8px 32px rgba(0,0,0,0.6);
+}
+
+.cfm-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* ── Header ── */
