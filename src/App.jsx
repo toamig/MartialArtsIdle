@@ -489,8 +489,7 @@ function App() {
     onUnlock: (featureId, msg) => {
       const SCREEN = {
         worlds: 'worlds', gathering: 'worlds', mining: 'worlds',
-        production: 'production', transmutation: 'production',
-        alchemy: 'production',
+        production: 'production', alchemy: 'production',
         character: 'character', collection: 'collection',
         qi_crystal: 'home',
       };
@@ -605,7 +604,7 @@ function App() {
                     />,
     character:  <CharacterScreen cultivation={cultivation} techniques={techniques} artefacts={artefacts} selections={selections} pills={pills} tree={tree} />,
     collection: <CollectionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} />,
-    production: <ProductionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} pills={pills} tree={tree} isUnlocked={featureFlags.isUnlocked} getHint={featureFlags.getHint} getDesc={featureFlags.getDesc} />,
+    production: <ProductionScreen inventory={inventory} pills={pills} tree={tree} />,
     settings:   null,
     reincarnation: <EternalTreeScreen
                      karma={karma.karma}

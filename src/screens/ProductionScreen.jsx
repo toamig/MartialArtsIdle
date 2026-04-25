@@ -1,531 +1,10 @@
 // @refresh reset
 import { useState, useMemo, useRef } from 'react';
-import LockTooltip from '../components/LockTooltip';
 import { useTranslation } from 'react-i18next';
-import { QUALITY, ARTEFACTS_BY_ID } from '../data/artefacts';
-import { formatArtefactName } from '../data/artefactNames';
-import { LAW_RARITY } from '../data/laws';
-import { TECHNIQUE_QUALITY } from '../data/techniques';
 import { HERB_ITEMS, ALL_MATERIALS, RARITY } from '../data/materials';
-import { MOD } from '../data/stats';
-import { RARITY_TIER } from '../data/affixPools';
-import { AFFIX_UNIQUE_COLOR as UNIQUE_COLOR, formatAffixValue } from '../data/affixDisplay';
-import ArtefactTooltip, { useTooltipPos } from '../components/ArtefactTooltip';
 import { findPill, PILLS, PILLS_BY_ID, RECIPES_BY_PILL } from '../data/pills';
 
 const ITEMS_BY_ID = { ...ALL_MATERIALS, ...PILLS_BY_ID };
-import { formatUniqueDescription } from '../data/lawUniques';
-import { TECH_NEXT_QUALITY } from '../hooks/useTechniques';
-import { LAW_NEXT_RARITY } from '../hooks/useCultivation';
-import {
-  SLOT_BRACKETS,
-  getActiveBrackets,
-  getActiveArtefactBrackets,
-  getBracketCost as bracketCost,
-  UPGRADE_COSTS,
-  getUpgradeCosts,
-} from '../data/crafting';
-
-/**
- * Group items by their actual `tier` field into rarity brackets.
- * Each bracket shows all filled items of that tier, plus ONE empty slot
- * when the tier is below its limit. The same affix ID can repeat across
- * different tiers (e.g. Iron Sharpness + Bronze Sharpness).
- */
-function buildBracketSlots(items, rarity, bracketsProvider = getActiveBrackets) {
-  const brackets = bracketsProvider(rarity);
-  return brackets.map(b => {
-    const slots = [];
-    items.forEach((item, gIdx) => {
-      const itemTier = item.tier ?? 'Iron';
-      if (itemTier === b.label) {
-        slots.push({ filled: true, item, gIdx });
-      }
-    });
-    if (slots.length < b.count) {
-      slots.push({ filled: false });
-    }
-    return { ...b, slots };
-  });
-}
-
-// bracketCost, SLOT_BRACKETS, getActiveBrackets, UPGRADE_COSTS are all
-// imported from src/data/crafting.js — edit costs there, not here.
-
-// ─── Quality label helpers ───────────────────────────────────────────────────
-
-function artQuality(rarity)  { return QUALITY[rarity]           ?? { label: rarity,  color: '#aaa' }; }
-function techQuality(quality){ return TECHNIQUE_QUALITY[quality] ?? { label: quality, color: '#aaa' }; }
-function lawQuality(rarity)  { return LAW_RARITY[rarity]         ?? { label: rarity,  color: '#aaa' }; }
-
-// ─── Value display helpers ────────────────────────────────────────────────────
-// STAT_LABELS, PCT_FLAT_STATS, UNIQUE_COLOR and formatAffixValue live in
-// src/data/affixDisplay.js so the Equip tab renders identical strings.
-
-// formatMultLabel is called inside components that have t() available
-function formatMultLabel(key, t) {
-  switch (key) {
-    case 'cultivationSpeedMult': return t('statNames.cultivation_speed');
-    default:                     return key;
-  }
-}
-
-// ─── Cost helpers ─────────────────────────────────────────────────────────────
-
-function CostBadge({ costs, inventory }) {
-  return (
-    <span className="tx-craft-cost">
-      {costs.map(c => {
-        const mat  = ITEMS_BY_ID[c.itemId];
-        const have = inventory.getQuantity(c.itemId);
-        const ok   = have >= c.qty;
-        return (
-          <span key={c.itemId} className={`tx-craft-cost-item ${ok ? 'tx-cost-ok' : 'tx-cost-short'}`}>
-            {mat?.name ?? c.itemId} x{c.qty}
-          </span>
-        );
-      })}
-    </span>
-  );
-}
-
-function canAfford(costs, inventory) {
-  return costs.every(c => inventory.getQuantity(c.itemId) >= c.qty);
-}
-
-function spend(costs, inventory) {
-  for (const c of costs) inventory.removeItem(c.itemId, c.qty);
-}
-
-function CostRow({ itemId, needed, owned }) {
-  const mat  = ITEMS_BY_ID[itemId];
-  const name = mat?.name ?? itemId;
-  const has  = owned >= needed;
-  return (
-    <div className="tx-cost-row">
-      <span className="tx-cost-name">{name}</span>
-      <span className={`tx-cost-qty ${has ? 'tx-cost-ok' : 'tx-cost-short'}`}>
-        {needed} <span className="tx-cost-sep">/</span> {owned}
-      </span>
-    </div>
-  );
-}
-
-// ─── Modifier rows ────────────────────────────────────────────────────────────
-
-// AffixRow removed in stage 14 — it was used only by the deleted
-// ArtefactDetail panel (stage 13). Techniques still use PassiveRow below.
-
-function PassiveRow({ passive, gIdx, color, mineralMod, inventory, onReplace }) {
-  const replaceCosts = bracketCost(null, mineralMod, 'replace');
-  return (
-    <div className="tx-mod-row" style={{ borderLeft: `3px solid ${color}` }}>
-      <div className="tx-mod-left">
-        <span className="tx-mod-desc" style={{ color }}>{passive.description}</span>
-      </div>
-      <div className="tx-mod-actions">
-        <button
-          className={`tx-craft-btn ${canAfford(replaceCosts, inventory) ? '' : 'tx-craft-btn-disabled'}`}
-          onClick={() => { if (canAfford(replaceCosts, inventory)) { spend(replaceCosts, inventory); onReplace(gIdx); } }}
-          title="Replace — swap for a different passive"
-        >
-          ↺
-          <CostBadge costs={replaceCosts} inventory={inventory} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function MultRow({ label, value, multKey, mineralStat, inventory, onHone }) {
-  const honeCosts = bracketCost(mineralStat, null, 'hone');
-  return (
-    <div className="tx-mod-row">
-      <div className="tx-mod-left">
-        <span className="tx-mod-name">{label}</span>
-        <span className="tx-mod-value">x{value.toFixed(2)}</span>
-      </div>
-      <div className="tx-mod-actions">
-        <button
-          className={`tx-craft-btn ${canAfford(honeCosts, inventory) ? '' : 'tx-craft-btn-disabled'}`}
-          onClick={() => { if (canAfford(honeCosts, inventory)) { spend(honeCosts, inventory); onHone(multKey); } }}
-          title="Hone — randomize value"
-        >
-          ⟳
-          <CostBadge costs={honeCosts} inventory={inventory} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function EmptySlotRow({ color, mineralStat, craftCount = 0, inventory, onAdd }) {
-  const { t } = useTranslation('ui');
-  const addCosts = bracketCost(mineralStat, null, 'add', craftCount);
-  return (
-    <div className="tx-mod-row tx-mod-row-empty" style={{ borderLeft: `3px solid ${color}` }}>
-      <div className="tx-mod-left">
-        <span className="tx-mod-empty" style={{ color }}>{t('production.emptySlot')}</span>
-      </div>
-      <div className="tx-mod-actions">
-        <button
-          className={`tx-craft-btn tx-craft-btn-add ${canAfford(addCosts, inventory) ? '' : 'tx-craft-btn-disabled'}`}
-          onClick={() => { if (canAfford(addCosts, inventory)) { spend(addCosts, inventory); onAdd(); } }}
-          title="Add — fill with a random modifier"
-        >
-          +
-          <CostBadge costs={addCosts} inventory={inventory} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Bracket section renderer ────────────────────────────────────────────────
-
-function BracketSection({ bracket, renderFilled, renderEmpty }) {
-  if (!bracket.slots.length) return null;
-  return (
-    <div className="tx-bracket">
-      <div className="tx-bracket-label" style={{ color: bracket.color }}>
-        {bracket.label}
-      </div>
-      <div className="tx-mod-list">
-        {bracket.slots.map((slot, i) =>
-          slot.filled
-            ? renderFilled(slot, i, bracket)
-            : renderEmpty(i, bracket)
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Upgrade section ──────────────────────────────────────────────────────────
-
-function UpgradeSection({ rarity, nextQ, inventory, onUpgrade, kind = 'artefact' }) {
-  const { t } = useTranslation('ui');
-  // Laws have their own (heavier) cost table.
-  const upgCost   = getUpgradeCosts(kind, rarity);
-  const upgAfford = upgCost?.every(c => inventory.getQuantity(c.itemId) >= c.qty) ?? false;
-
-  if (!nextQ) return <p className="tx-max-quality">{t('production.alreadyMaxQuality')}</p>;
-
-  return (
-    <div className="tx-upgrade-section">
-      <div className="tx-upgrade-arrow">
-        <span style={{ color: nextQ.color, fontWeight: 700 }}>
-          {t('production.upgradeTo', { quality: t(`quality.${nextQ.label}`, { defaultValue: nextQ.label }) })}
-        </span>
-      </div>
-      <div className="tx-cost-list">
-        {upgCost.map(c => (
-          <CostRow key={c.itemId} itemId={c.itemId} needed={c.qty} owned={inventory.getQuantity(c.itemId)} />
-        ))}
-      </div>
-      <button
-        className={`tx-upgrade-btn ${upgAfford ? '' : 'tx-upgrade-btn-disabled'}`}
-        onClick={() => {
-          if (!upgAfford) return;
-          for (const c of upgCost) inventory.removeItem(c.itemId, c.qty);
-          onUpgrade();
-        }}
-        disabled={!upgAfford}
-      >
-        {t('common.upgrade')}
-      </button>
-    </div>
-  );
-}
-
-// ─── Detail panels ─────────────────────────────────────────────────────────
-
-// ArtefactDetail removed in stage 13 of the Damage & Element Overhaul.
-// Artefacts no longer participate in refining / honing / replacing / adding
-// / rarity-upgrading. Their upgrade UI lives in the Collection tab — see
-// CollectionScreen's selected-artefact modal (stages 9–10).
-
-function TechniqueDetail({ tech, techniques, inventory }) {
-  const { t }        = useTranslation('ui');
-  const { t: tGame } = useTranslation('game');
-  const q        = techQuality(tech.quality);
-  const passives = tech.passives ?? [];
-  const brackets = buildBracketSlots(passives, tech.quality);
-
-  const totalFilled = passives.length;
-  const totalCapacity = getActiveBrackets(tech.quality).reduce((s, b) => s + b.count, 0);
-  const nextQn      = TECH_NEXT_QUALITY[tech.quality];
-  const nextQ       = nextQn ? techQuality(nextQn) : null;
-
-  return (
-    <div className="tx-detail-panel">
-      <div className="tx-detail-header">
-        <div>
-          <span className="tx-item-name">{tGame(`techniques.${tech.id}.name`, { defaultValue: tech.name })}</span>
-          <span className="tx-item-sub">{t(`techniqueTypes.${tech.type}`, { defaultValue: tech.type })} · {t(`techniqueRanks.${tech.rank}`, { defaultValue: tech.rank })} · {t(`elements.${tech.element}`, { defaultValue: tech.element })}</span>
-        </div>
-        <span className="tx-quality-badge" style={{ color: q.color, borderColor: q.color }}>{t(`quality.${tech.quality}`, { defaultValue: q.label })}</span>
-      </div>
-
-      {/* Stats */}
-      <div className="tx-section-title">{t('production.stats')}</div>
-      <div className="tx-stat-list">
-        {tech.type === 'Attack' && (
-          <>
-            {tech.arteMult   != null && <div className="tx-stat-row"><span>Arte Mult.</span><span>x{tech.arteMult.toFixed(2)}</span></div>}
-            {tech.elemBonus  != null && tech.elemBonus !== 1 && <div className="tx-stat-row"><span>Elem. Bonus</span><span>x{tech.elemBonus.toFixed(2)}</span></div>}
-          </>
-        )}
-        {tech.type === 'Heal' && tech.healPercent != null && (
-          <div className="tx-stat-row"><span>Heal</span><span>{Math.round(tech.healPercent * 100)}% HP</span></div>
-        )}
-        {tech.type === 'Defend' && (
-          <>
-            {tech.defMult     != null && <div className="tx-stat-row"><span>DEF Mult.</span><span>x{tech.defMult.toFixed(2)}</span></div>}
-            {tech.buffAttacks != null && <div className="tx-stat-row"><span>Covers</span><span>{tech.buffAttacks} hits</span></div>}
-          </>
-        )}
-        {tech.type === 'Dodge' && (
-          <>
-            {tech.dodgeChance != null && <div className="tx-stat-row"><span>Dodge Chance</span><span>{Math.round(tech.dodgeChance * 100)}%</span></div>}
-            {tech.buffAttacks != null && <div className="tx-stat-row"><span>Covers</span><span>{tech.buffAttacks} hits</span></div>}
-          </>
-        )}
-      </div>
-
-      {/* Passives */}
-      <div className="tx-section-title">{t('production.passives', { filled: totalFilled, capacity: totalCapacity })}</div>
-      {brackets.map((b, bi) => (
-        <BracketSection
-          key={bi}
-          bracket={b}
-          renderFilled={(slot, i) => (
-            <PassiveRow
-              key={`f-${bi}-${i}`}
-              passive={slot.item}
-              gIdx={slot.gIdx}
-              color={b.color}
-              mineralMod={b.mineralMod}
-              inventory={inventory}
-              onReplace={(idx) => techniques.replacePassive(tech.id, idx)}
-            />
-          )}
-          renderEmpty={(i) => (
-            <EmptySlotRow
-              key={`e-${bi}-${i}`}
-              color={b.color}
-              mineralStat={b.mineralStat}
-              inventory={inventory}
-              onAdd={() => techniques.addPassive(tech.id, b.label)}
-            />
-          )}
-        />
-      ))}
-
-      {/* Upgrade */}
-      <div className="tx-section-title">{t('production.upgradeQuality')}</div>
-      <UpgradeSection
-        rarity={tech.quality}
-        nextQ={nextQ}
-        inventory={inventory}
-        onUpgrade={() => techniques.upgradeTechnique(tech.id)}
-      />
-    </div>
-  );
-}
-
-function LawUniqueRow({ tier, color, mineralStat, mineralMod, entry, inventory, onHone, onReplace }) {
-  const honeCosts    = bracketCost(mineralStat, mineralMod, 'hone');
-  const replaceCosts = bracketCost(mineralStat, mineralMod, 'replace');
-  const text = entry ? formatUniqueDescription(entry.id, entry.value) : '— Empty —';
-  return (
-    <div className="tx-mod-row" style={{ borderLeft: `3px solid ${color}` }}>
-      <div className="tx-mod-left">
-        <span className="tx-mod-desc" style={{ color }}>{text}</span>
-      </div>
-      <div className="tx-mod-actions">
-        <button
-          className={`tx-craft-btn ${canAfford(honeCosts, inventory) ? '' : 'tx-craft-btn-disabled'}`}
-          onClick={() => { if (canAfford(honeCosts, inventory)) { spend(honeCosts, inventory); onHone(); } }}
-          title="Hone — reroll the value"
-        >
-          ⟳
-          <CostBadge costs={honeCosts} inventory={inventory} />
-        </button>
-        <button
-          className={`tx-craft-btn ${canAfford(replaceCosts, inventory) ? '' : 'tx-craft-btn-disabled'}`}
-          onClick={() => { if (canAfford(replaceCosts, inventory)) { spend(replaceCosts, inventory); onReplace(); } }}
-          title="Replace — swap for a different unique modifier"
-        >
-          ↺
-          <CostBadge costs={replaceCosts} inventory={inventory} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function LawDetail({ law, cultivation, inventory }) {
-  const { t }        = useTranslation('ui');
-  const { t: tGame } = useTranslation('game');
-  const q        = lawQuality(law.rarity);
-  const uniques  = law.uniques ?? {};
-  const activeBrackets = getActiveBrackets(law.rarity);
-  const nextRn   = LAW_NEXT_RARITY[law.rarity];
-  const nextQ       = nextRn ? lawQuality(nextRn) : null;
-
-  // Law multipliers: hone (stat roll) uses mineralStat, replace uses mineralMod
-  const baseTier       = RARITY_TIER[law.rarity] ?? 1;
-  const baseMineralStat = SLOT_BRACKETS[baseTier - 1]?.mineralStat ?? 'iron_mineral_1';
-  const baseMineralMod  = SLOT_BRACKETS[baseTier - 1]?.mineralMod  ?? 'iron_mineral_2';
-
-  // Only cultivation speed is honable. Essence/Soul/Body are balanced by design
-  // (their sum is fixed) — modifying them individually would break that balance.
-  const MULT_KEYS = ['cultivationSpeedMult'];
-
-  return (
-    <div className="tx-detail-panel">
-      <div className="tx-detail-header">
-        <div>
-          <span className="tx-item-name">{tGame(`laws.${law.id}.name`, { defaultValue: law.name })}</span>
-          <span className="tx-item-sub">{t(`elements.${law.element}`, { defaultValue: law.element })} · {law.realmRequirementLabel ?? ''}</span>
-        </div>
-        <span className="tx-quality-badge" style={{ color: q.color, borderColor: q.color }}>{t(`quality.${law.rarity}`, { defaultValue: q.label })}</span>
-      </div>
-
-      {/* Multipliers */}
-      <div className="tx-section-title">{t('production.multipliers')}</div>
-      <div className="tx-mod-list">
-        {MULT_KEYS.map(key => (
-          <MultRow
-            key={key}
-            label={formatMultLabel(key, t)}
-            value={law[key] ?? 0}
-            multKey={key}
-            mineralStat={baseMineralStat}
-            inventory={inventory}
-            onHone={(mk) => cultivation.honeLawMult(law.id, mk)}
-          />
-        ))}
-      </div>
-
-      {/* Unique Modifiers (one per tier, up to law rarity) */}
-      <div className="tx-section-title">{t('production.uniqueModifiers', { active: activeBrackets.length, total: activeBrackets.length })}</div>
-      {activeBrackets.map((b) => {
-        const entry = uniques[b.label];
-        return (
-          <LawUniqueRow
-            key={b.label}
-            tier={b.label}
-            color={b.color}
-            mineralStat={b.mineralStat}
-            mineralMod={b.mineralMod}
-            entry={entry}
-            inventory={inventory}
-            onHone={() => cultivation.honeLawUnique(law.id, b.label)}
-            onReplace={() => cultivation.replaceLawUnique(law.id, b.label)}
-          />
-        );
-      })}
-
-      {/* Upgrade */}
-      <div className="tx-section-title">{t('production.upgradeQuality')}</div>
-      <UpgradeSection
-        rarity={law.rarity}
-        nextQ={nextQ}
-        inventory={inventory}
-        kind="law"
-        onUpgrade={() => cultivation.upgradeLaw(law.id)}
-      />
-    </div>
-  );
-}
-
-// ─── TransmutationPanel ──────────────────────────────────────────────────────
-
-function TransmutationPanel({ inventory, artefacts, techniques, cultivation }) {
-  const { t }        = useTranslation('ui');
-  const { t: tGame } = useTranslation('game');
-  const [itemTab,  setItemTab]  = useState('techniques');
-  const [selected, setSelected] = useState(null);
-
-  // Artefact refining / transmutation was removed in the Damage & Element
-  // Overhaul. Artefacts drop fully-rolled and are upgraded in the Collection
-  // tab (see obsidian/Artefacts.md). Only techniques + laws remain here.
-  const ITEM_TABS = [
-    { key: 'techniques', tKey: 'inventory.tabTechniques' },
-    { key: 'laws',       tKey: 'inventory.tabLaws'       },
-  ];
-
-  const switchTab = (tab) => { setItemTab(tab); setSelected(null); };
-
-  let selectedInst = null;
-  if (selected) {
-    if (itemTab === 'techniques') selectedInst = techniques.ownedTechniques[selected] ?? null;
-    if (itemTab === 'laws')       selectedInst = cultivation.ownedLaws.find(l => l.id === selected) ?? null;
-  }
-
-  return (
-    <div className="tx-panel">
-      <div className="inv-tabs">
-        {ITEM_TABS.map(tab => (
-          <button
-            key={tab.key}
-            className={`inv-tab ${itemTab === tab.key ? 'inv-tab-active' : ''}`}
-            onClick={() => switchTab(tab.key)}
-          >
-            {t(tab.tKey)}
-          </button>
-        ))}
-      </div>
-
-      <div className="inv-grid tx-item-grid">
-        {itemTab === 'techniques' && Object.values(techniques.ownedTechniques).map(tech => {
-          const q = techQuality(tech.quality);
-          return (
-            <button
-              key={tech.id}
-              className={`inv-slot tx-slot ${selected === tech.id ? 'tx-slot-selected' : ''}`}
-              style={{ borderColor: q.color }}
-              onClick={() => setSelected(tech.id === selected ? null : tech.id)}
-            >
-              <span className="inv-quality-gem" style={{ color: q.color }}>◆</span>
-              <span className="inv-name" style={{ color: q.color }}>{tGame(`techniques.${tech.id}.name`, { defaultValue: tech.name })}</span>
-              <span className="inv-slot-label">{t(`techniqueTypes.${tech.type}`, { defaultValue: tech.type })}</span>
-            </button>
-          );
-        })}
-
-        {itemTab === 'laws' && cultivation.ownedLaws.map(law => {
-          const q = lawQuality(law.rarity);
-          return (
-            <button
-              key={law.id}
-              className={`inv-slot tx-slot ${selected === law.id ? 'tx-slot-selected' : ''}`}
-              style={{ borderColor: q.color }}
-              onClick={() => setSelected(law.id === selected ? null : law.id)}
-            >
-              <span className="inv-quality-gem" style={{ color: q.color }}>◆</span>
-              <span className="inv-name" style={{ color: q.color }}>{tGame(`laws.${law.id}.name`, { defaultValue: law.name })}</span>
-              <span className="inv-slot-label">{t(`elements.${law.element}`, { defaultValue: law.element })}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {selectedInst && itemTab === 'techniques' && (
-        <TechniqueDetail tech={selectedInst} techniques={techniques} inventory={inventory} />
-      )}
-      {selectedInst && itemTab === 'laws' && (
-        <LawDetail law={selectedInst} cultivation={cultivation} inventory={inventory} />
-      )}
-
-      {!selected && (
-        <p className="tx-hint">{t('production.selectInspect')}</p>
-      )}
-    </div>
-  );
-}
 
 // ─── AlchemyPanel ────────────────────────────────────────────────────────────
 
@@ -552,12 +31,6 @@ function formatEffect(eff) {
   return `+${eff.value} ${label}`;
 }
 
-// HerbSelector replaced by inline herb picker in AlchemyPanel.
-
-// Refining was removed — artefacts and techniques now drop from combat,
-// and laws come from major-realm ascension selections (see useSelections).
-
-/** Check if the player can afford a recipe key ("herb|herb|herb"). */
 function canAffordRecipe(key, inventory) {
   const ids = key.split('|');
   const needed = {};
@@ -567,8 +40,6 @@ function canAffordRecipe(key, inventory) {
   }
   return true;
 }
-
-// ─── RecipeBrowser — flat scrollable list, no accordion ─────────────────────
 
 function RecipeBrowser({ inventory, pills, onFillSlots }) {
   const { t }        = useTranslation('ui');
@@ -588,7 +59,7 @@ function RecipeBrowser({ inventory, pills, onFillSlots }) {
 
   return (
     <div className="recipe-browser">
-      <div className="tx-section-title">{t('production.craftableRecipes')}</div>
+      <div className="alchemy-section-title">{t('production.craftableRecipes')}</div>
       <div className="recipe-browser-list">
         {craftable.length === 0 ? (
           <p className="recipe-browser-empty">{t('production.noRecipes')}</p>
@@ -629,7 +100,6 @@ function AlchemyPanel({ inventory, pills, tree }) {
     [inventory],
   );
 
-  // Assign a herb to the active slot, then auto-advance to the next empty slot.
   const assignHerb = (herbId) => {
     const newSlots = [...slots];
     newSlots[activeSlot] = herbId;
@@ -695,7 +165,6 @@ function AlchemyPanel({ inventory, pills, tree }) {
   return (
     <div className="alchemy-panel">
 
-      {/* ── Workspace: slot targets (left) + herb picker (right) ── */}
       <div className="alchemy-workspace">
         <div className="alchemy-slots-col">
           {[0, 1, 2].map(i => {
@@ -742,7 +211,6 @@ function AlchemyPanel({ inventory, pills, tree }) {
         </div>
       </div>
 
-      {/* ── Furnace + result strip ── */}
       <div className="alchemy-result">
         <span className="alchemy-furnace" aria-hidden="true">
           🔥
@@ -778,7 +246,6 @@ function AlchemyPanel({ inventory, pills, tree }) {
         </div>
       </div>
 
-      {/* ── Craft controls ── */}
       <div className="alchemy-craft-row">
         <div className="alchemy-qty-selector" role="group">
           {CRAFT_QTY_OPTIONS.map(opt => (
@@ -799,66 +266,24 @@ function AlchemyPanel({ inventory, pills, tree }) {
         </button>
       </div>
 
-      {/* ── Recipe browser ── */}
       <RecipeBrowser inventory={inventory} pills={pills} onFillSlots={fillSlots} />
     </div>
   );
 }
 
 // ─── ProductionScreen ─────────────────────────────────────────────────────────
+// Alchemy is the only production activity now. Artefacts and techniques drop
+// from combat (modified in the Collection screen) and laws drop from major-realm
+// ascension selections.
 
-function ProductionScreen({ inventory, artefacts, techniques, cultivation, pills, tree, isUnlocked = () => true, getHint = () => null, getDesc = () => null }) {
+function ProductionScreen({ inventory, pills, tree }) {
   const { t } = useTranslation('ui');
-
-  const PROD_TABS = [
-    { key: 'alchemy',       tKey: 'production.tabAlchemy',       feature: 'alchemy'       },
-    { key: 'transmutation', tKey: 'production.tabTransmutation', feature: 'transmutation' },
-  ];
-
-  // Default to the first unlocked tab so a freshly-unlocked player doesn't land
-  // on a locked tab. Falls back to transmutation when everything is unlocked.
-  const firstUnlocked = PROD_TABS.find(tb => isUnlocked(tb.feature))?.key ?? 'transmutation';
-  const [activeTab, setActiveTab] = useState(firstUnlocked);
-
-  const activeUnlocked = isUnlocked(
-    PROD_TABS.find(tb => tb.key === activeTab)?.feature ?? activeTab,
-  );
 
   return (
     <div className="screen production-screen">
       <h1>{t('production.title')}</h1>
       <p className="subtitle">{t('production.subtitle')}</p>
-
-      <div className="inv-tabs">
-        {PROD_TABS.map(tab => {
-          const unlocked = isUnlocked(tab.feature);
-          const hint     = !unlocked ? getHint(tab.feature) : null;
-          const desc     = !unlocked ? getDesc(tab.feature) : null;
-          return (
-            <button
-              key={tab.key}
-              className={`inv-tab ${activeTab === tab.key ? 'inv-tab-active' : ''}${!unlocked ? ' inv-tab-locked' : ''}`}
-              onClick={() => unlocked && setActiveTab(tab.key)}
-            >
-              <span className="inv-tab-label">{!unlocked && '🔒 '}{t(tab.tKey)}</span>
-              {!unlocked && <LockTooltip desc={desc} hint={hint} position="below" />}
-            </button>
-          );
-        })}
-      </div>
-
-      {activeUnlocked && activeTab === 'alchemy' && (
-        <AlchemyPanel inventory={inventory} pills={pills} tree={tree} />
-      )}
-
-      {activeUnlocked && activeTab === 'transmutation' && (
-        <TransmutationPanel
-          inventory={inventory}
-          artefacts={artefacts}
-          techniques={techniques}
-          cultivation={cultivation}
-        />
-      )}
+      <AlchemyPanel inventory={inventory} pills={pills} tree={tree} />
     </div>
   );
 }

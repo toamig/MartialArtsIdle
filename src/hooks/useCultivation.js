@@ -4,21 +4,12 @@ import AudioManager from '../audio/AudioManager';
 // DEFAULT_LAW / THREE_HARMONY_MANUAL no longer auto-seed the library.
 // Laws enter via major-breakthrough selections (see useSelections).
 import { saveGame, loadGame } from '../systems/save';
-import { rollLawMult } from '../data/affixPools';
-import { pickRandomUnique, rollUniqueValue } from '../data/lawUniques';
 import { evaluateLawUniques, buildContext } from '../systems/lawEngine';
 import { computeStat, MOD } from '../data/stats';
 
 const OWNED_LAWS_KEY   = 'mai_owned_laws';
 const ACTIVE_LAW_KEY   = 'mai_active_law';
 export const MAX_LAWS = 100;
-
-export const LAW_NEXT_RARITY = {
-  Iron:   'Bronze',
-  Bronze: 'Silver',
-  Silver: 'Gold',
-  Gold:   'Transcendent',
-};
 
 function loadOwnedLaws() {
   try {
@@ -92,37 +83,6 @@ export default function useCultivation() {
     });
   }, []);
 
-  const upgradeLaw = useCallback((lawId) => {
-    setOwnedLaws(prev => prev.map(law => {
-      if (law.id !== lawId) return law;
-      const next = LAW_NEXT_RARITY[law.rarity];
-      if (!next) return law;
-      return { ...law, rarity: next };
-    }));
-  }, []);
-
-  /** Re-roll one law multiplier within the rarity range. */
-  const honeLawMult = useCallback((lawId, multKey) => {
-    setOwnedLaws(prev => prev.map(law => {
-      if (law.id !== lawId) return law;
-      const newVal = rollLawMult(multKey, law.rarity);
-      return { ...law, [multKey]: newVal };
-    }));
-  }, []);
-
-  /** Replace the unique modifier at a given tier with a different one. */
-  const replaceLawUnique = useCallback((lawId, tier) => {
-    setOwnedLaws(prev => prev.map(law => {
-      if (law.id !== lawId) return law;
-      const uniques = law.uniques ?? {};
-      const currentIds = Object.values(uniques).filter(Boolean).map(u => u.id);
-      // Pass the full law so the picker can filter by pool (law.types ∪ general).
-      const newUnique = pickRandomUnique(law, currentIds);
-      if (!newUnique) return law;
-      return { ...law, uniques: { ...uniques, [tier]: newUnique } };
-    }));
-  }, []);
-
   /**
    * Dismantle an owned law. Refuses if it's the currently active law
    * (unequip it first). Returns the rarity on success so the caller
@@ -141,18 +101,6 @@ export default function useCultivation() {
     });
     return rarity;
   }, [activeLawId]);
-
-  /** Re-roll the value of an existing unique at a given tier. */
-  const honeLawUnique = useCallback((lawId, tier) => {
-    setOwnedLaws(prev => prev.map(law => {
-      if (law.id !== lawId) return law;
-      const uniques = law.uniques ?? {};
-      const current = uniques[tier];
-      if (!current) return law;
-      const newValue = rollUniqueValue(current.id);
-      return { ...law, uniques: { ...uniques, [tier]: { ...current, value: newValue } } };
-    }));
-  }, []);
 
   const [offlineEarnings, setOfflineEarnings] = useState(() => {
     // Calculate qi earned while the app was closed
@@ -450,10 +398,6 @@ export default function useCultivation() {
     isLawUnlocked: !!activeLaw && realmIndex >= (activeLaw.realmRequirement ?? 0),
     ownedLaws,
     addOwnedLaw,
-    upgradeLaw,
-    honeLawMult,
-    replaceLawUnique,
-    honeLawUnique,
     dismantleLaw,
     // Pill qi multiplier ref — updated by App.jsx
     pillQiMultRef,

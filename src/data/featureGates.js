@@ -57,7 +57,7 @@ const BASELINE = {
   },
   mining: {
     gate: { type: 'realm', minRealmIndex: 7 },
-    desc: 'Dispatch an idle worker to extract ores from cleared regions. Materials fuel transmutation and upgrades.',
+    desc: 'Dispatch an idle worker to extract ores from cleared regions.',
     hint: 'Reach Tempered Body Layer 8',
     unlockMsg: 'Mining unlocked.',
   },
@@ -67,36 +67,16 @@ const BASELINE = {
     hint: null,
     unlockMsg: null,
   },
-  // Production screen unlocks as soon as the player has ANY crafting
-  // material — herbs (gathered), minerals (mined), or blood cores (combat drop).
-  // Individual sub-tabs still gate on their source activity below.
+  // Production screen unlocks the first time the player gathers a herb —
+  // alchemy is the only activity here.
   production: {
-    gate: { type: 'any', gates: [
-      { type: 'item_category', category: 'herbs' },
-      { type: 'item_category', category: 'minerals' },
-      { type: 'item_category', category: 'bloodCores' },
-    ] },
-    desc: 'Craft cultivation pills, transmute and upgrade gear, and smelt raw materials into powerful equipment.',
-    hint: 'Gather herbs, mine minerals, or collect a blood core to unlock',
+    gate: { type: 'item_category', category: 'herbs' },
+    desc: 'Brew cultivation pills that grant passive bonuses to combat strength and training speed.',
+    hint: 'Gather a herb to unlock',
     unlockMsg: 'Production unlocked.',
   },
-  // ── Production sub-tabs ────────────────────────────────────────────────────
-  // transmutation: paired with combat (modifies artefacts / techniques / laws).
-  // Same material-driven gate as the parent so the default sub-tab is
-  // always reachable once the player enters Production.
-  transmutation: {
-    gate: { type: 'any', gates: [
-      { type: 'item_category', category: 'herbs' },
-      { type: 'item_category', category: 'minerals' },
-      { type: 'item_category', category: 'bloodCores' },
-    ] },
-    desc: 'Upgrade, replace, and transmute your artefacts, technique slots, and law bindings using gathered materials.',
-    hint: 'Gather herbs, mine minerals, or collect a blood core to unlock',
-    unlockMsg: 'Transmutation unlocked.',
-  },
-  // alchemy: paired with gathering (herb-driven pill crafting). Unlocks
-  // the first time the player collects any herb (Sect Grounds Grass /
-  // Borderland Root are the Iron-tier first picks).
+  // alchemy mirrors production for the unlock-toast routing — kept as a
+  // separate id so older saves / toast calls still resolve.
   alchemy: {
     gate: { type: 'item_category', category: 'herbs' },
     desc: 'Brew cultivation pills in the furnace that grant passive bonuses to combat strength and training speed.',

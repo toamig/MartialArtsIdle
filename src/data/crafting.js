@@ -1,34 +1,24 @@
 /**
- * crafting.js — single source of truth for transmutation + upgrade costs.
+ * crafting.js — slot bracket definitions used for displaying tier metadata
+ * (name / colour / per-tier slot count).
  *
- * ── Design contract ───────────────────────────────────────────────────────────
- *  upgrade   (all)   → current + next mineral  (gateway material from next world tier)
- *  hone/add          → mineralStat ×TRANSMUTE_QTY.hone / .add
- *  replace           → mineralMod  ×TRANSMUTE_QTY.replace
- *
- *  Artefacts and techniques drop from combat fully rolled; laws drop from
- *  major-realm ascension selections. There is no refining flow anymore.
- *
- * ── Dev panel note ────────────────────────────────────────────────────────────
- *  Every exported object here is directly editable config. A future dev
- *  panel should expose SLOT_BRACKETS, TRANSMUTE_QTY, and UPGRADE_COSTS as
- *  editable fields.
- *
- * ── Adding a new tier ─────────────────────────────────────────────────────────
- *  1. Add a bracket entry to SLOT_BRACKETS.
- *  2. Add a row to UPGRADE_COSTS (current rarity → next).
- *  UI components derive everything else from these tables.
+ * The previous transmutation flow (hone / replace / add / quality upgrade)
+ * was removed when artefacts and techniques became drop-only and laws moved
+ * to ascension selections. The cost tables (TRANSMUTE_QTY, UPGRADE_COSTS,
+ * LAW_UPGRADE_COSTS) and helpers (getBracketCost, getCraftMultiplier,
+ * getUpgradeCosts) were deleted with that flow.
  */
 
 import { RARITY_TIER } from './affixPools';
 import { mergeSingleton } from './config/loader';
 
-// ── Transmutation slot brackets ───────────────────────────────────────────────
+// ── Slot brackets ─────────────────────────────────────────────────────────────
 // Each bracket defines the affix-slot group for one quality tier.
 //   count       — max affix slots in this bracket
 //   color       — UI accent colour for this tier
-//   mineralStat — used for Hone and Add operations
-//   mineralMod  — used for Replace operations
+//   mineralStat — material id paired with this tier (kept on the record so
+//                 future systems can reference per-tier minerals)
+//   mineralMod  — paired modifier mineral id (same reasoning)
 
 const SLOT_BRACKETS_RAW = [
   { label: 'Iron',         tier: 1, count: 3, color: '#9ca3af', mineralStat: 'iron_mineral_1',         mineralMod: 'iron_mineral_2'         },
@@ -44,93 +34,3 @@ export function getActiveBrackets(rarity) {
   const tier = RARITY_TIER[rarity] ?? 1;
   return SLOT_BRACKETS.slice(0, tier);
 }
-
-// ── Artefact-only bracket view ────────────────────────────────────────────────
-// Artefacts have 2 Iron slots + 1 per higher rarity. Techniques / laws still
-// use the original SLOT_BRACKETS counts via getActiveBrackets() above.
-const ARTEFACT_BRACKET_COUNTS = { Iron: 2, Bronze: 1, Silver: 1, Gold: 1, Transcendent: 1 };
-
-export function getActiveArtefactBrackets(rarity) {
-  return getActiveBrackets(rarity).map(b => ({
-    ...b,
-    count: ARTEFACT_BRACKET_COUNTS[b.label] ?? b.count,
-  }));
-}
-
-// ── Transmutation operation quantities ───────────────────────────────────────
-// Number of minerals consumed per operation type.
-// Dev panel: expose and edit these to tune transmutation economy.
-
-const TRANSMUTE_QTY_RAW = {
-  hone:    3,  // qty of mineralStat per Hone (randomise value)
-  replace: 5,  // qty of mineralMod  per Replace (swap modifier type)
-  add:     8,  // qty of mineralStat per Add (fill empty slot)
-};
-export const TRANSMUTE_QTY = mergeSingleton(TRANSMUTE_QTY_RAW, 'crafting', 'TRANSMUTE_QTY');
-
-// ── Craft-count cost scaling ──────────────────────────────────────────────────
-// Each transmutation (hone/replace/add) bumps a hidden craftCount on the
-// artefact instance. Subsequent ops on the same item cost geometrically more:
-//   multiplier = (1 + TRANSMUTE_GROWTH) ^ craftCount
-// With growth = 0.05: n=0→1x, n=10→1.63x, n=50→11.5x, n=100→131x.
-// Small ramp early, extremely costly for heavily-worked items.
-const TRANSMUTE_GROWTH_RAW = { value: 0.05 };
-export const TRANSMUTE_GROWTH = mergeSingleton(
-  TRANSMUTE_GROWTH_RAW, 'crafting', 'TRANSMUTE_GROWTH'
-).value;
-
-export function getCraftMultiplier(craftCount = 0) {
-  const n = Math.max(0, craftCount);
-  return Math.pow(1 + TRANSMUTE_GROWTH, n);
-}
-
-/**
- * Build the cost array for a single transmutation operation.
- * @param {string|null} mineralStat  — the tier's mineralStat ID
- * @param {string|null} mineralMod   — the tier's mineralMod ID
- * @param {'hone'|'replace'|'add'} op
- * @param {number} craftCount        — hidden per-instance craft counter (0 = fresh)
- * @returns {{ itemId: string, qty: number }[]}
- */
-export function getBracketCost(mineralStat, mineralMod, op, craftCount = 0) {
-  const mult = getCraftMultiplier(craftCount);
-  const scale = (base) => Math.max(1, Math.ceil(base * mult));
-  if (op === 'hone')    return [{ itemId: mineralStat, qty: scale(TRANSMUTE_QTY.hone)    }];
-  if (op === 'replace') return [{ itemId: mineralMod,  qty: scale(TRANSMUTE_QTY.replace) }];
-  return                       [{ itemId: mineralStat, qty: scale(TRANSMUTE_QTY.add)     }];
-}
-
-// ── Item upgrade costs ────────────────────────────────────────────────────────
-// Cost to upgrade an artefact / technique / law to the next quality tier.
-// Key = current rarity. No entry = already at Transcendent (maximum).
-//
-// Pattern: current-tier mineral (bulk) + next-tier mineral (gateway taste).
-// Dev panel: edit qty values to tune upgrade pacing.
-
-// Shared upgrade cost (artefacts, techniques). Kept stable to avoid
-// touching the non-law upgrade economy.
-const UPGRADE_COSTS_RAW = {
-  Iron:   [ { itemId: 'iron_mineral_1',   qty: 10 }, { itemId: 'bronze_mineral_1',        qty: 3 } ],
-  Bronze: [ { itemId: 'bronze_mineral_1', qty: 8  }, { itemId: 'silver_mineral_1',        qty: 3 } ],
-  Silver: [ { itemId: 'silver_mineral_1', qty: 5  }, { itemId: 'gold_mineral_1',          qty: 3 } ],
-  Gold:   [ { itemId: 'gold_mineral_1',   qty: 8  }, { itemId: 'transcendent_mineral_1',  qty: 2 } ],
-};
-export const UPGRADE_COSTS = mergeSingleton(UPGRADE_COSTS_RAW, 'crafting', 'UPGRADE_COSTS');
-
-// Law-specific upgrade cost — laws drop from breakthroughs now instead
-// of being refined, so the upgrade path is the only mineral sink for
-// them. ~1.5× heavier than the shared table to respect that shift.
-const LAW_UPGRADE_COSTS_RAW = {
-  Iron:   [ { itemId: 'iron_mineral_1',   qty: 15 }, { itemId: 'bronze_mineral_1',        qty: 4 } ],
-  Bronze: [ { itemId: 'bronze_mineral_1', qty: 12 }, { itemId: 'silver_mineral_1',        qty: 4 } ],
-  Silver: [ { itemId: 'silver_mineral_1', qty: 8  }, { itemId: 'gold_mineral_1',          qty: 4 } ],
-  Gold:   [ { itemId: 'gold_mineral_1',   qty: 12 }, { itemId: 'transcendent_mineral_1',  qty: 3 } ],
-};
-export const LAW_UPGRADE_COSTS = mergeSingleton(LAW_UPGRADE_COSTS_RAW, 'crafting', 'LAW_UPGRADE_COSTS');
-
-/** Upgrade cost array for an item of the given kind + current rarity. */
-export function getUpgradeCosts(kind, rarity) {
-  if (kind === 'law') return LAW_UPGRADE_COSTS[rarity] ?? [];
-  return UPGRADE_COSTS[rarity] ?? [];
-}
-
