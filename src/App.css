@@ -39,14 +39,17 @@ html, body, * {
      Used to keep background art and content from bleeding behind the nav. */
   --nav-h: 48px;
   --top-bar-h: 48px;
-  /* Visible buffer above and below modals so the bars have clear breathing
-     room and the modal's box-shadow doesn't bleed over the bottom nav (which
-     sits below the overlay in the z-stack — top-bar is above and clips its
-     own shadow side). Used by both --modal-max-h and .modal-overlay padding. */
-  --modal-edge-pad: 24px;
+  /* Visible buffer between modals and each fixed bar. Different per side
+     because the top-bar (z-700) is above the modal-overlay (z-200) and clips
+     the modal's upward shadow on its own — so 8px there reads as a clean
+     8px gap. The bottom nav (z-100) is below the overlay, so the modal's
+     ~32-40px box-shadow bleeds over it; the larger bottom buffer absorbs
+     the shadow so the perceived gap matches the top. */
+  --modal-edge-pad-top:    8px;
+  --modal-edge-pad-bottom: 24px;
   /* Maximum height available to popups/modals — viewport minus both fixed bars,
-     their safe-area insets, and the buffer applied on each side. */
-  --modal-max-h: calc(100svh - var(--top-bar-h) - var(--nav-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - (var(--modal-edge-pad) * 2));
+     their safe-area insets, and the per-side buffers above. */
+  --modal-max-h: calc(100svh - var(--top-bar-h) - var(--nav-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--modal-edge-pad-top) - var(--modal-edge-pad-bottom));
 }
 
 .app {
@@ -4936,7 +4939,7 @@ html, body, * {
   align-items: center;
   justify-content: center;
   z-index: 200;
-  padding: calc(var(--top-bar-h) + env(safe-area-inset-top) + var(--modal-edge-pad)) 20px calc(var(--nav-h) + env(safe-area-inset-bottom) + var(--modal-edge-pad));
+  padding: calc(var(--top-bar-h) + env(safe-area-inset-top) + var(--modal-edge-pad-top)) 20px calc(var(--nav-h) + env(safe-area-inset-bottom) + var(--modal-edge-pad-bottom));
   animation: fade-in 0.2s ease-out;
 }
 
