@@ -4637,30 +4637,54 @@ html, body, * {
 }
 
 .save-btn {
-  padding: 10px 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-card);
-  color: var(--text-primary);
+  padding: 10px 18px;
+  border: 1px solid rgba(var(--ui-purple-rgb), 0.30);
+  border-radius: 10px;
+  background: rgba(var(--ui-purple-rgb), 0.10);
+  color: var(--ui-purple-wash);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   cursor: pointer;
+  font-family: inherit;
   -webkit-tap-highlight-color: transparent;
-  transition: border-color 0.2s;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s, transform 0.05s;
 }
 
-.save-btn:active {
-  border-color: var(--accent);
+.save-btn:hover:not(:disabled) {
+  background: rgba(var(--ui-purple-rgb), 0.20);
+  border-color: rgba(var(--ui-purple-rgb), 0.50);
+}
+
+.save-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.save-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .save-btn-danger {
   color: var(--accent);
-  border-color: rgba(233, 69, 96, 0.3);
+  background: rgba(233, 69, 96, 0.10);
+  border-color: rgba(233, 69, 96, 0.35);
+}
+
+.save-btn-danger:hover:not(:disabled) {
+  background: rgba(233, 69, 96, 0.20);
+  border-color: rgba(233, 69, 96, 0.55);
 }
 
 .save-btn-active {
-  border-color: var(--blood-lotus);
-  color: var(--blood-lotus);
+  border-color: rgba(245, 200, 66, 0.55);
+  background: rgba(245, 200, 66, 0.10);
+  color: #f5c842;
+}
+
+.save-btn-active:hover:not(:disabled) {
+  background: rgba(245, 200, 66, 0.20);
+  border-color: rgba(245, 200, 66, 0.75);
 }
 
 .save-btn .res-sub {
@@ -4668,6 +4692,8 @@ html, body, * {
   font-size: 0.7rem;
   opacity: 0.55;
   margin-top: 2px;
+  font-weight: 500;
+  letter-spacing: 0;
 }
 
 .import-area {
