@@ -459,21 +459,20 @@ export default function useCombat() {
         s._triggerLog = logs; // exposed to applyTriggerAction for log lines
 
         // ── Basic attack (always fires) ────────────────────────────────────
+        // Damage is purely stat-driven (mirrors secret techs):
+        //   physical_damage + damage_all (+ earth-law max-HP %)  × default_attack_damage
+        // K_BASIC × realmIndex was removed 2026-04-27 — auto-scaling per
+        // realm hid the real damage source from the player. Realm progression
+        // now flows through gear-driven stat growth, not a built-in floor.
         {
-          const K_BASIC = 10;
-          const realmIdx = s.stats?.realmIndex ?? 0;
-          let dmg = K_BASIC * (realmIdx + 1);
-          // Basic attack is hard-pinned to physical damage, so it adds 100%
-          // of the physical_damage stat (same as a physical secret tech does
-          // via calcDamage's damage_bucket addition).
-          dmg += s.stats?.damageStats?.physical ?? 0;
+          let dmg = s.stats?.damageStats?.physical ?? 0;
           dmg += s.stats?.damageStats?.damage_all ?? 0;
           // Earth law: "Default attacks deal 5% of max HP as physical damage".
           if (s.stats?.lawFlags?.basicAttackHpPctDmg) {
             dmg += Math.floor(s.pMaxHp * s.stats.lawFlags.basicAttackHpPctDmg);
           }
           const baseMult = 1 + (s.stats?.damageStats?.default_attack_damage ?? 0);
-          dmg = Math.max(5, Math.floor(dmg * baseMult));
+          dmg = Math.max(1, Math.floor(dmg * baseMult));
           // Fire double-strike: doubled damage; consumed by this attack.
           if (s.defaultAttackBuff?.stacks > 0) {
             dmg = dmg * 2;
