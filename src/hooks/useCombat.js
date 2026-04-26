@@ -12,9 +12,12 @@ const PIPE_MITIGATION_CAP = 0.9;
 //   mitigation = armour / (armour + ARMOUR_DAMAGE_FACTOR × damage)
 // Higher → bigger hits scale into armour better.
 const ARMOUR_DAMAGE_FACTOR = 10;
-// Per-region scaling for enemy DEF / ELEM_DEF (starting values; tune later).
+// Per-region scaling for enemy DEF / ELEM_DEF.
 //   EnemyDef = max(10, region_index × ENEMY_DEF_PER_REGION × def_mult)
-const ENEMY_DEF_PER_REGION = 8;
+// Cut from 8 → 5 on 2026-04-27 to keep enemy defense from getting absurd
+// at high region indices. At regionIndex 50 the cap drops 400 → 250 base.
+// PoE armour curve still applies on top.
+const ENEMY_DEF_PER_REGION = 5;
 
 // Artefacts drop using the same per-enemy `techniqueDrop.chance`, scaled up
 // so they feel distinctly more common than Secret Technique scrolls.

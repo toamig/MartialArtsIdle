@@ -51,8 +51,8 @@
         },
         {
           "name": "Borderland Wilds",
-          "minRealm": "Tempered Body L8",
-          "minRealmIndex": 7,
+          "minRealm": "Tempered Body L6",
+          "minRealmIndex": 5,
           "enemies": "Outer sect disciples, pack wolves",
           "gatherDrops": [
             {

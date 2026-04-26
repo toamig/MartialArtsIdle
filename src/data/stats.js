@@ -83,8 +83,8 @@ export function computeAllStats(qi, law, realmIndex, modifiers = {}) {
   // Base damage floors (added 2026-04-27): give the player a non-zero baseline
   // before any artefact / law / set contribution so unequipped builds still
   // deal something. Modifier sources still stack normally on top.
-  const physDmg       = Math.floor(computeStat(30, mods('physical_damage')));
-  const elemDmg       = Math.floor(computeStat(30, mods('elemental_damage')));
+  const physDmg       = Math.floor(computeStat(50, mods('physical_damage')));
+  const elemDmg       = Math.floor(computeStat(50, mods('elemental_damage')));
   const defense       = Math.floor(computeStat(0, mods('defense')));
   const elemDef       = Math.floor(computeStat(0, mods('elemental_defense')));
   const exploitChance = Math.round(computeStat(5,   mods('exploit_chance')));

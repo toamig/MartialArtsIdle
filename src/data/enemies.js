@@ -43,7 +43,9 @@ const ENEMIES_RAW = {
     name:        'Outer Sect Disciple',
     sprite:      'outer_sect_disciple',
     description: 'A young cultivator in a plain white training robe, wielding a basic wooden practice sword with clumsy but eager stances.',
-    statMult: { hp: 0.7, atk: 1.8 },
+    // atk cut from 1.8 → 0.7 on 2026-04-27 — first-zone player has no pills
+    // or artefacts and 100 base HP, prior 1.8× was killing in 3 hits.
+    statMult: { hp: 0.7, atk: 0.7 },
     drops: [
       { itemId: 'iron_cultivation_1', chance: 1.0, qty: [3, 4] },
     ],
@@ -55,7 +57,8 @@ const ENEMIES_RAW = {
     name:        'Training Golem',
     sprite:      'training_golem',
     description: 'A squat clay-and-iron automaton stamped with sect seals, built for durability over damage — its fists are blunted iron spheres.',
-    statMult: { hp: 1.2, atk: 1.2 },   // tanky construct, low damage
+    // atk cut from 1.2 → 0.5 on 2026-04-27 — first-zone tutorial pacing.
+    statMult: { hp: 1.2, atk: 0.5 },   // tanky construct, very low damage
     drops: [
       { itemId: 'iron_cultivation_1', chance: 1.0, qty: [3, 4] },
     ],
