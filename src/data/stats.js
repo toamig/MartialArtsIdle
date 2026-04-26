@@ -83,6 +83,14 @@ export function computeAllStats(qi, law, realmIndex, modifiers = {}) {
   const elemDef       = Math.floor(computeStat(r * 5,  mods('elemental_defense')));
   const exploitChance = Math.round(computeStat(5,   mods('exploit_chance')));
   const exploitMult   = Math.round(computeStat(150, mods('exploit_attack_mult')));
+  // Expose-pipeline stats (added 2026-04-26 secret-tech overhaul).
+  // defPen — % of enemy DEF / ELEM_DEF ignored before the PoE-armour mitigation
+  //   curve. Stored as 0–1 fraction.
+  // incomingDamageReduction — multiplied against incoming enemy hits BEFORE
+  //   the armour mitigation step. Stored as 0–1 fraction. Cap at 0.9 to
+  //   avoid full negation.
+  const defPen                  = Math.max(0, Math.min(1, computeStat(0, mods('defense_penetration'))));
+  const incomingDamageReduction = Math.max(0, Math.min(0.9, computeStat(0, mods('incoming_damage_reduction'))));
 
   // ── Activity ───────────────────────────────────────────────────────────────
   const qiSpeed      = QI_BASE_RATE * (law?.cultivationSpeedMult ?? 1);
@@ -94,7 +102,7 @@ export function computeAllStats(qi, law, realmIndex, modifiers = {}) {
 
   return {
     meta:     { soulUnlocked: true },  // kept true so legacy UI guards pass
-    combat:   { health, physDmg, elemDmg, defense, elemDef, exploitChance, exploitMult },
+    combat:   { health, physDmg, elemDmg, defense, elemDef, exploitChance, exploitMult, defPen, incomingDamageReduction },
     activity: { qiSpeed, focusMult, harvestSpeed, harvestLuck, miningSpeed, miningLuck },
   };
 }

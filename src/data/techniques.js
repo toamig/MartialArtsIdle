@@ -35,6 +35,7 @@ export const BASE_COOLDOWN = {
   Heal:   12,
   Defend: 10,
   Dodge:  10,
+  Expose: 12,
 };
 
 export const TYPE_COLOR = {
@@ -42,26 +43,130 @@ export const TYPE_COLOR = {
   Heal:   '#4ade80',
   Defend: '#60a5fa',
   Dodge:  '#facc15',
+  Expose: '#a78bfa',
 };
 
-// Techniques are always procedurally generated via generateTechnique() in
-// techniqueDrops.js. There's no hand-authored catalogue — names, elements,
-// rolled stats and passives are all rolled at drop time and then frozen on
-// the instance. Stats (dodgeChance, buffAttacks, healPercent, defMult,
-// arteMult, elemBonus, bonus) cannot be modified by transmutation; only
-// quality-upgrade and passive replace/add are permitted.
-export const TECHNIQUES = [];
+// ─── Unique technique catalogue ──────────────────────────────────────────────
+//
+// Hand-authored pool. Each technique is identified by `id` (stable across
+// drops — drop instances suffix `__<random>` to that base id). Quality is
+// IDENTITY (Iron Sword Slash and Bronze Sword Slash are different entries);
+// rank is assigned per-drop from the world tier (W1=Mortal … W6=Heaven), so
+// a single Iron entry can manifest at any of the 6 K_TABLE ranks.
+//
+// Distribution: 12 techniques per quality × 5 qualities = 60 total.
+//   per-quality: 4 Attack + 2 Heal + 2 Defend + 2 Dodge + 2 Expose
+//
+// All names + flavours are placeholders for the designer to update later.
+// Stat values scale with quality tier on a deliberate ladder so the unique
+// pool feels stratified out of the box; the designer can re-tune per entry.
+
+const QUALITIES = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
+
+function buildCatalogue() {
+  const out = [];
+
+  QUALITIES.forEach((quality, qIdx) => {
+    // ── Attack ×4 ──
+    for (let i = 1; i <= 4; i++) {
+      out.push({
+        id:         `${quality.toLowerCase()}_attack_${i}`,
+        name:       `Placeholder ${quality} Attack ${i}`,
+        type:       'Attack',
+        quality,
+        flavour:    'TBD — designer to fill in.',
+        arteMult:   parseFloat((1.0 + qIdx * 0.1).toFixed(2)),
+        bonus:      qIdx * 5,
+        damageType: i % 2 === 0 ? 'elemental' : 'physical',
+      });
+    }
+
+    // ── Heal ×2 ──
+    for (let i = 1; i <= 2; i++) {
+      out.push({
+        id:          `${quality.toLowerCase()}_heal_${i}`,
+        name:        `Placeholder ${quality} Heal ${i}`,
+        type:        'Heal',
+        quality,
+        flavour:     'TBD — designer to fill in.',
+        healPercent: parseFloat((0.15 + qIdx * 0.05).toFixed(3)),
+      });
+    }
+
+    // ── Defend ×2 ──
+    for (let i = 1; i <= 2; i++) {
+      out.push({
+        id:          `${quality.toLowerCase()}_defend_${i}`,
+        name:        `Placeholder ${quality} Defend ${i}`,
+        type:        'Defend',
+        quality,
+        flavour:     'TBD — designer to fill in.',
+        defMult:     parseFloat((1.3 + qIdx * 0.15).toFixed(2)),
+        buffAttacks: 2 + qIdx,
+      });
+    }
+
+    // ── Dodge ×2 ──
+    for (let i = 1; i <= 2; i++) {
+      out.push({
+        id:          `${quality.toLowerCase()}_dodge_${i}`,
+        name:        `Placeholder ${quality} Dodge ${i}`,
+        type:        'Dodge',
+        quality,
+        flavour:     'TBD — designer to fill in.',
+        dodgeChance: parseFloat((0.30 + qIdx * 0.075).toFixed(3)),
+        buffAttacks: 2 + qIdx,
+      });
+    }
+
+    // ── Expose ×2 ──
+    // Expose 1: offensive bundle (exploit chance + def pen) — player clock
+    out.push({
+      id:                 `${quality.toLowerCase()}_expose_1`,
+      name:               `Placeholder ${quality} Expose 1`,
+      type:               'Expose',
+      quality,
+      flavour:            'TBD — designer to fill in.',
+      exploitChance:      15 + qIdx * 5,
+      defPen:             parseFloat((0.05 + qIdx * 0.05).toFixed(2)),
+      buffPlayerAttacks:  3 + qIdx,
+    });
+    // Expose 2: mitigation focus (incoming damage reduction) — enemy clock
+    out.push({
+      id:                 `${quality.toLowerCase()}_expose_2`,
+      name:               `Placeholder ${quality} Expose 2`,
+      type:               'Expose',
+      quality,
+      flavour:            'TBD — designer to fill in.',
+      dmgReduction:       parseFloat((0.10 + qIdx * 0.04).toFixed(2)),
+      exploitMult:        175 + qIdx * 10,    // applies on exploit rolls during the buff
+      buffEnemyAttacks:   3 + qIdx,
+      buffPlayerAttacks:  3 + qIdx,           // exploitMult needs the player clock
+    });
+  });
+
+  return out;
+}
+
+export const TECHNIQUES = buildCatalogue();
+
+const TECHNIQUES_BY_ID = Object.fromEntries(TECHNIQUES.map(t => [t.id, t]));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Legacy shim. All live techniques now come from the player's owned drops,
- * so this always returns null and the caller should fall back to the
- * ownedTechniques map (see useTechniques.getTechById).
+ * Look up a catalogue technique by id. Drop instances carry `${baseId}__suffix`
+ * for uniqueness — strip the suffix before looking up so the catalogue entry
+ * (and i18n keys, balance data, etc.) resolves to the shared base id.
  */
-// eslint-disable-next-line no-unused-vars
+export function getTechniqueBaseId(id) {
+  if (!id) return null;
+  const cut = id.indexOf('__');
+  return cut >= 0 ? id.slice(0, cut) : id;
+}
+
 export function getTechnique(id) {
-  return null;
+  return TECHNIQUES_BY_ID[getTechniqueBaseId(id)] ?? null;
 }
 
 /** Effective cooldown in seconds for a given type + quality. */
@@ -76,40 +181,32 @@ export function getK(rank, quality) {
 
 /**
  * Attack damage formula:
- *   K * (Essence + Soul + Body + artefactFlat) * arteMult * elemBonus + bonus
+ *   K * (Essence + Soul + Body + artefactFlat) * arteMult + bonus
  *   + damage-bucket flat bonus (single bucket per technique)
  *
- * elemBonus only applies when the active Law's element matches the technique's.
+ * Element-matching elemBonus retired in 2026-04-26 secret-tech overhaul —
+ * techniques no longer carry an `element` field.
  *
- * Damage-bucket flat bonus (Stage 5 onward): each technique carries a single
- * `damageType` field — 'physical' or 'elemental'. The technique adds the
- * matching flat stat (physical_damage or elemental_damage) once. The prior
- * 9-pool split-across-law.types behaviour is gone along with the 9-pool
- * type system.
+ * Damage-bucket flat bonus: each technique carries a single `damageType`
+ * field — 'physical' or 'elemental'. The technique adds the matching flat
+ * stat (physical_damage or elemental_damage) once.
  *
  * @param {object} tech
  * @param {number} essence
  * @param {number} soul
  * @param {number} body
- * @param {object|string|null} lawOrElement  — full law object, or legacy
- *                                             lawElement string for backcompat.
+ * @param {object|string|null} _law  — kept for backcompat, unused (element gone)
  * @param {number} artefactFlat
  * @param {{physical:number, elemental:number}|null} damageStats
  */
-export function calcDamage(tech, essence, soul, body, lawOrElement = null, artefactFlat = 0, damageStats = null) {
-  const law = (lawOrElement && typeof lawOrElement === 'object') ? lawOrElement : null;
-  const lawElement = law?.element ?? (typeof lawOrElement === 'string' ? lawOrElement : null);
-
+// eslint-disable-next-line no-unused-vars
+export function calcDamage(tech, essence, soul, body, _law = null, artefactFlat = 0, damageStats = null) {
   const K = getK(tech.rank, tech.quality);
-  const elemMatch = !!tech.element && tech.element === lawElement;
-  const elemBonus = elemMatch ? (tech.elemBonus ?? 1.0) : 1.0;
   let dmg = K * (essence + soul + body + artefactFlat)
           * (tech.arteMult ?? 1.0)
-          * elemBonus
           + (tech.bonus ?? 0);
 
-  // Damage-bucket flat bonus. Untagged techniques default to physical so
-  // pre-overhaul drops keep contributing until a content-pass retags them.
+  // Damage-bucket flat bonus. Untagged techniques default to physical.
   if (damageStats) {
     const bucket = tech.damageType === 'elemental' ? 'elemental' : 'physical';
     dmg += damageStats[bucket] ?? 0;

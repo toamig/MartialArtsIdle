@@ -11,7 +11,8 @@ import ENEMIES from '../data/enemies';
 import { ALL_MATERIALS } from '../data/materials';
 import { PILLS_BY_ID } from '../data/pills';
 import REALMS from '../data/realms';
-import { generateTechnique } from '../data/techniqueDrops';
+import { pickTechnique } from '../data/techniqueDrops';
+import { TECHNIQUES } from '../data/techniques';
 import { generateLaw } from '../data/affixPools';
 import { pickRandomArtefact } from '../data/artefactDrops';
 
@@ -203,16 +204,43 @@ export function initDebug(hooksRef) {
     // ── Techniques & Laws ──────────────────────────────────────────────────
 
     /**
-     * Generate and add random techniques.
+     * Pick + add random techniques from the unique catalogue.
      * @param {number} [count=10]
-     * @param {number} [worldId=1]  World tier 1–6 (affects quality/element).
+     * @param {number} [worldId=1]  World tier 1–6 (gates quality bias + rank).
      */
     giveTechniques(count = 10, worldId = 1) {
       const techs = g().techniques;
+      let added = 0;
       for (let i = 0; i < count; i++) {
-        techs.addOwnedTechnique(generateTechnique(worldId));
+        const tech = pickTechnique(worldId);
+        if (!tech) continue;
+        techs.addOwnedTechnique(tech);
+        added += 1;
       }
-      console.log(`[debug] +${count} random techniques (world ${worldId})`);
+      console.log(`[debug] +${added} unique techniques (world ${worldId})`);
+    },
+
+    /**
+     * Grant the first Expose technique of a given quality. Useful for testing
+     * the new buff plumbing in isolation.
+     * @param {string} [quality='Iron']
+     * @param {number} [worldId=1]  Sets the rank (W1=Mortal … W6=Heaven).
+     */
+    giveExpose(quality = 'Iron', worldId = 1) {
+      const base = TECHNIQUES.find(t => t.type === 'Expose' && t.quality === quality);
+      if (!base) {
+        console.warn(`[debug] No Expose at quality ${quality}`);
+        return;
+      }
+      const wIdx = Math.max(0, Math.min(5, worldId - 1));
+      const ranks = ['Mortal', 'Earth', 'Sky', 'Saint', 'Emperor', 'Heaven'];
+      const drop = {
+        ...base,
+        rank: ranks[wIdx],
+        id: `${base.id}__${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
+      };
+      g().techniques.addOwnedTechnique(drop);
+      console.log(`[debug] +1 ${quality} ${ranks[wIdx]} Expose (${base.id})`);
     },
 
     /**

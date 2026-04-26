@@ -240,6 +240,7 @@
     "filterHeal":   "Cura",
     "filterDefend": "Defesa",
     "filterDodge":  "Esquiva",
+    "filterExpose": "Expor",
     "slot1":        "Técnica I",
     "slot2":        "Técnica II",
     "slot3":        "Técnica III",
@@ -248,6 +249,10 @@
     "healPercent":  "Cura {{pct}}% de Vida",
     "defBuff":      "DEF ×{{mult}} / {{hits}} golpes",
     "dodgeBuff":    "{{pct}}% esquiva / {{hits}} golpes",
+    "exposeExploitChance": "+{{pct}}% chance de explorar / {{hits}} golpes",
+    "exposeExploitMult":   "Exploração ×{{mult}} / {{hits}} golpes",
+    "exposeDefPen":        "{{pct}}% pen. de defesa / {{hits}} golpes",
+    "exposeDmgReduction":  "{{pct}}% redução de dano / {{hits}} golpes inimigos",
     "requiresRealm":"Requer reino {{rank}}",
     "unequip":      "Desequipar"
   },
@@ -333,7 +338,8 @@
     "Attack": "Ataque",
     "Heal":   "Cura",
     "Defend": "Defesa",
-    "Dodge":  "Esquiva"
+    "Dodge":  "Esquiva",
+    "Expose": "Expor"
   },
 
   "techniqueRanks": {

@@ -1,9 +1,77 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { calcDamage, getCooldown } from '../data/techniques';
 import { ALL_MATERIALS } from '../data/materials';
-import { generateTechnique } from '../data/techniqueDrops';
+import { pickTechnique } from '../data/techniqueDrops';
 import { pickRandomArtefact } from '../data/artefactDrops';
 import { ARTEFACTS_BY_ID } from '../data/artefacts';
+
+// PoE-style armour mitigation cap. Past this, even infinite armour can't
+// fully negate a hit. Standard PoE convention.
+const PIPE_MITIGATION_CAP = 0.9;
+// Multiplier on `damage` in the PoE armour curve:
+//   mitigation = armour / (armour + ARMOUR_DAMAGE_FACTOR × damage)
+// Higher → bigger hits scale into armour better.
+const ARMOUR_DAMAGE_FACTOR = 10;
+// Per-region scaling for enemy DEF / ELEM_DEF (starting values; tune later).
+//   EnemyDef = max(10, region_index × ENEMY_DEF_PER_REGION × def_mult)
+const ENEMY_DEF_PER_REGION = 8;
+
+/**
+ * Apply the PoE armour mitigation curve and return the final damage.
+ *   mitigation = armour / (armour + 10 × damage), capped at 0.9.
+ *   final     = damage × (1 − mitigation)
+ */
+function applyArmourMitigation(damage, armour) {
+  if (armour <= 0 || damage <= 0) return damage;
+  const mitigation = Math.min(
+    PIPE_MITIGATION_CAP,
+    armour / (armour + ARMOUR_DAMAGE_FACTOR * damage),
+  );
+  return Math.max(1, Math.floor(damage * (1 - mitigation)));
+}
+
+/** Resolve total exploit chance / mult including any active expose buff. */
+function resolveExploitParams(s) {
+  const baseChance = s.stats?.exploitChance ?? 0;
+  const baseMult   = s.stats?.exploitMult   ?? 150;
+  const ex = s.exposeBuff;
+  if (!ex || ex.playerAttacksLeft <= 0) {
+    return { chance: baseChance, mult: baseMult };
+  }
+  return {
+    chance: baseChance + (ex.exploitChance ?? 0),
+    mult:   ex.exploitMult ?? baseMult,
+  };
+}
+
+/** Resolve total def_pen including any active expose buff (player clock). */
+function resolveDefPen(s) {
+  const base = s.stats?.defPen ?? 0;
+  const ex   = s.exposeBuff;
+  if (!ex || ex.playerAttacksLeft <= 0) return base;
+  return Math.min(1, base + (ex.defPen ?? 0));
+}
+
+/** Resolve total incoming-damage reduction including the expose buff (enemy clock). */
+function resolveIncomingDmgReduction(s) {
+  const base = s.stats?.incomingDamageReduction ?? 0;
+  const ex   = s.exposeBuff;
+  if (!ex || ex.enemyAttacksLeft <= 0) return base;
+  return Math.min(0.9, base + (ex.dmgReduction ?? 0));
+}
+
+/**
+ * Decrement the appropriate expose-buff clock(s) after a turn resolves.
+ * @param {object} s
+ * @param {'player'|'enemy'} clock — which clock to tick
+ */
+function tickExposeBuff(s, clock) {
+  const ex = s.exposeBuff;
+  if (!ex) return;
+  if (clock === 'player' && ex.playerAttacksLeft > 0) ex.playerAttacksLeft -= 1;
+  if (clock === 'enemy'  && ex.enemyAttacksLeft  > 0) ex.enemyAttacksLeft  -= 1;
+  if (ex.playerAttacksLeft <= 0 && ex.enemyAttacksLeft <= 0) s.exposeBuff = null;
+}
 
 // Artefacts drop using the same per-enemy `techniqueDrop.chance`, scaled up
 // so they feel distinctly more common than Secret Technique scrolls — per the
@@ -223,9 +291,11 @@ export default function useCombat() {
     // Primary-stat layer retired in stage 15 — pMaxHp flows through the
     // `health` stat bundle now (stats.js placeholder formula).
 
-    const hpMult  = enemyDef?.statMult?.hp  ?? 1;
-    const atkMult = enemyDef?.statMult?.atk ?? 1;
-    const eName   = enemyDef?.name ?? 'Training Dummy';
+    const hpMult     = enemyDef?.statMult?.hp     ?? 1;
+    const atkMult    = enemyDef?.statMult?.atk    ?? 1;
+    const defMultE   = enemyDef?.statMult?.def    ?? 1;
+    const elemDefMul = enemyDef?.statMult?.elemDef ?? 1;
+    const eName     = enemyDef?.name ?? 'Training Dummy';
     // Each enemy deals a fixed damage type; the combat tick picks the
     // matching defence stat below. Default to 'physical' for anything the
     // DAMAGE_TYPE_BY_ID map missed (e.g. designer-added enemies).
@@ -243,6 +313,11 @@ export default function useCombat() {
     // Mitigated in the enemy-turn tick via the player's matching defence stat.
     const atkBase = 18 * Math.pow(1.12, Math.max(0, regionIndex ?? 0));
     const eAtk    = Math.max(10, Math.floor(atkBase * atkMult));
+    // Enemy DEF / ELEM_DEF — scale-independent like ATK, anchored to region.
+    // Starting values; tune after balance pass (see plan).
+    const defBase  = ENEMY_DEF_PER_REGION * Math.max(0, regionIndex ?? 0);
+    const eDef     = Math.max(10, Math.floor(defBase * defMultE));
+    const eElemDef = Math.max(10, Math.floor(defBase * elemDefMul));
 
     // md_1 Steady Hands (+ artefact cooldown reductions) — both shrink every
     // cooldown. `cooldownReductionPct` is an artefact-derived 0–1 fraction.
@@ -260,11 +335,15 @@ export default function useCombat() {
       phase:     'fighting',
       turnPhase: 'spawn_idle',
       pHp: pMaxHp, pMaxHp,
-      eHp: eMaxHp, eMaxHp, eAtk, eDmgType,
+      eHp: eMaxHp, eMaxHp, eAtk, eDmgType, eDef, eElemDef,
       cds:    [...cds],
       maxCds: [...maxCds],
       defBuff:   { mult: 1, attacksLeft: 0 },
       dodgeBuff: { chance: 0, attacksLeft: 0 },
+      // Expose buff (added 2026-04-26). Null when inactive. Per-clock charges
+      // — playerAttacksLeft burns on player attacks, enemyAttacksLeft on
+      // enemy attacks. Re-cast overwrites (no stacking).
+      exposeBuff: null,
       stats:    { ...stats },
       equipped: [...equippedTechs],
       enemyDrops:       enemyDef?.drops ?? [],
@@ -350,9 +429,9 @@ export default function useCombat() {
           // calcDamage).
           const baseMult = 1 + (s.stats.damageStats?.default_attack_damage ?? 0);
           dmg = Math.max(5, Math.floor(dmg * baseMult));
-          // Exploit also applies to basic attacks.
-          const exChance = s.stats.exploitChance ?? 0;
-          const exMult   = s.stats.exploitMult   ?? 150;
+          // Exploit also applies to basic attacks. Pulls expose-buff bonuses
+          // through resolveExploitParams.
+          const { chance: exChance, mult: exMult } = resolveExploitParams(s);
           const exploited = exChance > 0 && Math.random() * 100 < exChance;
           if (exploited) dmg = Math.floor(dmg * (exMult / 100));
           // Artefact-unique conditional damage stack (time / combo / realm…).
@@ -361,6 +440,17 @@ export default function useCombat() {
           const critRes = rollCritMultiplier(s, dmg);
           dmg = critRes.dmg;
           dmg = Math.floor(dmg * (s.stats.damageMult ?? 1));
+          // Enemy mitigation (PoE armour curve). Basic attack is hard-pinned
+          // to physical damage; def_pen + expose-buff defPen reduce armour.
+          {
+            const armour    = s.eDef ?? 0;
+            const totalPen  = resolveDefPen(s);
+            const effArmour = Math.max(0, armour * (1 - totalPen));
+            dmg = applyArmourMitigation(dmg, effArmour);
+          }
+          // Player-clock expose buff burns one charge per player attack
+          // regardless of whether the boost contributed.
+          tickExposeBuff(s, 'player');
           s.eHp = Math.max(0, s.eHp - dmg);
           // Lifesteal from artefact affixes (blood_drinker / blood_palms / …).
           const lifestealPct = s.stats?.lifestealPct ?? 0;
@@ -409,9 +499,8 @@ export default function useCombat() {
               s.stats.damageStats ?? null,
             );
             // Exploit: roll exploitChance % per attack; on success multiply
-            // damage by exploitMult % (default 150%).
-            const exChance = s.stats.exploitChance ?? 0;
-            const exMult   = s.stats.exploitMult   ?? 150;
+            // damage by exploitMult % (default 150%). Expose buff folds in.
+            const { chance: exChance, mult: exMult } = resolveExploitParams(s);
             // md_k Killing Stride — next cast after a kill is a guaranteed
             // exploit and gets +50% damage. One-shot flag, consumed here.
             const stride = strideRef.current;
@@ -426,6 +515,16 @@ export default function useCombat() {
             dmg = critRes.dmg;
             // Reincarnation-tree "Triple All Damage" node.
             dmg = Math.floor(dmg * (s.stats.damageMult ?? 1));
+            // Enemy mitigation: pick DEF / ELEM_DEF by tech damage type, then
+            // apply def_pen + expose-buff defPen, then PoE armour curve.
+            {
+              const armour    = tech.damageType === 'elemental' ? (s.eElemDef ?? 0) : (s.eDef ?? 0);
+              const totalPen  = resolveDefPen(s);
+              const effArmour = Math.max(0, armour * (1 - totalPen));
+              dmg = applyArmourMitigation(dmg, effArmour);
+            }
+            // Player-clock expose buff burns a charge per player attack.
+            tickExposeBuff(s, 'player');
             s.eHp = Math.max(0, s.eHp - dmg);
             // Lifesteal — counts every damage source.
             const lifestealPct = s.stats?.lifestealPct ?? 0;
@@ -461,6 +560,29 @@ export default function useCombat() {
             const chance  = Math.min(1, (tech.dodgeChance ?? 0.4) * effMult);
             s.dodgeBuff = { chance, attacksLeft: atks };
             logs.push({ msg: `${tech.name} → ${Math.round(chance * 100)}% dodge (${atks} hits)`, kind: 'buff' });
+          } else if (tech.type === 'Expose') {
+            // Per-effect clocks: any of {exploitChance, exploitMult, defPen}
+            // burns on player attacks; dmgReduction burns on enemy attacks.
+            const playerAtks = resolveBuffAttacks(tech.buffPlayerAttacks ?? 0, s.stats);
+            const enemyAtks  = resolveBuffAttacks(tech.buffEnemyAttacks  ?? 0, s.stats);
+            s.exposeBuff = {
+              exploitChance:     tech.exploitChance ?? 0,
+              exploitMult:       tech.exploitMult, // undefined → fall back to stats.exploitMult in resolveExploitParams
+              defPen:            tech.defPen ?? 0,
+              dmgReduction:      tech.dmgReduction ?? 0,
+              playerAttacksLeft: tech.buffPlayerAttacks ? playerAtks : 0,
+              enemyAttacksLeft:  tech.buffEnemyAttacks  ? enemyAtks  : 0,
+            };
+            const parts = [];
+            if (tech.exploitChance) parts.push(`+${tech.exploitChance}% exploit`);
+            if (tech.defPen)        parts.push(`${Math.round(tech.defPen * 100)}% def pen`);
+            if (tech.exploitMult)   parts.push(`exploit ×${(tech.exploitMult/100).toFixed(2)}`);
+            if (tech.dmgReduction)  parts.push(`${Math.round(tech.dmgReduction * 100)}% dmg red`);
+            const charges = [
+              tech.buffPlayerAttacks ? `${playerAtks} player` : null,
+              tech.buffEnemyAttacks  ? `${enemyAtks} enemy`   : null,
+            ].filter(Boolean).join(' / ');
+            logs.push({ msg: `${tech.name} → ${parts.join(', ')} (${charges} hits)`, kind: 'buff' });
           }
           break; // one technique per turn
         }
@@ -514,9 +636,11 @@ export default function useCombat() {
 
             // Roll technique drop
             if (s2.techDropChance > 0 && Math.random() < s2.techDropChance) {
-              const tech = generateTechnique(s2.worldId);
-              onTechniqueDropRef.current?.(tech);
-              newLogs.unshift({ msg: `Scroll found: ${tech.name} (${tech.quality} ${tech.type})`, kind: 'technique' });
+              const tech = pickTechnique(s2.worldId);
+              if (tech) {
+                onTechniqueDropRef.current?.(tech);
+                newLogs.unshift({ msg: `Scroll found: ${tech.name} (${tech.quality} ${tech.type})`, kind: 'technique' });
+              }
             }
 
             // Roll artefact drop — independent from the technique roll so an
@@ -593,10 +717,14 @@ export default function useCombat() {
           } else {
             rawDef = s.stats.defense ?? 0;
           }
-          const def = Math.max(1, rawDef * defMult);
-          // Scale-independent formula: dmg = eAtk² / (eAtk + def)
-          // At equal eAtk and def → 50% reduction. Fully works at any stat scale.
-          const rawDmg  = Math.max(1, Math.floor(s.eAtk * s.eAtk / (s.eAtk + def)));
+          // Defend buff multiplies effective armour (and therefore mitigation
+          // in the PoE curve). 2026-04-26 overhaul: incoming-damage reduction
+          // (player stat + enemy-clock expose buff) is applied BEFORE armour
+          // mitigation, then armour curve runs.
+          const armour = Math.max(1, rawDef * defMult);
+          const reduction = resolveIncomingDmgReduction(s);
+          let rawDmg = Math.max(1, Math.floor(s.eAtk * (1 - reduction)));
+          rawDmg = applyArmourMitigation(rawDmg, armour);
           // hw_3 Undying Resolve — once per fight, a lethal hit leaves you
           // at 1 HP instead of dying. Charge consumed regardless of whether
           // the hit would actually have killed (only triggers on kill).
@@ -643,6 +771,9 @@ export default function useCombat() {
         // Consume a charge from any active buff after this attack resolves.
         if (dodgeActive) s.dodgeBuff.attacksLeft -= 1;
         if (defActive)   s.defBuff.attacksLeft   -= 1;
+        // Expose buff enemy clock — burns whether the hit landed, was dodged,
+        // or was god-moded; the buff covered the moment regardless.
+        tickExposeBuff(s, 'enemy');
 
         if (logs.length) setLog(prev => [...logs, ...prev].slice(0, MAX_LOG));
 

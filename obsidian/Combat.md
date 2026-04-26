@@ -58,16 +58,13 @@ Enemies in a zone have a **normally distributed** power level:
 ### Player Attack — Secret Technique
 
 ```
-base    = K × (Essence + Soul + Body + artefact_flat) × arteMult × elemBonus + bonus
-+ category bonus (per damage category × law-share)
-+ per-pool bonus  (per pool × law-share)
-+ damage_all      (whole-attack flat, no share)
+base    = K × (Essence + Soul + Body + artefact_flat) × arteMult + bonus
++ damage_bucket_flat   (physical_damage if damageType==='physical', else elemental_damage)
++ damage_all           (whole-attack flat, no share)
 × (1 + secret_technique_damage)
 ```
 
-`elemBonus` only fires when `tech.element === lawElement` (and tech is
-not Normal). Category / pool / damage_all flats come from artefact
-affixes and law uniques (see [[Stats]] and [[Artefacts]]).
+> The element-matching `elemBonus` factor was removed in 2026-04-26 along with the `tech.element` field — every Expose / Attack technique now picks its damage bucket purely via `damageType`. Laws still carry an element for elsewhere.
 
 ### Player Attack — Basic
 
@@ -97,9 +94,13 @@ HP = max(100, (Essence + Body) × 12 + Soul × 4)
 
 ### Enemy Stats
 ```
-Enemy HP  = max(100, 150 × 1.12^region_index × enemy_hp_mult)
-Enemy ATK = max(10,  (Essence + Soul + Body) × enemy_atk_mult)
+Enemy HP       = max(100, 150 × 1.12^region_index × enemy_hp_mult)
+Enemy ATK      = max(10,  18 × 1.12^region_index × enemy_atk_mult)
+Enemy DEF      = max(10,  region_index × 8 × enemy_def_mult)        // physical mitigation
+Enemy ELEM_DEF = max(10,  region_index × 8 × enemy_elem_def_mult)   // elemental mitigation
 ```
+
+> `enemy_def_mult` and `enemy_elem_def_mult` are STARTING VALUES added in the 2026-04-26 secret-tech overhaul (defaults 1.0; per-enemy overrides go in `data/enemies.js` `statMult`). Tune after the next balance pass — direction is to lower if player damage feels ineffectual at high realm.
 `region_index` is the region's `minRealmIndex` (0–50 across the six worlds).
 The 1.12×-per-index curve gives a ~300× HP spread from W1 R1 to W6 R4, independent of
 the qi economy. Early zones always have low HP, late zones always have high HP,
@@ -121,12 +122,32 @@ Reference HP (before `hp_mult`):
 | W6 R1 Heaven Pillar Ascent        | 45 | 16 775 |
 | W6 R4 Heaven's Core               | 51 | 31 392 |
 
-### Enemy Damage Formula (scale-independent)
+### Mitigation Pipeline (added 2026-04-26 secret-tech overhaul)
+
+Both directions of the damage formula now use a **PoE-style armour curve**:
+
 ```
-DEF       = (Essence + Body) × def_buff_mult
-EnemyDmg  = EnemyATK² / (EnemyATK + DEF)
+mitigation = armour / (armour + 10 × damage)         // capped at 0.9
+final      = damage × (1 − mitigation)
 ```
-This formula is fully scale-independent: **hits-to-die depends only on enemy_atk_mult, not on absolute qi**. At `EnemyATK = DEF`, the enemy deals 50% of its raw attack. The `def_buff_mult` is 1 normally, raised by Defend-type [[Secret Techniques]].
+
+**Player → Enemy (player attacks):**
+```
+armour    = (tech.damageType === 'elemental') ? EnemyElemDef : EnemyDef
+effArmour = armour × (1 − totalDefPen)               // totalDefPen = stats.defPen + exposeBuff.defPen
+final     = applyArmourMitigation(rawDmg, effArmour)
+```
+
+**Enemy → Player (enemy attacks):**
+```
+reduction = stats.incomingDamageReduction + (exposeBuff.dmgReduction if active)   // capped at 0.9
+preDef    = EnemyATK × (1 − reduction)
+armour    = (eDmgType === 'elemental') ? player.elemDef : player.defense
+armour   *= def_buff_mult                            // Defend buff multiplies effective armour
+final     = applyArmourMitigation(preDef, armour)
+```
+
+Order on incoming hits: **incoming-damage reduction first, then armour mitigation**. Defend buff `def_buff_mult` is 1 normally, raised by Defend-type [[Secret Techniques]] — it now multiplies effective armour (so it boosts mitigation in the curve, not raw DEF).
 
 **Reference hits-to-die** (default law, no defence buffs):
 
@@ -145,6 +166,8 @@ This formula is fully scale-independent: **hits-to-die depends only on enemy_atk
 
 - **DEF** = `body + modifiers` (artefact / pill / law-unique flats and
   multipliers all stack via the standard 5-layer formula).
+- **Defense Penetration** (`defense_penetration`) — fraction of enemy DEF / ELEM_DEF the player ignores before the armour mitigation curve. Stored as 0–1. Comes from artefact / law / Expose-buff sources.
+- **Incoming Damage Reduction** (`incoming_damage_reduction`) — fraction subtracted from incoming enemy damage **before** armour mitigation. Stored as 0–1, capped at 0.9.
 - **Defend buff** — Defend-type [[Secret Techniques]] cast applies a
   `defBuff = { mult: defMult × (1 + buff_effect), attacksLeft: N }` for
   the next N enemy attacks (charge-based, NOT a wall-clock timer).
@@ -154,8 +177,8 @@ This formula is fully scale-independent: **hits-to-die depends only on enemy_atk
   enemy turn rolls `Math.random() < chance`; success negates damage
   fully. Both branches consume one charge regardless of roll outcome.
   No passive dodge stat; only the buff matters today.
-- Buff `N` (`buffAttacks`) is rolled at generation: Defend 2–4 hits,
-  Dodge 2–4 hits. The `buff_duration` stat scales N at cast time.
+- **Expose buff** — Expose-type techniques apply an `exposeBuff` with one or two of: `exploitChance` / `exploitMult` / `defPen` (player-clock, burns on next N **player** attacks), and `dmgReduction` (enemy-clock, burns on next N **enemy** attacks). Mixed buffs track both clocks independently. Re-casting overwrites — no stacking.
+- Buff `N` (`buffAttacks`, `buffPlayerAttacks`, `buffEnemyAttacks`) is baked per-technique now (Defend 2–6, Dodge 2–6, Expose 3–7 depending on quality). The `buff_duration` stat still scales N at cast time.
 
 ---
 

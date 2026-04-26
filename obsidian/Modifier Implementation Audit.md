@@ -211,45 +211,17 @@ Representative subset (full list in `lawUniques.js`):
 
 ## 3 · Secret Technique Modifiers
 
-### 3a · Type-level stats — **IMPLEMENTED**
+> **Removed 2026-04-26 secret-tech overhaul.** Techniques no longer carry random modifiers. They're hand-authored uniques (60-entry catalogue, 12 per quality × 5 qualities) with every effect baked into the definition. See [[Secret Techniques]] and the new Expose type. The previous `TECHNIQUE_UNIQUES` stub pool and the `PASSIVE_POOLS` presentation-only display layer are both gone.
 
-Generated at drop time
-([techniqueDrops.js:176–192](../src/data/techniqueDrops.js)); frozen on
-the instance.
+Effect fields per type (all baked into the catalogue entry, no modifier system):
 
-| stat | where generated | where consumed | status |
-|---|---|---|---|
-| `arteMult`    | Attack | `calcDamage` ([techniques.js:112](../src/data/techniques.js)) | YES |
-| `elemBonus`   | Attack (elemental) | `calcDamage` ([techniques.js:110](../src/data/techniques.js)) | YES |
-| `bonus`       | Attack | `calcDamage` ([techniques.js:114](../src/data/techniques.js)) | YES |
-| `healPercent` | Heal | `useCombat.js:343` | YES |
-| `defMult`     | Defend | `useCombat.js:349` | YES |
-| `dodgeChance` | Dodge | `useCombat.js:355` | YES |
-| `buffAttacks` | Defend, Dodge | `resolveBuffAttacks` in [useCombat.js:22](../src/hooks/useCombat.js) | YES |
-
-### 3b · `TECHNIQUE_UNIQUES` pool — **STUB**
-
-Defined in [uniqueModifiers.js:204–335](../src/data/uniqueModifiers.js);
-100+ entries for Attack, Heal, Defend, Dodge types.
-
-- `generateTechnique` has **no reference** to `TECHNIQUE_UNIQUES`.
-- `techniqueUniquesByType()` at line 399 is **never called**.
-- No combat code reads these entries.
-
-### 3c · `PASSIVE_POOLS` — **PRESENTATION ONLY**
-
-Defined in `useTechniques.js:7–36` and mirrored in
-`techniqueDrops.js:70–99`. They are rolled onto technique instances and
-can be swapped via transmutation, but **no combat logic reads the
-passive name, description, or effect**. Examples declared but not
-wired up:
-
-- `Penetrating` — "Ignores 15% of enemy DEF."
-- `Sharpened` — "Deals 10% bonus damage."
-- `Swift Strike` — "Cooldown reduced by 0.5s on hit."
-- `Vicious` — "20% chance to deal double damage."
-- `Focus` — "+10% critical hit chance."
-- (full list: Attack / Heal / Defend / Dodge, five per type)
+| Type | Fields | Status |
+|---|---|---|
+| Attack  | `arteMult`, `bonus`, `damageType` | live in `calcDamage` |
+| Heal    | `healPercent` | live in `useCombat` |
+| Defend  | `defMult`, `buffAttacks` | live in `useCombat` |
+| Dodge   | `dodgeChance`, `buffAttacks` | live in `useCombat` |
+| Expose  | `exploitChance`, `exploitMult`, `defPen`, `dmgReduction`, `buffPlayerAttacks`, `buffEnemyAttacks` | live in `useCombat` |
 
 ---
 

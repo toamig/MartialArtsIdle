@@ -64,15 +64,23 @@ Multiplier applied **only to secret-technique damage** in `calcDamage`.
 
 ### Defense
 
-`defense` — physical defense. Reduces enemy physical attack damage via `dmg = atk² / (atk + defense)`. A live `defBuff` multiplies it for the next N enemy attacks.
+`defense` — physical defense. Reduces enemy physical attack damage via the PoE-style armour curve `mitigation = armour / (armour + 10 × damage)` (capped at 0.9). A live `defBuff` multiplies effective armour, boosting mitigation in the curve. See [[Combat#Mitigation Pipeline]].
 
 ### Elemental Defense
 
-`elemental_defense` — reduces enemy elemental attack damage via the same defense-curve formula.
+`elemental_defense` — reduces enemy elemental attack damage via the same armour curve, picked when the incoming hit's `damageType` is elemental.
 
 ### Exploit Chance / Multiplier
 
 Per-attack roll % to flag an attack as an exploit hit. `exploit_chance` base 0; `exploit_attack_mult` base 150%.
+
+### Defense Penetration
+
+`defense_penetration` (added 2026-04-26 secret-tech overhaul) — fraction of enemy DEF / ELEM_DEF the player ignores. Applied **before** the armour mitigation curve: `effArmour = armour × (1 − totalDefPen)`. Stored as 0–1 fraction, capped at 1.0. Sources include artefact / law uniques and the Expose-buff `defPen` field.
+
+### Incoming Damage Reduction
+
+`incoming_damage_reduction` (added 2026-04-26 secret-tech overhaul) — fraction subtracted from incoming enemy damage **before** the armour mitigation curve: `preDef = enemyDmg × (1 − reduction)`. Stored as 0–1 fraction, capped at 0.9. Sources include artefact / law uniques and the Expose-buff `dmgReduction` field (enemy-clock).
 
 ---
 

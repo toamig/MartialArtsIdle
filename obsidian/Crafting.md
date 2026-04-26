@@ -108,12 +108,7 @@ At epic/legendary quality, Refine also requires Skyfire Meteorite × tier (in ad
 
 ### Secret Techniques
 
-| Property | Refine | Hone | Imbue / Extract | Transmute |
-|---|---|---|---|---|
-| Passives | ✓ | ✓ (effect values) | ✓ | ✓ |
-| Element | ✓ | ✗ | ✗ | ✓ |
-| Type (Attack / Heal / Defend / Dodge) | ✗ | ✗ | ✗ | ✗ |
-| Rank | ✗ | ✗ | ✗ | ✗ |
+> **Removed 2026-04-26.** Techniques are now hand-authored uniques drawn from a fixed catalogue of 60 entries (12 per quality × 5 qualities) — see [[Secret Techniques]]. They carry no modifiers, no element, and no editable properties. Refining + transmutation paths for techniques are gone. Drops are the only acquisition path.
 
 ### Laws
 

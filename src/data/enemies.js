@@ -10,8 +10,10 @@
  *   For null-sprite enemies this is the brief for whoever creates the art.
  *
  * statMult: multiplied on top of the player-derived base stats.
- *     hp  — scales enemy max HP
- *     atk — scales enemy attack damage
+ *     hp     — scales enemy max HP
+ *     atk    — scales enemy attack damage
+ *     def    — scales enemy DEF (physical mitigation), default 1.0
+ *     elemDef — scales enemy ELEM_DEF (elemental mitigation), default 1.0
  *
  * drops: array of { itemId, chance 0–1, qty [min, max] }
  *   Combat drops: blood cores (per-enemy rarity) + QI stones (cultivation materials).

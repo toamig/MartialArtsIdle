@@ -4,9 +4,10 @@ import { useTranslation } from 'react-i18next';
 import {
   TECHNIQUE_QUALITY, TECHNIQUE_RANK,
   TYPE_COLOR, getCooldown, getK, canEquip,
+  getTechniqueBaseId,
 } from '../data/techniques';
 
-const FILTER_KEYS = ['All', 'Attack', 'Heal', 'Defend', 'Dodge'];
+const FILTER_KEYS = ['All', 'Attack', 'Heal', 'Defend', 'Dodge', 'Expose'];
 const SLOT_T_KEYS = ['techniqueSlotModal.slot1', 'techniqueSlotModal.slot2', 'techniqueSlotModal.slot3'];
 
 function TechniqueCard({ tech, equipped, locked, onClick }) {
@@ -18,8 +19,11 @@ function TechniqueCard({ tech, equipped, locked, onClick }) {
   const cd      = getCooldown(tech.type, tech.quality);
   const K       = getK(tech.rank, tech.quality);
 
-  const techName    = tGame(`techniques.${tech.id}.name`,    { defaultValue: tech.name });
-  const techFlavour = tGame(`techniques.${tech.id}.flavour`, { defaultValue: tech.flavour });
+  // i18n keys live on the catalogue base id; drop-instance ids carry a
+  // `__suffix` for uniqueness — strip it before looking up translations.
+  const baseId      = getTechniqueBaseId(tech.id);
+  const techName    = tGame(`techniques.${baseId}.name`,    { defaultValue: tech.name });
+  const techFlavour = tGame(`techniques.${baseId}.flavour`, { defaultValue: tech.flavour });
 
   return (
     <button
@@ -55,21 +59,22 @@ function TechniqueCard({ tech, equipped, locked, onClick }) {
         {tech.type === 'Dodge' && (
           <span>{t('techniqueSlotModal.dodgeBuff', { pct: Math.round((tech.dodgeChance ?? 0) * 100), hits: tech.buffAttacks })}</span>
         )}
-        {tech.element && tech.element !== 'Normal' && (
-          <span className="tech-element">
-            {t(`elements.${tech.element}`, { defaultValue: tech.element })}
-          </span>
-        )}
       </div>
 
-      {tech.passives?.length > 0 && (
+      {tech.type === 'Expose' && (
         <ul className="tech-item-passives">
-          {tech.passives.map((p, i) => {
-            const desc = tGame(`techniques.${tech.id}.passives.${p.name}`, { defaultValue: p.description });
-            return (
-              <li key={`${p.name}-${i}`}><strong>{p.name}:</strong> {desc}</li>
-            );
-          })}
+          {tech.exploitChance ? (
+            <li>{t('techniqueSlotModal.exposeExploitChance', { pct: tech.exploitChance, hits: tech.buffPlayerAttacks })}</li>
+          ) : null}
+          {tech.exploitMult ? (
+            <li>{t('techniqueSlotModal.exposeExploitMult', { mult: (tech.exploitMult / 100).toFixed(2), hits: tech.buffPlayerAttacks })}</li>
+          ) : null}
+          {tech.defPen ? (
+            <li>{t('techniqueSlotModal.exposeDefPen', { pct: Math.round(tech.defPen * 100), hits: tech.buffPlayerAttacks })}</li>
+          ) : null}
+          {tech.dmgReduction ? (
+            <li>{t('techniqueSlotModal.exposeDmgReduction', { pct: Math.round(tech.dmgReduction * 100), hits: tech.buffEnemyAttacks })}</li>
+          ) : null}
         </ul>
       )}
 

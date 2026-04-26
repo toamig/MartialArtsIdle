@@ -2,12 +2,34 @@ import { useState, useEffect, useCallback } from 'react';
 import { saveTechniques, loadTechniques, saveOwnedTechniques, loadOwnedTechniques } from '../systems/save';
 import { getTechnique } from '../data/techniques';
 
+// One-shot save migration flag. The 2026-04-26 secret-tech overhaul switched
+// the technique system from procedural generation + passive pool to a fixed
+// unique catalogue. Old `mai_owned_techniques` entries reference random ids
+// + display-only passives that no longer exist; wipe them once on first load
+// and stamp this flag so we don't re-wipe on every mount.
+const MIGRATION_FLAG_KEY = 'mai_techniques_pool_v2';
+
 // Base slot count is 3; the reincarnation tree node `md_3` (The Fourth
 // Form) raises it to 4. Hook accepts an `extraSlots` arg from App.jsx so
 // the base value lives here and the augment lives in the tree hook.
 const SLOT_COUNT = 3;
 export const MAX_SLOT_COUNT = 4;
 export const MAX_TECHNIQUES = 100;
+
+function loadOwnedWithMigration() {
+  try {
+    if (!localStorage.getItem(MIGRATION_FLAG_KEY)) {
+      // Drop any pre-overhaul drops + clear all equipped slots, then stamp
+      // the flag. localStorage.setItem handles the slot wipe via the same
+      // empty array the load helper would return.
+      saveOwnedTechniques({});
+      saveTechniques(Array.from({ length: MAX_SLOT_COUNT }, () => null));
+      localStorage.setItem(MIGRATION_FLAG_KEY, '1');
+      return {};
+    }
+  } catch { /* localStorage unavailable — fall through to load */ }
+  return loadOwnedTechniques();
+}
 
 export default function useTechniques({ extraSlots = 0 } = {}) {
   const totalSlots = Math.min(MAX_SLOT_COUNT, SLOT_COUNT + extraSlots);
@@ -17,9 +39,7 @@ export default function useTechniques({ extraSlots = 0 } = {}) {
   });
 
   // { [id]: techniqueObj } — all acquired techniques (drops only, no starter seeding)
-  const [ownedTechniques, setOwned] = useState(() => {
-    return loadOwnedTechniques();
-  });
+  const [ownedTechniques, setOwned] = useState(() => loadOwnedWithMigration());
 
   useEffect(() => {
     saveOwnedTechniques(ownedTechniques);
@@ -33,10 +53,11 @@ export default function useTechniques({ extraSlots = 0 } = {}) {
     });
   }, []);
 
-  /** Look up a technique by id — static catalogue first, then owned drops. */
+  /** Look up a technique by id — the owned (drop-instance) entry first, then
+   *  the static catalogue (so legacy ids without the drop suffix still resolve). */
   const getTechById = useCallback((id) => {
     if (!id) return null;
-    return getTechnique(id) ?? ownedTechniques[id] ?? null;
+    return ownedTechniques[id] ?? getTechnique(id) ?? null;
   }, [ownedTechniques]);
 
   const equip = useCallback((slotIndex, techniqueId) => {

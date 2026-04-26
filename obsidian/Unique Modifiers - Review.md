@@ -4,7 +4,9 @@ Flat list of curated unique modifier ideas, organized by pool. Descriptions use 
 
 Format: `- **Name** — description (range: min–max) [tags]`
 
-> Counts: **128 laws / 150 artefacts / 100 techniques = 378 total**
+> **Technique passives deprecated 2026-04-26.** The 100-entry technique-passive list below is **archived for reference only**. Effects are now baked into the 60-entry unique-technique catalogue (see [[Secret Techniques]]). The technique sections below should not be ported into the new catalogue verbatim; they're idea seeds.
+
+> Counts: **128 laws / 150 artefacts / 100 techniques (archived) = 378 total**
 
 ---
 

@@ -101,11 +101,19 @@ export default function useReincarnationTree({ karma, spendKarma, lives = 0 } = 
       cooldownMult:       purchased.has('md_1') ? 0.90 : 1,   // md_1 -10% CDs
       exploitChanceFlat:  purchased.has('md_2') ? 20   : 0,   // md_2 +20% (units: %)
       extraTechSlot:      purchased.has('md_3'),              // md_3 +1 slot
-      craftedTechQualityBump: purchased.has('md_4') ? 1 : 0,
+      // TODO: redesign — refining removed in 2026-04-26 secret-tech overhaul.
+      // md_4 Veteran's Eye no longer has anywhere to apply (it bumped the
+      // quality of refined techniques; refining is gone). Keep the node
+      // purchasable so saved trees don't break, but the modifier is a no-op
+      // until the node is repurposed.
+      craftedTechQualityBump: 0,
       killingStride:      purchased.has('md_k'),              // md_k post-kill exploit
 
       // ── Fate's Path ───────────────────────────────────────────────
-      craftRarityUpChance:purchased.has('fp_1') ? 0.10 : 0,   // fp_1 +10% tier-up on craft
+      // fp_1 Lucky Star — still applies to ALCHEMY crafts (chance to bump
+      // the brewed pill's rarity). Refining no longer exists, so the node's
+      // surface area is narrower than originally designed.
+      craftRarityUpChance:purchased.has('fp_1') ? 0.10 : 0,
       gatherMineRarityUpChance: purchased.has('fp_2') ? 0.10 : 0,
       // fp_3 is currently a placeholder — no modifier wired.
       selectionOptionCount: purchased.has('fp_4') ? 4 : 3,

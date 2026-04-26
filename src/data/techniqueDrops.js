@@ -1,14 +1,14 @@
 /**
- * techniqueDrops.js — procedural Secret Technique generation for loot drops.
+ * techniqueDrops.js — drop generation for the unique-pool secret-tech catalogue.
  *
- * Quality and element pools are biased by world tier so that later worlds
- * yield better techniques. Rank scales with world:
- *   World 1 → Mortal, World 2 → Earth, World 3 → Sky,
- *   World 4 → Saint, World 5 → Emperor, World 6 → Heaven
+ * Quality is rolled per world (same rarity table as materials). Once quality
+ * is decided, a uniform-random pick from the matching subset of TECHNIQUES is
+ * cloned and tagged with: a fresh drop id (`${baseId}__suffix`) so duplicates
+ * stack distinctly in `ownedTechniques`, and a `rank` derived from the world
+ * tier (W1=Mortal … W6=Heaven) — the K_TABLE indexes by rank × quality.
  */
 
-import { TECHNIQUE_QUALITY } from './techniques';
-import { ELEMENTS } from './elements';
+import { TECHNIQUES } from './techniques';
 
 // ─── World-tier tables ────────────────────────────────────────────────────────
 
@@ -22,103 +22,10 @@ export const WORLD_QUALITY_WEIGHTS = [
   { Iron: 0,  Bronze: 0,  Silver: 3,  Gold: 20, Transcendent: 77 }, // World 6
 ];
 
-/**
- * Dominant elements per world. Post-Stage-7 every technique is tagged with
- * one of the five elements (see obsidian/Elements.md). Early worlds bias
- * toward metal/earth (the "plain" elements) so a law's element match is
- * still statistically uncommon at low realms; later worlds open up.
- */
-const WORLD_ELEMENTS = [
-  ['metal', 'metal', 'earth', 'fire'],                             // World 1
-  ['metal', 'earth', 'fire', 'water'],                             // World 2
-  ['metal', 'earth', 'fire', 'water', 'wood'],                     // World 3
-  ['fire', 'water', 'wood', 'metal', 'earth'],                     // World 4
-  ['fire', 'water', 'wood', 'metal', 'earth'],                     // World 5
-  ['fire', 'water', 'wood', 'metal', 'earth'],                     // World 6
-];
-
 /** Rank of dropped techniques per world. */
-const WORLD_RANK = [
+export const WORLD_RANK = [
   'Mortal', 'Earth', 'Sky', 'Saint', 'Emperor', 'Heaven',
 ];
-
-const TYPE_WEIGHTS = { Attack: 50, Heal: 20, Defend: 15, Dodge: 15 };
-
-// ─── Name generation ──────────────────────────────────────────────────────────
-
-const ELEM_WORDS = {
-  fire:  ['Flame', 'Blazing', 'Inferno', 'Scorching', 'Ember'],
-  water: ['Tidal', 'Frost', 'Glacial', 'Torrent', 'River'],
-  earth: ['Stone', 'Mountain', 'Granite', 'Tremor', 'Dune'],
-  wood:  ['Thorn', 'Ivy', 'Verdant', 'Root', 'Grove'],
-  metal: ['Iron', 'Steel', 'Razor', 'Bladed', 'Sovereign'],
-};
-
-const TYPE_WORDS = {
-  Attack: ['Slash', 'Strike', 'Surge', 'Edge', 'Palm', 'Fist', 'Puncture', 'Cleave'],
-  Heal:   ['Breath', 'Mending', 'Recovery', 'Restoration', 'Purification'],
-  Defend: ['Shield', 'Barrier', 'Fortress', 'Ward', 'Guard', 'Shell'],
-  Dodge:  ['Step', 'Flash', 'Shift', 'Blur', 'Feint', 'Vanish'],
-};
-
-const SUFFIXES = ['Technique', 'Art', 'Method', 'Scripture', 'Form', 'Scroll', 'Manual'];
-
-// ─── Passive pools ────────────────────────────────────────────────────────────
-
-const PASSIVE_POOLS = {
-  Attack: [
-    { name: 'Penetrating',    description: 'Ignores 15% of enemy DEF.' },
-    { name: 'Sharpened',      description: 'Deals 10% bonus damage.' },
-    { name: 'Swift Strike',   description: 'Cooldown reduced by 0.5s on hit.' },
-    { name: 'Vicious',        description: '20% chance to deal double damage.' },
-    { name: 'Focus',          description: '+10% critical hit chance.' },
-  ],
-  Heal: [
-    { name: 'Restorative',    description: 'Heals an additional 5% HP over 3s.' },
-    { name: 'Calm Mind',      description: 'Reduces all cooldowns by 5% for 5s.' },
-    { name: 'Inner Peace',    description: 'Increases DEF by 10% for 4s after heal.' },
-    { name: 'Swift Recovery', description: 'Cooldown reduced by 1s.' },
-    { name: 'Overflow',       description: 'Can overheal up to 110% max HP.' },
-  ],
-  Defend: [
-    { name: 'Enduring',       description: 'Duration extended by 1s.' },
-    { name: 'Counterforce',   description: '10% of blocked damage returned to attacker.' },
-    { name: 'Qi Fortification', description: 'Restores 5% HP when activated.' },
-    { name: 'Ironclad',       description: 'Cannot be reduced below 1 HP while active.' },
-    { name: 'Hardened',       description: 'DEF bonus increased by 15%.' },
-  ],
-  Dodge: [
-    { name: 'Swift',          description: 'Dodge window extended by 0.5s.' },
-    { name: 'Afterimage',     description: 'Afterimage distracts enemy for 0.5s.' },
-    { name: 'Fleet Foot',     description: 'Cooldown reduced by 1s on successful dodge.' },
-    { name: 'Phase',          description: 'Next attack after dodge deals ×1.3 dmg.' },
-    { name: 'Ghost',          description: 'Dodge chance increased by +10%.' },
-  ],
-};
-
-const FLAVOURS = {
-  Attack: [
-    'A technique born from necessity, honed through blood and trial.',
-    'Its edge does not forgive.',
-    'Speed and precision — two blades, one strike.',
-    'Strike before the enemy has finished thinking.',
-  ],
-  Heal: [
-    'The body remembers wholeness even after it is broken.',
-    'Qi flows inward, mending what battle has torn.',
-    'A breath drawn in darkness; life reasserts itself.',
-  ],
-  Defend: [
-    'No force can penetrate a will made into stone.',
-    'Stillness is its own kind of strength.',
-    'Stand firm. Let the storm break against you.',
-  ],
-  Dodge: [
-    "The best defence is never being where the blade lands.",
-    'Between heartbeats — there is a gap wide enough to vanish into.',
-    'Motion without thought; instinct sharpened into art.',
-  ],
-};
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -126,7 +33,7 @@ function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function weightedPick(weights) {
+export function weightedPick(weights) {
   const total = Object.values(weights).reduce((s, w) => s + w, 0);
   let roll = Math.random() * total;
   for (const [key, w] of Object.entries(weights)) {
@@ -136,71 +43,32 @@ function weightedPick(weights) {
   return Object.keys(weights).at(-1);
 }
 
-function genName(type, element) {
-  const prefix = pick(ELEM_WORDS[element] ?? ['']);
-  const word   = pick(TYPE_WORDS[type]);
-  const suffix = pick(SUFFIXES);
-  return prefix ? `${prefix} ${word} ${suffix}` : `${word} ${suffix}`;
-}
-
-function genPassives(type, quality) {
-  const count = Object.keys(TECHNIQUE_QUALITY).indexOf(quality) + 1; // Iron=1, Bronze=2…
-  const pool  = [...(PASSIVE_POOLS[type] ?? [])];
-  const result = [];
-  for (let i = 0; i < count && pool.length > 0; i++) {
-    const idx = Math.floor(Math.random() * pool.length);
-    result.push(pool.splice(idx, 1)[0]);
-  }
-  return result;
-}
-
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 /**
- * Generate a random technique appropriate for the given world tier.
+ * Pick a unique technique from the catalogue, tagged for a specific drop.
+ *
  * @param {number} worldId  1–6
- * @returns Technique object with randomly rolled name, element, type,
- *          rank, quality, passives, and type-specific stats. All stats
- *          are frozen at generation time — transmutation only edits
- *          quality and passives.
+ * @returns Technique drop instance (catalogue entry clone with a fresh drop
+ *          id + world-derived rank). All stats are baked into the catalogue
+ *          entry itself — no random rolls beyond which entry was picked.
  */
-export function generateTechnique(worldId) {
+export function pickTechnique(worldId) {
   const wIdx    = Math.max(0, Math.min(5, worldId - 1));
   const quality = weightedPick(WORLD_QUALITY_WEIGHTS[wIdx]);
-  const type    = weightedPick(TYPE_WEIGHTS);
-  const element = pick(WORLD_ELEMENTS[wIdx]);
   const rank    = WORLD_RANK[wIdx];
 
-  const typeStats = {};
-  if (type === 'Attack') {
-    typeStats.arteMult  = 1.0;
-    // Every technique now carries an element — elem-match is always
-    // live if the player equips a same-element law.
-    typeStats.elemBonus = parseFloat((1.0 + Math.random() * 0.3).toFixed(2));
-    typeStats.bonus = 0;
-    // damageType routes the single flat-bucket bonus in calcDamage
-    // (post-Stage-5). Independent of `element`, which is a content tag.
-    typeStats.damageType = Math.random() < 0.5 ? 'physical' : 'elemental';
-  } else if (type === 'Heal') {
-    typeStats.healPercent = parseFloat((0.15 + Math.random() * 0.20).toFixed(3));
-  } else if (type === 'Defend') {
-    typeStats.defMult     = parseFloat((1.3 + Math.random() * 0.7).toFixed(2));
-    // Buffs are charge-based (N enemy attacks) now, not a wall-clock timer.
-    typeStats.buffAttacks = 2 + Math.floor(Math.random() * 3); // 2-4 hits
-  } else if (type === 'Dodge') {
-    typeStats.dodgeChance = parseFloat((0.30 + Math.random() * 0.30).toFixed(2));
-    typeStats.buffAttacks = 2 + Math.floor(Math.random() * 3); // 2-4 hits
-  }
+  const pool = TECHNIQUES.filter(t => t.quality === quality);
+  if (pool.length === 0) return null;
+  const base = pick(pool);
 
   return {
-    id:       `drop_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    name:     genName(type, element),
-    type,
+    ...base,
     rank,
-    quality,
-    element,
-    flavour:  pick(FLAVOURS[type]),
-    passives: genPassives(type, quality),
-    ...typeStats,
+    id: `${base.id}__${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
   };
 }
+
+// Backcompat alias for callers still using the old name. Same return shape;
+// safe to drop once external references are cleaned up.
+export const generateTechnique = pickTechnique;

@@ -382,6 +382,9 @@ function AppInner() {
       // type when computing mitigation.
       defense:          bundle.combat.defense,
       elementalDefense: bundle.combat.elemDef,
+      // Expose-pipeline stats (added 2026-04-26 secret-tech overhaul).
+      defPen:                   bundle.combat.defPen,
+      incomingDamageReduction:  bundle.combat.incomingDamageReduction,
       // Scales the attack-count of Defend / Dodge buffs at cast time.
       buffDurationMult: 1 + collapsePct('buff_duration'),
       // Scales magnitude (defMult / dodgeChance) at cast time.
