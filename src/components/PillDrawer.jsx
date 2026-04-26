@@ -6,9 +6,10 @@ import {
 } from '../data/pills';
 
 const CAT_T_KEY = {
-  combat:  'pillDrawer.catCombat',
-  harvest: 'pillDrawer.catHarvest',
-  mining:  'pillDrawer.catMining',
+  combat:      'pillDrawer.catCombat',
+  cultivation: 'pillDrawer.catCultivation',
+  harvest:     'pillDrawer.catHarvest',
+  mining:      'pillDrawer.catMining',
 };
 
 function DrawerPillCard({ pill, qty, onUse }) {

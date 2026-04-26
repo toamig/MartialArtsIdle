@@ -260,6 +260,7 @@
   "pillDrawer": {
     "title": "Pills",
     "catCombat": "Combat",
+    "catCultivation": "Cultivation",
     "catHarvest": "Harvest",
     "catMining": "Mining",
     "empty": "No {{category}} pills yet. Brew some at the Production screen.",

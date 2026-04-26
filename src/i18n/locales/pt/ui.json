@@ -259,9 +259,10 @@
 
   "pillDrawer": {
     "title":      "Pílulas",
-    "catCombat":  "Combate",
-    "catHarvest": "Coleta",
-    "catMining":  "Mineração",
+    "catCombat":     "Combate",
+    "catCultivation": "Cultivo",
+    "catHarvest":    "Coleta",
+    "catMining":     "Mineração",
     "empty":      "Nenhuma pílula de {{category}} ainda. Prepare algumas na tela de Produção.",
     "use":        "Consumir (Permanente)",
     "effectPct":  "+{{pct}}% {{stat}}",
