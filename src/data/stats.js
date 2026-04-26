@@ -77,8 +77,11 @@ export function computeAllStats(qi, law, realmIndex, modifiers = {}) {
   // ── Combat ─────────────────────────────────────────────────────────────────
   // Placeholder formulas — see obsidian/Primary Stats.md.
   const health        = Math.max(100, Math.floor(computeStat(Math.max(100, r * 200), mods('health'))));
-  const physDmg       = Math.floor(computeStat(0, mods('physical_damage')));
-  const elemDmg       = Math.floor(computeStat(0, mods('elemental_damage')));
+  // Base damage floors (added 2026-04-27): give the player a non-zero baseline
+  // before any artefact / law / set contribution so unequipped builds still
+  // deal something. Modifier sources still stack normally on top.
+  const physDmg       = Math.floor(computeStat(20, mods('physical_damage')));
+  const elemDmg       = Math.floor(computeStat(20, mods('elemental_damage')));
   const defense       = Math.floor(computeStat(r * 5,  mods('defense')));
   const elemDef       = Math.floor(computeStat(r * 5,  mods('elemental_defense')));
   const exploitChance = Math.round(computeStat(5,   mods('exploit_chance')));
