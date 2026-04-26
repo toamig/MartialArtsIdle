@@ -61,6 +61,7 @@ export function useVFX() {
           style={{
             left: effect.x,
             top: effect.y,
+            ...effect.style,
           }}
         >
           {effect.content && (

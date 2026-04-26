@@ -532,6 +532,42 @@ function HomeScreen({
     };
   }, []);
 
+  // ── Qi tick floaters — "+N Qi" flies up off the cultivator on a steady
+  // cadence so passive ticking reads as visible progress. Reuses the existing
+  // vfx-float-up effect; gated off while qi is capped at a major-realm gate
+  // or the run is finished without ascension.
+  const lastFloaterQiRef = useRef(qiRef.current);
+  useEffect(() => {
+    lastFloaterQiRef.current = qiRef.current;
+    const fmt = (n) => {
+      if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+      if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return String(Math.floor(n));
+    };
+    const id = setInterval(() => {
+      if (maxed && !ascended)   return;
+      if (gateRef?.current)    { lastFloaterQiRef.current = qiRef.current; return; }
+      const now   = qiRef.current;
+      const delta = now - lastFloaterQiRef.current;
+      const whole = Math.floor(delta);
+      if (whole < 1) return;
+      lastFloaterQiRef.current += whole;
+      const sz = 128 * spriteScale;
+      const x  = sz * 0.5 + (Math.random() - 0.5) * sz * 0.45;
+      const y  = sz * 0.55 + (Math.random() - 0.5) * sz * 0.15;
+      const driftX = (Math.random() - 0.5) * 32;
+      spawnVFX({
+        type: 'qi-tick',
+        x, y,
+        content: `+${fmt(whole)}`,
+        duration: 1100,
+        style: { '--qi-drift-x': `${driftX}px` },
+      });
+    }, 500);
+    return () => clearInterval(id);
+  }, [qiRef, gateRef, maxed, ascended, spawnVFX, spriteScale]);
+
   // ── Rewarded ad ─────────────────────────────────────────────────────────
   const onCultivationReward = useCallback(() => {
     activateAdBoost(AD_BOOST_DURATION_MS);
