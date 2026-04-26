@@ -36,6 +36,11 @@ export function wipeSave() {
   localStorage.removeItem('mai_active_law');
   localStorage.removeItem('mai_pills');
   localStorage.removeItem('mai_active_pills');
+  // Discovered pills + pinned recipes are tied to save state — wipe alongside
+  // the rest of the pill data. Previously omitted, which made discoveries
+  // appear to "leak" across save resets.
+  localStorage.removeItem('mai_discovered_pills');
+  localStorage.removeItem('mai_pinned_recipes');
   localStorage.removeItem('mai_seen_worlds');
   localStorage.removeItem('mai_pending_selections');
   localStorage.removeItem('mai_active_selections');
