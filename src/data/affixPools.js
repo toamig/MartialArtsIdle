@@ -79,14 +79,34 @@ export const RARITY_TIER = {
 //   - FLAT primary / HP / damage rolls store integers (Math.floor at roll).
 //   - FLAT_PCT rolls store decimals (0.05 = +5pp on percentage stats).
 //   - FLAT_QI rolls store decimals (0.30 = +0.30 qi/sec).
+//
+// 2026-04-27 rebalance: pre-overhaul ranges produced absurd late-game numbers
+// once the new element-themed laws + 30 set bonuses started stacking on top
+// of the artefact-only baseline. Cuts (vs prior values):
+//   MORE_TIER  ~50% (the worst offender — multiplicative across every layer)
+//   INCR_LARGE ~40% (damage stats stack with set/law INCR damage)
+//   FLAT_PCT   ~50% (exploit chance trivially hit 100%)
+//   INCR_BASIC ~35%
+//   FLAT_DMG   ~37%
+//   FLAT_HP    ~35%
+//   FLAT_PRIMARY / FLAT_QI: unchanged (less compounding pressure)
+// Spread Iron→Transcendent stays ~10× so rarity progression still feels
+// meaningful. Existing instances keep their old (high) baked-in values; only
+// new drops use the nerfed ranges.
+//
+// Tuning levers if this nerf misses:
+//   - MORE rolls still stacking too hot → cut MORE_TIER another 30% OR
+//     restrict MORE to specific slot types (PoE pattern).
+//   - Iron tier feels too weak → lift Iron floor by 1pp / 0.5 stat.
+//   - Late-game still trivializes → consider per-stat caps in the engine.
 const RANGES = {
-  INCR_BASIC:   { Iron:[0.06,0.12], Bronze:[0.10,0.18], Silver:[0.16,0.28], Gold:[0.24,0.40], Transcendent:[0.35,0.60] },
-  INCR_LARGE:   { Iron:[0.08,0.15], Bronze:[0.14,0.24], Silver:[0.22,0.36], Gold:[0.32,0.50], Transcendent:[0.45,0.75] },
-  MORE_TIER:    { Iron:[1.03,1.07], Bronze:[1.05,1.11], Silver:[1.09,1.18], Gold:[1.14,1.26], Transcendent:[1.20,1.40] },
-  FLAT_DMG:     { Iron:[6,14],      Bronze:[14,32],     Silver:[32,70],     Gold:[70,150],    Transcendent:[150,300]   },
-  FLAT_HP:      { Iron:[20,50],     Bronze:[50,120],    Silver:[120,280],   Gold:[280,600],   Transcendent:[600,1200]  },
+  INCR_BASIC:   { Iron:[0.04,0.08], Bronze:[0.07,0.12], Silver:[0.11,0.18], Gold:[0.16,0.26], Transcendent:[0.22,0.38] },
+  INCR_LARGE:   { Iron:[0.05,0.10], Bronze:[0.09,0.16], Silver:[0.14,0.24], Gold:[0.20,0.32], Transcendent:[0.28,0.45] },
+  MORE_TIER:    { Iron:[1.02,1.04], Bronze:[1.03,1.06], Silver:[1.05,1.10], Gold:[1.07,1.13], Transcendent:[1.10,1.18] },
+  FLAT_DMG:     { Iron:[4,9],       Bronze:[9,20],      Silver:[20,44],     Gold:[44,95],     Transcendent:[95,190]    },
+  FLAT_HP:      { Iron:[14,32],     Bronze:[32,78],     Silver:[78,180],    Gold:[180,390],   Transcendent:[390,780]   },
   FLAT_PRIMARY: { Iron:[3,8],       Bronze:[8,18],      Silver:[18,35],     Gold:[35,60],     Transcendent:[60,100]    },
-  FLAT_PCT:     { Iron:[0.01,0.03], Bronze:[0.02,0.05], Silver:[0.04,0.08], Gold:[0.06,0.12], Transcendent:[0.10,0.20] },
+  FLAT_PCT:     { Iron:[0.005,0.015], Bronze:[0.01,0.025], Silver:[0.02,0.04], Gold:[0.03,0.06], Transcendent:[0.05,0.10] },
   FLAT_QI:      { Iron:[0.05,0.15], Bronze:[0.15,0.30], Silver:[0.30,0.55], Gold:[0.55,0.90], Transcendent:[0.90,1.50] },
 };
 
