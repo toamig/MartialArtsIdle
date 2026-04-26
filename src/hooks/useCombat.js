@@ -439,8 +439,13 @@ export default function useCombat() {
         s.pHp = Math.min(s.pMaxHp, s.pHp + s.pMaxHp * regen * dt);
       }
       // Generic in-combat regen (water laws "5% HP/s natural regen"; pills).
-      const inCombatRegen = s.stats?.hpRegenInCombatPct ?? 0;
-      if (inCombatRegen > 0 && s.pHp < s.pMaxHp) {
+      const baseInCombatRegen = s.stats?.hpRegenInCombatPct ?? 0;
+      if (baseInCombatRegen > 0 && s.pHp < s.pMaxHp) {
+        // Water Set 2 4-piece: HP/s recovery is 50% more effective if a
+        // Heal-type secret technique is currently on cooldown.
+        const healCdActive = (s.equipped ?? []).some((t, i) => t?.type === 'Heal' && s.cds[i] > 0);
+        const healMore = healCdActive ? (s.stats?.setFlags?.hpRegenMoreIfHealCdActive ?? 0) : 0;
+        const inCombatRegen = baseInCombatRegen * (1 + healMore);
         s.pHp = Math.min(s.pMaxHp, s.pHp + s.pMaxHp * inCombatRegen * dt);
       }
 
@@ -699,6 +704,13 @@ export default function useCombat() {
             const reflected = Math.max(1, Math.floor(mitigated * retaliatePct));
             s.eHp = Math.max(0, s.eHp - reflected);
             logs.push({ msg: `Retaliated ${reflected} dmg`, kind: 'damage' });
+          }
+          // Earth Set 3 4-piece: heal a fraction of mitigated damage.
+          const bleedPct = s.stats?.setFlags?.defenseModsBleedToHealthPct ?? 0;
+          if (bleedPct > 0 && mitigated > 0 && s.pHp < s.pMaxHp) {
+            const heal = Math.max(1, Math.floor(mitigated * bleedPct));
+            s.pHp = Math.min(s.pMaxHp, s.pHp + heal);
+            logs.push({ msg: `Stoneblood → +${heal} HP from mitigation`, kind: 'heal' });
           }
           // Reflect (carried over from existing lifesteal/reflect plumbing).
           const reflectPct = s.stats?.reflectPct ?? 0;

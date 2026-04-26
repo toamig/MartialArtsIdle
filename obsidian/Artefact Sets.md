@@ -21,7 +21,7 @@ Each [[Artefacts|artefact]] drops with one (rarely two) `setId` constrained to i
 | Set | 2-piece | 4-piece |
 |---|---|---|
 | **Tidebound Rite** (`set_water_1`) | 20% increased healing effectiveness | Heal techniques only trigger when below 70% health. 60% increased healing effectiveness if below 50% health |
-| **Frost Mirror** (`set_water_2`) | 4% HP/s recovery | 6% HP/s recovery. HP/s recovery is 50% more effective if a healing technique is on cooldown |
+| **Frost Mirror** (`set_water_2`) | 4% HP/s recovery | 6% HP/s recovery. HP/s recovery is 50% more effective if a Heal-type secret technique is on cooldown |
 | **Abyssal Pact** (`set_water_3`) | Damage enemies by 20% of healing received | Damage enemies by 50% of healing received. Cannot use attack secret techniques |
 
 ### Earth — defence / mitigation
@@ -30,7 +30,7 @@ Each [[Artefacts|artefact]] drops with one (rarely two) `setId` constrained to i
 |---|---|---|
 | **Stoneblood Oath** (`set_earth_1`) | 20% more elemental defense | 50% of elemental defense is converted to defense |
 | **Mountain Chapel** (`set_earth_2`) | 20% more defense | 20% additional damage reduction |
-| **Dune Wanderers** (`set_earth_3`) | 20% more health | Any increases or reductions to defense apply to health at 30% of their value |
+| **Dune Wanderers** (`set_earth_3`) | 20% more health | Heal 30% of mitigated damage on every enemy hit (mitigated = raw enemy damage − damage actually taken after armour curve) |
 
 ### Metal — exploit / debuff
 

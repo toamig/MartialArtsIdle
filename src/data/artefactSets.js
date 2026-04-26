@@ -146,7 +146,7 @@ const SET_BONUSES = {
       effects: [{ kind: 'stat', stat: 'health', mod: MOD.MORE, value: 1.20 }],
     },
     fourPiece: {
-      description: 'Any increases or reductions to defense apply to health at 30% of their value',
+      description: 'Heal 30% of mitigated damage on every enemy hit',
       effects: [{ kind: 'flag', flag: 'defenseModsBleedToHealthPct', value: 0.30 }],
     },
   },
