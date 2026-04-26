@@ -87,26 +87,23 @@ Base cooldown by type, reduced by quality:
 ## Attack Formula
 
 ```
-Damage = K * realmIndex * arte_mult + bonus
-       + physMult × physical_damage
-       + elemMult × elemental_damage
+Damage = bonus
+       + K × (physMult × physical_damage + elemMult × elemental_damage)
        + damage_all
        × (1 + secret_technique_damage)
 ```
 
 | Variable | Meaning |
 |---|---|
-| `K` | Technique multiplier — scales with rank and quality (see table below) |
-| `realmIndex` | Player's realm progression index (placeholder anchor since primary stats were removed — see [[Primary Stats]]) |
-| `arte_mult` | Technique's `arteMult` — multiplier on the K-formula main term |
-| `bonus` | Flat additive damage |
+| `bonus` | Flat additive damage per technique (small, scales 0/5/10/15/20 by quality default) |
+| `K` | Rank × quality multiplier on the phys+elem contribution (see table below) |
 | `physMult` | Technique's coefficient on the `physical_damage` stat (any non-negative decimal) |
 | `elemMult` | Technique's coefficient on the `elemental_damage` stat (any non-negative decimal) |
 | `damage_all` | Universal flat from artefacts + sets + laws |
 
-> **Damage-type model overhauled 2026-04-27**: the categorical `damageType` field (`'physical'` / `'elemental'`) was replaced by two coefficients, `physMult` and `elemMult`. A technique can scale with both stats independently — designer authors how heavily it leans. A "balanced" technique with `physMult: 1.0, elemMult: 1.0` adds 100% of both stats. A pure-physical technique uses `physMult: 1.0, elemMult: 0`.
+> **Cleanup pass 2026-04-27**: the dead `K × (essence + soul + body + artefactFlat) × arteMult` term was removed (every multiplicand was 0 since the primary-stat layer was retired stage 15). All damage now flows from physical_damage + elemental_damage via the per-technique `physMult` / `elemMult` coefficients. `K` survives as a multiplier on that contribution so rank × quality still drives a meaningful curve (Mortal-Iron K=0.5 → Heaven-Trans K=13.0).
 
-> The element-matching `elem_bonus` was removed in 2026-04-26 — techniques no longer carry an `element` field. Laws still carry an element for other systems.
+> **Damage-type model overhauled 2026-04-27 (earlier same day)**: the categorical `damageType` field (`'physical'` / `'elemental'`) was replaced by two coefficients, `physMult` and `elemMult`. A technique can scale with both stats independently — designer authors how heavily it leans. A "balanced" technique with `physMult: 1.0, elemMult: 1.0` adds 100% of both stats. A pure-physical technique uses `physMult: 1.0, elemMult: 0`.
 
 After the formula resolves, the player damage is mitigated by **enemy DEF / ELEM_DEF** via the PoE-style armour curve — see [[Combat]] for the mitigation pipeline. The mitigating armour is the **weighted average** of phys + elem armour, weighted by `physMult` and `elemMult`:
 

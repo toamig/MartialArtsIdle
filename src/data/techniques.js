@@ -84,7 +84,6 @@ function buildCatalogue() {
         type:       'Attack',
         quality,
         flavour:    'TBD — designer to fill in.',
-        arteMult:   parseFloat((1.0 + qIdx * 0.1).toFixed(2)),
         bonus:      qIdx * 5,
         physMult:   mults.physMult,
         elemMult:   mults.elemMult,
@@ -200,42 +199,35 @@ export function getK(rank, quality) {
 }
 
 /**
- * Attack damage formula:
- *   K * (Essence + Soul + Body + artefactFlat) * arteMult + bonus
- *   + physMult × physical_damage + elemMult × elemental_damage
- *   + damage_all
- *   × (1 + secret_technique_damage)
+ * Attack damage formula (2026-04-27, post-cleanup):
  *
- * Element-matching elemBonus retired in 2026-04-26 — techniques no longer
- * carry an `element` field.
+ *   damage = bonus
+ *          + K × (physMult × physical_damage + elemMult × elemental_damage)
+ *          + damage_all
+ *          × (1 + secret_technique_damage)
  *
- * Damage-type model overhauled 2026-04-27: the categorical `damageType`
- * (physical|elemental) is gone. Every technique now carries a `physMult`
- * and `elemMult` coefficient that scales the matching stat. A technique
- * can scale with both buckets — designer authors how heavily it leans.
+ * `K` (rank × quality table) multiplies the phys+elem stat contribution so
+ * Heaven-Transcendent techs scale dramatically harder than Mortal-Iron ones.
+ * `bonus` is a small flat per-technique add. `damage_all` and the
+ * `secret_technique_damage` source multiplier behave as before.
+ *
+ * Removed in this cleanup pass:
+ *   - essence / soul / body params (primary-stat layer was retired stage 15)
+ *   - `_law` param (element-matching elemBonus was removed 2026-04-26)
+ *   - artefactFlat param (no caller fills it; was always 0)
+ *   - `arteMult` per-technique field (was multiplying a zero term)
+ *
+ * The previous categorical `damageType` (physical|elemental) was replaced
+ * 2026-04-27 by independent `physMult` + `elemMult` coefficients.
  *
  * @param {object} tech
- * @param {number} essence
- * @param {number} soul
- * @param {number} body
- * @param {object|string|null} _law  — kept for backcompat, unused
- * @param {number} artefactFlat
- * @param {{physical:number, elemental:number}|null} damageStats
+ * @param {{physical:number, elemental:number, damage_all?:number, secret_technique_damage?:number}|null} damageStats
  */
-// eslint-disable-next-line no-unused-vars
-export function calcDamage(tech, essence, soul, body, _law = null, artefactFlat = 0, damageStats = null) {
+export function calcDamage(tech, damageStats = null) {
   const K = getK(tech.rank, tech.quality);
-  let dmg = K * (essence + soul + body + artefactFlat)
-          * (tech.arteMult ?? 1.0)
-          + (tech.bonus ?? 0);
-
-  // Phys + elem stat scaling. Each technique declares its own coefficients;
-  // both stats add independently so a balanced (physMult=1.0, elemMult=1.0)
-  // tech gets 100% of both. Designer balances per-tech identity.
-  if (damageStats) {
-    dmg += (tech.physMult ?? 0) * (damageStats.physical  ?? 0);
-    dmg += (tech.elemMult ?? 0) * (damageStats.elemental ?? 0);
-  }
+  const physBonus = (tech.physMult ?? 0) * (damageStats?.physical  ?? 0);
+  const elemBonus = (tech.elemMult ?? 0) * (damageStats?.elemental ?? 0);
+  let dmg = (tech.bonus ?? 0) + K * (physBonus + elemBonus);
 
   // Universal damage_all flat bonus (whole-attack, no share).
   if (damageStats?.damage_all) dmg += damageStats.damage_all;

@@ -804,13 +804,7 @@ export default function useCombat() {
 /** Execute a single technique. Mutates state, pushes a log entry. */
 function executeTechnique(s, tech, slotIdx, logs, { stride = false } = {}) {
   if (tech.type === 'Attack') {
-    let dmg = calcDamage(
-      tech,
-      0, 0, 0,
-      s.stats?.law ?? s.stats?.lawElement,
-      0,
-      s.stats?.damageStats ?? null,
-    );
+    let dmg = calcDamage(tech, s.stats?.damageStats ?? null);
     const exRes = rollExploit(s, dmg, { stride });
     dmg = exRes.dmg;
     const exploited = exRes.exploited;

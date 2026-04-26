@@ -370,16 +370,12 @@ function AppInner() {
     // simply don't feed into damage anymore.
 
     return {
-      // Primary stats (essence/soul/body) retired in stage 15 — zeroed here
-      // for consumers (calcDamage signature, etc.) that still destructure
-      // them. Future cleanup drops them from this bundle entirely.
-      essence:    0,
-      soul:       0,
-      body:       0,
+      // Primary stats (essence/soul/body) were retired stage 15 and stripped
+      // from the bundle 2026-04-27 alongside the calcDamage cleanup. The
+      // associated lawElement holdover is retained for any law-engine
+      // condition that still keys off it.
       health:     bundle.combat.health,
       lawElement: law?.element ?? null,
-      // Full active law — calcDamage still reads law.element for the
-      // elem-match bonus. law.types drives unique-pool selection only.
       law: lawForCompute,
       // Flat damage bonuses + source-gated multipliers, all consumed by
       // calcDamage and useCombat's basic-attack.

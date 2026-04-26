@@ -60,7 +60,7 @@ export function evaluateLawUniques(law, ctx) {
 export function buildContext({
   hpPct, hpFull, enemyHpPct, inCombat, combatTimeSec, lastDamageAt, lastTechAt,
   lastKillAt, lastDodgeAt, lastExploitAt, firstAttackFired,
-  essence, soul, body, lawElement, techElements,
+  lawElement, techElements,
   realmIndex, isAtPeak, activePillCount, equippedArtefactCount,
   equippedRingCount, focusing, currentQi,
   // ── Added 2026-04-27 (element-themed laws + set bonuses) ───────────────
@@ -86,7 +86,6 @@ export function buildContext({
     lastDodgeAt,
     lastExploitAt,
     firstAttackFired,
-    essence, soul, body,
     lawElement,
     techElements: techElements || [],
     realmIndex: realmIndex ?? 0,
@@ -260,16 +259,9 @@ export function evaluateCondition(cond, ctx) {
     case 'recent_dodge_sec':   return ctx.lastDodgeAt !== undefined && ctx.nowSec - ctx.lastDodgeAt < cond.sec;
     case 'recent_exploit_sec':    return ctx.lastExploitAt !== undefined && ctx.nowSec - ctx.lastExploitAt < cond.sec;
     case 'first_attack':       return !ctx.firstAttackFired;
-    case 'body_gt_soul':       return (ctx.body ?? 0) > (ctx.soul ?? 0);
-    case 'soul_gt_body':       return (ctx.soul ?? 0) > (ctx.body ?? 0);
-    case 'body_gt_essence_plus_soul': return (ctx.body ?? 0) > (ctx.essence ?? 0) + (ctx.soul ?? 0);
-    case 'tri_harmony_10': {
-      const e = ctx.essence ?? 0, s = ctx.soul ?? 0, b = ctx.body ?? 0;
-      if (e === 0 || s === 0 || b === 0) return false;
-      const avg = (e + s + b) / 3;
-      const tol = avg * 0.1;
-      return Math.abs(e - avg) <= tol && Math.abs(s - avg) <= tol && Math.abs(b - avg) <= tol;
-    }
+    // Primary-stat (essence/soul/body) conditions removed 2026-04-27 — those
+    // stats no longer exist in the engine. body_gt_soul / soul_gt_body /
+    // body_gt_essence_plus_soul / tri_harmony_10 went with them.
     case 'realm_below':        return (ctx.realmIndex ?? 0) < cond.index;
     case 'realm_above':        return (ctx.realmIndex ?? 0) > cond.index;
     case 'at_peak_realm':      return !!ctx.isAtPeak;

@@ -17,8 +17,7 @@ Block format:
 name: 
 flavour: 
 overrides:
-  # arteMult: 1.2     (optional)
-  # bonus: 10         (optional)
+  # bonus: 10         (optional — flat damage)
   # physMult: 1.0     (optional — coefficient on physical_damage)
   # elemMult: 0.5     (optional — coefficient on elemental_damage)
 ```
@@ -40,15 +39,14 @@ Total: 12 per quality × 5 qualities = **60 techniques**.
 
 ## Iron — qIdx 0
 
-> Defaults: Attack `arteMult 1.0 / bonus 0 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 15% + scaling per slot lean`. Defend `defMult ×1.30 / 2 hits`. Dodge `dodgeChance 30% / 2 hits`. Expose 1 `exploitChance +15 / defPen 5% / 3 player hits`. Expose 2 `dmgReduction 10% / exploitMult 175 / 3 enemy + 3 player hits`.
+> Defaults: Attack `bonus 0 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 15% + scaling per slot lean`. Defend `defMult ×1.30 / 2 hits`. Dodge `dodgeChance 30% / 2 hits`. Expose 1 `exploitChance +15 / defPen 5% / 3 player hits`. Expose 2 `dmgReduction 10% / exploitMult 175 / 3 enemy + 3 player hits`.
 
 ### Attack
 
 #### iron_attack_1
-name: 
-flavour: 
+name: TBD
+flavour: TBD
 overrides:
-  # arteMult: 
   # bonus: 
   # physMult: 
   # elemMult: 
@@ -57,7 +55,6 @@ overrides:
 name: 
 flavour: 
 overrides:
-  # arteMult: 
   # bonus: 
   # physMult: 
   # elemMult: 
@@ -66,7 +63,6 @@ overrides:
 name: 
 flavour: 
 overrides:
-  # arteMult: 
   # bonus: 
   # physMult: 
   # elemMult: 
@@ -75,7 +71,6 @@ overrides:
 name: 
 flavour: 
 overrides:
-  # arteMult: 
   # bonus: 
   # physMult: 
   # elemMult: 
@@ -153,7 +148,7 @@ overrides:
 
 ## Bronze — qIdx 1
 
-> Defaults: Attack `arteMult 1.1 / bonus 5 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 20% + scaling per slot lean`. Defend `defMult ×1.45 / 3 hits`. Dodge `dodgeChance 37.5% / 3 hits`. Expose 1 `exploitChance +20 / defPen 10% / 4 player hits`. Expose 2 `dmgReduction 14% / exploitMult 185 / 4 enemy + 4 player hits`.
+> Defaults: Attack `bonus 5 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 20% + scaling per slot lean`. Defend `defMult ×1.45 / 3 hits`. Dodge `dodgeChance 37.5% / 3 hits`. Expose 1 `exploitChance +20 / defPen 10% / 4 player hits`. Expose 2 `dmgReduction 14% / exploitMult 185 / 4 enemy + 4 player hits`.
 
 ### Attack
 
@@ -229,7 +224,7 @@ overrides:
 
 ## Silver — qIdx 2
 
-> Defaults: Attack `arteMult 1.2 / bonus 10 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 25% + scaling per slot lean`. Defend `defMult ×1.60 / 4 hits`. Dodge `dodgeChance 45% / 4 hits`. Expose 1 `exploitChance +25 / defPen 15% / 5 player hits`. Expose 2 `dmgReduction 18% / exploitMult 195 / 5 enemy + 5 player hits`.
+> Defaults: Attack `bonus 10 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 25% + scaling per slot lean`. Defend `defMult ×1.60 / 4 hits`. Dodge `dodgeChance 45% / 4 hits`. Expose 1 `exploitChance +25 / defPen 15% / 5 player hits`. Expose 2 `dmgReduction 18% / exploitMult 195 / 5 enemy + 5 player hits`.
 
 ### Attack
 
@@ -305,7 +300,7 @@ overrides:
 
 ## Gold — qIdx 3
 
-> Defaults: Attack `arteMult 1.3 / bonus 15 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 30% + scaling per slot lean`. Defend `defMult ×1.75 / 5 hits`. Dodge `dodgeChance 52.5% / 5 hits`. Expose 1 `exploitChance +30 / defPen 20% / 6 player hits`. Expose 2 `dmgReduction 22% / exploitMult 205 / 6 enemy + 6 player hits`.
+> Defaults: Attack `bonus 15 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 30% + scaling per slot lean`. Defend `defMult ×1.75 / 5 hits`. Dodge `dodgeChance 52.5% / 5 hits`. Expose 1 `exploitChance +30 / defPen 20% / 6 player hits`. Expose 2 `dmgReduction 22% / exploitMult 205 / 6 enemy + 6 player hits`.
 
 ### Attack
 
@@ -381,7 +376,7 @@ overrides:
 
 ## Transcendent — qIdx 4
 
-> Defaults: Attack `arteMult 1.4 / bonus 20 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 35% + scaling per slot lean`. Defend `defMult ×1.90 / 6 hits`. Dodge `dodgeChance 60% / 6 hits`. Expose 1 `exploitChance +35 / defPen 25% / 7 player hits`. Expose 2 `dmgReduction 26% / exploitMult 215 / 7 enemy + 7 player hits`.
+> Defaults: Attack `bonus 20 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 35% + scaling per slot lean`. Defend `defMult ×1.90 / 6 hits`. Dodge `dodgeChance 60% / 6 hits`. Expose 1 `exploitChance +35 / defPen 25% / 7 player hits`. Expose 2 `dmgReduction 26% / exploitMult 215 / 7 enemy + 7 player hits`.
 
 ### Attack
 
@@ -461,7 +456,6 @@ If you leave any override blank, the technique uses these per-quality defaults f
 
 | Type | Field | Iron | Bronze | Silver | Gold | Transcendent |
 |---|---|---|---|---|---|---|
-| Attack | `arteMult` | 1.0 | 1.1 | 1.2 | 1.3 | 1.4 |
 | Attack | `bonus` | 0 | 5 | 10 | 15 | 20 |
 | Attack | `physMult` / `elemMult` (per slot, all qualities) | slot 1: 1.0/0.4 (phys-leaning) — slot 2: 0.4/1.0 (elem-leaning) — slot 3: 0.7/0.7 (balanced) — slot 4: 1.0/0.5 (phys + secondary elem) |
 | Heal | `healPercent` | 0.15 | 0.20 | 0.25 | 0.30 | 0.35 |
@@ -482,8 +476,7 @@ If you leave any override blank, the technique uses these per-quality defaults f
 
 | Field | Range / format | Notes |
 |---|---|---|
-| `arteMult` | decimal, e.g. `1.25` | Multiplier on the attack formula's main term |
-| `bonus` | integer | Flat damage added |
+| `bonus` | integer | Flat damage added (per technique, scales 0/5/10/15/20 by quality default) |
 | `physMult` | decimal ≥0, e.g. `1.0` | Coefficient on `physical_damage` stat. 1.0 adds 100%, 0 disables this scaling |
 | `elemMult` | decimal ≥0, e.g. `1.0` | Coefficient on `elemental_damage` stat. Same semantics as physMult |
 | `healPercent` | decimal 0-1, e.g. `0.40` | Fraction of max HP healed (Heal techs also use physMult / elemMult for bonus heal on top) |
