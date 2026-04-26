@@ -1959,6 +1959,34 @@ html, body, * {
   z-index: 1;
 }
 
+/* Hold-state edge vignette — soft warm glow at the screen edges that
+   blooms in while the player is holding the cultivator. Subtle on
+   purpose; the cultivator's aura carries the strong feedback. */
+.home-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 42%,
+    rgba(255, 200, 80, 0.10) 78%,
+    rgba(255, 150, 30, 0.22) 100%
+  );
+  opacity: 0;
+  transition: opacity 280ms ease-out;
+}
+
+.home-screen.home-boosting::after { opacity: 1; }
+
+.vfx-disabled .home-screen::after { display: none; }
+
+/* Particles flow faster while the player is holding — qi pours in. */
+.home-screen.home-boosting .home-qi-particle {
+  animation-duration: 1.0s;
+}
+
 /* Full-viewport background — absolute within the fixed .home-screen.
    inset:0 fills the parent (which already reserves navbar space via
    padding-bottom), so art stops right above the nav bar. */
@@ -4115,8 +4143,40 @@ html, body, * {
 }
 
 .stage-boosted .sprite-animator {
-  filter: brightness(1.05) saturate(1.1) drop-shadow(0 0 3px rgba(100, 160, 255, 0.22));
+  filter: brightness(1.1) saturate(1.18) drop-shadow(0 0 5px rgba(255, 210, 90, 0.45));
 }
+
+/* ── Hold-state aura ─────────────────────────────────────────────────────
+   Pulsing radial glow behind the cultivator while the player is holding.
+   Fades in on .stage-boosted and breathes on a 1.2s loop. */
+.home-fighter-stage::before {
+  content: '';
+  position: absolute;
+  inset: -35%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 220, 120, 0.40) 0%,
+    rgba(255, 180, 60, 0.18)  35%,
+    transparent               72%
+  );
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity 220ms ease-out;
+}
+
+.home-fighter-stage.stage-boosted::before {
+  opacity: 1;
+  animation: home-aura-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes home-aura-pulse {
+  0%, 100% { transform: scale(0.92); filter: brightness(0.95); }
+  50%      { transform: scale(1.18); filter: brightness(1.25); }
+}
+
+.vfx-disabled .home-fighter-stage::before { display: none; }
 
 .stage-ad-boosted .sprite-animator {
   filter: brightness(1.1) saturate(1.18) drop-shadow(0 0 5px rgba(100, 200, 255, 0.3));

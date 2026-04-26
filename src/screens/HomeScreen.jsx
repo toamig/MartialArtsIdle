@@ -664,7 +664,7 @@ function HomeScreen({
   const fps         = boosting ? 14 : 5;
 
   return (
-    <div className="screen home-screen">
+    <div className={`screen home-screen${boosting ? ' home-boosting' : ''}`}>
       {/* Full-screen background — center bottom so the hall floor and archway
           sit at the same visual depth regardless of screen aspect ratio */}
       <div className="home-bg" style={{ backgroundImage: `url(${BASE}backgrounds/home.png)` }} />
