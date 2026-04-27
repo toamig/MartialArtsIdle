@@ -90,9 +90,9 @@ const BASELINE = {
     unlockMsg: null,
   },
   qi_crystal: {
-    gate: { type: 'realm', minRealmIndex: 3 },
+    gate: { type: 'realm', minRealmIndex: 2 },
     desc: 'A crystallised vessel of refined Qi. Feed it QI stones to permanently boost your cultivation speed.',
-    hint: 'Reach Tempered Body Layer 4',
+    hint: 'Reach Tempered Body Layer 3',
     unlockMsg: 'Qi Crystal awakened.',
   },
 };
