@@ -5292,6 +5292,96 @@ html, body, * {
   margin: 0;
 }
 
+/* ── Collection slots — three fixed-size tiers ────────────────────────────────
+   Phone <480 / Tablet 480–767 / Desktop ≥768. Cards never stretch (no 1fr);
+   only column count varies with viewport. Scoped to .inventory-screen so the
+   Build/Character screen's own .inv-slot styling is left untouched. */
+
+.inventory-screen .inv-grid {
+  grid-template-columns: repeat(auto-fill, 78px);
+  gap: 8px;
+  justify-content: start;
+}
+.inventory-screen .inv-slot {
+  padding: 8px 5px;
+  min-height: 78px;
+  gap: 3px;
+}
+.inventory-screen .inv-icon {
+  width: 32px;
+  height: 32px;
+}
+.inventory-screen .inv-name {
+  font-size: 0.6rem;
+  max-width: 66px;
+}
+.inventory-screen .inv-qty {
+  font-size: 0.62rem;
+  padding: 1px 4px;
+  top: 3px;
+  right: 5px;
+}
+.inventory-screen .inv-quality-gem {
+  font-size: 1.15rem;
+  margin-bottom: 2px;
+}
+
+@media (min-width: 480px) {
+  .inventory-screen .inv-grid {
+    grid-template-columns: repeat(auto-fill, 96px);
+    gap: 10px;
+  }
+  .inventory-screen .inv-slot {
+    padding: 10px 6px;
+    min-height: 92px;
+    gap: 4px;
+  }
+  .inventory-screen .inv-icon {
+    width: 38px;
+    height: 38px;
+  }
+  .inventory-screen .inv-name {
+    font-size: 0.7rem;
+    max-width: 82px;
+  }
+  .inventory-screen .inv-qty {
+    font-size: 0.72rem;
+    padding: 2px 5px;
+  }
+  .inventory-screen .inv-quality-gem {
+    font-size: 1.3rem;
+    margin-bottom: 3px;
+  }
+}
+
+@media (min-width: 768px) {
+  .inventory-screen .inv-grid {
+    grid-template-columns: repeat(auto-fill, 116px);
+    gap: 12px;
+  }
+  .inventory-screen .inv-slot {
+    padding: 12px 8px;
+    min-height: 108px;
+    gap: 5px;
+  }
+  .inventory-screen .inv-icon {
+    width: 44px;
+    height: 44px;
+  }
+  .inventory-screen .inv-name {
+    font-size: 0.76rem;
+    max-width: 100px;
+  }
+  .inventory-screen .inv-qty {
+    font-size: 0.78rem;
+    padding: 2px 6px;
+  }
+  .inventory-screen .inv-quality-gem {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+  }
+}
+
 /* Item Modal */
 .modal-overlay {
   position: fixed;
