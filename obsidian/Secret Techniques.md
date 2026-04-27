@@ -64,7 +64,7 @@ A mixed Expose tracks both clocks **independently**: the player-clock effects ex
 
 ## Cooldowns
 
-**Per-technique cooldown** (2026-04-28 overhaul). Each entry in the catalogue carries an explicit `cooldown` field — the prior per-type `BASE_COOLDOWN` table was dropped along with the procedural scaffold. Cooldowns sit in narrow per-type bands so a slot's archetype is still legible at a glance:
+**Per-technique cooldown.** Each entry in the catalogue carries an explicit `cooldown` field — the prior per-type `BASE_COOLDOWN` table was dropped along with the procedural scaffold (2026-04-28 overhaul). Cooldowns sit in narrow per-type bands so a slot's archetype is still legible at a glance:
 
 | Type | Cooldown band |
 |---|---|
@@ -76,17 +76,7 @@ A mixed Expose tracks both clocks **independently**: the player-clock effects ex
 
 Within a band, slots 1–2 sit at the low end and slot 3–4 (Attack) / slot 2 (others) at the high end so similar-archetype slots don't all tick on the same frame.
 
-**Quality modifier** (multiplied against the per-tech base):
-
-| Quality | Cooldown Multiplier |
-|---|---|
-| Iron | ×1.0 |
-| Bronze | ×0.90 |
-| Silver | ×0.80 |
-| Gold | ×0.70 |
-| Transcendent | ×0.55 |
-
-A Transcendent Attack 1 (5.0s × 0.55) ticks every **2.75s**; an Iron Defend 2 (7.0s × 1.0) ticks every **7.0s**.
+**Quality does not reduce cooldown.** The previous per-quality `cdMult` table (Iron ×1.0 → Transcendent ×0.55) was removed 2026-04-28. Quality drives identity and visual styling only; the in-combat cooldown comes straight from the per-tech `cooldown` field, modified at runtime by laws / sets / tree (`cd_mult` effects, `cooldownReductionPct`, etc.) the same way as before.
 
 ---
 

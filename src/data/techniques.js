@@ -1,10 +1,15 @@
 // ─── Quality tiers ────────────────────────────────────────────────────────────
+//
+// Quality is identity + colour only — it does NOT reduce cooldown. The
+// per-quality `cdMult` table was removed 2026-04-28; cooldown is purely
+// the per-tech `cooldown` field, modified at runtime by laws / sets / tree
+// (cd_mult effects, cooldownReductionPct, etc.).
 export const TECHNIQUE_QUALITY = {
-  Iron:         { label: 'Iron',         color: '#9ca3af', cdMult: 1.00 },
-  Bronze:       { label: 'Bronze',       color: '#cd7f32', cdMult: 0.90 },
-  Silver:       { label: 'Silver',       color: '#c0c0c0', cdMult: 0.80 },
-  Gold:         { label: 'Gold',         color: '#f5c842', cdMult: 0.70 },
-  Transcendent: { label: 'Transcendent', color: '#c084fc', cdMult: 0.55 },
+  Iron:         { label: 'Iron',         color: '#9ca3af' },
+  Bronze:       { label: 'Bronze',       color: '#cd7f32' },
+  Silver:       { label: 'Silver',       color: '#c0c0c0' },
+  Gold:         { label: 'Gold',         color: '#f5c842' },
+  Transcendent: { label: 'Transcendent', color: '#c084fc' },
 };
 
 // Rank was removed 2026-04-28. The previous TECHNIQUE_RANK constant gated
@@ -516,16 +521,14 @@ export function getTechnique(id) {
 }
 
 /**
- * Effective cooldown in seconds for a single technique. Per-tech base
- * cooldown × quality cdMult. Per-type BASE_COOLDOWN was retired alongside
- * the buildCatalogue scaffold — every technique now carries an explicit
- * `cooldown` field.
+ * Cooldown in seconds for a single technique. Reads the per-tech `cooldown`
+ * field directly — quality does not reduce cooldown (the per-quality
+ * `cdMult` table was removed 2026-04-28). Runtime modifiers (law / set
+ * cd_mult effects, cooldownReductionPct, etc.) layer on top in useCombat.
  */
 export function getCooldown(tech) {
   if (!tech) return Infinity;
-  const base = tech.cooldown ?? 6;
-  const cdMult = TECHNIQUE_QUALITY[tech.quality]?.cdMult ?? 1;
-  return base * cdMult;
+  return tech.cooldown ?? 6;
 }
 
 /**
@@ -662,13 +665,7 @@ export function describeTechnique(tech) {
   }
 
   // ── Cooldown (always last) ──
-  const realCd = getCooldown(tech);
-  const baseCd = tech.cooldown ?? 6;
-  if (realCd === baseCd) {
-    lines.push(`Cooldown ${baseCd}s`);
-  } else {
-    lines.push(`Cooldown ${baseCd}s × ${tech.quality} → ${realCd.toFixed(2)}s`);
-  }
+  lines.push(`Cooldown ${getCooldown(tech)}s`);
 
   return lines;
 }

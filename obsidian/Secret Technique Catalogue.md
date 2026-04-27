@@ -8,7 +8,7 @@ Every entry is hand-authored — no scaffold defaults. A blank field = no effect
 
 Per-quality distribution: 4 Attack + 2 Heal + 2 Defend + 2 Dodge + 2 Expose = 12 per quality × 5 qualities = **60**.
 
-Cooldown bands (before quality multiplier):
+Cooldown bands (quality does not modify cooldown — these are the in-combat values):
 
 | Type | Slots and CDs |
 |---|---|
@@ -17,8 +17,6 @@ Cooldown bands (before quality multiplier):
 | Expose | `_1` 6.0s · `_2` 6.5s |
 | Defend | `_1` 6.5s · `_2` 7.0s |
 | Dodge  | `_1` 6.5s · `_2` 7.0s |
-
-Quality multiplier: Iron ×1.0, Bronze ×0.90, Silver ×0.80, Gold ×0.70, Transcendent ×0.55.
 
 ---
 
