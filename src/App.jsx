@@ -38,12 +38,14 @@ import { initDebug } from './debug/gameDebug';
 import { preloadImages, PLAYER_SPRITE_SRCS } from './utils/preload';
 import { loadGraphics, applyGraphics } from './systems/graphics';
 import useNotifications from './hooks/useNotifications';
-import useSelections from './hooks/useSelections';
+import useLawOffers from './hooks/useLawOffers';
+import useQiSparks  from './hooks/useQiSparks';
 import useClearedRegions from './hooks/useClearedRegions';
 import useFeatureFlags from './hooks/useFeatureFlags';
 import useAchievements from './hooks/useAchievements';
 import ToastStack from './components/ToastStack';
 import SelectionModal from './components/SelectionModal';
+import QiSparkChoiceModal from './components/QiSparkChoiceModal';
 import { AudioManager } from './audio';
 import { EventQueueProvider, useEventQueue, useBlockingPresence } from './contexts/EventQueueContext';
 import './App.css';
@@ -106,7 +108,8 @@ function AppInner() {
   const totalOwnedPills = Object.values(pills.ownedPills).reduce((s, n) => s + n, 0);
   const crystal         = useQiCrystal({ getQuantity: inventory.getQuantity, removeItem: inventory.removeItem });
   const { clearedRegions, clearRegion } = useClearedRegions();
-  const selections      = useSelections({ cultivation, optionCount: tree.modifiers.selectionOptionCount });
+  const selections      = useLawOffers({ cultivation });
+  const qiSparks        = useQiSparks({ cultivation });
 
   // Record every new realm reached so karma awards are first-time-only.
   useEffect(() => {
@@ -213,17 +216,23 @@ function AppInner() {
     }
   }, [selections.pendingCount, selectionModalOpen, currentEvent, dismiss]);
 
-  // Keep selection qi speed mult in sync with cultivation game loop
-  useEffect(() => {
-    if (!cultivation.selectionQiMultRef) return;
-    cultivation.selectionQiMultRef.current = selections.getQiSpeedMult();
-  }, [selections, cultivation.selectionQiMultRef]);
-
   // Keep QI crystal bonus in sync with cultivation game loop.
   useEffect(() => {
     if (!cultivation.crystalQiBonusRef) return;
     cultivation.crystalQiBonusRef.current = crystal.crystalQiBonus;
   }, [crystal.crystalQiBonus, cultivation.crystalQiBonusRef]);
+
+  // Mirror Qi Sparks multipliers into cultivation refs each render. Cheap;
+  // runs only when activeSparks identity changes (the hook returns the same
+  // array reference when no expiry happened).
+  useEffect(() => {
+    if (cultivation.sparkQiMultRef) {
+      cultivation.sparkQiMultRef.current = qiSparks.qiMultRef.current;
+    }
+    if (cultivation.sparkFocusMultBonusRef) {
+      cultivation.sparkFocusMultBonusRef.current = qiSparks.focusMultBonusRef.current;
+    }
+  }, [qiSparks.activeSparks, cultivation.sparkQiMultRef, cultivation.sparkFocusMultBonusRef, qiSparks.qiMultRef, qiSparks.focusMultBonusRef]);
 
 
   // ── Centralised stat getter ─────────────────────────────────────────────
@@ -344,7 +353,6 @@ function AppInner() {
       scaledArtefactMods,
       scaledPillMods,
       lawBundle.statMods,
-      selections?.getStatModifiers?.(),
       tree?.getStatModifiers?.(),
     );
 
@@ -668,7 +676,7 @@ function AppInner() {
                       getFullStats={getFullStats}
                       onRegionCleared={clearRegion}
                     />,
-    character:  <CharacterScreen cultivation={cultivation} techniques={techniques} artefacts={artefacts} selections={selections} pills={pills} tree={tree} />,
+    character:  <CharacterScreen cultivation={cultivation} techniques={techniques} artefacts={artefacts} pills={pills} tree={tree} />,
     collection: <CollectionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} />,
     production: <ProductionScreen inventory={inventory} pills={pills} tree={tree} />,
     settings:   null,
@@ -707,6 +715,8 @@ function AppInner() {
         activeModal={activeModal}
         onOpenReincarnation={() => navigate('reincarnation')}
         reincarnationUnlocked={reincarnationUnlocked}
+        onOpenCrystal={() => navigate('home', { openCrystal: Date.now() })}
+        crystalUnlocked={featureFlags.isUnlocked('qi_crystal')}
         realmName={cultivation.realmName}
         realmStage={cultivation.realmStage}
       />
@@ -731,13 +741,9 @@ function AppInner() {
         <SelectionModal
           selection={selections.pending[0]}
           bloodLotusBalance={selections.bloodLotusBalance}
-          onPick={selections.pickOption}
-          onRerollOne={selections.rerollOne}
           onPickLaw={selections.pickLaw}
           onSkipLaw={selections.skipLaw}
-          onRerollLaw={selections.rerollLaw}
           onRerollLawOne={selections.rerollLawOne}
-          onOpenShop={() => openModal('shop')}
           ownedLaws={cultivation.ownedLaws}
           activeLawId={cultivation.activeLaw?.id ?? null}
           onDismantleLaw={(lawId) => {
@@ -748,6 +754,25 @@ function AppInner() {
             setSelectionModalOpen(false);
             if (currentEvent?.kind === 'selection-cards') dismiss(currentEvent.id);
           }}
+        />
+      )}
+      {/* Qi Sparks pick-1-of-2 modal — fires on every layer breakthrough.
+          Suppressed while higher-priority overlays are showing so it doesn't
+          stack with breakthrough banners or law offers. */}
+      {qiSparks.pendingOffer
+        && !cultivation.majorBreakthrough
+        && currentEvent?.kind !== 'breakthrough'
+        && currentEvent?.kind !== 'crystal-evolution'
+        && currentEvent?.kind !== 'offline-earnings'
+        && !(selectionModalOpen && selections.pending[0]?.kind === 'law')
+        && (
+        <QiSparkChoiceModal
+          offer={qiSparks.pendingOffer}
+          bloodLotusBalance={qiSparks.bloodLotusBalance}
+          nextRerollCost={qiSparks.nextRerollCost()}
+          onChoose={qiSparks.choose}
+          onReroll={qiSparks.reroll}
+          onSkip={qiSparks.skip}
         />
       )}
       {activeModal === 'settings'     && <SettingsScreen onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} />}

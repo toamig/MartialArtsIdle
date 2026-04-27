@@ -12,6 +12,8 @@ export default function TopBar({
   activeModal,
   onOpenReincarnation,
   reincarnationUnlocked,
+  onOpenCrystal,
+  crystalUnlocked,
   realmName,
   realmStage,
 }) {
@@ -44,6 +46,15 @@ export default function TopBar({
           aria-label="Reincarnation"
         >
           ☸
+        </button>
+      )}
+      {crystalUnlocked && (
+        <button
+          className="home-hud-crystal"
+          onClick={onOpenCrystal}
+          aria-label="Qi Crystal"
+        >
+          🪨
         </button>
       )}
       <button

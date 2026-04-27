@@ -118,7 +118,7 @@ function StatRow({ label, hint, value, unit = '', locked = false, breakdown = nu
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-function StatsContent({ cultivation, artefacts, pills, selections, tree }) {
+function StatsContent({ cultivation, artefacts, pills, tree }) {
   const { t } = useTranslation('ui');
   const { qiRef, costRef, activeLaw, realmName, realmIndex } = cultivation;
 
@@ -140,7 +140,6 @@ function StatsContent({ cultivation, artefacts, pills, selections, tree }) {
   // attribute each contribution to its origin system.
   const artefactModBundle  = artefacts?.getStatModifiers?.()  ?? {};
   const pillModBundle      = pills?.getStatModifiers?.()      ?? {};
-  const selectionModBundle = selections?.getStatModifiers?.() ?? {};
   const treeModBundle      = tree?.getStatModifiers?.()       ?? {};
   const lawModBundle       = lawBundle.statMods               ?? {};
 
@@ -148,7 +147,6 @@ function StatsContent({ cultivation, artefacts, pills, selections, tree }) {
     artefactModBundle,
     pillModBundle,
     lawModBundle,
-    selectionModBundle,
     treeModBundle,
   );
   const { combat, activity } = computeAllStats(qi, activeLaw, realmIndex, mergedMods);
@@ -158,7 +156,6 @@ function StatsContent({ cultivation, artefacts, pills, selections, tree }) {
     { name: 'Artefacts',  bundle: artefactModBundle  },
     { name: 'Pills',      bundle: pillModBundle       },
     { name: 'Law',        bundle: lawModBundle        },
-    { name: 'Selections', bundle: selectionModBundle  },
     { name: 'Tree',       bundle: treeModBundle       },
   ];
 

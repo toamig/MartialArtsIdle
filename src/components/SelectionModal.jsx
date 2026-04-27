@@ -1,52 +1,9 @@
-import { SELECTION_BY_ID, SELECTION_RARITY } from '../data/selections';
 import { BLOOD_LOTUS_COSTS } from '../systems/bloodLotus';
 import { LAW_RARITY } from '../data/laws';
 import { formatUniqueDescription } from '../data/lawUniques';
 import { MAX_LAWS } from '../hooks/useCultivation';
 
-// ── Category config ───────────────────────────────────────────────────────────
-
-const CATEGORY = {
-  cultivation: { icon: '☯', color: '#a78bfa' },
-  combat:      { icon: '⚔', color: '#f87171' },
-  gathering:   { icon: '✿', color: '#4ade80' },
-  mining:      { icon: '⛏', color: '#fb923c' },
-  economy:     { icon: '◈', color: '#fbbf24' },
-  special:     { icon: '✦', color: '#22d3ee' },
-};
-
-// ── Augment card (existing) ──────────────────────────────────────────────────
-
-function AugmentCard({ optionId, onPick }) {
-  const opt    = SELECTION_BY_ID[optionId];
-  if (!opt) return null;
-
-  const rarity = SELECTION_RARITY[opt.rarity];
-  const cat    = CATEGORY[opt.category] ?? { icon: '◆', color: '#9ca3af' };
-
-  return (
-    <div
-      className={`augment-card augment-card-${opt.rarity}`}
-      style={{ '--cat-color': cat.color, '--rarity-color': rarity.color }}
-      onClick={() => onPick(optionId)}
-    >
-      <div className="augment-cat-strip">
-        <span className="augment-cat-icon">{cat.icon}</span>
-        <span className="augment-cat-label">{opt.category}</span>
-        <span className="augment-rarity-dot" style={{ background: rarity.color }} title={rarity.label} />
-      </div>
-      <div className="augment-body">
-        <p className="augment-name">{opt.name}</p>
-        <p className="augment-desc">{opt.description}</p>
-        {opt.maxStacks > 1 && (
-          <span className="augment-stacks">Max ×{opt.maxStacks}</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Law card (new) ───────────────────────────────────────────────────────────
+// ── Law card ─────────────────────────────────────────────────────────────────
 
 function LawCard({ law, onPick, disabled }) {
   const rarity = LAW_RARITY[law.rarity] ?? { color: '#9ca3af', label: law.rarity };
@@ -81,10 +38,10 @@ function LawCard({ law, onPick, disabled }) {
   );
 }
 
-// ── Law variant — modal body ─────────────────────────────────────────────────
+// ── Modal body ───────────────────────────────────────────────────────────────
 
 function LawSelectionBody({ selection, bloodLotusBalance, onPickLaw, onSkipLaw, onRerollLawOne, ownedLaws, activeLawId, onDismantleLaw }) {
-  const { id, realmLabel, lawOptions, freeRerolls, rerollsUsed, isFirst } = selection;
+  const { id, lawOptions, freeRerolls, rerollsUsed, isFirst } = selection;
   const hasFreeReroll = rerollsUsed < freeRerolls;
   const rerollCost = hasFreeReroll ? 0 : BLOOD_LOTUS_COSTS.reroll_law_extra;
   const canAffordReroll = hasFreeReroll || (bloodLotusBalance ?? 0) >= rerollCost;
@@ -176,97 +133,32 @@ function LawSelectionBody({ selection, bloodLotusBalance, onPickLaw, onSkipLaw, 
 function SelectionModal({
   selection,
   bloodLotusBalance,
-  onPick,
-  onRerollOne,
   onClose,
   onPickLaw,
   onSkipLaw,
   onRerollLawOne,
-  onOpenShop,
   ownedLaws,
   activeLawId,
   onDismantleLaw,
 }) {
-  if (!selection) return null;
-  const isLaw = selection.kind === 'law';
-
-  if (isLaw) {
-    return (
-      <div className="modal-overlay sel-overlay" onClick={onClose}>
-        <div
-          className="sel-modal sel-modal-law"
-          onClick={e => e.stopPropagation()}
-        >
-          <LawSelectionBody
-            selection={selection}
-            bloodLotusBalance={bloodLotusBalance}
-            onPickLaw={onPickLaw}
-            onSkipLaw={onSkipLaw}
-            onRerollLawOne={onRerollLawOne}
-            ownedLaws={ownedLaws}
-            activeLawId={activeLawId}
-            onDismantleLaw={onDismantleLaw}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Augment variant (existing behaviour).
-  const { id, realmLabel, tier, options, freeRerolls, rerollsUsed } = selection;
-  const hasFreeReroll   = rerollsUsed < freeRerolls;
-  const rerollCost      = hasFreeReroll ? 0
-    : tier === 'breakthrough' ? BLOOD_LOTUS_COSTS.reroll_extra : BLOOD_LOTUS_COSTS.reroll_minor;
-  const canAffordReroll = hasFreeReroll || (bloodLotusBalance ?? 0) >= rerollCost;
-  const isBreakthrough  = tier === 'breakthrough';
+  if (!selection || selection.kind !== 'law') return null;
 
   return (
     <div className="modal-overlay sel-overlay" onClick={onClose}>
       <div
-        className={`sel-modal${isBreakthrough ? ' sel-modal-breakthrough' : ''}`}
+        className="sel-modal sel-modal-law"
         onClick={e => e.stopPropagation()}
       >
-        <div className="sel-header">
-          <h2 className="sel-title">
-            {isBreakthrough ? 'Breakthrough Reward' : 'Level-Up Reward'}
-          </h2>
-        </div>
-
-        <div className="card-pair-grid">
-          {options.map((optId, i) => {
-            const locked = !canAffordReroll;
-            return (
-              <div key={optId} className="card-pair">
-                <AugmentCard optionId={optId} onPick={(oId) => onPick(id, oId)} />
-                <div className="augment-reroll-cell">
-                  <button
-                    className={[
-                      'augment-reroll-btn',
-                      hasFreeReroll ? 'augment-reroll-free' : '',
-                      locked        ? 'augment-reroll-locked' : '',
-                    ].filter(Boolean).join(' ')}
-                    onClick={() => locked ? onOpenShop?.() : onRerollOne(id, i)}
-                    title={
-                      hasFreeReroll ? 'Reroll — free!'
-                      : locked      ? `Need ${rerollCost} Blood Lotus · tap to open Shop`
-                      :               `Reroll — costs ${rerollCost} Blood Lotus`
-                    }
-                  >
-                    {locked ? '⊘' : '↺'}
-                  </button>
-                  <span className={[
-                    'augment-reroll-cost',
-                    hasFreeReroll ? 'augment-reroll-cost-free'  : '',
-                    locked        ? 'augment-reroll-cost-short' : '',
-                  ].filter(Boolean).join(' ')}>
-                    {hasFreeReroll ? 'Free' : `${rerollCost} BL`}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
+        <LawSelectionBody
+          selection={selection}
+          bloodLotusBalance={bloodLotusBalance}
+          onPickLaw={onPickLaw}
+          onSkipLaw={onSkipLaw}
+          onRerollLawOne={onRerollLawOne}
+          ownedLaws={ownedLaws}
+          activeLawId={activeLawId}
+          onDismantleLaw={onDismantleLaw}
+        />
       </div>
     </div>
   );

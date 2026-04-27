@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import REALMS, { getMajorBreakthroughRate, getPeakBreakthroughRate, isMajorTransition, isPeakTransition } from '../data/realms';
 import AudioManager from '../audio/AudioManager';
 // DEFAULT_LAW / THREE_HARMONY_MANUAL no longer auto-seed the library.
-// Laws enter via major-breakthrough selections (see useSelections).
+// Laws enter via major-breakthrough offers (see useLawOffers).
 import { saveGame, loadGame } from '../systems/save';
 import { evaluateLawUniques, buildContext } from '../systems/lawEngine';
 import { computeStat, MOD } from '../data/stats';
@@ -166,7 +166,6 @@ export default function useCultivation() {
   useEffect(() => { activeLawRef.current = activeLaw; }, [activeLaw]);
 
   const pillQiMultRef      = useRef(1);
-  const selectionQiMultRef = useRef(1);
   // Reincarnation-tree multipliers — written by App.jsx from useReincarnationTree.
   // `treeQiMultRef` always multiplies cultivation rate; `treeHeavenlyMultRef`
   // only applies while the ad (heavenly) boost is active.
@@ -191,6 +190,11 @@ export default function useCultivation() {
   const rebirthCultBuffRef = useRef(1);
   // Debug-only multiplier — set via gd.setQiRate(n) in the browser console.
   const debugQiMultRef = useRef(1);
+  // Qi Sparks — temporary buffs from the per-breakthrough card-pick system.
+  // sparkQiMultRef multiplies cultivation rate (e.g. 1.5 = +50%);
+  // sparkFocusMultBonusRef multiplies the focus boost mult (e.g. 0.3 = +30% on top).
+  const sparkQiMultRef         = useRef(1);
+  const sparkFocusMultBonusRef = useRef(0);
   // Hold-to-cultivate boost multiplier (qi_focus_mult stat, expressed as %).
   // Default 300% = the legacy 3× behavior; App.jsx writes the player's actual
   // focus mult into this ref each second.
@@ -248,9 +252,10 @@ export default function useCultivation() {
         qiUniqueMult = computeStat(1, qiMods);
       }
       // Boost multiplier: focusMult is in %, fall back to legacy 3× if unset.
-      const boostMult = boostRef.current
-        ? Math.max(1, (focusMultRef.current ?? 300) / 100)
-        : 1;
+      // Qi Spark "Focus Surge" cards layer additively on top via sparkFocusMultBonusRef.
+      const baseFocusMult = (focusMultRef.current ?? 300) / 100;
+      const focusMultWithSpark = baseFocusMult * (1 + sparkFocusMultBonusRef.current);
+      const boostMult = boostRef.current ? Math.max(1, focusMultWithSpark) : 1;
       // Heavenly QI extras — only apply while the ad boost is live. Two
       // independent multiplicative sources: the reincarnation tree node
       // and the artefact heavenly_qi_mult stat.
@@ -260,7 +265,7 @@ export default function useCultivation() {
         artefactQiMultRef.current *
         boostMult *
         adBoostRef.current * heavenlyTree * heavenlyArt *
-        pillQiMultRef.current * selectionQiMultRef.current *
+        pillQiMultRef.current * sparkQiMultRef.current *
         treeQiMultRef.current * rebirthCultBuffRef.current *
         debugQiMultRef.current;
       rateRef.current = rate;
@@ -405,8 +410,9 @@ export default function useCultivation() {
     dismantleLaw,
     // Pill qi multiplier ref — updated by App.jsx
     pillQiMultRef,
-    // Selection qi speed multiplier ref — updated by App.jsx
-    selectionQiMultRef,
+    // Qi Sparks refs — updated by App.jsx from useQiSparks
+    sparkQiMultRef,
+    sparkFocusMultBonusRef,
     // QI Crystal flat bonus ref — updated by App.jsx from useQiCrystal
     crystalQiBonusRef,
     // Artefact qi_speed aggregate ref — updated by App.jsx each second

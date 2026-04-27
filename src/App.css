@@ -827,6 +827,159 @@ html, body, * {
 .augment-card-rare   { border-color: rgba(96,165,250,0.35); box-shadow: 0 0 10px rgba(96,165,250,0.1); }
 .augment-card-epic   { border-color: rgba(192,132,252,0.45); box-shadow: 0 0 14px rgba(192,132,252,0.15); }
 
+/* ── Qi Spark choice modal ────────────────────────────────────────────────
+   Pick-1-of-2 card UI that fires on every layer breakthrough. Distinct from
+   the law-offer SelectionModal so the two systems can evolve independently. */
+.qi-spark-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+.qi-spark-modal {
+  background: linear-gradient(180deg, #0e1a2a 0%, #061018 100%);
+  border: 1px solid rgba(126, 184, 255, 0.25);
+  border-radius: 14px;
+  box-shadow:
+    0 0 24px rgba(92, 216, 255, 0.18),
+    0 4px 24px rgba(0, 0, 0, 0.65);
+  padding: 18px 16px 14px;
+  width: min(540px, 92vw);
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.qi-spark-header {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.qi-spark-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #cfe4ff;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 10px rgba(92, 216, 255, 0.5);
+}
+
+.qi-spark-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: rgba(180, 210, 240, 0.65);
+}
+
+.qi-spark-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.qi-spark-card {
+  background: linear-gradient(180deg, rgba(20, 35, 55, 0.95) 0%, rgba(10, 20, 32, 0.95) 100%);
+  border: 1px solid var(--rarity-color, rgba(156, 163, 175, 0.3));
+  border-radius: 10px;
+  padding: 12px 12px 14px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s;
+  user-select: none;
+}
+
+.qi-spark-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5),
+              0 0 14px var(--rarity-color, rgba(156, 163, 175, 0.4));
+  border-color: var(--rarity-color);
+}
+
+.qi-spark-card:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.qi-spark-card-common   { box-shadow: none; }
+.qi-spark-card-uncommon { box-shadow: 0 0 10px rgba(74, 222, 128, 0.10); }
+.qi-spark-card-rare     { box-shadow: 0 0 14px rgba(167, 139, 250, 0.18); }
+
+.qi-spark-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.qi-spark-rarity-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.qi-spark-rarity-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rarity-color);
+  opacity: 0.85;
+}
+
+.qi-spark-name {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #e5efff;
+}
+
+.qi-spark-desc {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: rgba(200, 220, 240, 0.85);
+}
+
+.qi-spark-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.qi-spark-reroll-btn {
+  background: rgba(126, 184, 255, 0.10);
+  border: 1px solid rgba(126, 184, 255, 0.30);
+  border-radius: 8px;
+  color: #cfe4ff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.qi-spark-reroll-btn:hover:not(:disabled) {
+  background: rgba(126, 184, 255, 0.18);
+  border-color: rgba(126, 184, 255, 0.5);
+}
+
+.qi-spark-reroll-free {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.35);
+  color: #a7f3c4;
+}
+.qi-spark-reroll-free:hover:not(:disabled) {
+  background: rgba(74, 222, 128, 0.22);
+  border-color: rgba(74, 222, 128, 0.5);
+}
+
+.qi-spark-reroll-locked {
+  background: rgba(120, 60, 60, 0.12);
+  border-color: rgba(200, 100, 100, 0.30);
+  color: rgba(220, 160, 160, 0.6);
+  cursor: not-allowed;
+}
+
 /* Rarity border glow — law cards */
 .augment-card-iron         { border-color: rgba(156,163,175,0.30); }
 .augment-card-bronze       { border-color: rgba(205,127,50,0.50);  box-shadow: 0 0 12px rgba(205,127,50,0.18); }
@@ -7390,8 +7543,8 @@ html, body, * {
   background: rgba(180, 140, 0, 0.05);
 }
 
-/* Idle toggle — pinned to top-right corner of the card */
-.region-idle-btn {
+/* Idle status stamp — pinned to top-right corner, non-interactive */
+.region-idle-stamp {
   position: absolute;
   top: 12px;
   right: 16px;
@@ -7399,34 +7552,27 @@ html, body, * {
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: transparent;
-  color: rgba(var(--ui-muted-rgb), 0.55);
+  color: rgba(var(--ui-muted-rgb), 0.5);
   font-size: 11px;
   font-weight: 600;
-  cursor: pointer;
   white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Hovering idle-able region — green: start idling */
-.region-idle-btn:hover {
-  border-color: rgba(120, 200, 100, 0.6);
-  background: rgba(60, 140, 60, 0.12);
-  color: rgba(150, 220, 130, 1);
 }
 
 /* Currently idling — yellow */
-.region-idle-btn.region-idle-btn-active {
+.region-idle-stamp.region-idle-stamp-active {
   border-color: rgba(245, 200, 66, 0.55);
   background: rgba(180, 140, 0, 0.12);
   color: rgba(245, 200, 66, 0.9);
 }
 
-/* Hovering while idling — red: cancel */
-.region-idle-btn.region-idle-btn-active:hover {
-  border-color: rgba(233, 69, 96, 0.6);
-  background: rgba(180, 30, 60, 0.15);
-  color: rgba(240, 100, 120, 1);
+/* Idle-target rows tint the stamp green on row hover for click affordance */
+.region-row.region-row-idle-target:not(.region-row-idling):hover .region-idle-stamp {
+  border-color: rgba(120, 200, 100, 0.6);
+  background: rgba(60, 140, 60, 0.12);
+  color: rgba(150, 220, 130, 1);
 }
 
 .region-row:not(.region-locked) {
@@ -7444,6 +7590,21 @@ html, body, * {
 
 .region-row:not(.region-locked):not(.region-row-world):active {
   background: rgba(255, 255, 255, 0.07);
+}
+
+/* Idle-target rows: green left border + tinted hover (mirrors world-row pattern).
+   .region-row-idling overrides this with its yellow border defined above. */
+.region-row.region-row-idle-target:not(.region-row-idling) {
+  border-left: 3px solid rgba(120, 200, 100, 0.3);
+}
+
+.region-row.region-row-idle-target:not(.region-row-idling):hover {
+  background: rgba(120, 200, 100, 0.06);
+  border-left-color: rgba(120, 200, 100, 0.7);
+}
+
+.region-row.region-row-idle-target:not(.region-row-idling):active {
+  background: rgba(120, 200, 100, 0.1);
 }
 
 /* Collect — pinned to bottom-right corner of the card */
@@ -9109,7 +9270,8 @@ html, body, * {
 
 /* ─── Journey HUD button ─────────────────────────────────────────────────────── */
 
-.home-hud-journey {
+.home-hud-journey,
+.home-hud-crystal {
   width: 34px;
   height: 34px;
   background: rgba(100, 180, 255, 0.07);
@@ -9121,6 +9283,13 @@ html, body, * {
   font-size: 16px;
   cursor: pointer;
   transition: background 0.15s;
+}
+.home-hud-crystal {
+  background: rgba(150, 100, 255, 0.07);
+  border-color: rgba(150, 100, 255, 0.22);
+}
+.home-hud-crystal:hover {
+  background: rgba(150, 100, 255, 0.18);
 }
 .home-hud-journey:hover {
   background: rgba(100, 180, 255, 0.15);

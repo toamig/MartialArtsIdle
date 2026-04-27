@@ -44,6 +44,10 @@ export function wipeSave() {
   localStorage.removeItem('mai_seen_worlds');
   localStorage.removeItem('mai_pending_selections');
   localStorage.removeItem('mai_active_selections');
+  // Qi Sparks — temporary buffs / pending offer / pity counter (Phase 1+).
+  localStorage.removeItem('mai_qi_sparks_active');
+  localStorage.removeItem('mai_qi_sparks_pending');
+  localStorage.removeItem('mai_qi_sparks_pity');
   localStorage.removeItem('mai_cleared_regions');
   localStorage.removeItem('mai_seen_features');
   localStorage.removeItem('mai_auto_farm');

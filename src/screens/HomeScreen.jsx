@@ -349,8 +349,10 @@ const CRYSTAL_COLORS = {
   10:     { glowA: 'rgba(255,170,34,1)',   glowB: 'rgba(220,120,0,0.55)', textName: '#ffb860', particles: ['#ffaa22','#ffe566','#ffbb44','#ff9900','#fff0aa'] },
 };
 
-/** Qi Crystal — locked (dim, greyscale) or unlocked (glowing, tappable). */
-function KeyCrystal({ crystal, isUnlocked, onOpen, particleColors, hidden }) {
+/** Qi Crystal — locked (dim, greyscale) or unlocked (glowing, decorative).
+ *  The feed modal is opened from the top-bar 🪨 button, not by tapping the
+ *  crystal itself, so this component is purely visual. */
+function KeyCrystal({ crystal, isUnlocked, particleColors, hidden }) {
   const unlockHint = FEATURE_GATES.qi_crystal?.hint ?? 'Reach a higher realm';
 
   if (!isUnlocked) {
@@ -379,10 +381,7 @@ function KeyCrystal({ crystal, isUnlocked, onOpen, particleColors, hidden }) {
   const tier = getCrystalTier(level);
   const { glowA, glowB } = CRYSTAL_COLORS[tier];
   return (
-    <div
-      className={`home-crystal-anchor${hidden ? ' home-crystal-anchor-lifted' : ''}`}
-      onClick={onOpen}
-    >
+    <div className={`home-crystal-anchor${hidden ? ' home-crystal-anchor-lifted' : ''}`}>
       <div className="home-crystal-float" style={{ '--cg-a': glowA, '--cg-b': glowB }}>
         <span className="home-crystal-tag">Qi Crystal</span>
         <span className="home-crystal-evolve">Lv {level}</span>
@@ -400,7 +399,7 @@ function KeyCrystal({ crystal, isUnlocked, onOpen, particleColors, hidden }) {
         <div className="ctt-bonus">
           <span className="ctt-gem">◆</span> Current bonus: <strong>+{crystalQiBonus} Qi/s</strong>
         </div>
-        <div className="ctt-hint">Tap to feed and evolve</div>
+        <div className="ctt-hint">Feed via 🪨 in the top bar</div>
       </div>
     </div>
   );
@@ -787,7 +786,6 @@ function HomeScreen({
           <KeyCrystal
             crystal={crystal}
             isUnlocked={isCrystalUnlocked}
-            onOpen={() => setCrystalModalOpen(true)}
             particleColors={isCrystalUnlocked && crystal ? CRYSTAL_COLORS[getCrystalTier(crystal.level)] : CRYSTAL_COLORS[1]}
             hidden={currentEvent?.kind === 'crystal-evolution'}
           />
