@@ -2459,9 +2459,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .vfx-disabled .home-screen::after { display: none; }
 
-/* Particles flow faster while the player is holding — qi pours in. */
+/* Particles drift slightly faster while holding — qi is being drawn in,
+   but the flow stays gentle and meditative rather than frantic. */
 .home-screen.home-boosting .home-qi-particle {
-  animation-duration: 1.0s;
+  animation-duration: 1.9s;
 }
 
 /* Full-viewport background — absolute within the fixed .home-screen.
@@ -4391,16 +4392,20 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 /* qi-particle-paths-start — managed by QiParticleEditor (?particleEdit)  */
-.home-qi-particle-pathA { offset-path: path('M   45  -21 C   30   30,  133   34,  128   70'); }
+.home-qi-particle-pathA { offset-path: path('M   48  -14 C   30   30,  133   34,  128   70'); }
 .home-qi-particle-pathB { offset-path: path('M   57   -3 C   40   30,  110   50,  100   70'); }
-.home-qi-particle-pathC { offset-path: path('M   80    0 C  110   20,   70   50,  100   70'); }
-.home-qi-particle-pathD { offset-path: path('M  120    0 C   90   20,  130   50,  100   70'); }
+.home-qi-particle-pathC { offset-path: path('M   80    0 C  110   20,   70   50,   93   71'); }
+.home-qi-particle-pathD { offset-path: path('M  120    0 C   90   20,  130   50,  107   71'); }
 .home-qi-particle-pathE { offset-path: path('M  143   -2 C  160   30,   90   50,   99   70'); }
-.home-qi-particle-pathF { offset-path: path('M  152  -19 C  170   30,   60   30,   72   72'); }
-.home-qi-particle-pathG { offset-path: path('M   46  -42 C    5  -22, -100   62,   48   82'); }
-.home-qi-particle-pathH { offset-path: path('M  154  -43 C  195  -22,  300   62,  152   82'); }
-.home-qi-particle-pathI { offset-path: path('M   53  -63 C -181    3,  -69   84,   26  124'); }
-.home-qi-particle-pathJ { offset-path: path('M  147  -63 C  383    8,  257   94,  174  129'); }
+.home-qi-particle-pathF { offset-path: path('M  152  -14 C  170   30,   60   30,   72   72'); }
+.home-qi-particle-pathG { offset-path: path('M   43  -43 C  -94   64,   -6   29,   36   95'); }
+.home-qi-particle-pathH { offset-path: path('M  157  -43 C  294   64,  206   35,  167  101'); }
+.home-qi-particle-pathI { offset-path: path('M   47  -74 C -181    3,  -69   84,   26  124'); }
+.home-qi-particle-pathJ { offset-path: path('M  152  -75 C  383    8,  257   94,  174  129'); }
+.home-qi-particle-pathK { offset-path: path('M   44  -27 C -140   70,  353    0,  174  114'); }
+.home-qi-particle-pathL { offset-path: path('M  155  -27 C  343   71, -151    0,   28  110'); }
+.home-qi-particle-pathM { offset-path: path('M   44  -59 C -105    5,   11   19,   47   84'); }
+.home-qi-particle-pathN { offset-path: path('M  156  -58 C  306    6,  189   23,  160   89'); }
 /* qi-particle-paths-end */
 
 @keyframes home-qi-flow {
@@ -4409,13 +4414,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   88%  { opacity: 0.65; }
   100% { opacity: 0;    offset-distance: 100%; --qi-mix: 100%; }
 }
-
-/* CF rung flow-speed escalation — higher rungs channel qi faster.
-   These override the base home-boosting rule (1.0 s) for rung 3–5.
-   Selector specificity beats the base rule by adding body class. */
-body.cf-rung-3 .home-screen.home-boosting .home-qi-particle { animation-duration: 0.80s; }
-body.cf-rung-4 .home-screen.home-boosting .home-qi-particle { animation-duration: 0.65s; }
-body.cf-rung-5 .home-screen.home-boosting .home-qi-particle { animation-duration: 0.50s; }
 
 /* ── Character group — grounded at scene bottom ─────────────────────────── */
 

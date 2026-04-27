@@ -491,10 +491,10 @@ function QiParticles({ colors, rung = 0 }) {
   const PER_PATH_BY_RUNG = [6, 7, 9, 11, 14, 18];
   const perPath = PER_PATH_BY_RUNG[Math.min(rung, 5)];
 
-  // qi-particle-paths-start — managed by QiParticleEditor (?particleEdit)
+            // qi-particle-paths-start — managed by QiParticleEditor (?particleEdit)
   const BASE_PATHS    = ['A', 'B', 'C', 'D', 'E', 'F'];
-  const WIDE_PATHS    = ['G', 'H'];
-  const EXTREME_PATHS = ['I', 'J'];
+  const WIDE_PATHS    = ['G', 'H', 'M', 'N'];
+  const EXTREME_PATHS = ['I', 'J', 'K', 'L'];
   // qi-particle-paths-end
   const PATHS = [
     ...BASE_PATHS,
@@ -510,10 +510,18 @@ function QiParticles({ colors, rung = 0 }) {
     for (let n = 0; n < perPath; n++) {
       // Particle size grows one step at rung 3+ for extra visual weight.
       const sizeBase = rung >= 3 ? 1 : 0;
+      // Deterministic positional jitter — keeps each particle slightly off
+      // the exact spline so the stream reads as a soft, natural flow rather
+      // than a rigid line of marching dots. Using index math instead of
+      // Math.random() makes the offsets stable across re-renders.
+      const jx = ((p * 17 + n * 11 + 5) % 19) - 9;   // ±9 px horizontal
+      const jy = ((p * 13 + n *  7 + 3) % 11) - 5;   // ±5 px vertical
       slots.push({
         path:  PATHS[p],
         delay: (p * 0.07 + n * (PERIOD / perPath)).toFixed(2),
         size:  3 + sizeBase + ((p + n) % 3),
+        jx,
+        jy,
       });
     }
   }
@@ -531,6 +539,7 @@ function QiParticles({ colors, rung = 0 }) {
             animationDelay: `${s.delay}s`,
             width:  `${s.size}px`,
             height: `${s.size}px`,
+            transform: `translate(${s.jx}px, ${s.jy}px)`,
           }}
         />
       ))}
