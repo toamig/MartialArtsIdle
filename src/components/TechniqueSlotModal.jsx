@@ -16,7 +16,7 @@ function TechniqueCard({ tech, equipped, locked, onClick }) {
 
   const quality = TECHNIQUE_QUALITY[tech.quality];
   const rank    = TECHNIQUE_RANK[tech.rank];
-  const cd      = getCooldown(tech.type, tech.quality);
+  const cd      = getCooldown(tech);
 
   // i18n keys live on the catalogue base id; drop-instance ids carry a
   // `__suffix` for uniqueness — strip it before looking up translations.

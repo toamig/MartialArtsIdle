@@ -199,7 +199,7 @@ function TechSlotCard({ index, tech, onClick }) {
   }
 
   const quality  = TECHNIQUE_QUALITY[tech.quality];
-  const cd       = getCooldown(tech.type, tech.quality);
+  const cd       = getCooldown(tech);
   const techName = tGame(`techniques.${tech.id}.name`, { defaultValue: tech.name });
 
   return (

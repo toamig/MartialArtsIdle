@@ -1,493 +1,117 @@
-# Secret Technique Catalogue — Author Sheet
+# Secret Technique Catalogue
 
-This file is the **content source** for the 60 unique secret techniques. Fill in name, flavour, and optionally any stat overrides per slot. Hand the file back when done; I'll port the values into [src/data/techniques.js](../src/data/techniques.js).
+Canonical content reference for the 60-entry secret-tech pool. Code lives in [src/data/techniques.js](../src/data/techniques.js) — keep this file in parity when editing values there.
 
-> **Design DD lives in [[Secret Techniques]].** This file is just for filling in content — no design discussion here.
+> **Design DD lives in [[Secret Techniques]].** This file lists *what each entry does*; that file explains *how the system works*.
 
----
+Every entry is hand-authored — no scaffold defaults. A blank field = no effect (0 / false / null).
 
-## How to fill
+Per-quality distribution: 4 Attack + 2 Heal + 2 Defend + 2 Dodge + 2 Expose = 12 per quality × 5 qualities = **60**.
 
-Each technique has a **slot id** (already fixed — do not change) and a small block to fill. Required fields are `name` and `flavour`. Stat overrides are optional — leave blank to use the per-quality default scaffold (see "Defaults reference" at the bottom).
+Cooldown bands (before quality multiplier):
 
-Block format:
+| Type | Slots and CDs |
+|---|---|
+| Attack | `_1` 5.0s · `_2` 5.0s · `_3` 5.5s · `_4` 5.5s |
+| Heal   | `_1` 6.0s · `_2` 6.5s |
+| Expose | `_1` 6.0s · `_2` 6.5s |
+| Defend | `_1` 6.5s · `_2` 7.0s |
+| Dodge  | `_1` 6.5s · `_2` 7.0s |
 
-```
-#### iron_attack_1
-name: 
-flavour: 
-overrides:
-  # bonus: 10         (optional — flat damage)
-  # physMult: 1.0     (optional — coefficient on physical_damage)
-  # elemMult: 0.5     (optional — coefficient on elemental_damage)
-```
-
-Uncomment any line under `overrides:` to replace the default.
-
-**Damage-type model**: every technique scales with both physical and elemental damage stats via two independent coefficients (`physMult`, `elemMult`). Set either to 0 for a pure-element tech; set both high for a hybrid. Heal techniques use the same fields — the bonus is added to the heal amount on top of `healPercent × maxHP`.
-
-Per-rarity, the slots are:
-- 4 Attack: `${quality}_attack_1` … `${quality}_attack_4`
-- 2 Heal: `${quality}_heal_1`, `${quality}_heal_2`
-- 2 Defend: `${quality}_defend_1`, `${quality}_defend_2`
-- 2 Dodge: `${quality}_dodge_1`, `${quality}_dodge_2`
-- 2 Expose: `${quality}_expose_1`, `${quality}_expose_2`
-
-Total: 12 per quality × 5 qualities = **60 techniques**.
+Quality multiplier: Iron ×1.0, Bronze ×0.90, Silver ×0.80, Gold ×0.70, Transcendent ×0.55.
 
 ---
 
-## Iron — qIdx 0
+## Iron
 
-> Defaults: Attack `bonus 0 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 15% + scaling per slot lean`. Defend `defMult ×1.30 / 2 hits`. Dodge `dodgeChance 30% / 2 hits`. Expose 1 `exploitChance +15 / defPen 5% / 3 player hits`. Expose 2 `dmgReduction 10% / exploitMult 175 / 3 enemy + 3 player hits`.
+| Slot | Name | Stats | Special |
+|---|---|---|---|
+| `iron_attack_1` | **Iron Fist** | bonus 100, physMult 1.0 | — |
+| `iron_attack_2` | **Flame Palm** | bonus 100, elemMult 1.0 | — |
+| `iron_attack_3` | **Flaming Slash** | physMult 0.6, elemMult 0.6 | — |
+| `iron_attack_4` | **Spiked Shell** | — | Deal 20% defense as damage |
+| `iron_heal_1` | **Apply Bandage** | healPercent 10% | — |
+| `iron_heal_2` | **Healing Hand** | elemMult 1.0 | (pure elem-stat heal) |
+| `iron_defend_1` | **Stone Stance** | defMult ×1.4, 2 hits | — |
+| `iron_defend_2` | **Iron Bark Form** | defMult ×1.2, 4 hits | — |
+| `iron_dodge_1` | **Lithe Step** | 15% / 3 hits | — |
+| `iron_dodge_2` | **Coiled Sway** | 20% / 2 hits | Multiplies defenses ×1.2 while buff active |
+| `iron_expose_1` | **Read the Opening** | +15% exploit, 3 player hits | — |
+| `iron_expose_2` | **Settle the Mind** | 20% dmg reduction, 3 enemy hits | — |
 
-### Attack
+## Bronze
 
-#### iron_attack_1
-name: TBD
-flavour: TBD
-overrides:
-  # bonus: 
-  # physMult: 
-  # elemMult: 
+| Slot | Name | Stats | Special |
+|---|---|---|---|
+| `bronze_attack_1` | **Steel Fist** | bonus 500, physMult 1.5 | — |
+| `bronze_attack_2` | **Water Jet** | bonus 500, elemMult 1.5 | — |
+| `bronze_attack_3` | **Heart Furnace Strike** | physMult 0.2, elemMult 0.2 | Deal 20% max HP as damage |
+| `bronze_attack_4` | **Mirror Lance** | — | Deal 30% elemental defense as damage |
+| `bronze_heal_1` | **Steady Breath** | healPercent 15% | — |
+| `bronze_heal_2` | **Convergent Stream** | physMult 0.7, elemMult 0.7 | (pure stat-scaled heal) |
+| `bronze_defend_1` | **Tempered Aegis** | defMult ×1.6, 2 hits | Heal 5% HP on cast |
+| `bronze_defend_2` | **Patient Wall** | defMult ×1.4, 4 hits | — |
+| `bronze_dodge_1` | **Crescent Slide** | 25% / 3 hits | — |
+| `bronze_dodge_2` | **Counter Step** | 30% / 2 hits | +30% damage on next attack after a successful dodge |
+| `bronze_expose_1` | **Glaring Pin** | +20% exploit, 10% def pen, 2 player hits | — |
+| `bronze_expose_2` | **Veiled Stance** | 25% dmg reduction, 3 enemy hits | — |
 
-#### iron_attack_2
-name: 
-flavour: 
-overrides:
-  # bonus: 
-  # physMult: 
-  # elemMult: 
+## Silver
 
-#### iron_attack_3
-name: 
-flavour: 
-overrides:
-  # bonus: 
-  # physMult: 
-  # elemMult: 
+| Slot | Name | Stats | Special |
+|---|---|---|---|
+| `silver_attack_1` | **Steel Slash** | bonus 2000, physMult 2.0 | — |
+| `silver_attack_2` | **Blooming Lotus** | bonus 2000, elemMult 2.0 | — |
+| `silver_attack_3` | **Twin Crescents** | physMult 1.5, elemMult 1.5 | — |
+| `silver_attack_4` | **Quickening Strike** | physMult 1.0, elemMult 1.0 | Reduces other Attack cooldowns by 30% on cast |
+| `silver_heal_1` | **Restorative Pulse** | healPercent 20% | — |
+| `silver_heal_2` | **Lifebloom Lash** | physMult 0.9, elemMult 0.9 | Deals 50% of healing as damage to the enemy |
+| `silver_defend_1` | **Centred Mountain** | defMult ×1.6, 2 hits | Reduces ALL other cooldowns by 20% on cast |
+| `silver_defend_2` | **Layered Bulwark** | defMult ×1.5, 4 hits | +10% incoming damage reduction while buff active |
+| `silver_dodge_1` | **Drifting Petal** | 30% / 3 hits | — |
+| `silver_dodge_2` | **Phoenix Feint** | 30% / 2 hits | Heal 5% max HP on each successful dodge |
+| `silver_expose_1` | **Soul-Marking Glare** | +20% exploit, 20% def pen, 3 player hits | **Applies to Attack secret techs** |
+| `silver_expose_2` | **Misted Veil** | 30% dmg reduction, 3 enemy hits | — |
 
-#### iron_attack_4
-name: 
-flavour: 
-overrides:
-  # bonus: 
-  # physMult: 
-  # elemMult: 
+## Gold
 
-### Heal
+| Slot | Name | Stats | Special |
+|---|---|---|---|
+| `gold_attack_1` | **Heaven-Cleaving Edge** | bonus 4000, physMult 3.0 | — |
+| `gold_attack_2` | **Phoenix Cry** | bonus 4000, elemMult 3.0 | — |
+| `gold_attack_3` | **Bloodroot Lance** | physMult 2.0, elemMult 1.5 | Deal 5% max HP as damage |
+| `gold_attack_4` | **Cascading Step** | physMult 1.0, elemMult 1.0 | Reduces other Attack cooldowns by 30% on cast |
+| `gold_heal_1` | **Mending Ward** | healPercent 20% | Arms next dodge to heal 10% max HP |
+| `gold_heal_2` | **Twin Bloom Strike** | physMult 1.0, elemMult 1.0 | Deals 60% of healing as damage to the enemy |
+| `gold_defend_1` | **Stoneblood Mantle** | defMult ×1.7, 2 hits | Heal 50% of mitigated damage while buff active |
+| `gold_defend_2` | **Adamant Wall** | defMult ×1.5, 4 hits | +20% incoming damage reduction while buff active |
+| `gold_dodge_1` | **Mirror Sway** | 40% / 2 hits | Reflects would-have-been damage to enemy on dodge |
+| `gold_dodge_2` | **Wind Step** | 30% / 4 hits | Reduces all CDs by 10% per successful dodge |
+| `gold_expose_1` | **Sunder Sigil** | 40% def pen, 5 player hits | **Applies to Attack secret techs** |
+| `gold_expose_2` | **Rebound Shroud** | 30% dmg reduction, 4 enemy hits | Reflects 50% of mitigated damage to enemy |
 
-#### iron_heal_1
-name: 
-flavour: 
-overrides:
-  # healPercent: 
-  # physMult: 
-  # elemMult: 
+## Transcendent
 
-#### iron_heal_2
-name: 
-flavour: 
-overrides:
-  # healPercent: 
-  # physMult: 
-  # elemMult: 
-
-### Defend
-
-#### iron_defend_1
-name: 
-flavour: 
-overrides:
-  # defMult: 
-  # buffAttacks: 
-
-#### iron_defend_2
-name: 
-flavour: 
-overrides:
-  # defMult: 
-  # buffAttacks: 
-
-### Dodge
-
-#### iron_dodge_1
-name: 
-flavour: 
-overrides:
-  # dodgeChance: 
-  # buffAttacks: 
-
-#### iron_dodge_2
-name: 
-flavour: 
-overrides:
-  # dodgeChance: 
-  # buffAttacks: 
-
-### Expose
-
-#### iron_expose_1
-name: 
-flavour: 
-overrides:
-  # exploitChance: 
-  # defPen: 
-  # buffPlayerAttacks: 
-
-#### iron_expose_2
-name: 
-flavour: 
-overrides:
-  # dmgReduction: 
-  # exploitMult: 
-  # buffEnemyAttacks: 
-  # buffPlayerAttacks: 
+| Slot | Name | Stats | Special |
+|---|---|---|---|
+| `transcendent_attack_1` | **Severing Heaven** | bonus 10000, physMult 5.0 | — |
+| `transcendent_attack_2` | **Calamity Star** | bonus 10000, elemMult 5.0 | — |
+| `transcendent_attack_3` | **Eternal Cascade** | physMult 2.5, elemMult 2.5 | Reduces other Attack cooldowns by 40% on cast |
+| `transcendent_attack_4` | **Iron-Bone Smite** | physMult 1.0, elemMult 1.0 | Deal 20% defense as damage |
+| `transcendent_heal_1` | **Prelude of Mending** | healPercent 25% | Next Heal cast is doubled |
+| `transcendent_heal_2` | **Cycle of the Phoenix** | healPercent 10%, physMult 1.0, elemMult 1.0 | Deals 100% of healing as damage to the enemy |
+| `transcendent_defend_1` | **Diamond Mantle** | defMult ×2.0, 3 hits | +25% incoming damage reduction while buff active |
+| `transcendent_defend_2` | **Sky-Veil Stance** | defMult ×2.5, 3 hits | +20% passive dodge while buff active |
+| `transcendent_dodge_1` | **Shadow Reversal** | 60% / 2 hits | Reflects would-have-been damage to enemy on dodge |
+| `transcendent_dodge_2` | **Hundred-River Step** | 50% / 4 hits | Reduces all CDs by 20% per successful dodge |
+| `transcendent_expose_1` | **Oblivion Mark** | +25% exploit, 60% def pen, 5 player hits | **Applies to Attack secret techs** |
+| `transcendent_expose_2` | **Shroud of Inverted Heavens** | 40% dmg reduction, 2 enemy hits | Defenses use the higher of phys/elem regardless of damage type |
 
 ---
 
-## Bronze — qIdx 1
-
-> Defaults: Attack `bonus 5 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 20% + scaling per slot lean`. Defend `defMult ×1.45 / 3 hits`. Dodge `dodgeChance 37.5% / 3 hits`. Expose 1 `exploitChance +20 / defPen 10% / 4 player hits`. Expose 2 `dmgReduction 14% / exploitMult 185 / 4 enemy + 4 player hits`.
-
-### Attack
-
-#### bronze_attack_1
-name: 
-flavour: 
-overrides:
-
-#### bronze_attack_2
-name: 
-flavour: 
-overrides:
-
-#### bronze_attack_3
-name: 
-flavour: 
-overrides:
-
-#### bronze_attack_4
-name: 
-flavour: 
-overrides:
-
-### Heal
-
-#### bronze_heal_1
-name: 
-flavour: 
-overrides:
-
-#### bronze_heal_2
-name: 
-flavour: 
-overrides:
-
-### Defend
-
-#### bronze_defend_1
-name: 
-flavour: 
-overrides:
-
-#### bronze_defend_2
-name: 
-flavour: 
-overrides:
-
-### Dodge
-
-#### bronze_dodge_1
-name: 
-flavour: 
-overrides:
-
-#### bronze_dodge_2
-name: 
-flavour: 
-overrides:
-
-### Expose
-
-#### bronze_expose_1
-name: 
-flavour: 
-overrides:
-
-#### bronze_expose_2
-name: 
-flavour: 
-overrides:
-
----
-
-## Silver — qIdx 2
-
-> Defaults: Attack `bonus 10 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 25% + scaling per slot lean`. Defend `defMult ×1.60 / 4 hits`. Dodge `dodgeChance 45% / 4 hits`. Expose 1 `exploitChance +25 / defPen 15% / 5 player hits`. Expose 2 `dmgReduction 18% / exploitMult 195 / 5 enemy + 5 player hits`.
-
-### Attack
-
-#### silver_attack_1
-name: 
-flavour: 
-overrides:
-
-#### silver_attack_2
-name: 
-flavour: 
-overrides:
-
-#### silver_attack_3
-name: 
-flavour: 
-overrides:
-
-#### silver_attack_4
-name: 
-flavour: 
-overrides:
-
-### Heal
-
-#### silver_heal_1
-name: 
-flavour: 
-overrides:
-
-#### silver_heal_2
-name: 
-flavour: 
-overrides:
-
-### Defend
-
-#### silver_defend_1
-name: 
-flavour: 
-overrides:
-
-#### silver_defend_2
-name: 
-flavour: 
-overrides:
-
-### Dodge
-
-#### silver_dodge_1
-name: 
-flavour: 
-overrides:
-
-#### silver_dodge_2
-name: 
-flavour: 
-overrides:
-
-### Expose
-
-#### silver_expose_1
-name: 
-flavour: 
-overrides:
-
-#### silver_expose_2
-name: 
-flavour: 
-overrides:
-
----
-
-## Gold — qIdx 3
-
-> Defaults: Attack `bonus 15 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 30% + scaling per slot lean`. Defend `defMult ×1.75 / 5 hits`. Dodge `dodgeChance 52.5% / 5 hits`. Expose 1 `exploitChance +30 / defPen 20% / 6 player hits`. Expose 2 `dmgReduction 22% / exploitMult 205 / 6 enemy + 6 player hits`.
-
-### Attack
-
-#### gold_attack_1
-name: 
-flavour: 
-overrides:
-
-#### gold_attack_2
-name: 
-flavour: 
-overrides:
-
-#### gold_attack_3
-name: 
-flavour: 
-overrides:
-
-#### gold_attack_4
-name: 
-flavour: 
-overrides:
-
-### Heal
-
-#### gold_heal_1
-name: 
-flavour: 
-overrides:
-
-#### gold_heal_2
-name: 
-flavour: 
-overrides:
-
-### Defend
-
-#### gold_defend_1
-name: 
-flavour: 
-overrides:
-
-#### gold_defend_2
-name: 
-flavour: 
-overrides:
-
-### Dodge
-
-#### gold_dodge_1
-name: 
-flavour: 
-overrides:
-
-#### gold_dodge_2
-name: 
-flavour: 
-overrides:
-
-### Expose
-
-#### gold_expose_1
-name: 
-flavour: 
-overrides:
-
-#### gold_expose_2
-name: 
-flavour: 
-overrides:
-
----
-
-## Transcendent — qIdx 4
-
-> Defaults: Attack `bonus 20 / physMult+elemMult per slot lean (see master table)`. Heal `healPercent 35% + scaling per slot lean`. Defend `defMult ×1.90 / 6 hits`. Dodge `dodgeChance 60% / 6 hits`. Expose 1 `exploitChance +35 / defPen 25% / 7 player hits`. Expose 2 `dmgReduction 26% / exploitMult 215 / 7 enemy + 7 player hits`.
-
-### Attack
-
-#### transcendent_attack_1
-name: 
-flavour: 
-overrides:
-
-#### transcendent_attack_2
-name: 
-flavour: 
-overrides:
-
-#### transcendent_attack_3
-name: 
-flavour: 
-overrides:
-
-#### transcendent_attack_4
-name: 
-flavour: 
-overrides:
-
-### Heal
-
-#### transcendent_heal_1
-name: 
-flavour: 
-overrides:
-
-#### transcendent_heal_2
-name: 
-flavour: 
-overrides:
-
-### Defend
-
-#### transcendent_defend_1
-name: 
-flavour: 
-overrides:
-
-#### transcendent_defend_2
-name: 
-flavour: 
-overrides:
-
-### Dodge
-
-#### transcendent_dodge_1
-name: 
-flavour: 
-overrides:
-
-#### transcendent_dodge_2
-name: 
-flavour: 
-overrides:
-
-### Expose
-
-#### transcendent_expose_1
-name: 
-flavour: 
-overrides:
-
-#### transcendent_expose_2
-name: 
-flavour: 
-overrides:
-
----
-
-## Defaults reference (per qIdx 0 → 4)
-
-If you leave any override blank, the technique uses these per-quality defaults from the catalogue scaffold in `src/data/techniques.js`:
-
-| Type | Field | Iron | Bronze | Silver | Gold | Transcendent |
-|---|---|---|---|---|---|---|
-| Attack | `bonus` | 0 | 5 | 10 | 15 | 20 |
-| Attack | `physMult` / `elemMult` (per slot, all qualities) | slot 1: 1.0/0.4 (phys-leaning) — slot 2: 0.4/1.0 (elem-leaning) — slot 3: 0.7/0.7 (balanced) — slot 4: 1.0/0.5 (phys + secondary elem) |
-| Heal | `healPercent` | 0.15 | 0.20 | 0.25 | 0.30 | 0.35 |
-| Heal | `physMult` / `elemMult` (per slot, all qualities) | slot 1: 0.4/0.2 (phys-leaning) — slot 2: 0.2/0.4 (elem-leaning) |
-| Defend | `defMult` | 1.30 | 1.45 | 1.60 | 1.75 | 1.90 |
-| Defend | `buffAttacks` | 2 | 3 | 4 | 5 | 6 |
-| Dodge | `dodgeChance` | 0.30 | 0.375 | 0.45 | 0.525 | 0.60 |
-| Dodge | `buffAttacks` | 2 | 3 | 4 | 5 | 6 |
-| Expose 1 | `exploitChance` | 15 | 20 | 25 | 30 | 35 |
-| Expose 1 | `defPen` | 0.05 | 0.10 | 0.15 | 0.20 | 0.25 |
-| Expose 1 | `buffPlayerAttacks` | 3 | 4 | 5 | 6 | 7 |
-| Expose 2 | `dmgReduction` | 0.10 | 0.14 | 0.18 | 0.22 | 0.26 |
-| Expose 2 | `exploitMult` | 175 | 185 | 195 | 205 | 215 |
-| Expose 2 | `buffEnemyAttacks` | 3 | 4 | 5 | 6 | 7 |
-| Expose 2 | `buffPlayerAttacks` | 3 | 4 | 5 | 6 | 7 |
-
-### Field reference
-
-| Field | Range / format | Notes |
-|---|---|---|
-| `bonus` | integer | Flat damage added (per technique, scales 0/5/10/15/20 by quality default) |
-| `physMult` | decimal ≥0, e.g. `1.0` | Coefficient on `physical_damage` stat. 1.0 adds 100%, 0 disables this scaling |
-| `elemMult` | decimal ≥0, e.g. `1.0` | Coefficient on `elemental_damage` stat. Same semantics as physMult |
-| `healPercent` | decimal 0-1, e.g. `0.40` | Fraction of max HP healed (Heal techs also use physMult / elemMult for bonus heal on top) |
-| `defMult` | decimal ≥1, e.g. `1.5` | Multiplier on player defense during the buff |
-| `dodgeChance` | decimal 0-1, e.g. `0.50` | Per-attack chance to fully dodge |
-| `buffAttacks` | integer | Number of enemy hits the buff covers |
-| `exploitChance` | integer (raw %), e.g. `25` | Bonus exploit chance during the buff |
-| `exploitMult` | integer (raw %), e.g. `200` | Override default 150% exploit damage during the buff |
-| `defPen` | decimal 0-1, e.g. `0.20` | Fraction of enemy DEF ignored during the buff |
-| `dmgReduction` | decimal 0-1, e.g. `0.30` | Fraction of incoming enemy damage reduced during the buff |
-| `buffPlayerAttacks` | integer | Player-clock buff duration (for player-side Expose effects) |
-| `buffEnemyAttacks` | integer | Enemy-clock buff duration (for `dmgReduction`) |
-
-> **Expose rule reminder**: each Expose entry should populate **1–2** of the four effects (`exploitChance`, `exploitMult`, `defPen`, `dmgReduction`). The two slots per quality already split this 2/2 in the defaults, but you can re-balance.
+## Notes
+
+- **Expose buff scope.** By default, an Expose buff applies to basic attacks only. Marked entries (`silver_expose_1`, `gold_expose_1`, `transcendent_expose_1`) opt into Attack secret techs via the `exposeBuffApplyToAttack` flag. The wood-set bonus `exposeBuffsApplyToAttack` opts in globally for any Expose tech equipped while the set is active.
+- **Heal-to-damage** (silver/gold/transcendent _heal_2). The damage to the enemy is computed from the *actual* heal amount (post-double from Prelude of Mending if armed, post `healing_received` mult, pre HP cap), so stacking heal modifiers also stacks the side-damage.
+- **Reflect on dodge** (gold/transcendent _dodge_1). Reflects the enemy's *post-incoming-dmg-reduction* attack value (pre-armour), so any `incomingDamageReduction` stat reduces both the would-have-been hit *and* the reflect.
+- **CD reduction on cast** is applied to other slots only — never the casting slot itself. The `Attack`-filtered version (silver/gold/transcendent attack 4) only touches Attack-type slots; the `all`-filtered version (silver_defend_1) touches every other slot regardless of type.

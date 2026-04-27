@@ -62,17 +62,19 @@ A mixed Expose tracks both clocks **independently**: the player-clock effects ex
 
 ## Cooldowns
 
-Base cooldown by type, reduced by quality:
+**Per-technique cooldown** (2026-04-28 overhaul). Each entry in the catalogue carries an explicit `cooldown` field — the prior per-type `BASE_COOLDOWN` table was dropped along with the procedural scaffold. Cooldowns sit in narrow per-type bands so a slot's archetype is still legible at a glance:
 
-| Type | Base Cooldown |
+| Type | Cooldown band |
 |---|---|
-| Attack | 6s |
-| Heal | 12s |
-| Defend | 10s |
-| Dodge | 10s |
-| Expose | 12s |
+| Attack | 5.0–5.5s |
+| Heal   | 6.0–6.5s |
+| Expose | 6.0–6.5s |
+| Defend | 6.5–7.0s |
+| Dodge  | 6.5–7.0s |
 
-**Quality modifier** (multiplied against base):
+Within a band, slots 1–2 sit at the low end and slot 3–4 (Attack) / slot 2 (others) at the high end so similar-archetype slots don't all tick on the same frame.
+
+**Quality modifier** (multiplied against the per-tech base):
 
 | Quality | Cooldown Multiplier |
 |---|---|
@@ -82,6 +84,8 @@ Base cooldown by type, reduced by quality:
 | Gold | ×0.70 |
 | Transcendent | ×0.55 |
 
+A Transcendent Attack 1 (5.0s × 0.55) ticks every **2.75s**; an Iron Defend 2 (7.0s × 1.0) ticks every **7.0s**.
+
 ---
 
 ## Attack Formula
@@ -90,15 +94,21 @@ Base cooldown by type, reduced by quality:
 Damage = bonus
        + physMult × physical_damage
        + elemMult × elemental_damage
+       + damageFromMaxHpPct       × pMaxHp           (opt-in per tech)
+       + damageFromDefensePct     × defense          (opt-in per tech)
+       + damageFromElemDefensePct × elementalDefense (opt-in per tech)
        + damage_all
        × (1 + secret_technique_damage)
 ```
 
 | Variable | Meaning |
 |---|---|
-| `bonus` | Flat additive damage per technique (scales 0/5/10/15/20 by quality default; designer can override) |
+| `bonus` | Flat additive damage per technique (hand-authored per entry; no quality default) |
 | `physMult` | Technique's coefficient on the `physical_damage` stat (any non-negative decimal) |
 | `elemMult` | Technique's coefficient on the `elemental_damage` stat (any non-negative decimal) |
+| `damageFromMaxHpPct` | Optional. Adds `pct × max HP` flat damage (e.g. Heart Furnace Strike). |
+| `damageFromDefensePct` | Optional. Adds `pct × defense` flat damage (e.g. Spiked Shell, Iron-Bone Smite). |
+| `damageFromElemDefensePct` | Optional. Adds `pct × elemental_defense` flat damage (e.g. Mirror Lance). |
 | `damage_all` | Universal flat from artefacts + sets + laws |
 
 > **K removed 2026-04-27**: the rank × quality K multiplier (`K_TABLE`) is gone. Damage scales purely through the player's gear-driven phys / elem stat growth. Rank still gates *equip* (Mortal techs equip from Tempered Body, Heaven techs require Open Heaven); quality still drives *cooldown* (Iron 1.0× → Transcendent 0.55×). But neither rank nor quality multiplies damage directly anymore — both their gameplay effects come from non-damage axes plus the player's own stats hitting harder over time.
@@ -114,6 +124,56 @@ effectiveArmour = (physMult × eDef + elemMult × eElemDef) / (physMult + elemMu
 A pure-physical tech faces only `eDef`; a balanced tech (1.0/1.0) faces 50/50; a heavy elemental tech faces mostly `eElemDef`. After def_pen reduces effective armour, the standard PoE armour curve runs.
 
 **Basic attack** (fires when no secret technique is ready) is hard-pinned to physical damage and adds 100% of `physical_damage` directly. See [[Damage Types]].
+
+---
+
+## Special-Logic Fields
+
+A second pass on the catalogue (2026-04-28) gave most entries a unique mechanic on top of the baseline type behaviour. Every field is opt-in per entry — absent fields contribute nothing. See [[Secret Technique Catalogue]] for which entry uses each.
+
+### Cross-type
+
+| Field | Effect |
+|---|---|
+| `cdReductionOnCastPct` | On cast, reduce other slots' remaining cooldowns by `pct`. |
+| `cdReductionOnCastFilter` | `'Attack'` (only Attack-type slots) or `'all'` (default). |
+
+### Heal
+
+| Field | Effect |
+|---|---|
+| `healDealEnemyDamagePctOfHeal` | After healing, deal `pct × healAmount` damage to the enemy. |
+| `nextDodgeHealPct` | Arms a one-shot heal (`pct × maxHP`) on the next successful dodge. |
+| `nextHealDoubled` | Arms a one-shot 2× multiplier on the next Heal cast. |
+
+### Defend (snapshotted onto buff at cast — expire with buff)
+
+| Field | Effect |
+|---|---|
+| `healOnCastPct` | Heal `pct × maxHP` immediately on cast. |
+| `defendBuffIncomingDmgReduction` | Add `pct` to total incoming-dmg-reduction while buff active. |
+| `defendBuffDodgeChance` | Add `pct × 100` passive dodge while buff active. |
+| `defendBuffMitigatedHealPct` | Heal `pct × mitigated` per hit while buff active. |
+
+### Dodge (snapshotted onto buff at cast — expire with buff)
+
+| Field | Effect |
+|---|---|
+| `dodgeBuffDefMult` | Multiply player defenses by `mult` while buff active. |
+| `dodgeBuffOnSuccessHealPct` | On each successful dodge, heal `pct × maxHP`. |
+| `dodgeBuffOnSuccessDamageBuffPct` | On dodge, arm a one-shot dmg buff (`+pct`) for the next attack. |
+| `dodgeBuffReflectDamage` | On dodge, reflect the would-have-been damage to the enemy (post incoming-dmg-reduction, pre-armour). |
+| `dodgeBuffOnSuccessCdReductionPct` | On each successful dodge, reduce all CDs by `pct`. |
+
+### Expose (snapshotted onto buff at cast — expire with buff)
+
+| Field | Effect |
+|---|---|
+| `exposeBuffApplyToAttack` | Opts INTO Attack-secret-tech buff application. **By default the Expose buff applies to basic attacks only.** Set bonus `exposeBuffsApplyToAttack` opts in globally. |
+| `exposeBuffMitigatedReflectPct` | Reflect `pct × mitigated` to the enemy per hit while buff active. |
+| `exposeBuffUseMaxDefense` | While buff active, enemy hits use `max(defense, elementalDefense)` regardless of damage type. |
+
+> **Default change (2026-04-28).** Previously the Expose buff applied to all player attacks (basic + secret tech). The new default is **basic attacks only** so designers control which Expose options synergise with Attack secret techs via the `exposeBuffApplyToAttack` flag (or the matching set bonus).
 
 ---
 

@@ -445,7 +445,7 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
         const tech     = selectedTechnique;
         const quality  = TECHNIQUE_QUALITY[tech.quality] ?? { label: tech.quality, color: '#9ca3af' };
         const typeCol  = TYPE_COLOR[tech.type] ?? '#fff';
-        const cd       = getCooldown(tech.type, tech.quality);
+        const cd       = getCooldown(tech);
         const techName    = tGame(`techniques.${tech.id}.name`,    { defaultValue: tech.name });
         const techFlavour = tGame(`techniques.${tech.id}.flavour`, { defaultValue: tech.flavour });
         return (
