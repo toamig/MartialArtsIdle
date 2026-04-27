@@ -63,7 +63,15 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
   // the breakthrough effect to re-subscribe.
   const isFeatureUnlockedRef = useRef(isFeatureUnlocked);
   useEffect(() => { isFeatureUnlockedRef.current = isFeatureUnlocked; }, [isFeatureUnlocked]);
-  const [activeSparks, setActiveSparks] = useState(() => loadJSON(ACTIVE_KEY, []));
+  const [activeSparks, setActiveSparks] = useState(() => {
+    // Reassign every instanceId on rehydrate. Older saves can contain
+    // duplicate ids (the counter used to reset to 0 on reload), and the
+    // ids are only used as React keys + within-list lookups — safe to
+    // renumber. This guarantees uniqueness for both the initial render
+    // and any sparks added later in the session.
+    const loaded = loadJSON(ACTIVE_KEY, []);
+    return loaded.map(s => ({ ...s, instanceId: ++instanceCounter }));
+  });
   const [pendingOffer, setPendingOffer] = useState(() => loadJSON(PENDING_KEY, null));
   const [pityCounter,  setPityCounter]  = useState(() => loadJSON(PITY_KEY, 0));
   const [bloodLotusBalance, setBloodLotusBalance] = useState(() => {
