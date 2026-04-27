@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { saveTechniques, loadTechniques, saveOwnedTechniques, loadOwnedTechniques } from '../systems/save';
 import { getTechnique, getTechniqueBaseId } from '../data/techniques';
 
@@ -41,6 +41,15 @@ export default function useTechniques({ extraSlots = 0 } = {}) {
   // { [id]: techniqueObj } — all acquired techniques (drops only, no starter seeding)
   const [ownedTechniques, setOwned] = useState(() => loadOwnedWithMigration());
 
+  // Synchronous shadow of `ownedTechniques`. The dedupe in addOwnedTechnique
+  // needs an up-to-date view in the same tick: in combat, drops happen one
+  // per kill so the React closure is fresh, but in tight debug loops (e.g.
+  // gd.giveTechniques(15)) every call shares the same stale closure and
+  // every drop reads as "not owned yet". Mutating + reading the ref keeps
+  // dedupe correct for both paths without changing the caller API.
+  const ownedRef = useRef(ownedTechniques);
+  useEffect(() => { ownedRef.current = ownedTechniques; }, [ownedTechniques]);
+
   useEffect(() => {
     saveOwnedTechniques(ownedTechniques);
   }, [ownedTechniques]);
@@ -58,19 +67,20 @@ export default function useTechniques({ extraSlots = 0 } = {}) {
    */
   const addOwnedTechnique = useCallback((tech) => {
     const baseId = getTechniqueBaseId(tech.id);
-    const isDuplicate = Object.values(ownedTechniques)
+    const current = ownedRef.current;
+    const isDuplicate = Object.values(current)
       .some(t => getTechniqueBaseId(t.id) === baseId);
     if (isDuplicate) {
       return { added: false, duplicate: true, baseId, quality: tech.quality ?? 'Iron' };
     }
-    let added = false;
-    setOwned(prev => {
-      if (Object.keys(prev).length >= MAX_TECHNIQUES) return prev;
-      added = true;
-      return { ...prev, [tech.id]: tech };
-    });
-    return { added, duplicate: false, baseId, quality: tech.quality ?? 'Iron' };
-  }, [ownedTechniques]);
+    if (Object.keys(current).length >= MAX_TECHNIQUES) {
+      return { added: false, duplicate: false, baseId, quality: tech.quality ?? 'Iron' };
+    }
+    const next = { ...current, [tech.id]: tech };
+    ownedRef.current = next;  // sync update so subsequent calls in this tick see the addition
+    setOwned(next);
+    return { added: true, duplicate: false, baseId, quality: tech.quality ?? 'Iron' };
+  }, []);
 
   /** Look up a technique by id — the owned (drop-instance) entry first, then
    *  the static catalogue (so legacy ids without the drop suffix still resolve). */
@@ -113,15 +123,13 @@ export default function useTechniques({ extraSlots = 0 } = {}) {
   const dismantleTechnique = useCallback((id) => {
     // Equipped check — can't dismantle while slotted.
     if (slots.includes(id)) return null;
-    let quality = null;
-    setOwned(prev => {
-      const tech = prev[id];
-      if (!tech) return prev;
-      quality = tech.quality ?? 'Iron';
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
+    const tech = ownedRef.current[id];
+    if (!tech) return null;
+    const quality = tech.quality ?? 'Iron';
+    const next = { ...ownedRef.current };
+    delete next[id];
+    ownedRef.current = next;
+    setOwned(next);
     return quality;
   }, [slots]);
 

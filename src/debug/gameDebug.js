@@ -204,43 +204,55 @@ export function initDebug(hooksRef) {
     // ── Techniques & Laws ──────────────────────────────────────────────────
 
     /**
-     * Pick + add random techniques from the unique catalogue.
-     * @param {number} [count=10]
-     * @param {number} [worldId=1]  World tier 1–6 (gates quality bias + rank).
+     * Simulate `count` real technique drops one by one. Each draw goes
+     * through the standard `pickTechnique → addOwnedTechnique` path, so
+     * duplicates are caught by the dedupe (same as in combat) and the loop
+     * keeps drawing until `count` NEW techniques have actually entered the
+     * collection — or until an attempt cap is hit (in case the catalogue
+     * subset for this world is exhausted, e.g. you already own every Iron-
+     * quality entry on World 1).
+     *
+     * @param {number} [count=10]   Target number of new owned techniques.
+     * @param {number} [worldId=1]  World tier 1–6 (drives quality bias).
      */
     giveTechniques(count = 10, worldId = 1) {
       const techs = g().techniques;
-      let added = 0;
-      for (let i = 0; i < count; i++) {
+      const MAX_ATTEMPTS = count * 20 + 50;  // generous cap for high-coverage saves
+      let added = 0, dupes = 0, attempts = 0;
+      while (added < count && attempts < MAX_ATTEMPTS) {
+        attempts += 1;
         const tech = pickTechnique(worldId);
         if (!tech) continue;
-        techs.addOwnedTechnique(tech);
-        added += 1;
+        const res = techs.addOwnedTechnique(tech);
+        if (res?.added)         added += 1;
+        else if (res?.duplicate) dupes += 1;
       }
-      console.log(`[debug] +${added} unique techniques (world ${worldId})`);
+      const exhausted = added < count;
+      const tail = exhausted
+        ? ` (catalogue exhausted at ${attempts} attempts — only ${added} new entries left in pool)`
+        : '';
+      console.log(`[debug] +${added} unique techniques, ${dupes} duplicates auto-dismantled${tail}`);
     },
 
     /**
      * Grant the first Expose technique of a given quality. Useful for testing
-     * the new buff plumbing in isolation.
+     * the new buff plumbing in isolation. Goes through the standard add path
+     * so the dedupe applies (re-running silently no-ops if you already own it).
      * @param {string} [quality='Iron']
-     * @param {number} [worldId=1]  Sets the rank (W1=Mortal … W6=Heaven).
      */
-    giveExpose(quality = 'Iron', worldId = 1) {
+    giveExpose(quality = 'Iron') {
       const base = TECHNIQUES.find(t => t.type === 'Expose' && t.quality === quality);
       if (!base) {
         console.warn(`[debug] No Expose at quality ${quality}`);
         return;
       }
-      const wIdx = Math.max(0, Math.min(5, worldId - 1));
-      const ranks = ['Mortal', 'Earth', 'Sky', 'Saint', 'Emperor', 'Heaven'];
       const drop = {
         ...base,
-        rank: ranks[wIdx],
         id: `${base.id}__${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
       };
-      g().techniques.addOwnedTechnique(drop);
-      console.log(`[debug] +1 ${quality} ${ranks[wIdx]} Expose (${base.id})`);
+      const res = g().techniques.addOwnedTechnique(drop);
+      if (res?.added) console.log(`[debug] +1 ${quality} Expose (${base.id})`);
+      else            console.log(`[debug] ${quality} Expose already owned (${base.id})`);
     },
 
     /**
@@ -477,7 +489,8 @@ export function initDebug(hooksRef) {
       console.log('  gd.addAllMaterials(n=10)  — add n of every material');
       console.log('  gd.listMaterials()        — show all material IDs and rarities');
       console.log('%cTechniques & Laws', 'font-weight: bold');
-      console.log('  gd.giveTechniques(n=10, world=1) — generate n random techniques');
+      console.log('  gd.giveTechniques(n=10, world=1) — simulate n drops, dedupe + auto-dismantle dupes');
+      console.log('  gd.giveExpose(quality="Iron")    — grant the first Expose of that quality');
       console.log('  gd.giveArtefacts(n=10, world=1)  — generate n random artefacts');
       console.log('  gd.giveLaws(n=10)                — generate n random laws');
       console.log('%cQi Crystal', 'font-weight: bold');
