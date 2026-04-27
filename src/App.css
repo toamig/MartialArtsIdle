@@ -31,180 +31,181 @@ html, body, * {
   image-rendering: pixelated;
 }
 
-/* ─── Consecutive Focus — per-rung escalation ─────────────────────────────
-   Each rung the player crosses (1s, 2s, 4s, 7s, 10s) intensifies the hold
-   visuals: the cultivator's aura widens, the screen edges brighten, and at
-   T5 the world tilts into deep meditation. Each upward edge also fires a
-   brief "pop" burst so the bump feels earned.
+/* ─── Consecutive Focus — per-rung tint ───────────────────────────────────
+   Restrained pass: keep the existing hold-state aura's shape and intensity.
+   Each rung just RECOLOURS that aura from electric blue → divine gold.
+   On every upward rung edge, a subtle one-shot pulse of the new colour
+   fades out so the moment registers without stealing focus.
 
-   Layered design:
-     - Rung classes (cf-rung-1..5) → set CSS vars + push a screen-edge bloom.
-     - Pop class (cf-rung-pop)     → one-shot radial flash that fades out.
-     - deep-meditation (rung 5)    → global hue/saturate tilt on .app.
+   What this CSS does NOT do (intentionally): no screen-edge halo, no full-
+   viewport flash, no global hue tilt, no particle speed override, no sprite
+   filter ramp. The aura colour change + the small pulse is the whole effect.
 */
 
-/* Default rung vars (rung 0 / not held). */
 :root {
-  --cf-aura-scale:     1;
-  --cf-aura-color:     rgba(120, 220, 255, 0);
-  --cf-edge-color:     rgba(120, 220, 255, 0);
-  --cf-edge-spread:    60px;
-  --cf-edge-blur:      40px;
-  --cf-saturate:       1;
-  --cf-brightness:     1;
-  --cf-particle-speed: 1.0s;
+  /* Default — matches the existing hold-state aura (pale cyan). */
+  --cf-aura-core:    rgba(120, 220, 255, 0.50);
+  --cf-aura-fringe:  rgba(60,  180, 230, 0.26);
 }
 
+/* Smooth power-up sweep — saturated deep blue → electric indigo → warm
+   cream pivot → rich amber → divine gold. Avoids the baseline pale cyan
+   (which is the no-spark aura) so T1 reads as an obvious change from T0.
+   Each rung is also more opaque than the last so power monotonically grows.
+     T1 225°  saturated deep electric blue   (clearly NOT the baseline cyan)
+     T2 250°  electric indigo / blue-violet  (qi gains depth)
+     T3  45°  pale warm cream                (cool→warm pivot)
+     T4  35°  rich amber                     (qi blooms warm)
+     T5  48°  divine gold                    (peak)
+*/
 body.cf-rung-1 {
-  --cf-aura-scale:     1.06;
-  --cf-aura-color:     rgba(120, 220, 255, 0.55);
-  --cf-edge-color:     rgba(120, 220, 255, 0.30);
-  --cf-edge-spread:    70px;
-  --cf-saturate:       1.05;
-  --cf-particle-speed: 0.85s;
+  --cf-aura-core:   rgba( 50, 110, 255, 0.62);
+  --cf-aura-fringe: rgba( 10,  60, 220, 0.36);
+  --cf-text-color:  #b3c8ff;
+  --cf-text-glow:   rgba( 80, 140, 255, 0.95);
+  --cf-text-deep:   rgba( 30,  90, 230, 0.55);
+  --cf-bar-edge:    #2042b8;
+  --cf-bar-core:    #b3c8ff;
 }
 body.cf-rung-2 {
-  --cf-aura-scale:     1.12;
-  --cf-aura-color:     rgba(140, 200, 255, 0.65);
-  --cf-edge-color:     rgba(140, 200, 255, 0.42);
-  --cf-edge-spread:    90px;
-  --cf-edge-blur:      55px;
-  --cf-saturate:       1.10;
-  --cf-brightness:     1.04;
-  --cf-particle-speed: 0.70s;
+  --cf-aura-core:   rgba(120, 100, 255, 0.66);
+  --cf-aura-fringe: rgba( 70,  40, 220, 0.40);
+  --cf-text-color:  #cdb5ff;
+  --cf-text-glow:   rgba(150, 120, 255, 0.95);
+  --cf-text-deep:   rgba( 90,  50, 230, 0.55);
+  --cf-bar-edge:    #4d34a8;
+  --cf-bar-core:    #ddc8ff;
 }
 body.cf-rung-3 {
-  --cf-aura-scale:     1.20;
-  --cf-aura-color:     rgba(170, 170, 255, 0.72);
-  --cf-edge-color:     rgba(170, 170, 255, 0.55);
-  --cf-edge-spread:    115px;
-  --cf-edge-blur:      70px;
-  --cf-saturate:       1.18;
-  --cf-brightness:     1.07;
-  --cf-particle-speed: 0.55s;
+  --cf-aura-core:   rgba(255, 230, 180, 0.66);  /* warm cream — bridges cool → gold */
+  --cf-aura-fringe: rgba(230, 195, 130, 0.40);
+  --cf-text-color:  #ffeac7;
+  --cf-text-glow:   rgba(255, 220, 160, 0.95);
+  --cf-text-deep:   rgba(220, 175, 100, 0.55);
+  --cf-bar-edge:    #a07b48;
+  --cf-bar-core:    #fff1d6;
 }
 body.cf-rung-4 {
-  --cf-aura-scale:     1.30;
-  --cf-aura-color:     rgba(200, 150, 255, 0.78);
-  --cf-edge-color:     rgba(200, 150, 255, 0.65);
-  --cf-edge-spread:    140px;
-  --cf-edge-blur:      85px;
-  --cf-saturate:       1.25;
-  --cf-brightness:     1.10;
-  --cf-particle-speed: 0.42s;
+  --cf-aura-core:   rgba(255, 145,  40, 0.78);  /* proper orange — clearly distinct from gold T5 */
+  --cf-aura-fringe: rgba(210,  90,   0, 0.48);
+  --cf-text-color:  #ffba70;
+  --cf-text-glow:   rgba(255, 135,  30, 1.00);
+  --cf-text-deep:   rgba(200,  80,   0, 0.65);
+  --cf-bar-edge:    #7a3a00;
+  --cf-bar-core:    #ffc88a;
 }
 body.cf-rung-5 {
-  --cf-aura-scale:     1.42;
-  --cf-aura-color:     rgba(225, 130, 255, 0.85);
-  --cf-edge-color:     rgba(225, 130, 255, 0.78);
-  --cf-edge-spread:    180px;
-  --cf-edge-blur:      105px;
-  --cf-saturate:       1.32;
-  --cf-brightness:     1.13;
-  --cf-particle-speed: 0.30s;
+  --cf-aura-core:   rgba(255, 215,  60, 0.80);
+  --cf-aura-fringe: rgba(220, 140,   0, 0.50);
+  --cf-text-color:  #ffe680;
+  --cf-text-glow:   rgba(255, 205,  40, 1.00);
+  --cf-text-deep:   rgba(220, 140,   0, 0.65);
+  --cf-bar-edge:    #7a4400;
+  --cf-bar-core:    #ffeea0;
 }
 
-/* Global colour tilt — only at T5 deep meditation. Smooth ease in/out. */
-body.deep-meditation .app {
-  filter: hue-rotate(-14deg) saturate(var(--cf-saturate)) brightness(var(--cf-brightness));
-  transition: filter 0.6s ease-out;
-}
-body:not(.deep-meditation) .app {
-  transition: filter 1.2s ease-in;
-}
-
-/* Persistent screen-edge bloom — sits on top of the existing hold-state
-   vignette, intensifying with rung. Pulse animation runs at every rung;
-   T5 pulses faster for the meditative breath. */
-body[class*="cf-rung-"]::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  /* Sits above home content (z 0–4) and the existing edge vignette, but
-     below the top-bar (z-700), modal overlay (z-200), and nav (z-100) so
-     focus visuals never block the HUD or modals. */
-  z-index: 50;
-  box-shadow: inset 0 0 var(--cf-edge-blur) var(--cf-edge-spread) var(--cf-edge-color);
-  opacity: 0.85;
-  animation: cf-edge-breathe 2.4s ease-in-out infinite;
-  transition: box-shadow 360ms ease-out;
-}
-body.cf-rung-5::before { animation-duration: 1.6s; }
-
-@keyframes cf-edge-breathe {
-  0%, 100% { opacity: 0.65; }
-  50%      { opacity: 1.00; }
+/* Recolour the existing cultivator aura — overrides the hardcoded cyan
+   gradient on .home-fighter-stage::before. Smooth crossfade between rungs;
+   shape + scale + animation are inherited from the original rule. */
+body[class*="cf-rung-"] .home-fighter-stage.stage-boosted::before {
+  background: radial-gradient(
+    circle,
+    var(--cf-aura-core)   0%,
+    var(--cf-aura-fringe) 35%,
+    transparent           72%
+  );
+  transition: background 600ms ease-out;
 }
 
-/* Cultivator aura escalation — rides on top of the existing
-   .home-fighter-stage::before glow defined later in this file. Same layer
-   so it composites; we just amp scale/colour via the ::after pseudo. */
-body[class*="cf-rung-"] .home-fighter-stage::after {
+/* Subtle pop — brief outward glow ring on the cultivator stage when the
+   player crosses a new rung. Coloured to match the new rung. Lives on a
+   ::after so it doesn't fight with the existing breathing aura. */
+body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
   content: '';
   position: absolute;
-  inset: -45%;
+  inset: -28%;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--cf-aura-color) 0%, transparent 65%);
-  transform: scale(var(--cf-aura-scale));
+  background: radial-gradient(
+    circle,
+    var(--cf-aura-core)   0%,
+    var(--cf-aura-fringe) 40%,
+    transparent           70%
+  );
   pointer-events: none;
   z-index: -1;
-  opacity: 0.9;
-  animation: cf-aura-breathe 1.0s ease-in-out infinite;
-  transition: transform 320ms ease-out, background 320ms ease-out;
-}
-@keyframes cf-aura-breathe {
-  0%, 100% { filter: brightness(0.95); transform: scale(calc(var(--cf-aura-scale) * 0.95)); }
-  50%      { filter: brightness(1.30); transform: scale(calc(var(--cf-aura-scale) * 1.06)); }
-}
-
-/* Particle flow speeds up with each rung — overrides the hold-state
-   1.0s baseline declared further down. */
-body[class*="cf-rung-"] .home-screen.home-boosting .home-qi-particle {
-  animation-duration: var(--cf-particle-speed);
-}
-
-/* Cultivator sprite saturation/brightness ramp. */
-body[class*="cf-rung-"] .home-fighter-stage.stage-boosted .sprite-animator {
-  filter:
-    brightness(calc(1.10 * var(--cf-brightness)))
-    saturate(calc(1.18 * var(--cf-saturate)))
-    drop-shadow(0 0 calc(8px * var(--cf-aura-scale)) var(--cf-aura-color));
-  transition: filter 320ms ease-out;
-}
-
-/* ── Pop burst — fires once per upward rung edge ──────────────────────── */
-body.cf-rung-pop::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  /* Brief flash — sits just above the persistent edge bloom but still
-     under the top-bar / modal overlay so it can't accidentally block UI. */
-  z-index: 60;
-  background: radial-gradient(
-    circle at center,
-    var(--cf-aura-color) 0%,
-    var(--cf-edge-color) 35%,
-    transparent          70%
-  );
   opacity: 0;
-  animation: cf-pop-flash 700ms ease-out forwards;
-  mix-blend-mode: screen;
+  transform: scale(0.9);
+  animation: cf-aura-pop 600ms ease-out forwards;
 }
-@keyframes cf-pop-flash {
-  0%   { opacity: 0;    transform: scale(0.85); filter: blur(20px); }
-  18%  { opacity: 0.85; transform: scale(1.00); filter: blur(8px); }
-  100% { opacity: 0;    transform: scale(1.20); filter: blur(0px); }
+@keyframes cf-aura-pop {
+  0%   { opacity: 0;    transform: scale(0.90); }
+  35%  { opacity: 0.55; transform: scale(1.05); }
+  100% { opacity: 0;    transform: scale(1.20); }
 }
 
-/* Respect the vfx-disabled pref — kill all rung overlays. */
-.vfx-disabled body[class*="cf-rung-"]::before,
-.vfx-disabled body[class*="cf-rung-"] .home-fighter-stage::after,
-.vfx-disabled body.cf-rung-pop::after {
-  display: none !important;
+/* Qi/s multiplier badge — subtle border-colour tint per rung so the
+   numeric jump (×3.00 → ×4.80) reads alongside a small visual cue. No
+   pulse, no glow shift — the climbing number does the heavy lifting. */
+body[class*="cf-rung-"] .qi-rate-badge-cf {
+  border-color: var(--cf-aura-core);
+  box-shadow: 0 0 6px var(--cf-aura-core);
+  transition: border-color 320ms ease-out, box-shadow 320ms ease-out;
 }
-.vfx-disabled body.deep-meditation .app { filter: none !important; }
+
+/* Floating "+N" qi tick numbers — recolour to match the active rung so
+   the visual feedback chain stays unified (aura, badge, floaters all
+   share the same hue). Uses high-opacity --cf-text-* vars (the aura
+   vars carry alpha for the gradient and would be too faint for text). */
+body[class*="cf-rung-"] .vfx-qi-tick .vfx-content {
+  color: var(--cf-text-color);
+  text-shadow:
+    0 0 8px  var(--cf-text-glow),
+    0 0 18px var(--cf-text-deep),
+    0 2px 0 rgba(0, 0, 0, 0.85),
+    1px 0 0 rgba(0, 0, 0, 0.75),
+    -1px 0 0 rgba(0, 0, 0, 0.75),
+    0 -1px 0 rgba(0, 0, 0, 0.75);
+  transition: color 320ms ease-out, text-shadow 320ms ease-out;
+}
+
+/* Boosted cultivation bar — picks up the rung's hue while keeping the
+   "edge → bright core → edge" three-stop structure so the charge-up
+   animation stays readable. Box-shadow glow swaps to a rung-aware
+   pulse keyframes so the breathing glow recolours too (the baseline
+   `realmBoostedPulse` hardcodes cyan in its keyframe values). */
+body[class*="cf-rung-"] .realm-fill-boosted {
+  animation: cf-realm-boost-pulse 1.1s ease-in-out infinite alternate;
+}
+body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
+  background: linear-gradient(
+    to right,
+    var(--cf-bar-edge),
+    var(--cf-bar-core),
+    var(--cf-bar-edge)
+  );
+  transition: background 360ms ease-out;
+}
+
+@keyframes cf-realm-boost-pulse {
+  0% {
+    box-shadow:
+      0 0 12px var(--cf-text-glow),
+      0 0 22px var(--cf-text-deep);
+    filter: brightness(1.0);
+  }
+  100% {
+    box-shadow:
+      0 0 18px var(--cf-text-glow),
+      0 0 36px var(--cf-text-deep);
+    filter: brightness(1.15);
+  }
+}
+
+/* Respect the vfx-disabled pref. */
+.vfx-disabled body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
+  display: none !important;
+  animation: none !important;
+}
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 

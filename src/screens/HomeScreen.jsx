@@ -30,7 +30,7 @@ function getSpriteState(boosting, adBoostActive) {
 
 /** Qi/s readout — updated via rAF so it tracks every modifier without re-renders.
  *  The focus multiplier badge includes the Qi-Spark Focus Surge bonus when active. */
-function QiRateReadout({ rateRef, focusMultRef, sparkFocusMultBonusRef, boosting, adBoostActive, maxed }) {
+function QiRateReadout({ rateRef, focusMultRef, sparkFocusMultBonusRef, sparkConsecutiveCurrentBonusRef, boosting, adBoostActive, maxed }) {
   const { t } = useTranslation('ui');
   const textRef  = useRef(null);
   const boostRef = useRef(null);
@@ -50,20 +50,26 @@ function QiRateReadout({ rateRef, focusMultRef, sparkFocusMultBonusRef, boosting
       if (boostRef.current && focusMultRef) {
         const baseMult  = (focusMultRef.current ?? 300) / 100;
         const sparkBonus = sparkFocusMultBonusRef?.current ?? 0;
-        const mult = baseMult * (1 + sparkBonus);
-        boostRef.current.textContent = `×${mult % 1 === 0 ? mult.toFixed(0) : mult.toFixed(1)}`;
+        // Consecutive Focus folds in multiplicatively on top of the focus
+        // mult — same shape as the rate calc, so the badge matches reality.
+        const cfBonus = sparkConsecutiveCurrentBonusRef?.current ?? 0;
+        const mult = baseMult * (1 + sparkBonus) * (1 + cfBonus);
+        // Show 2 decimals when CF is contributing fractional gains so the
+        // step-ups (×3.00 → ×3.15 → ×3.36 …) feel readable.
+        const decimals = cfBonus > 0 ? 2 : (mult % 1 === 0 ? 0 : 1);
+        boostRef.current.textContent = `×${mult.toFixed(decimals)}`;
       }
       raf = requestAnimationFrame(update);
     };
     raf = requestAnimationFrame(update);
     return () => cancelAnimationFrame(raf);
-  }, [rateRef, focusMultRef, sparkFocusMultBonusRef, maxed, t]);
+  }, [rateRef, focusMultRef, sparkFocusMultBonusRef, sparkConsecutiveCurrentBonusRef, maxed, t]);
 
   const cls = `qi-rate${boosting ? ' qi-rate-boosted' : ''}${adBoostActive ? ' qi-rate-ad' : ''}`;
   return (
     <div className={cls}>
       <span ref={textRef} className="qi-rate-value">—</span>
-      {boosting      && <span ref={boostRef} className="qi-rate-badge">×3</span>}
+      {boosting      && <span ref={boostRef} className="qi-rate-badge qi-rate-badge-cf">×3</span>}
       {adBoostActive && <span className="qi-rate-badge qi-rate-badge-ad">×2</span>}
     </div>
   );
@@ -371,7 +377,6 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden }) {
             draggable="false"
           />
         </div>
-        <QiParticles colors={particleColors} />
         <div className="crystal-tooltip crystal-tooltip-locked">
           <div className="ctt-title">🔒 Qi Crystal</div>
           <div className="ctt-desc">A crystallised vessel of refined Qi. Permanently boosts your cultivation speed.</div>
@@ -455,7 +460,7 @@ function PCQiProgressText({ qiRef, costRef, gateRef, rateRef, maxed, ascended })
 
 /** Left panel — visible only at wide (≥ 900 px) breakpoints.
  *  Shows cultivation stats so the player doesn't have to look at the bar. */
-function HomePCLeftPanel({ realmName, realmStage, qiRef, costRef, rateRef, gateRef, focusMultRef, sparkFocusMultBonusRef, boosting, adBoostActive, maxed, ascended }) {
+function HomePCLeftPanel({ realmName, realmStage, qiRef, costRef, rateRef, gateRef, focusMultRef, sparkFocusMultBonusRef, sparkConsecutiveCurrentBonusRef, boosting, adBoostActive, maxed, ascended }) {
   const { t } = useTranslation('ui');
   return (
     <div className="home-pc-left">
@@ -463,7 +468,7 @@ function HomePCLeftPanel({ realmName, realmStage, qiRef, costRef, rateRef, gateR
       <div className="home-pc-realm-name">{realmName.split(' - ')[0]}</div>
       {realmStage && !ascended && <div className="home-pc-realm-stage">{realmStage}</div>}
       <PCQiProgressText qiRef={qiRef} costRef={costRef} gateRef={gateRef} rateRef={rateRef} maxed={maxed} ascended={ascended} />
-      <QiRateReadout rateRef={rateRef} focusMultRef={focusMultRef} sparkFocusMultBonusRef={sparkFocusMultBonusRef} boosting={boosting} adBoostActive={adBoostActive} maxed={maxed} />
+      <QiRateReadout rateRef={rateRef} focusMultRef={focusMultRef} sparkFocusMultBonusRef={sparkFocusMultBonusRef} sparkConsecutiveCurrentBonusRef={sparkConsecutiveCurrentBonusRef} boosting={boosting} adBoostActive={adBoostActive} maxed={maxed} />
     </div>
   );
 }
@@ -504,6 +509,7 @@ function HomeScreen({
     gateRef,
     focusMultRef,
     sparkFocusMultBonusRef,
+    sparkConsecutiveCurrentBonusRef,
     boosting,
     maxed,
     startBoost,
@@ -704,6 +710,7 @@ function HomeScreen({
           qiRef={qiRef}
           focusMultRef={focusMultRef}
           sparkFocusMultBonusRef={sparkFocusMultBonusRef}
+          sparkConsecutiveCurrentBonusRef={sparkConsecutiveCurrentBonusRef}
           costRef={costRef}
           rateRef={rateRef}
           gateRef={gateRef}
@@ -842,6 +849,7 @@ function HomeScreen({
                 rateRef={rateRef}
                 focusMultRef={focusMultRef}
                 sparkFocusMultBonusRef={sparkFocusMultBonusRef}
+                sparkConsecutiveCurrentBonusRef={sparkConsecutiveCurrentBonusRef}
                 boosting={boosting}
                 adBoostActive={adBoostActive}
                 maxed={maxed}

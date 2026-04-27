@@ -45,9 +45,12 @@ export function wipeSave() {
   localStorage.removeItem('mai_pending_selections');
   localStorage.removeItem('mai_active_selections');
   // Qi Sparks — temporary buffs / pending offer / pity counter (Phase 1+).
+  // Offline snapshot mirrors Heaven's Bond's offline-qi multiplier so the
+  // pre-mount offline calc can pick it up; wipe it alongside.
   localStorage.removeItem('mai_qi_sparks_active');
   localStorage.removeItem('mai_qi_sparks_pending');
   localStorage.removeItem('mai_qi_sparks_pity');
+  localStorage.removeItem('mai_qi_sparks_offline_snapshot');
   localStorage.removeItem('mai_cleared_regions');
   localStorage.removeItem('mai_seen_features');
   localStorage.removeItem('mai_auto_farm');

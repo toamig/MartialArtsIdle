@@ -32,6 +32,21 @@
  *     duration: number (ms)
  *     residualMult: number    — qi/s mult applied for `residualDurationMs` after focus release
  *     residualDurationMs: number
+ *   'permanent'                — persists for the entire run; resets on reincarnation only.
+ *                                Stacks additively when re-drawn (instance.stacks counter).
+ *     effect: { type: 'qi_flat_per_stack',                  value }   — adds to base qi/s
+ *           | { type: 'qi_mult_per_stack',                  value }   — adds to qi/s mult bonus (sums across stacks)
+ *           | { type: 'focus_mult_bonus_per_stack',         value }   — adds to focus mult bonus
+ *           | { type: 'gate_reduction_per_stack',           value }   — reduces major-realm gate qi/s requirement
+ *           | { type: 'offline_qi_mult_per_stack',          value }   — multiplies offline qi accrual
+ *           | { type: 'qi_mult_per_breakthrough_per_stack', value }   — qi/s mult that grows with breakthroughs accrued
+ *   'mechanic'                 — rare-tier mechanic unlock or upgrade. One
+ *                                active spark per mechanicId; picking a higher
+ *                                tier replaces the lower one in place.
+ *     mechanicId:  string                  — groups the 5 tier cards together
+ *     tier:        1 | 2 | 3 | 4 | 5       — drives gating & in-game effect
+ *     unlockCheck: string?                 — feature-gate id required for T1 only (e.g. 'qi_crystal')
+ *     ...mechanic-specific fields read by useCultivation / mechanic UI
  */
 
 export const QI_SPARKS = [
@@ -106,6 +121,124 @@ export const QI_SPARKS = [
     breakthroughs: 3,
     effect:      { type: 'qi_mult', value: 0.05 },
   },
+
+  // ── Uncommon (permanent run buffs, additive stacking) ───────────────────
+  {
+    id:          'steady_cultivation',
+    rarity:      'uncommon',
+    name:        'Steady Cultivation',
+    description: '+1 base qi/s for the rest of this run. Stacks.',
+    kind:        'permanent',
+    effect:      { type: 'qi_flat_per_stack', value: 1 },
+  },
+  {
+    id:          'sharper_focus',
+    rarity:      'uncommon',
+    name:        'Sharper Focus',
+    description: '+5% Focus multiplier for the rest of this run. Stacks.',
+    kind:        'permanent',
+    effect:      { type: 'focus_mult_bonus_per_stack', value: 0.05 },
+  },
+  {
+    id:          'enduring_stream',
+    rarity:      'uncommon',
+    name:        'Enduring Stream',
+    description: '+2% qi/s for the rest of this run. Stacks.',
+    kind:        'permanent',
+    effect:      { type: 'qi_mult_per_stack', value: 0.02 },
+  },
+  {
+    id:          'patience_of_stone',
+    rarity:      'uncommon',
+    name:        'Patience of Stone',
+    description: 'Major-realm gate qi/s requirement reduced 5% for the rest of this run. Stacks.',
+    kind:        'permanent',
+    effect:      { type: 'gate_reduction_per_stack', value: 0.05 },
+  },
+  {
+    id:          'heavens_bond',
+    rarity:      'uncommon',
+    name:        "Heaven's Bond",
+    description: '+10% offline qi accrual for the rest of this run. Stacks.',
+    kind:        'permanent',
+    effect:      { type: 'offline_qi_mult_per_stack', value: 0.10 },
+  },
+  {
+    id:          'resonant_soul',
+    rarity:      'uncommon',
+    name:        'Resonant Soul',
+    description: '+0.5% qi/s for every layer breakthrough you reach this run. Stacks.',
+    kind:        'permanent',
+    effect:      { type: 'qi_mult_per_breakthrough_per_stack', value: 0.005 },
+  },
+
+  // ── Rare — Mechanic: Consecutive Focus ──────────────────────────────────
+  // Each tier ADDS a new threshold rung on top of the previous ones, so
+  // holding Focus rewards the player with stepped gains over time.
+  // `bonus` = incremental qi/s mult added at THIS tier's threshold.
+  // Even 2s spacing keeps every rung-up feeling rhythmic.
+  // Cumulative table (T5 player, hold 10s):
+  //   2s  → +5%   (T1)
+  //   4s  → +12%  (T2: +7%)
+  //   6s  → +25%  (T3: +13%)
+  //   8s  → +40%  (T4: +15%)
+  //  10s  → +60%  (T5: +20%, deep meditation visual)
+  {
+    id:          'consecutive_focus_t1',
+    rarity:      'rare',
+    name:        'Consecutive Focus',
+    description: 'Hold Focus 2s → +5% qi/s.',
+    kind:        'mechanic',
+    mechanicId:  'consecutive_focus',
+    tier:        1,
+    holdMs:      2000,
+    bonus:       0.05,
+  },
+  {
+    id:          'consecutive_focus_t2',
+    rarity:      'rare',
+    name:        'Consecutive Focus',
+    description: 'Adds: hold Focus 4s → +7% more qi/s (total +12%).',
+    kind:        'mechanic',
+    mechanicId:  'consecutive_focus',
+    tier:        2,
+    holdMs:      4000,
+    bonus:       0.07,
+  },
+  {
+    id:          'consecutive_focus_t3',
+    rarity:      'rare',
+    name:        'Consecutive Focus',
+    description: 'Adds: hold Focus 6s → +13% more qi/s (total +25%).',
+    kind:        'mechanic',
+    mechanicId:  'consecutive_focus',
+    tier:        3,
+    holdMs:      6000,
+    bonus:       0.13,
+  },
+  {
+    id:          'consecutive_focus_t4',
+    rarity:      'rare',
+    name:        'Consecutive Focus',
+    description: 'Adds: hold Focus 8s → +15% more qi/s (total +40%).',
+    kind:        'mechanic',
+    mechanicId:  'consecutive_focus',
+    tier:        4,
+    holdMs:      8000,
+    bonus:       0.15,
+  },
+  {
+    id:          'consecutive_focus_t5',
+    rarity:      'rare',
+    name:        'Consecutive Focus',
+    description: 'Adds: hold Focus 10s → +20% more qi/s (total +60%) and enter deep meditation.',
+    kind:        'mechanic',
+    mechanicId:  'consecutive_focus',
+    tier:        5,
+    holdMs:      10000,
+    bonus:       0.20,
+    deepMeditation: true,
+  },
 ];
 
 export const QI_SPARK_BY_ID = Object.fromEntries(QI_SPARKS.map(s => [s.id, s]));
@@ -118,8 +251,8 @@ export const SPARK_RARITY = {
   rare:     { label: 'Rare',     color: '#a78bfa' },
 };
 
-// Phase 1: only common cards exist. Weights effective even if other tiers
-// are added later — empty pools simply contribute zero.
+// Per-card weights summed over the eligible pool. Rare tier (Phase 3) is
+// empty until mechanic cards ship — its weight then contributes zero.
 export const SPARK_RARITY_WEIGHTS = {
   common:   55,
   uncommon: 30,
@@ -129,18 +262,50 @@ export const SPARK_RARITY_WEIGHTS = {
 // ── Drawing ─────────────────────────────────────────────────────────────────
 
 /**
- * Build the eligible pool for an offer. Phase 1 has no gating beyond rarity
- * existence; later phases will filter by mechanic-unlock state.
+ * Build the eligible pool for an offer.
+ *
+ * Mechanic-card gating (Phase 3+):
+ *   - Each `mechanicId` may have at most one active card. The eligible card
+ *     for that mechanic is exactly tier (currentTier + 1).
+ *   - currentTier 0 means "not yet drawn" → only T1 is eligible, AND its
+ *     `unlockCheck` (if set) must pass via `isFeatureUnlocked`.
+ *   - currentTier 5 → mechanic is capped, no more upgrades drawn.
+ *
+ * @param {object} ctx
+ * @param {Array}  ctx.activeSparks       Current active sparks (instances).
+ * @param {Function} ctx.isFeatureUnlocked  (featureId) → boolean.
  */
-function eligiblePool() {
-  return QI_SPARKS;
+function eligiblePool({ activeSparks = [], isFeatureUnlocked } = {}) {
+  // Build mechanicId → highest active tier from the active spark set.
+  const tierByMechanic = new Map();
+  for (const s of activeSparks) {
+    const card = QI_SPARK_BY_ID[s.sparkId];
+    if (card?.kind !== 'mechanic') continue;
+    const prev = tierByMechanic.get(card.mechanicId) ?? 0;
+    if (card.tier > prev) tierByMechanic.set(card.mechanicId, card.tier);
+  }
+
+  return QI_SPARKS.filter((card) => {
+    if (card.kind !== 'mechanic') return true;
+    const currentTier = tierByMechanic.get(card.mechanicId) ?? 0;
+    if (currentTier >= 5) return false;          // capped
+    if (card.tier !== currentTier + 1) return false;
+    if (card.tier === 1 && card.unlockCheck) {
+      return isFeatureUnlocked ? !!isFeatureUnlocked(card.unlockCheck) : false;
+    }
+    return true;
+  });
 }
 
 /**
  * Draw `count` distinct sparks from the eligible pool, weighted by rarity.
+ *
+ * @param {number} count
+ * @param {object} [ctx]  Forwarded to eligiblePool — required once mechanic
+ *                        cards exist; defaults are safe for plain rarity rolls.
  */
-export function drawOffer(count = 2) {
-  const pool = eligiblePool();
+export function drawOffer(count = 2, ctx = {}) {
+  const pool = eligiblePool(ctx);
   if (pool.length === 0) return [];
 
   const picked = [];

@@ -1,6 +1,6 @@
 # Qi Sparks — Implementation Status
 
-**Status:** Phase 1 + 1B shipped — 8 common cards live in production
+**Status:** Phase 1 + 1B + 2 shipped; Phase 3 in progress (Consecutive Focus done — 1 of 4 mechanics)
 **Last commit:** 726d9ea (fix: Focus multiplier badge reflects Focus Surge bonus)
 **Date:** 2026-04-27
 
@@ -43,34 +43,62 @@ All functional with proper UI feedback through qi/s readout + focus badge.
 
 ---
 
-## What's left to attack tomorrow
+## What's done (Phase 2 — Uncommon permanents)
 
-### Phase 2 — Permanent buffs (Uncommon tier)
 6 cards that persist for the entire run, stack additively, reset on reincarnation.
 
 | Card | Effect |
 |---|---|
-| Steady Cultivation | +1 to base qi/s, permanent (run) |
-| Sharper Focus | +5% Focus multiplier, permanent (run) |
-| Enduring Stream | +2% qi/s, permanent (run) |
-| Patience of Stone | Major-realm gate qi/s requirement reduced 5%, permanent |
-| Heaven's Bond | +10% offline qi accrual, permanent |
-| Resonant Soul | +0.5% qi/s per layer breakthrough this run (stacks) |
+| Steady Cultivation | +1 base qi/s per stack |
+| Sharper Focus | +5% Focus multiplier per stack |
+| Enduring Stream | +2% qi/s per stack (additive across permanent stacks, multiplied with temp buffs) |
+| Patience of Stone | Major-realm gate qi/s requirement −5% per stack (capped at 90%) |
+| Heaven's Bond | +10% offline qi accrual per stack (mirrored to localStorage for pre-mount offline calc) |
+| Resonant Soul | +0.5% qi/s per stack per layer breakthrough accrued since pick |
 
-**Implementation notes:**
-- Add `kind: 'permanent'` to qiSparks data
-- New ref `sparkPermanentQiMultRef` etc. — needs separate stacking math from temp buffs
-- Each permanent draw stacks additively — track stacks per card id in active sparks state
-- Active-sparks chips show stack count for permanents (e.g. "Sharper Focus ×3")
+**Implementation:**
+- New `kind: 'permanent'` with per-stack effect types in `data/qiSparks.js`
+- `useQiSparks.applySparkChoice` merges duplicate permanent picks into one instance with a `stacks` counter
+- New refs in `useQiSparks` → `useCultivation`: `sparkQiFlatRef` (added to BASE_RATE), `sparkGateReductionRef` (shrinks gate)
+- Heaven's Bond uses the same `mai_qi_sparks_offline_snapshot` localStorage pattern as the artefact offline-mult
+- Active-sparks chip shows `×N` suffix once stacks > 1
+- Reset on reincarnation via existing `wipeSave()` (snapshot key added)
+
+## What's left
 
 ### Phase 3 — Mechanic cards (Rare tier)
 4 mechanics × 5 tiers each = 20 cards. T1 unlocks AND T2-T5 upgrades have **same rare draw rate** (per design call).
 
-**Gating rules:**
-- T2-T5 of a mechanic only enter offer pool after T1 is drawn for that mechanic
-- Crystal Click T1 requires `featureFlags.isUnlocked('qi_crystal')` — gated by realm progression
-- T5-capped mechanics stop generating upgrade offers
-- Already-unlocked T1s drop from the offer pool
+**Infra status (shipped):**
+- `kind: 'mechanic'` cards with `mechanicId` / `tier` / optional `unlockCheck`
+- `eligiblePool` filters by current per-mechanic tier from active sparks; T5-capped mechanics drop entirely; T1 gated by feature-flag when `unlockCheck` set
+- `applySparkChoice` upgrades the existing mechanic instance in place (no stacking — tier replaces tier)
+- `ActiveSparksBar` shows mechanic name + `T<n>` suffix
+- `useQiSparks` accepts `isFeatureUnlocked` prop, threaded through `featureFlagsRef` in App.jsx
+
+**Mechanic status:**
+- ✅ Consecutive Focus (5 tiers shipped — see below)
+- ⏳ Crystal Click — next
+- ⏳ Divine Qi
+- ⏳ Pattern Clicking
+
+#### Mechanic 0: Consecutive Focus — SHIPPED
+
+Each unlocked tier ADDS a new threshold rung. Player feels stepped ramps as they hold longer; the ladder is cumulative.
+
+| Rung | Threshold | Adds | Cumulative @ T5 |
+|---|---|---|---|
+| T1 | 1 s   | +5%  | +5%  |
+| T2 | 2 s   | +7%  | +12% |
+| T3 | 4 s   | +13% | +25% |
+| T4 | 7 s   | +15% | +40% |
+| T5 | 10 s  | +20% | +60% (+ deep-meditation screen tint) |
+
+Implementation:
+- `useCultivation` tracks `boostStartTimeRef` (set on focus press edge); release for any reason resets the climb.
+- `useQiSparks` builds the full `consecutiveFocusLadderRef` from all T1..currentTier cards each time the active spark set changes.
+- Tick sums every met rung's bonus into `consecutiveMult`, folded into the rate alongside `boostMult`.
+- T5 dispatches `mai:deep-meditation` on edges; App.jsx toggles `body.deep-meditation`; CSS applies subtle hue-shift + vignette pulse.
 
 #### Mechanic 1: Crystal Click — accumulation reservoir
 - Crystal stockpiles qi at a fraction of qi/s rate, capped at N minutes

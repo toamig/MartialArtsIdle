@@ -156,7 +156,15 @@ export default function useCultivation() {
       if (raw) artefactOfflineMult = JSON.parse(raw).offlineQiMult ?? 1;
     } catch {}
 
-    const baseRate = BASE_RATE * lawMult * offlineQiMult * artefactOfflineMult * (1 + pillQiSpeedBonus);
+    // Heaven's Bond (Qi Spark) — same snapshot pattern as artefacts. Mirrored
+    // by useQiSparks every time the active spark set changes.
+    let sparkOfflineMult = 1;
+    try {
+      const raw = localStorage.getItem('mai_qi_sparks_offline_snapshot');
+      if (raw) sparkOfflineMult = JSON.parse(raw).offlineQiMult ?? 1;
+    } catch {}
+
+    const baseRate = BASE_RATE * lawMult * offlineQiMult * artefactOfflineMult * sparkOfflineMult * (1 + pillQiSpeedBonus);
     const total = baseRate * awaySeconds;
 
     return Math.floor(total);
@@ -195,6 +203,11 @@ export default function useCultivation() {
   // sparkFocusMultBonusRef multiplies the focus boost mult (e.g. 0.3 = +30% on top).
   const sparkQiMultRef               = useRef(1);
   const sparkFocusMultBonusRef       = useRef(0);
+  // Permanent (uncommon) Qi Spark buffs:
+  //  sparkQiFlatRef        — adds to BASE_RATE (Steady Cultivation × stacks)
+  //  sparkGateReductionRef — fraction subtracted from major-realm gate rate (Patience of Stone)
+  const sparkQiFlatRef               = useRef(0);
+  const sparkGateReductionRef        = useRef(0);
   // Painless Ascension — when true, the next breakthrough doesn't drain qi.
   // Consumed (set false) by the tick when a breakthrough fires; the hook
   // listens for the 'mai:painless-consumed' event to remove the spark.
@@ -207,6 +220,22 @@ export default function useCultivation() {
   const sparkLingeringResidualMultRef = useRef(0);
   const focusReleaseTimeRef          = useRef(0);
   const prevBoostStateRef            = useRef(false);
+  // Consecutive Focus mechanic — every unlocked tier adds a rung to a
+  // cumulative ladder of (holdMs, bonus). Each tick sums every met rung
+  // into the qi/s mult so the player feels stepped gains as they hold
+  // longer. Empty array = mechanic not unlocked.
+  const sparkConsecutiveLadderRef    = useRef([]);
+  const sparkConsecutiveDeepRef      = useRef(false);
+  const boostStartTimeRef            = useRef(0);
+  // Debug-only — when true, Consecutive Focus skips the hold-duration
+  // check so the bonus applies the instant boost is held.
+  const debugConsecutiveBypassRef    = useRef(false);
+  // Last rung depth (count of met thresholds) emitted by the tick. Used
+  // to fire `mai:cf-rung` only on edges so listeners aren't event-stormed.
+  const consecutiveRungRef           = useRef(0);
+  // Live qi/s bonus from Consecutive Focus this frame (0 when not held or
+  // no rungs met). UI reads it to fold into the multiplier badge.
+  const sparkConsecutiveCurrentBonusRef = useRef(0);
   // Hold-to-cultivate boost multiplier (qi_focus_mult stat, expressed as %).
   // Default 300% = the legacy 3× behavior; App.jsx writes the player's actual
   // focus mult into this ref each second.
@@ -274,7 +303,53 @@ export default function useCultivation() {
       if (prevBoostStateRef.current && !boostRef.current) {
         focusReleaseTimeRef.current = now;
       }
+      // Record every focus press time — Consecutive Focus rewards holding
+      // boost continuously past `holdMs`.
+      if (!prevBoostStateRef.current && boostRef.current) {
+        boostStartTimeRef.current = now;
+      }
       prevBoostStateRef.current = boostRef.current;
+
+      // Consecutive Focus bonus — only active while boost is held AND has
+      // been held for at least `holdMs`. Folded into the final rate as a
+      // multiplier alongside the focus boost.
+      // Sum every Consecutive Focus ladder rung whose threshold is met.
+      // Ladder is sorted ascending by holdMs in useQiSparks so we can early-
+      // out the moment we hit an unmet threshold (or always, when bypassed).
+      let consecutiveBonus = 0;
+      let consecutiveRung  = 0;
+      const ladder = sparkConsecutiveLadderRef.current;
+      if (boostRef.current && ladder.length > 0) {
+        const heldMs = now - boostStartTimeRef.current;
+        const bypass = debugConsecutiveBypassRef.current;
+        for (const step of ladder) {
+          if (bypass || heldMs >= step.holdMs) {
+            consecutiveBonus += step.bonus;
+            consecutiveRung++;
+          } else break;
+        }
+      }
+      const consecutiveMult = 1 + consecutiveBonus;
+      // Mirror the running bonus so the qi/s readout can fold it into the
+      // displayed multiplier badge each frame.
+      sparkConsecutiveCurrentBonusRef.current = consecutiveBonus;
+      // Edge-only event: rung depth changed. UI listens to drive the per-
+      // rung aura/glow escalation + the upward "pop" transient.
+      if (consecutiveRung !== consecutiveRungRef.current) {
+        const prev = consecutiveRungRef.current;
+        consecutiveRungRef.current = consecutiveRung;
+        try {
+          window.dispatchEvent(new CustomEvent('mai:cf-rung', {
+            detail: {
+              rung:     consecutiveRung,
+              prevRung: prev,
+              total:    consecutiveBonus,
+              deep:     !!sparkConsecutiveDeepRef.current && consecutiveRung >= 5,
+              upward:   consecutiveRung > prev,
+            },
+          }));
+        } catch {}
+      }
 
       let boostMult;
       if (boostRef.current) {
@@ -295,9 +370,9 @@ export default function useCultivation() {
       // and the artefact heavenly_qi_mult stat.
       const heavenlyTree = adBoostRef.current > 1 ? treeHeavenlyMultRef.current : 1;
       const heavenlyArt  = adBoostRef.current > 1 ? (1 + heavenlyQiMultRef.current) : 1;
-      const rate = (BASE_RATE + crystalQiBonusRef.current) * lawMult * qiUniqueMult *
+      const rate = (BASE_RATE + crystalQiBonusRef.current + sparkQiFlatRef.current) * lawMult * qiUniqueMult *
         artefactQiMultRef.current *
-        boostMult *
+        boostMult * consecutiveMult *
         adBoostRef.current * heavenlyTree * heavenlyArt *
         pillQiMultRef.current * sparkQiMultRef.current *
         treeQiMultRef.current * rebirthCultBuffRef.current *
@@ -324,7 +399,9 @@ export default function useCultivation() {
         // Normal realm progression.
         if (qiRef.current >= costRef.current) {
           const majorRate    = getMajorBreakthroughRate(indexRef.current);
-          const requiredRate = majorRate > 0 ? majorRate : getPeakBreakthroughRate(indexRef.current);
+          const baseRequired = majorRate > 0 ? majorRate : getPeakBreakthroughRate(indexRef.current);
+          // Patience of Stone (Qi Spark) shrinks the gate requirement.
+          const requiredRate = baseRequired * (1 - sparkGateReductionRef.current);
           if (requiredRate > 0 && rate < requiredRate) {
             // Major-realm gate: hold qi at cost until sustained qi/s is enough.
             qiRef.current = costRef.current;
@@ -454,10 +531,19 @@ export default function useCultivation() {
     // Qi Sparks refs — updated by App.jsx from useQiSparks
     sparkQiMultRef,
     sparkFocusMultBonusRef,
+    sparkQiFlatRef,
+    sparkGateReductionRef,
     sparkPainlessRef,
     sparkLingeringActiveRef,
     sparkLingeringResidualMsRef,
     sparkLingeringResidualMultRef,
+    sparkConsecutiveLadderRef,
+    sparkConsecutiveDeepRef,
+    sparkConsecutiveCurrentBonusRef,
+    // Exposed for debug bridges — production code should treat both as
+    // private to the cultivation tick.
+    boostStartTimeRef,
+    debugConsecutiveBypassRef,
     // QI Crystal flat bonus ref — updated by App.jsx from useQiCrystal
     crystalQiBonusRef,
     // Artefact qi_speed aggregate ref — updated by App.jsx each second

@@ -15,6 +15,7 @@ import { pickTechnique } from '../data/techniqueDrops';
 import { TECHNIQUES } from '../data/techniques';
 import { generateLaw } from '../data/affixPools';
 import { pickRandomArtefact } from '../data/artefactDrops';
+import { QI_SPARKS, QI_SPARK_BY_ID } from '../data/qiSparks';
 
 const ITEMS_BY_ID = { ...ALL_MATERIALS, ...PILLS_BY_ID };
 
@@ -332,6 +333,115 @@ export function initDebug(hooksRef) {
      * @param {number} [newLevel]    Displayed level on the overlay card.
      * @param {string} [variant]     Animation variant: 'shatter' (default) | 'current'.
      */
+    // ── Qi Sparks ─────────────────────────────────────────────────────────
+
+    /** List every active spark with its key state for quick inspection. */
+    listQiSparks() {
+      const sparks = g().qiSparks?.activeSparks ?? [];
+      if (sparks.length === 0) {
+        console.log('[debug] No active qi sparks.');
+        return sparks;
+      }
+      console.table(sparks.map(s => {
+        const card = QI_SPARK_BY_ID[s.sparkId];
+        return {
+          id:       s.sparkId,
+          rarity:   card?.rarity,
+          kind:     card?.kind,
+          stacks:   s.stacks ?? '-',
+          tier:     card?.tier ?? '-',
+          mechanic: card?.mechanicId ?? '-',
+          expires:  s.expiresAt ? `${Math.max(0, Math.round((s.expiresAt - Date.now()) / 1000))}s` : '-',
+          breakthroughs: s.breakthroughsRemaining ?? s.breakthroughsAccrued ?? '-',
+        };
+      }));
+      return sparks;
+    },
+
+    /**
+     * Grant a qi spark by id, bypassing the offer modal. Use the literal
+     * card id from data/qiSparks.js (e.g. 'consecutive_focus_t1', 'painless_ascension').
+     * Run `gd.listQiSparkIds()` to see all available ids.
+     */
+    giveQiSpark(sparkId) {
+      const card = QI_SPARK_BY_ID[sparkId];
+      if (!card) {
+        console.warn(`[debug] Unknown qi spark id: ${sparkId}. Try gd.listQiSparkIds().`);
+        return;
+      }
+      g().qiSparks.applySpark(sparkId);
+      console.log(`[debug] Granted qi spark: ${card.name} (${card.rarity}, kind=${card.kind})`);
+    },
+
+    /** Print every qi spark id grouped by rarity. */
+    listQiSparkIds() {
+      const groups = { common: [], uncommon: [], rare: [] };
+      for (const c of QI_SPARKS) (groups[c.rarity] ?? (groups[c.rarity] = [])).push(c.id);
+      for (const [rarity, ids] of Object.entries(groups)) {
+        console.log(`[${rarity}]`, ids.join(', '));
+      }
+    },
+
+    /**
+     * Bump a mechanic spark up by `n` tiers (default 1). If the mechanic
+     * isn't yet active, starts at T1 then upgrades to T(1+n−1).
+     * Mechanic ids: 'consecutive_focus' (Phase 3 in progress; more later).
+     */
+    upgradeMechanic(mechanicId, n = 1) {
+      const tiers = QI_SPARKS
+        .filter(c => c.kind === 'mechanic' && c.mechanicId === mechanicId)
+        .sort((a, b) => a.tier - b.tier);
+      if (tiers.length === 0) {
+        console.warn(`[debug] Unknown mechanic: ${mechanicId}`);
+        return;
+      }
+      const active = (g().qiSparks?.activeSparks ?? [])
+        .map(s => QI_SPARK_BY_ID[s.sparkId])
+        .find(c => c?.kind === 'mechanic' && c.mechanicId === mechanicId);
+      const startTier = active ? active.tier : 0;
+      const targetTier = Math.min(5, startTier + Math.max(1, n));
+      for (let t = startTier + 1; t <= targetTier; t++) {
+        const card = tiers.find(c => c.tier === t);
+        if (card) g().qiSparks.applySpark(card.id);
+      }
+      console.log(`[debug] ${mechanicId}: T${startTier} → T${targetTier}`);
+    },
+
+    /** Wipe every active qi spark + pending offer + pity counter. */
+    clearQiSparks() {
+      g().qiSparks.clearAll();
+      console.log('[debug] Qi sparks cleared.');
+    },
+
+    /**
+     * Force the next breakthrough's card-pick offer to roll right now.
+     * Useful for testing offer-modal flow without waiting on cultivation.
+     */
+    rollQiSparkOffer() {
+      g().cultivation.qiRef.current = g().cultivation.costRef.current - 1;
+      console.log('[debug] Qi filled — next tick will breakthrough and roll an offer.');
+    },
+
+    /**
+     * Consecutive Focus tester — toggles a bypass that makes the bonus
+     * fire the instant Focus is held, ignoring the tier's hold-duration
+     * threshold. Call again with `false` to restore normal behaviour.
+     *
+     *   gd.bypassConsecutiveFocus()       → ON  (any tier triggers instantly)
+     *   gd.bypassConsecutiveFocus(false)  → OFF (back to normal threshold)
+     *
+     * The card itself must still be active — pair with gd.giveQiSpark.
+     */
+    bypassConsecutiveFocus(on = true) {
+      const ref = g().cultivation.debugConsecutiveBypassRef;
+      if (!ref) {
+        console.warn('[debug] debugConsecutiveBypassRef not exposed.');
+        return;
+      }
+      ref.current = !!on;
+      console.log(`[debug] Consecutive Focus threshold bypass: ${on ? 'ON' : 'OFF'}`);
+    },
+
     crystalEvolve(newTier, previousTier, newLevel, variant) {
       const TIER_LEVELS = { 1:1, 2:10, 3:25, 4:50, 5:100, 6:200, 7:350, 8:500, 9:750, 10:1000 };
       if (!TIER_LEVELS[newTier]) {

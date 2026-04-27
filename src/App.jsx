@@ -109,7 +109,14 @@ function AppInner() {
   const crystal         = useQiCrystal({ getQuantity: inventory.getQuantity, removeItem: inventory.removeItem });
   const { clearedRegions, clearRegion } = useClearedRegions();
   const selections      = useLawOffers({ cultivation });
-  const qiSparks        = useQiSparks({ cultivation });
+  // featureFlags is declared further down — useQiSparks reads its unlock
+  // gates via this ref-backed callback to avoid a TDZ on the inline value.
+  const featureFlagsRef = useRef(null);
+  const isFeatureUnlocked = useCallback(
+    (id) => featureFlagsRef.current?.isUnlocked?.(id) ?? false,
+    [],
+  );
+  const qiSparks        = useQiSparks({ cultivation, isFeatureUnlocked });
 
   // Record every new realm reached so karma awards are first-time-only.
   useEffect(() => {
@@ -232,6 +239,12 @@ function AppInner() {
     if (cultivation.sparkFocusMultBonusRef) {
       cultivation.sparkFocusMultBonusRef.current = qiSparks.focusMultBonusRef.current;
     }
+    if (cultivation.sparkQiFlatRef) {
+      cultivation.sparkQiFlatRef.current = qiSparks.qiFlatRef.current;
+    }
+    if (cultivation.sparkGateReductionRef) {
+      cultivation.sparkGateReductionRef.current = qiSparks.gateReductionRef.current;
+    }
     if (cultivation.sparkPainlessRef) {
       cultivation.sparkPainlessRef.current = qiSparks.painlessActiveRef.current;
     }
@@ -244,7 +257,47 @@ function AppInner() {
     if (cultivation.sparkLingeringResidualMultRef) {
       cultivation.sparkLingeringResidualMultRef.current = qiSparks.lingeringResidualMultRef.current;
     }
+    if (cultivation.sparkConsecutiveLadderRef) {
+      cultivation.sparkConsecutiveLadderRef.current = qiSparks.consecutiveFocusLadderRef.current;
+    }
+    if (cultivation.sparkConsecutiveDeepRef) {
+      cultivation.sparkConsecutiveDeepRef.current = qiSparks.consecutiveFocusDeepRef.current;
+    }
   }, [qiSparks.activeSparks]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Consecutive Focus rung escalation — toggle body classes that CSS keys
+  // off to drive per-rung aura/glow/tint + a brief upward "pop" burst.
+  // Cultivation tick only dispatches on edges, so this listener is cheap.
+  useEffect(() => {
+    const RUNG_CLASSES = ['cf-rung-1', 'cf-rung-2', 'cf-rung-3', 'cf-rung-4', 'cf-rung-5'];
+    let popTimer = 0;
+    const onRung = (e) => {
+      const { rung, deep, upward } = e.detail ?? {};
+      const body = document.body;
+      body.classList.remove(...RUNG_CLASSES);
+      if (rung > 0) body.classList.add(`cf-rung-${rung}`);
+      body.classList.toggle('deep-meditation', !!deep);
+
+      // Restart the pop animation on every upward edge.
+      if (upward) {
+        body.classList.remove('cf-rung-pop');
+        // Force reflow so the animation can replay back-to-back rung-ups.
+        // eslint-disable-next-line no-unused-expressions
+        body.offsetWidth;
+        body.style.setProperty('--cf-pop-rung', String(rung));
+        body.classList.add('cf-rung-pop');
+        clearTimeout(popTimer);
+        popTimer = setTimeout(() => body.classList.remove('cf-rung-pop'), 800);
+      }
+    };
+    window.addEventListener('mai:cf-rung', onRung);
+    return () => {
+      window.removeEventListener('mai:cf-rung', onRung);
+      clearTimeout(popTimer);
+      const body = document.body;
+      body.classList.remove(...RUNG_CLASSES, 'cf-rung-pop', 'deep-meditation');
+    };
+  }, []);
 
 
   // ── Centralised stat getter ─────────────────────────────────────────────
@@ -568,6 +621,8 @@ function AppInner() {
     Object.keys(pills.discoveredPills).length,
   ]);
 
+  // Wired into useQiSparks above via featureFlagsRef so its mechanic-card
+  // pool gating (Crystal Click T1 etc.) can query feature unlocks.
   const featureFlags = useFeatureFlags({
     cultivation,
     clearedRegions,
@@ -584,10 +639,11 @@ function AppInner() {
       notifications.addToast({ message: msg, targetScreen, targetParam });
     },
   });
+  featureFlagsRef.current = featureFlags;
 
   // Keep a live ref to all hooks so debug commands always see fresh state.
   const hooksRef = useRef({});
-  hooksRef.current = { cultivation, inventory, techniques, combat, artefacts, pills, autoFarm, crystal };
+  hooksRef.current = { cultivation, inventory, techniques, combat, artefacts, pills, autoFarm, crystal, qiSparks };
   useEffect(() => { initDebug(hooksRef); }, []);
 
   // Preload both BGM tracks once on mount so crossfades are instant
