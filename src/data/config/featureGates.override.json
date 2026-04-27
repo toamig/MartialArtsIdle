@@ -1,13 +1,12 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-18T12:52:57.762Z",
+  "updatedAt": "2026-04-28T00:00:00.000Z",
   "records": {
     "collection": {
       "gate": {
-        "type": "realm",
-        "minRealmIndex": 3
+        "type": "item_any"
       },
-      "hint": "Reach Tempered Body Layer 4",
+      "hint": "Acquire your first item",
       "unlockMsg": "Collection unlocked. Browse your acquired items."
     },
     "gathering": {
