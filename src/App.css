@@ -31,6 +31,181 @@ html, body, * {
   image-rendering: pixelated;
 }
 
+/* ─── Consecutive Focus — per-rung escalation ─────────────────────────────
+   Each rung the player crosses (1s, 2s, 4s, 7s, 10s) intensifies the hold
+   visuals: the cultivator's aura widens, the screen edges brighten, and at
+   T5 the world tilts into deep meditation. Each upward edge also fires a
+   brief "pop" burst so the bump feels earned.
+
+   Layered design:
+     - Rung classes (cf-rung-1..5) → set CSS vars + push a screen-edge bloom.
+     - Pop class (cf-rung-pop)     → one-shot radial flash that fades out.
+     - deep-meditation (rung 5)    → global hue/saturate tilt on .app.
+*/
+
+/* Default rung vars (rung 0 / not held). */
+:root {
+  --cf-aura-scale:     1;
+  --cf-aura-color:     rgba(120, 220, 255, 0);
+  --cf-edge-color:     rgba(120, 220, 255, 0);
+  --cf-edge-spread:    60px;
+  --cf-edge-blur:      40px;
+  --cf-saturate:       1;
+  --cf-brightness:     1;
+  --cf-particle-speed: 1.0s;
+}
+
+body.cf-rung-1 {
+  --cf-aura-scale:     1.06;
+  --cf-aura-color:     rgba(120, 220, 255, 0.55);
+  --cf-edge-color:     rgba(120, 220, 255, 0.30);
+  --cf-edge-spread:    70px;
+  --cf-saturate:       1.05;
+  --cf-particle-speed: 0.85s;
+}
+body.cf-rung-2 {
+  --cf-aura-scale:     1.12;
+  --cf-aura-color:     rgba(140, 200, 255, 0.65);
+  --cf-edge-color:     rgba(140, 200, 255, 0.42);
+  --cf-edge-spread:    90px;
+  --cf-edge-blur:      55px;
+  --cf-saturate:       1.10;
+  --cf-brightness:     1.04;
+  --cf-particle-speed: 0.70s;
+}
+body.cf-rung-3 {
+  --cf-aura-scale:     1.20;
+  --cf-aura-color:     rgba(170, 170, 255, 0.72);
+  --cf-edge-color:     rgba(170, 170, 255, 0.55);
+  --cf-edge-spread:    115px;
+  --cf-edge-blur:      70px;
+  --cf-saturate:       1.18;
+  --cf-brightness:     1.07;
+  --cf-particle-speed: 0.55s;
+}
+body.cf-rung-4 {
+  --cf-aura-scale:     1.30;
+  --cf-aura-color:     rgba(200, 150, 255, 0.78);
+  --cf-edge-color:     rgba(200, 150, 255, 0.65);
+  --cf-edge-spread:    140px;
+  --cf-edge-blur:      85px;
+  --cf-saturate:       1.25;
+  --cf-brightness:     1.10;
+  --cf-particle-speed: 0.42s;
+}
+body.cf-rung-5 {
+  --cf-aura-scale:     1.42;
+  --cf-aura-color:     rgba(225, 130, 255, 0.85);
+  --cf-edge-color:     rgba(225, 130, 255, 0.78);
+  --cf-edge-spread:    180px;
+  --cf-edge-blur:      105px;
+  --cf-saturate:       1.32;
+  --cf-brightness:     1.13;
+  --cf-particle-speed: 0.30s;
+}
+
+/* Global colour tilt — only at T5 deep meditation. Smooth ease in/out. */
+body.deep-meditation .app {
+  filter: hue-rotate(-14deg) saturate(var(--cf-saturate)) brightness(var(--cf-brightness));
+  transition: filter 0.6s ease-out;
+}
+body:not(.deep-meditation) .app {
+  transition: filter 1.2s ease-in;
+}
+
+/* Persistent screen-edge bloom — sits on top of the existing hold-state
+   vignette, intensifying with rung. Pulse animation runs at every rung;
+   T5 pulses faster for the meditative breath. */
+body[class*="cf-rung-"]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* Sits above home content (z 0–4) and the existing edge vignette, but
+     below the top-bar (z-700), modal overlay (z-200), and nav (z-100) so
+     focus visuals never block the HUD or modals. */
+  z-index: 50;
+  box-shadow: inset 0 0 var(--cf-edge-blur) var(--cf-edge-spread) var(--cf-edge-color);
+  opacity: 0.85;
+  animation: cf-edge-breathe 2.4s ease-in-out infinite;
+  transition: box-shadow 360ms ease-out;
+}
+body.cf-rung-5::before { animation-duration: 1.6s; }
+
+@keyframes cf-edge-breathe {
+  0%, 100% { opacity: 0.65; }
+  50%      { opacity: 1.00; }
+}
+
+/* Cultivator aura escalation — rides on top of the existing
+   .home-fighter-stage::before glow defined later in this file. Same layer
+   so it composites; we just amp scale/colour via the ::after pseudo. */
+body[class*="cf-rung-"] .home-fighter-stage::after {
+  content: '';
+  position: absolute;
+  inset: -45%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--cf-aura-color) 0%, transparent 65%);
+  transform: scale(var(--cf-aura-scale));
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.9;
+  animation: cf-aura-breathe 1.0s ease-in-out infinite;
+  transition: transform 320ms ease-out, background 320ms ease-out;
+}
+@keyframes cf-aura-breathe {
+  0%, 100% { filter: brightness(0.95); transform: scale(calc(var(--cf-aura-scale) * 0.95)); }
+  50%      { filter: brightness(1.30); transform: scale(calc(var(--cf-aura-scale) * 1.06)); }
+}
+
+/* Particle flow speeds up with each rung — overrides the hold-state
+   1.0s baseline declared further down. */
+body[class*="cf-rung-"] .home-screen.home-boosting .home-qi-particle {
+  animation-duration: var(--cf-particle-speed);
+}
+
+/* Cultivator sprite saturation/brightness ramp. */
+body[class*="cf-rung-"] .home-fighter-stage.stage-boosted .sprite-animator {
+  filter:
+    brightness(calc(1.10 * var(--cf-brightness)))
+    saturate(calc(1.18 * var(--cf-saturate)))
+    drop-shadow(0 0 calc(8px * var(--cf-aura-scale)) var(--cf-aura-color));
+  transition: filter 320ms ease-out;
+}
+
+/* ── Pop burst — fires once per upward rung edge ──────────────────────── */
+body.cf-rung-pop::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* Brief flash — sits just above the persistent edge bloom but still
+     under the top-bar / modal overlay so it can't accidentally block UI. */
+  z-index: 60;
+  background: radial-gradient(
+    circle at center,
+    var(--cf-aura-color) 0%,
+    var(--cf-edge-color) 35%,
+    transparent          70%
+  );
+  opacity: 0;
+  animation: cf-pop-flash 700ms ease-out forwards;
+  mix-blend-mode: screen;
+}
+@keyframes cf-pop-flash {
+  0%   { opacity: 0;    transform: scale(0.85); filter: blur(20px); }
+  18%  { opacity: 0.85; transform: scale(1.00); filter: blur(8px); }
+  100% { opacity: 0;    transform: scale(1.20); filter: blur(0px); }
+}
+
+/* Respect the vfx-disabled pref — kill all rung overlays. */
+.vfx-disabled body[class*="cf-rung-"]::before,
+.vfx-disabled body[class*="cf-rung-"] .home-fighter-stage::after,
+.vfx-disabled body.cf-rung-pop::after {
+  display: none !important;
+}
+.vfx-disabled body.deep-meditation .app { filter: none !important; }
+
 /* ─────────────────────────────────────────────────────────────────────────── */
 
 :root {
@@ -827,49 +1002,152 @@ html, body, * {
 .augment-card-rare   { border-color: rgba(96,165,250,0.35); box-shadow: 0 0 10px rgba(96,165,250,0.1); }
 .augment-card-epic   { border-color: rgba(192,132,252,0.45); box-shadow: 0 0 14px rgba(192,132,252,0.15); }
 
-/* ── Active Sparks bar — small chips in home-chips-tl ──────────────────────
-   One chip per currently-active Qi Spark, with a rarity-coloured dot,
-   the spark name, and a suffix (countdown for timed, count for event-based,
-   "next" for next-breakthrough flags). */
-.active-sparks-bar {
+/* ── Active Sparks chip — cyan-themed sibling of home-pill-chip / home-idle-chip.
+   Same shape, sizing and behaviour as the rest of the home-chips-tl stack;
+   tapping opens the Active Sparks modal listing every active bonus. */
+.home-sparks-chip {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 4px;
-}
-
-.active-spark-chip {
-  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(20, 30, 45, 0.78);
-  border: 1px solid var(--rarity-color, rgba(156, 163, 175, 0.4));
-  font-size: 0.72rem;
-  color: rgba(220, 230, 240, 0.92);
-  user-select: none;
-  pointer-events: auto;
-  white-space: nowrap;
+  gap: 6px;
+  padding: 5px 12px;
+  background: linear-gradient(135deg, rgba(15, 40, 70, 0.85), rgba(25, 70, 110, 0.85));
+  border: 1px solid rgba(126, 184, 255, 0.50);
+  border-radius: 20px;
+  color: #cfe4ff;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 8px rgba(92, 216, 255, 0.30);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.home-sparks-chip:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 14px rgba(92, 216, 255, 0.50);
+}
+.home-sparks-chip-icon  { font-size: 12px; }
+.home-sparks-chip-label { white-space: nowrap; }
+
+/* ── Active Sparks panel — modal listing all current spark bonuses ──
+   Adapts to phones via the shared .modal-overlay safe-area padding;
+   on small screens the panel fills the available width comfortably. */
+.active-sparks-overlay {
+  z-index: 220;
 }
 
-.active-spark-dot {
-  width: 6px;
-  height: 6px;
+.active-sparks-panel {
+  background: linear-gradient(180deg, #0e1a2a 0%, #061018 100%);
+  border: 1px solid rgba(126, 184, 255, 0.22);
+  border-radius: 14px;
+  width: min(420px, 96vw);
+  max-height: min(80vh, 640px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow:
+    0 0 24px rgba(92, 216, 255, 0.14),
+    0 8px 32px rgba(0, 0, 0, 0.65);
+  animation: modal-pop 0.2s ease-out;
+}
+
+.active-sparks-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.active-sparks-panel-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #cfe4ff;
+  letter-spacing: 0.03em;
+  flex: 1;
+}
+
+.active-sparks-panel-count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(207, 228, 255, 0.7);
+  background: rgba(126, 184, 255, 0.1);
+  border: 1px solid rgba(126, 184, 255, 0.22);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.active-sparks-panel-header .modal-close {
+  position: static;
+  font-size: 1.05rem;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+.active-sparks-panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.active-spark-row {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(20, 30, 45, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-left: 3px solid var(--rarity-color, rgba(156, 163, 175, 0.5));
+}
+
+.active-spark-row-dot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
+  margin-top: 6px;
+  box-shadow: 0 0 8px var(--rarity-color, transparent);
 }
 
-.active-spark-name {
-  font-weight: 600;
+.active-spark-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.active-spark-row-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.active-spark-row-name {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: rgba(230, 240, 250, 0.95);
   letter-spacing: 0.01em;
 }
 
-.active-spark-suffix {
-  font-size: 0.66rem;
-  opacity: 0.75;
+.active-spark-row-suffix {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--rarity-color, rgba(255, 255, 255, 0.7));
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.active-spark-row-desc {
+  font-size: 0.75rem;
+  color: rgba(200, 215, 230, 0.72);
+  line-height: 1.4;
 }
 
 /* ── Qi Spark choice modal ────────────────────────────────────────────────
