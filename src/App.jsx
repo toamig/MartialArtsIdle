@@ -65,8 +65,21 @@ function AppInner() {
       if (prev === key) { AudioManager.playSfx('ui_close'); return null; }
       AudioManager.playSfx('ui_open');
       if (sideEffect) sideEffect();
+      // Broadcast so other modals (ActiveSparksBar, CrystalFeedModal, …) close.
+      window.dispatchEvent(new CustomEvent('mai:modal-opened', { detail: { id: key } }));
       return key;
     });
+  }, []);
+
+  // Close any app-level modal when an external modal announces itself.
+  // We keep a Set of our own ids so we don't react to our own broadcast.
+  useEffect(() => {
+    const ours = new Set(['settings', 'shop', 'journey', 'achievements', 'pills', 'daily']);
+    const handler = (e) => {
+      if (!ours.has(e.detail?.id)) setActiveModal(null);
+    };
+    window.addEventListener('mai:modal-opened', handler);
+    return () => window.removeEventListener('mai:modal-opened', handler);
   }, []);
 
   const dailyBonus = useDailyBonus();

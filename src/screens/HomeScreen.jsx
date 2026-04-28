@@ -1248,7 +1248,18 @@ function HomeScreen({
 
   // ── Crystal feed modal ───────────────────────────────────────────────────
   const [crystalModalOpen, setCrystalModalOpen] = useState(false);
-  useEffect(() => { if (openCrystal && isCrystalUnlocked) setCrystalModalOpen(true); }, [openCrystal]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (openCrystal && isCrystalUnlocked) {
+      window.dispatchEvent(new CustomEvent('mai:modal-opened', { detail: { id: 'crystal-feed' } }));
+      setCrystalModalOpen(true);
+    }
+  }, [openCrystal]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Close crystal feed whenever another modal announces itself
+  useEffect(() => {
+    const handler = (e) => { if (e.detail?.id !== 'crystal-feed') setCrystalModalOpen(false); };
+    window.addEventListener('mai:modal-opened', handler);
+    return () => window.removeEventListener('mai:modal-opened', handler);
+  }, []);
   // While the player is feeding the crystal, queued events (breakthrough
   // banner, level-up cards) wait until the modal closes.
   useBlockingPresence(crystalModalOpen);

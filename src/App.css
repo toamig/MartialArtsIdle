@@ -1029,6 +1029,30 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 .home-sparks-chip-icon  { font-size: 12px; }
 .home-sparks-chip-label { white-space: nowrap; }
+/* Countdown badge shown on the chip when a timed spark is active */
+.home-sparks-chip-timer {
+  font-size:        10px;
+  font-weight:      700;
+  color:            #7ee8fa;
+  background:       rgba(30, 80, 120, 0.6);
+  border-radius:    8px;
+  padding:          1px 5px;
+  white-space:      nowrap;
+}
+/* Chip flashes amber when the soonest timer ≤ 10s */
+.home-sparks-chip-urgent {
+  border-color:     rgba(255, 160, 50, 0.7);
+  box-shadow:       0 0 10px rgba(255, 160, 50, 0.35);
+  animation:        sparks-chip-urgent-pulse 0.7s ease-in-out infinite alternate;
+}
+.home-sparks-chip-urgent .home-sparks-chip-timer {
+  color:            #fbbf24;
+  background:       rgba(80, 40, 0, 0.6);
+}
+@keyframes sparks-chip-urgent-pulse {
+  from { box-shadow: 0 0 6px rgba(255, 160, 50, 0.3); }
+  to   { box-shadow: 0 0 16px rgba(255, 160, 50, 0.6); }
+}
 
 /* ── Active Sparks panel — modal listing all current spark bonuses ──
    Adapts to phones via the shared .modal-overlay safe-area padding;
@@ -1149,6 +1173,21 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 0.75rem;
   color: rgba(200, 215, 230, 0.72);
   line-height: 1.4;
+}
+
+/* Expiring-soon row (< 10s remaining) — amber highlight + pulse */
+.active-spark-row-urgent {
+  border-left-color:  #f59e0b;
+  background:         rgba(40, 25, 5, 0.65);
+  animation:          spark-row-urgent-pulse 0.8s ease-in-out infinite alternate;
+}
+@keyframes spark-row-urgent-pulse {
+  from { background: rgba(40, 25, 5, 0.55); }
+  to   { background: rgba(60, 35, 5, 0.80); }
+}
+.active-spark-row-suffix-urgent {
+  color: #fbbf24;
+  font-size: 0.72rem;
 }
 
 /* ── Qi Spark choice modal ────────────────────────────────────────────────

@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { QI_SPARK_BY_ID, SPARK_RARITY } from '../data/qiSparks';
+
+// Unique id used to identify this modal in the mai:modal-opened broadcast.
+const MODAL_ID = 'active-sparks';
 
 /**
  * ActiveSparksBar — single chip in the home top-left chip stack matching
  * the visual language of the other status chips (rewards, idle, pills).
  * Tapping it opens a modal listing every active Qi Spark with its bonus.
  * Updates once per second to keep timed-spark countdowns ticking.
+ *
+ * Modal is rendered via createPortal so it escapes the home-screen stacking
+ * context (position:fixed; z-index:1) and sits at document.body level.
  */
 function formatSuffix(card, instance) {
   if (instance.expiresAt) {
@@ -23,16 +30,19 @@ function ActiveSparksBar({ activeSparks }) {
   const [, setNow] = useState(Date.now());
   const [open, setOpen] = useState(false);
 
+  // Tick every second — drives chip countdown + modal row countdowns
   useEffect(() => {
     if (!activeSparks || activeSparks.length === 0) return undefined;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [activeSparks?.length]);
 
+  // Auto-close when no sparks remain
   useEffect(() => {
     if (!activeSparks || activeSparks.length === 0) setOpen(false);
   }, [activeSparks?.length]);
 
+  // Escape key
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
@@ -40,16 +50,41 @@ function ActiveSparksBar({ activeSparks }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
+  // Close self whenever a DIFFERENT modal announces itself
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail?.id !== MODAL_ID) setOpen(false);
+    };
+    window.addEventListener('mai:modal-opened', handler);
+    return () => window.removeEventListener('mai:modal-opened', handler);
+  }, []);
+
   if (!activeSparks || activeSparks.length === 0) return null;
 
   const count = activeSparks.length;
+  const now   = Date.now();
+
+  // Soonest-expiring timed spark → shown as countdown on the chip itself
+  const timedSparks   = activeSparks.filter(s => s.expiresAt);
+  const soonestExpiry = timedSparks.length > 0
+    ? Math.min(...timedSparks.map(s => s.expiresAt))
+    : null;
+  const chipTimer = soonestExpiry !== null
+    ? Math.max(0, Math.ceil((soonestExpiry - now) / 1000))
+    : null;
+
+  const handleOpen = () => {
+    // Broadcast so other modals close themselves
+    window.dispatchEvent(new CustomEvent('mai:modal-opened', { detail: { id: MODAL_ID } }));
+    setOpen(true);
+  };
 
   return (
     <>
       <button
         type="button"
-        className="home-sparks-chip"
-        onClick={() => setOpen(true)}
+        className={`home-sparks-chip${chipTimer !== null && chipTimer <= 10 ? ' home-sparks-chip-urgent' : ''}`}
+        onClick={handleOpen}
         aria-haspopup="dialog"
         aria-expanded={open}
         title="View active Qi Sparks"
@@ -58,9 +93,12 @@ function ActiveSparksBar({ activeSparks }) {
         <span className="home-sparks-chip-label">
           {count} {count === 1 ? 'Spark' : 'Sparks'}
         </span>
+        {chipTimer !== null && (
+          <span className="home-sparks-chip-timer">{chipTimer}s</span>
+        )}
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           className="modal-overlay active-sparks-overlay"
           role="dialog"
@@ -84,15 +122,17 @@ function ActiveSparksBar({ activeSparks }) {
 
             <ul className="active-sparks-panel-list">
               {activeSparks.map((s) => {
-                const card = QI_SPARK_BY_ID[s.sparkId];
+                const card   = QI_SPARK_BY_ID[s.sparkId];
                 if (!card) return null;
-                const rarity = SPARK_RARITY[card.rarity] ?? SPARK_RARITY.common;
-                const suffix = formatSuffix(card, s);
+                const rarity  = SPARK_RARITY[card.rarity] ?? SPARK_RARITY.common;
+                const suffix  = formatSuffix(card, s);
+                const urgentMs = s.expiresAt ? s.expiresAt - now : null;
+                const isUrgent = urgentMs !== null && urgentMs < 10_000;
 
                 return (
                   <li
                     key={s.instanceId}
-                    className="active-spark-row"
+                    className={`active-spark-row${isUrgent ? ' active-spark-row-urgent' : ''}`}
                     style={{ '--rarity-color': rarity.color }}
                   >
                     <span
@@ -103,7 +143,11 @@ function ActiveSparksBar({ activeSparks }) {
                     <div className="active-spark-row-body">
                       <div className="active-spark-row-top">
                         <span className="active-spark-row-name">{card.name}</span>
-                        {suffix && <span className="active-spark-row-suffix">{suffix}</span>}
+                        {suffix && (
+                          <span className={`active-spark-row-suffix${isUrgent ? ' active-spark-row-suffix-urgent' : ''}`}>
+                            {suffix}
+                          </span>
+                        )}
                       </div>
                       <div className="active-spark-row-desc">{card.description}</div>
                     </div>
@@ -112,7 +156,8 @@ function ActiveSparksBar({ activeSparks }) {
               })}
             </ul>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
