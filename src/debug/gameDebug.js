@@ -385,7 +385,7 @@ export function initDebug(hooksRef) {
     /**
      * Bump a mechanic spark up by `n` tiers (default 1). If the mechanic
      * isn't yet active, starts at T1 then upgrades to T(1+n−1).
-     * Mechanic ids: 'consecutive_focus' (Phase 3 in progress; more later).
+     * Mechanic ids: 'consecutive_focus' | 'crystal_click' | 'divine_qi' | 'pattern_click'
      */
     upgradeMechanic(mechanicId, n = 1) {
       const tiers = QI_SPARKS
@@ -609,6 +609,15 @@ export function initDebug(hooksRef) {
       console.log('  gd.crystalLevelUp(n=1)    — increment crystal level by n');
       console.log('  gd.crystalEvolve(newTier, prevTier?, lvl?, variant?) — fire evolution overlay (home screen only)');
       console.log('  gd.crystalFx(intensity=1)         — tune evolution flash intensity (0 = off)');
+      console.log('%cQi Sparks', 'font-weight: bold');
+      console.log('  gd.listQiSparks()                       — table of active sparks');
+      console.log('  gd.listQiSparkIds()                     — all card ids by rarity');
+      console.log('  gd.giveQiSpark(sparkId)                 — grant a spark by id');
+      console.log('  gd.upgradeMechanic(id, n=1)             — upgrade mechanic n tiers');
+      console.log('    ids: consecutive_focus | crystal_click | divine_qi | pattern_click');
+      console.log('  gd.rollQiSparkOffer()                   — trigger next offer immediately');
+      console.log('  gd.clearQiSparks()                      — wipe all active sparks');
+      console.log('  gd.bypassConsecutiveFocus(on=true)      — ignore hold-duration threshold');
       console.log('%cTheme', 'font-weight: bold');
       console.log('  gd.themeShift(hue=0, sat=1, light=0) — full UI recolor preview');
       console.log('  gd.hueShift(deg=0)        — shortcut: pure hue rotation');

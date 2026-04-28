@@ -514,6 +514,230 @@ function HomePCLeftPanel({ realmName, realmStage, qiRef, costRef, rateRef, gateR
   );
 }
 
+// ── Pattern Clicking — numbered dot mechanic ─────────────────────────────────
+
+/** Generate `count` dot positions with minimum separation (in % units).
+ *  Coordinates are viewport-relative (the overlay is position:fixed inset:0).
+ *  Safe zone avoids the top bar (~12%) and bottom nav (~18%) on typical phones. */
+function generateDotPositions(count) {
+  const MIN_DIST = 20; // % units minimum separation
+  const positions = [];
+  let attempts = 0;
+  while (positions.length < count && attempts < 400) {
+    attempts++;
+    const x = 8  + Math.random() * 80; // 8%..88% — avoids side edges
+    const y = 14 + Math.random() * 65; // 14%..79% — below top bar, above bottom nav
+    const ok = positions.every(p => Math.hypot(p.x - x, p.y - y) >= MIN_DIST);
+    if (ok) positions.push({ num: positions.length + 1, x, y });
+  }
+  // Fallback for extreme collision runs (shouldn't happen with reasonable counts)
+  while (positions.length < count) {
+    const i = positions.length;
+    positions.push({ num: i + 1, x: 15 + (i * 12) % 65, y: 20 + (i * 15) % 55 });
+  }
+  return positions;
+}
+
+/** Single numbered dot button — phases: current (pulsing) | waiting (dim) | tapped (burst-vanish). */
+function PatternDot({ dot, isCurrent, isTapped, onClick }) {
+  const phase = isTapped ? 'tapped' : isCurrent ? 'current' : 'waiting';
+  return (
+    <button
+      className={`pc-dot pc-dot-${phase}`}
+      style={{ left: `${dot.x}%`, top: `${dot.y}%` }}
+      onClick={onClick}
+      data-num={dot.num}
+      aria-label={`Pattern dot ${dot.num}`}
+    >
+      {dot.num}
+    </button>
+  );
+}
+
+/**
+ * Full cultivation-zone overlay showing the dot pattern + countdown timer.
+ * Tracks tap order internally; calls onComplete(wasFullClear) when done.
+ */
+function PatternClickOverlay({ pattern, onComplete, rateRef, spawnVFX }) {
+  const [nextNum, setNextNum] = useState(1);
+  const [tapped, setTapped]   = useState(() => new Set());
+  const [phase, setPhase]     = useState('active'); // 'active' | 'success' | 'fail'
+  const nextNumRef   = useRef(1);
+  const phaseRef     = useRef('active');
+  const startTimeRef = useRef(performance.now());
+  const timerBarRef  = useRef(null);
+
+  // Window expiry — if player doesn't finish in time, fail out
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (phaseRef.current !== 'active') return;
+      phaseRef.current = 'fail';
+      setPhase('fail');
+      setTimeout(() => onComplete(false), 600);
+    }, pattern.windowMs);
+    return () => clearTimeout(t);
+  }, [pattern.windowMs, onComplete]);
+
+  // Timer bar — rAF-driven scaleX shrink
+  useEffect(() => {
+    let raf;
+    const tick = () => {
+      const elapsed = performance.now() - startTimeRef.current;
+      const frac    = Math.max(0, 1 - elapsed / pattern.windowMs);
+      if (timerBarRef.current) {
+        timerBarRef.current.style.transform = `scaleX(${frac})`;
+        timerBarRef.current.classList.toggle('pc-timer-urgent', frac < 0.25);
+      }
+      if (frac > 0) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [pattern.windowMs]);
+
+  const handleDotClick = useCallback((dot) => {
+    if (phaseRef.current !== 'active') return;
+    if (dot.num !== nextNumRef.current) return; // wrong order — ignore tap
+    setTapped(prev => { const n = new Set(prev); n.add(dot.num); return n; });
+    const isLast = dot.num === pattern.dots.length;
+    if (isLast) {
+      phaseRef.current = 'success';
+      setPhase('success');
+      // VFX floater at the last dot's screen position
+      if (spawnVFX && rateRef) {
+        try {
+          const dotEl   = document.querySelector(`.pc-dot[data-num="${dot.num}"]`);
+          const stageEl = document.querySelector('.home-fighter-stage');
+          if (dotEl && stageEl) {
+            const dr     = dotEl.getBoundingClientRect();
+            const sr     = stageEl.getBoundingClientRect();
+            const x      = (dr.left + dr.width  / 2) - sr.left;
+            const y      = (dr.top  + dr.height / 2) - sr.top;
+            const reward = pattern.burstSeconds * (rateRef.current ?? 1);
+            const fmt    = n => n >= 1e6 ? `+${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `+${(n/1e3).toFixed(1)}K` : `+${Math.floor(n)}`;
+            spawnVFX({ type: 'qi-tick', x, y, content: fmt(reward), duration: 1600,
+              style: { '--qi-drift-x': '0px' } });
+          }
+        } catch {}
+      }
+      setTimeout(() => onComplete(true), 600);
+    } else {
+      nextNumRef.current = dot.num + 1;
+      setNextNum(dot.num + 1);
+    }
+  }, [pattern.dots.length, pattern.burstSeconds, rateRef, spawnVFX, onComplete]);
+
+  return (
+    <div className={`pc-overlay pc-overlay-${phase}`} aria-label="Pattern Clicking challenge">
+
+      {/* osu-style connecting lines — SVG spanning full overlay */}
+      <svg className="pc-connections" aria-hidden="true">
+        {pattern.dots.map((dot, i) => {
+          if (i === pattern.dots.length - 1) return null; // last dot has no outgoing line
+          const next = pattern.dots[i + 1];
+          if (tapped.has(dot.num)) return null;           // already tapped — line consumed
+          const isActive = dot.num === nextNum;            // current → next: brighter line
+          return (
+            <line
+              key={`${dot.num}-${next.num}`}
+              x1={`${dot.x}%`} y1={`${dot.y}%`}
+              x2={`${next.x}%`} y2={`${next.y}%`}
+              className={`pc-connection${isActive ? ' pc-connection-active' : ''}`}
+            />
+          );
+        })}
+      </svg>
+
+      <div className="pc-timer-track">
+        <div ref={timerBarRef} className="pc-timer-bar" />
+      </div>
+      {pattern.dots.map(dot => (
+        <PatternDot
+          key={dot.num}
+          dot={dot}
+          isCurrent={!tapped.has(dot.num) && dot.num === nextNum}
+          isTapped={tapped.has(dot.num)}
+          onClick={() => handleDotClick(dot)}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Manages the Pattern Click minigame lifecycle.
+ * Reads the active pattern_click spark; self-schedules spawns with ±30% jitter.
+ * Returns { activePattern, completePattern }.
+ */
+function usePatternClick({ activeSparks, rateRef, qiRef }) {
+  const [activePattern, setActivePattern] = useState(null);
+  const activeRef = useRef(false);
+
+  const config = useMemo(() => {
+    const inst = activeSparks?.find(s => {
+      const card = QI_SPARK_BY_ID[s.sparkId];
+      return card?.kind === 'mechanic' && card?.mechanicId === 'pattern_click';
+    });
+    return inst ? (QI_SPARK_BY_ID[inst.sparkId] ?? null) : null;
+  }, [activeSparks]);
+  const configRef = useRef(config);
+  useEffect(() => { configRef.current = config; }, [config]);
+
+  const spawnPattern = useCallback(() => {
+    if (activeRef.current) return; // don't overlap with an active pattern
+    const cfg = configRef.current;
+    if (!cfg) return;
+    activeRef.current = true;
+    setActivePattern({
+      id:                Date.now(),
+      dots:              generateDotPositions(cfg.dotCount),
+      windowMs:          cfg.windowMs,
+      burstSeconds:      cfg.burstSeconds,
+      doubleOnFullClear: cfg.doubleOnFullClear ?? false,
+      rateMult:          cfg.rateMult  ?? 2.0,
+      rateBuffMs:        cfg.rateBuffMs ?? 15_000,
+    });
+  }, []);
+
+  // Self-scheduling spawn timer with ±30% jitter
+  useEffect(() => {
+    if (!config) return;
+    let timer;
+    const arm = () => {
+      const cfg = configRef.current;
+      if (!cfg) return;
+      const delay = cfg.spawnIntervalMs * (0.7 + Math.random() * 0.6);
+      timer = setTimeout(() => { spawnPattern(); arm(); }, delay);
+    };
+    // First spawn after a brief "discovery" delay capped at 15s
+    timer = setTimeout(
+      () => { spawnPattern(); arm(); },
+      Math.min(config.spawnIntervalMs * 0.5, 15_000),
+    );
+    return () => clearTimeout(timer);
+  }, [config?.id, spawnPattern]); // re-arm if tier changes
+
+  const completePattern = useCallback((wasFullClear) => {
+    const cfg = configRef.current;
+    if (wasFullClear && cfg) {
+      // Add the qi burst reward directly
+      const reward = cfg.burstSeconds * (rateRef?.current ?? 1);
+      if (qiRef) qiRef.current += reward;
+      // T5: dispatch rate-buff event for ×2 qi/s for 15s
+      if (cfg.doubleOnFullClear && cfg.rateMult) {
+        try {
+          window.dispatchEvent(new CustomEvent('mai:pattern-click-buff', {
+            detail: { mult: cfg.rateMult, durationMs: cfg.rateBuffMs ?? 15_000 },
+          }));
+        } catch {}
+      }
+    }
+    activeRef.current = false;
+    setActivePattern(null);
+  }, [rateRef, qiRef]);
+
+  return { activePattern, completePattern };
+}
+
 // ── Divine Qi — golden orb mechanic ─────────────────────────────────────────
 
 /**
@@ -996,6 +1220,13 @@ function HomeScreen({
     spawnVFX,
   });
 
+  // ── Pattern Click — numbered dot minigame ────────────────────────────────
+  const { activePattern, completePattern } = usePatternClick({
+    activeSparks,
+    rateRef: cultivation.rateRef,
+    qiRef:   cultivation.qiRef,
+  });
+
   // ── Consecutive Focus rung — mirrors the body class set in App.jsx so
   // QiParticles can scale particle density without touching the DOM directly.
   const [cfRung, setCfRung] = useState(0);
@@ -1216,6 +1447,17 @@ function HomeScreen({
           {divineOrbs.map(orb => (
             <DivineQiOrb key={orb.id} orb={orb} onResolve={collectOrb} spawnVFX={spawnVFX} rateRef={cultivation.rateRef} />
           ))}
+
+          {/* Pattern Clicking overlay — appears when mechanic is active */}
+          {activePattern && (
+            <PatternClickOverlay
+              key={activePattern.id}
+              pattern={activePattern}
+              onComplete={completePattern}
+              rateRef={cultivation.rateRef}
+              spawnVFX={spawnVFX}
+            />
+          )}
 
           {/* Crystal + particles + character — stacked so gap always equals particles height */}
           <div className="home-crystal-char-stack">

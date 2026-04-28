@@ -239,6 +239,9 @@ export default function useCultivation() {
   // collects both T5 orbs. Written by the 'mai:divine-qi-buff' event handler
   // below; resets to 1 after rateBuffMs via a clearTimeout.
   const divineQiMultRef = useRef(1);
+  // Pattern Click mechanic — temporary multiplier applied on T5 full-clear.
+  // Written by the 'mai:pattern-click-buff' event handler below.
+  const patternClickMultRef = useRef(1);
 
   // Crystal Click mechanic — rate/cap mirrored from useQiSparks by App.jsx.
   // crystalReservoirRef holds the accumulated qi waiting to be collected.
@@ -408,6 +411,7 @@ export default function useCultivation() {
         pillQiMultRef.current * sparkQiMultRef.current *
         treeQiMultRef.current * rebirthCultBuffRef.current *
         divineQiMultRef.current *
+        patternClickMultRef.current *
         debugQiMultRef.current;
       rateRef.current = rate;
       qiRef.current += rate * dt;
@@ -508,6 +512,23 @@ export default function useCultivation() {
     window.addEventListener('mai:divine-qi-buff', onBuff);
     return () => {
       window.removeEventListener('mai:divine-qi-buff', onBuff);
+      clearTimeout(resetTimer);
+    };
+  }, []);
+
+  // Pattern Click T5 full-clear rate buff — fired by HomeScreen when the
+  // player clears all dots in order. Stacking restarts the timer.
+  useEffect(() => {
+    let resetTimer = null;
+    const onBuff = (e) => {
+      const { mult = 2.0, durationMs = 15_000 } = e.detail ?? {};
+      patternClickMultRef.current = mult;
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => { patternClickMultRef.current = 1; }, durationMs);
+    };
+    window.addEventListener('mai:pattern-click-buff', onBuff);
+    return () => {
+      window.removeEventListener('mai:pattern-click-buff', onBuff);
       clearTimeout(resetTimer);
     };
   }, []);
@@ -614,6 +635,8 @@ export default function useCultivation() {
     sparkConsecutiveCurrentBonusRef,
     // Divine Qi rate-buff ref — written by the mai:divine-qi-buff event listener
     divineQiMultRef,
+    // Pattern Click rate-buff ref — written by the mai:pattern-click-buff event listener
+    patternClickMultRef,
     // Crystal Click refs — rate/cap written by App.jsx, reservoir updated each tick
     sparkCrystalClickRateRef,
     sparkCrystalClickCapMinRef,

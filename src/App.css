@@ -3835,6 +3835,148 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   transform: translate(-50%, -50%) scale(0.88);
 }
 
+/* ── Pattern Clicking mechanic ──────────────────────────────────────────── */
+
+/* Fixed overlay — covers the full viewport; sits below the nav bar (z-100). */
+.pc-overlay {
+  position:       fixed;
+  inset:          0;
+  z-index:        90;
+  pointer-events: auto;
+  background:     rgba(0, 0, 0, 0.38);
+  animation:      pc-overlay-in 0.3s ease-out;
+}
+@keyframes pc-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+/* Success: green flash then fade out */
+.pc-overlay-success {
+  pointer-events: none;
+  animation: pc-overlay-success 0.6s ease-out forwards;
+}
+@keyframes pc-overlay-success {
+  0%   { background: rgba(0, 0, 0, 0.28); }
+  25%  { background: rgba(74, 222, 128, 0.32); }
+  100% { background: rgba(0, 0, 0, 0); opacity: 0; }
+}
+/* Fail: red flash then fade out */
+.pc-overlay-fail {
+  pointer-events: none;
+  animation: pc-overlay-fail 0.6s ease-out forwards;
+}
+@keyframes pc-overlay-fail {
+  0%   { background: rgba(0, 0, 0, 0.28); }
+  25%  { background: rgba(239, 68, 68, 0.28); }
+  100% { background: rgba(0, 0, 0, 0); opacity: 0; }
+}
+
+/* Timer bar — spans the width at the top of the overlay */
+.pc-timer-track {
+  position:      absolute;
+  top:           8px;
+  left:          10%;
+  right:         10%;
+  height:        4px;
+  background:    rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+  overflow:      hidden;
+}
+.pc-timer-bar {
+  height:           100%;
+  width:            100%;
+  background:       linear-gradient(90deg, #a78bfa, #60a5fa);
+  transform-origin: left center;
+  transform:        scaleX(1);
+}
+.pc-timer-bar.pc-timer-urgent {
+  background: linear-gradient(90deg, #f87171, #fb923c);
+  animation:  pc-timer-pulse 0.4s ease-in-out infinite alternate;
+}
+@keyframes pc-timer-pulse {
+  from { opacity: 0.75; }
+  to   { opacity: 1; }
+}
+
+/* SVG follow-point connections — spans the full overlay */
+.pc-connections {
+  position:       absolute;
+  inset:          0;
+  width:          100%;
+  height:         100%;
+  pointer-events: none;
+  overflow:       visible;
+}
+/* Dim dashed line to all upcoming dots */
+.pc-connection {
+  stroke:            rgba(200, 185, 255, 0.28);
+  stroke-width:      2px;
+  stroke-dasharray:  7 5;
+  stroke-linecap:    round;
+}
+/* Bright solid line from the current dot to the next one */
+.pc-connection-active {
+  stroke:            rgba(210, 195, 255, 0.72);
+  stroke-width:      2.5px;
+  stroke-dasharray:  none;
+}
+
+/* Individual numbered dot */
+.pc-dot {
+  position:        absolute;
+  width:           54px;
+  height:          54px;
+  border-radius:   50%;
+  border:          2px solid rgba(167, 139, 250, 0.6);
+  background:      rgba(25, 15, 45, 0.88);
+  color:           #c4b5fd;
+  font-size:       18px;
+  font-weight:     700;
+  font-family:     var(--font-heading, sans-serif);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  transform:       translate(-50%, -50%);
+  cursor:          pointer;
+  touch-action:    manipulation;
+  z-index:         1;
+  transition:      transform 0.1s;
+}
+/* Current dot — pulsing glow, player taps this one next */
+.pc-dot-current {
+  border-color: #c4b5fd;
+  background:   rgba(55, 35, 90, 0.95);
+  color:        #ede9fe;
+  animation:    pc-dot-current-pulse 0.8s ease-in-out infinite alternate;
+}
+@keyframes pc-dot-current-pulse {
+  from { box-shadow: 0 0 10px 3px rgba(167, 139, 250, 0.45),
+                     0 0 22px 7px rgba(167, 139, 250, 0.18); }
+  to   { box-shadow: 0 0 18px 7px rgba(167, 139, 250, 0.78),
+                     0 0 38px 14px rgba(167, 139, 250, 0.35); }
+}
+/* Waiting dots — dimmed */
+.pc-dot-waiting {
+  opacity: 0.38;
+  cursor:  default;
+}
+/* Tapped dot — burst-expand then vanish */
+.pc-dot-tapped {
+  pointer-events: none;
+  animation: pc-dot-tapped 0.42s ease-out forwards !important;
+}
+@keyframes pc-dot-tapped {
+  0%   { transform: translate(-50%, -50%) scale(1);    opacity: 1;
+         box-shadow: 0 0 14px 5px rgba(167, 139, 250, 0.65); }
+  40%  { transform: translate(-50%, -50%) scale(1.45); opacity: 0.9;
+         box-shadow: 0 0 28px 12px rgba(167, 139, 250, 0.45); }
+  100% { transform: translate(-50%, -50%) scale(0);    opacity: 0; }
+}
+/* Tap press feedback */
+.pc-dot:active:not(.pc-dot-waiting):not(.pc-dot-tapped) {
+  transform: translate(-50%, -50%) scale(0.86);
+}
+
 /* ── Crystal Feed Modal ─────────────────────────────────────────────────── */
 
 /* ─── Crystal Feed Modal (cfm) ───────────────────────────────────────────────── */

@@ -310,6 +310,80 @@ export const QI_SPARKS = [
     rateBuffMs:      30_000,
   },
 
+  // ── Rare — Mechanic: Pattern Clicking ──────────────────────────────────
+  // Numbered dots appear in the scene. Tap them in order before the timer
+  // runs out for a qi burst. Higher tiers add more dots, shorten the
+  // interval, and widen the window. T5 doubles the burst on full clear
+  // and grants a short qi/s rate buff.
+  {
+    id:              'pattern_click_t1',
+    rarity:          'rare',
+    name:            'Pattern Clicking',
+    description:     '3 numbered dots appear every ~2 min. Tap in order within 10s for 30s of qi.',
+    kind:            'mechanic',
+    mechanicId:      'pattern_click',
+    tier:            1,
+    dotCount:        3,
+    spawnIntervalMs: 120_000,
+    windowMs:        10_000,
+    burstSeconds:    30,
+  },
+  {
+    id:              'pattern_click_t2',
+    rarity:          'rare',
+    name:            'Pattern Clicking',
+    description:     '4 dots every ~100s, 12s window. Full clear: 40s of qi.',
+    kind:            'mechanic',
+    mechanicId:      'pattern_click',
+    tier:            2,
+    dotCount:        4,
+    spawnIntervalMs: 100_000,
+    windowMs:        12_000,
+    burstSeconds:    40,
+  },
+  {
+    id:              'pattern_click_t3',
+    rarity:          'rare',
+    name:            'Pattern Clicking',
+    description:     '5 dots every ~80s, 14s window. Full clear: 50s of qi.',
+    kind:            'mechanic',
+    mechanicId:      'pattern_click',
+    tier:            3,
+    dotCount:        5,
+    spawnIntervalMs: 80_000,
+    windowMs:        14_000,
+    burstSeconds:    50,
+  },
+  {
+    id:              'pattern_click_t4',
+    rarity:          'rare',
+    name:            'Pattern Clicking',
+    description:     '6 dots every ~60s, 16s window. Full clear: 60s of qi.',
+    kind:            'mechanic',
+    mechanicId:      'pattern_click',
+    tier:            4,
+    dotCount:        6,
+    spawnIntervalMs: 60_000,
+    windowMs:        16_000,
+    burstSeconds:    60,
+  },
+  {
+    id:              'pattern_click_t5',
+    rarity:          'rare',
+    name:            'Pattern Clicking',
+    description:     '7 dots every ~45s, 18s window. Full clear: 120s of qi + ×2 qi/s for 15s.',
+    kind:            'mechanic',
+    mechanicId:      'pattern_click',
+    tier:            5,
+    dotCount:        7,
+    spawnIntervalMs: 45_000,
+    windowMs:        18_000,
+    burstSeconds:    60,
+    doubleOnFullClear: true,
+    rateMult:        2.0,
+    rateBuffMs:      15_000,
+  },
+
   // ── Rare — Mechanic: Consecutive Focus ──────────────────────────────────
   // Each tier ADDS a new threshold rung on top of the previous ones, so
   // holding Focus rewards the player with stepped gains over time.

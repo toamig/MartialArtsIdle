@@ -1,6 +1,6 @@
 # Qi Sparks — Implementation Status
 
-**Status:** Phase 1 + 1B + 2 shipped; Phase 3 in progress (3 of 4 mechanics done — Pattern Clicking next)
+**Status:** Phase 1 + 1B + 2 + 3 shipped (all mechanics done); Phase 4 Polish next
 **Last commit:** (Divine Qi implementation)
 **Date:** 2026-04-28
 
@@ -80,7 +80,7 @@ All functional with proper UI feedback through qi/s readout + focus badge.
 - ✅ Consecutive Focus (5 tiers shipped — see below)
 - ✅ Crystal Click (5 tiers shipped — see below)
 - ✅ Divine Qi (5 tiers shipped — see below)
-- ⏳ Pattern Clicking — next
+- ✅ Pattern Clicking (5 tiers shipped — see below)
 
 #### Mechanic 0: Consecutive Focus — SHIPPED
 
@@ -139,14 +139,23 @@ Implementation:
 - `HomeScreen.jsx` — `useDivineQi` hook (self-scheduling spawn timer, wave tracking for T5 double-collect buff); `DivineQiOrb` component (alive → expiring → collected/expired phases, `performance.now()` expiresAt)
 - `App.css` — orb spawn/pulse/expiring/collected/expired animations; ±30% jitter interval
 
-#### Mechanic 3: Pattern Clicking (osu-style)
-- Periodic dot pattern appears, player taps in order/rhythm for burst reward
-- T1 = 3-dot pattern, +30s qi/s burst → T5 = 7-dot mixed-timing, full clear = double + ×2 qi/s 15s
-- Most complex of the four — full minigame component
+#### Mechanic 3: Pattern Clicking — SHIPPED
 
-#### Mechanic 4: Divine Qi (golden cookie)
-- Random orb spawns at intervals, tap before it disappears
-- T1 = every ~3min, +30s qi/s → T5 = double-orb spawns, +60s qi/s + ×1.5 qi/s 30s buff
+Numbered dots appear over the cultivation zone. Tap them in order within the window for a qi burst. T5 fires ×2 qi/s for 15s on full clear.
+
+| Tier | Dots | Interval | Window | Burst | Special |
+|---|---|---|---|---|---|
+| T1 | 3 | ~2 min | 10s | 30s qi | |
+| T2 | 4 | ~100s | 12s | 40s qi | |
+| T3 | 5 | ~80s | 14s | 50s qi | |
+| T4 | 6 | ~60s | 16s | 60s qi | |
+| T5 | 7 | ~45s | 18s | 60s qi | full clear → ×2 qi/s for 15s |
+
+Implementation:
+- `data/qiSparks.js` — 5 pattern_click_t1..t5 cards
+- `useCultivation.js` — `patternClickMultRef` folded into rate; `mai:pattern-click-buff` event listener
+- `HomeScreen.jsx` — `generateDotPositions()` with rejection sampling; `PatternDot` component (waiting/current/tapped phases); `PatternClickOverlay` (timer bar rAF + tap tracking + success/fail flash); `usePatternClick` hook (QI_SPARK_BY_ID config lookup, self-scheduling timer, completePattern callback)
+- `App.css` — `.pc-overlay`, `.pc-timer-track/.pc-timer-bar`, `.pc-dot` + phase variants
 
 ### Phase 4 — Polish
 - Visual rarity flourishes (uncommon = green particles, rare = purple glow + chime, future epic = gold particles + screen shake)
@@ -187,7 +196,7 @@ Implementation:
 - `src/hooks/useLawOffers.js` (was `useSelections.js`)
 
 ### Modified
-- `src/hooks/useCultivation.js` — sparkQiMultRef, sparkFocusMultBonusRef, sparkPainlessRef, sparkLingeringActiveRef + residual refs; tick logic for painless drain skip + lingering boost residual
+- `src/hooks/useCultivation.js` — sparkQiMultRef, sparkFocusMultBonusRef, sparkPainlessRef, sparkLingeringActiveRef + residual refs; tick logic for painless drain skip + lingering boost residual; divineQiMultRef + patternClickMultRef; mai:divine-qi-buff + mai:pattern-click-buff listeners
 - `src/App.jsx` — mounts useQiSparks, mirrors refs, renders modal app-wide
 - `src/screens/HomeScreen.jsx` — renders ActiveSparksBar; Focus mult badge includes spark bonus; crystal tappable + reservoir glow when Crystal Click active
 - `src/screens/CharacterScreen.jsx` — Perks tab removed
