@@ -1757,7 +1757,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .char-tab-content {
-  padding-top: 4px;
+  /* no top padding — matches col-sections which has none */
 }
 
 /* Perks placeholder */
