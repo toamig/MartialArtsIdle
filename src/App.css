@@ -4371,11 +4371,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   --qi-particle-end:   var(--cf-aura-core, rgba(120, 220, 255, 0.85));
 }
 
-/* Per-path wrapper — one per bezier branch. Sits on top of the qi-particles
-   container and covers the full 200px×h area. Its CSS opacity transition is
-   the sole mechanism for graceful drain: setting opacity to 0 lets already-
-   running particle animations finish their cycle invisibly rather than being
-   hard-removed (which would restart the animation and cause a positional jump). */
+/* Per-path wrapper — one per bezier branch. Covers the full particle field.
+   Lifecycle (pause/resume) is managed imperatively by JS via
+   animation-play-state on the child spans; this div is purely structural. */
 .home-qi-path-group {
   position: absolute;
   top: 0;
@@ -4383,12 +4381,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 100%;
   height: 100%;
   overflow: visible;
-  transition: opacity 2.4s linear;
-}
-/* Applied to path groups whose rung is being released — fade out over one
-   full animation period so every particle completes its arc before vanishing. */
-.home-qi-path-draining {
-  opacity: 0;
 }
 
 .home-qi-particle {
@@ -4414,6 +4406,11 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   animation:
     home-qi-flow-pos  2.4s linear infinite,
     home-qi-flow-fade 2.4s linear infinite;
+  /* MUST come after the animation shorthand — shorthand resets play-state to
+     running, so the longhand overrides it back to paused.  JS sets
+     span.style.animationPlayState = 'running' for active particles, and React
+     never touches that property so it is safe to manage imperatively. */
+  animation-play-state: paused;
 }
 
 /* qi-particle-paths-start — managed by QiParticleEditor (?particleEdit)  */
@@ -5463,13 +5460,14 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   flex: 1;
   position: relative;
   padding: 8px 4px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 9px;
-  background: rgba(var(--ui-bg-panel-rgb), 0.75);
+  background: rgba(255, 255, 255, 0.02);
   color: rgba(var(--ui-muted-rgb), 0.7);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  letter-spacing: 0.02em;
   -webkit-tap-highlight-color: transparent;
   transition: all 0.15s;
 }
@@ -5483,10 +5481,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .inv-tab-active {
-  background: linear-gradient(135deg, rgba(233, 69, 96, 0.18), rgba(180, 30, 60, 0.1));
-  border-color: rgba(233, 69, 96, 0.6);
+  background: linear-gradient(135deg, rgba(233, 69, 96, 0.16), rgba(180, 30, 60, 0.06));
+  border-color: rgba(233, 69, 96, 0.5);
   color: var(--accent);
-  box-shadow: 0 0 18px rgba(233, 69, 96, 0.12), inset 0 1px 0 rgba(255, 100, 120, 0.08);
+  box-shadow: 0 0 12px rgba(233, 69, 96, 0.1), inset 0 1px 0 rgba(255, 100, 120, 0.06);
 }
 
 .inv-grid {
@@ -5618,13 +5616,23 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   gap: 24px;
 }
 
+/* Section header — left-aligned title + count pill on the right.
+   Bottom rule is a horizontal gradient that fades to the right so the line
+   reads as an accent under the title rather than a flat divider. */
 .col-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid transparent;
+  background-image: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.04) 50%,
+    transparent 100%);
+  background-position: bottom;
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
 }
 
 .col-section-title {
@@ -5637,22 +5645,30 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   color: rgba(200, 210, 220, 0.6);
 }
 
+/* Count pill — matches the rounded badge family used in the upgrade modal. */
 .col-section-badge {
   font-size: 0.7rem;
-  font-weight: 600;
-  color: rgba(var(--ui-muted-rgb), 0.55);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: rgba(220, 230, 240, 0.7);
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 6px;
-  padding: 2px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 2px 9px;
+  letter-spacing: 0.04em;
 }
 
+/* Empty state — dashed block with hint text instead of a bare line. */
 .col-section-empty {
   font-size: 0.78rem;
-  color: rgba(var(--ui-muted-rgb), 0.3);
+  font-style: italic;
+  color: rgba(200, 210, 220, 0.45);
   text-align: center;
-  padding: 14px 0;
+  padding: 16px 12px;
   margin: 0;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
 }
 
 /* ── Collection slots — three fixed-size tiers ────────────────────────────────
@@ -5743,6 +5759,95 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
     font-size: 1.5rem;
     margin-bottom: 4px;
   }
+}
+
+/* ── Inventory tile aesthetic refresh (Collection-only) ─────────────────
+   Visual overrides on top of the breakpoint sizing above. Other screens
+   that use .inv-slot (Build / Character / Transmutation) keep their own
+   look since these rules sit under the .inventory-screen scope.
+
+   The rarity colour border is set inline via JSX (`borderColor: q.color`)
+   and overrides the baseline border-color below. */
+.inventory-screen .inv-slot {
+  background: linear-gradient(180deg, rgba(20, 28, 40, 0.82), rgba(10, 14, 22, 0.82));
+  border-color: rgba(255, 255, 255, 0.06);
+  border-radius: 9px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+@media (hover: hover) {
+  .inventory-screen .inv-slot:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 4px 14px rgba(0, 0, 0, 0.55),
+      0 0 12px rgba(255, 255, 255, 0.04);
+  }
+}
+
+/* Equipped state — gold ring + soft outer glow so it reads distinct from
+   the rarity border. */
+.inventory-screen .inv-slot-equipped {
+  box-shadow:
+    0 0 0 1px rgba(245, 200, 66, 0.5) inset,
+    0 0 14px rgba(245, 200, 66, 0.18);
+}
+
+/* Equipped pill — rounded with subtle backdrop, sits above qty when both
+   exist (e.g. on a stackable consumable equipped via a future feature). */
+.inventory-screen .inv-equipped-badge {
+  top: 3px;
+  right: 3px;
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fde68a;
+  background: rgba(245, 200, 66, 0.18);
+  border: 1px solid rgba(245, 200, 66, 0.45);
+  border-radius: 999px;
+  padding: 1px 5px;
+  backdrop-filter: blur(2px);
+}
+
+/* Quantity badge restyled to match the equipped pill family. */
+.inventory-screen .inv-qty {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(230, 235, 240, 0.95);
+}
+
+.inventory-screen .inv-name {
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+
+.inventory-screen .inv-slot-label {
+  letter-spacing: 0.04em;
+  color: rgba(200, 210, 220, 0.5);
+}
+
+/* Rarity-coloured glow on the quality gem — `currentColor` resolves to the
+   inline `color: q.color` set in JSX, so each tile glows in its own rarity. */
+.inventory-screen .inv-quality-gem {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+/* ── Page header — title + subtitle counts row ────────────────────────── */
+.coll-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+.coll-page-header h1 { margin: 0; }
+.coll-page-subtitle {
+  font-size: 0.74rem;
+  color: rgba(200, 210, 220, 0.55);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Item Modal */

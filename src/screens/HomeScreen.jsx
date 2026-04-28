@@ -491,7 +491,7 @@ function QiParticles({ colors, rung = 0 }) {
 
   const PER_PATH = 6;
   const PERIOD   = 2.4;
-  const INTERVAL = PERIOD / PER_PATH; // 0.4 s between each slot
+  const INTERVAL = PERIOD / PER_PATH; // 0.4 s between slots
 
   // qi-particle-paths-start — managed by QiParticleEditor (?particleEdit)
   const BASE_PATHS    = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -499,95 +499,131 @@ function QiParticles({ colors, rung = 0 }) {
   const EXTREME_PATHS = ['I', 'J', 'K', 'L', 'Q', 'R'];
   // qi-particle-paths-end
 
-  // displayRung: goes UP immediately, holds on the way DOWN until the
-  // CSS fade-out completes, then snaps to the real rung so path groups
-  // unmount invisibly.
-  const [displayRung, setDisplayRung] = useState(rung);
-  const [isDraining,  setIsDraining]  = useState(false);
-  const prevRungRef   = useRef(rung);
-  const latestRungRef = useRef(rung);
-  const drainTimerRef = useRef(null);
+  // Static pool — ALL paths are always in the DOM; JS controls which ones
+  // are emitting via animation-play-state (no React state, no re-renders).
+  const ALL_PATHS = [...BASE_PATHS, ...WIDE_PATHS, ...EXTREME_PATHS];
 
-  useEffect(() => {
-    latestRungRef.current = rung;
-    const prev = prevRungRef.current;
-    prevRungRef.current = rung;
-    if (rung === prev) return;
+  // ── Refs (all lifecycle management is imperative, outside React render) ──
+  const containerRef    = useRef(null);
+  // particleRefs[pathName][n] = <span> element
+  const particleRefs    = useRef({});
+  // Paths waiting for animationiteration to pause each particle naturally
+  const drainingRef     = useRef(new Set());
+  // Pending stagger timers per path
+  const resumeTimersRef = useRef({});
+  // Shadow of the current rung for the rung-change effect
+  const rungRef         = useRef(rung);
 
-    if (rung > prev) {
-      if (drainTimerRef.current) { clearTimeout(drainTimerRef.current); drainTimerRef.current = null; }
-      setDisplayRung(rung);
-      setIsDraining(false);
-    } else {
-      setIsDraining(true);
-      if (drainTimerRef.current) clearTimeout(drainTimerRef.current);
-      // Timer fires just after the CSS opacity transition finishes (PERIOD s).
-      drainTimerRef.current = setTimeout(() => {
-        setDisplayRung(latestRungRef.current);
-        setIsDraining(false);
-        drainTimerRef.current = null;
-      }, Math.round(PERIOD * 1000) + 300);
-    }
-  }, [rung]);
-
-  useEffect(() => () => {
-    if (drainTimerRef.current) clearTimeout(drainTimerRef.current);
-  }, []);
-
-  const livePathSet = new Set([
+  const activePaths = (r) => new Set([
     ...BASE_PATHS,
-    ...(rung >= 2 ? WIDE_PATHS    : []),
-    ...(rung >= 4 ? EXTREME_PATHS : []),
+    ...(r >= 2 ? WIDE_PATHS    : []),
+    ...(r >= 4 ? EXTREME_PATHS : []),
   ]);
 
-  const PATHS = [
-    ...BASE_PATHS,
-    ...(displayRung >= 2 ? WIDE_PATHS    : []),
-    ...(displayRung >= 4 ? EXTREME_PATHS : []),
-  ];
+  // Resume a path: stagger-emit particles one by one from slot 0 → PER_PATH-1.
+  // Each particle starts from offset-distance 0% (cycle boundary = invisible),
+  // building the flow naturally without a burst.
+  const startPath = (pathName) => {
+    drainingRef.current.delete(pathName); // cancel any in-progress drain
+    (resumeTimersRef.current[pathName] ?? []).forEach(clearTimeout);
+    resumeTimersRef.current[pathName] = Array.from({ length: PER_PATH }, (_, n) =>
+      setTimeout(() => {
+        const span = particleRefs.current[pathName]?.[n];
+        if (span) span.style.animationPlayState = 'running';
+      }, n * INTERVAL * 1000)
+    );
+  };
+
+  // Drain a path: mark it in drainingRef and let the animationiteration
+  // listener pause each particle at the end of its current arc (opacity ≈ 0).
+  // No animation is restarted — particles finish their journey invisibly.
+  const stopPath = (pathName) => {
+    (resumeTimersRef.current[pathName] ?? []).forEach(clearTimeout);
+    resumeTimersRef.current[pathName] = [];
+    drainingRef.current.add(pathName);
+  };
+
+  // ── Mount: wire the single event listener + activate initial paths ──────
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // One delegated listener for the whole particle field.
+    // animationiteration fires at the END of each loop cycle — the particle
+    // is at offset-distance≈100%, opacity≈0 (invisible).  Pausing here means
+    // it freezes at the natural "dead" point without any visible pop.
+    // We only act on one of the two animations (pos) to avoid double-pausing.
+    const onIteration = (e) => {
+      if (e.animationName !== 'home-qi-flow-pos') return;
+      const pathName = e.target.dataset?.path;
+      if (pathName && drainingRef.current.has(pathName)) {
+        e.target.style.animationPlayState = 'paused';
+      }
+    };
+    container.addEventListener('animationiteration', onIteration);
+
+    // Start the paths that are active at mount
+    const active = activePaths(rungRef.current);
+    ALL_PATHS.forEach(name => { if (active.has(name)) startPath(name); });
+
+    return () => {
+      container.removeEventListener('animationiteration', onIteration);
+      Object.values(resumeTimersRef.current).flat().forEach(clearTimeout);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps — mount only, intentional
+
+  // ── Rung changes: start newly active paths, drain newly inactive ones ───
+  useEffect(() => {
+    if (rung === rungRef.current) return;
+    const prevActive = activePaths(rungRef.current);
+    const nextActive = activePaths(rung);
+    rungRef.current = rung;
+    ALL_PATHS.forEach(name => {
+      const was = prevActive.has(name);
+      const is  = nextActive.has(name);
+      if ( is && !was) startPath(name);
+      if (!is &&  was) stopPath(name);
+    });
+  }, [rung]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div
+      ref={containerRef}
       className="home-qi-particles"
       aria-hidden="true"
       style={{ '--qi-particle-start': start }}
     >
-      {PATHS.map((pathName, p) => {
-        const draining = isDraining && !livePathSet.has(pathName);
-        return (
-          // Per-path container: opacity transition handles drain/reactivation
-          // without touching individual particle animations.
-          <div
-            key={pathName}
-            className={`home-qi-path-group${draining ? ' home-qi-path-draining' : ''}`}
-          >
-            {Array.from({ length: PER_PATH }, (_, n) => {
-              // Positive delay → particles appear one-by-one from the crystal
-              // on first activation, building to steady state over one PERIOD.
-              const delay = (n * INTERVAL).toFixed(2);
-              // Deterministic jitter — stable per (path, n) so re-renders and
-              // rung changes never reshuffle particles already in flight.
-              const jx = ((p * 17 + n * 11 + 5) % 19) - 9;
-              const jy = ((p * 13 + n *  7 + 3) % 11) - 5;
-              const MIX_STARTS = [0, 0, 0, 0, 40, 0, 65, 0, 0, 90];
-              const mixStart = MIX_STARTS[(p * 7 + n * 3) % MIX_STARTS.length];
-              return (
-                <span
-                  key={n}
-                  className={`home-qi-particle home-qi-particle-path${pathName}`}
-                  style={{
-                    animationDelay:    `${delay}s`,
-                    width:  `${3 + ((p + n) % 3)}px`,
-                    height: `${3 + ((p + n) % 3)}px`,
-                    transform:         `translate(${jx}px, ${jy}px)`,
-                    '--qi-mix-start':  `${mixStart}%`,
-                  }}
-                />
-              );
-            })}
-          </div>
-        );
-      })}
+      {ALL_PATHS.map((pathName, p) => (
+        <div key={pathName} className="home-qi-path-group">
+          {Array.from({ length: PER_PATH }, (_, n) => {
+            // Deterministic jitter — stable per (path, n) across re-renders.
+            const jx = ((p * 17 + n * 11 + 5) % 19) - 9;
+            const jy = ((p * 13 + n *  7 + 3) % 11) - 5;
+            const MIX_STARTS = [0, 0, 0, 0, 40, 0, 65, 0, 0, 90];
+            const mixStart = MIX_STARTS[(p * 7 + n * 3) % MIX_STARTS.length];
+            return (
+              <span
+                key={n}
+                ref={el => {
+                  if (!particleRefs.current[pathName]) particleRefs.current[pathName] = [];
+                  if (el) particleRefs.current[pathName][n] = el;
+                }}
+                data-path={pathName}
+                className={`home-qi-particle home-qi-particle-path${pathName}`}
+                style={{
+                  // animationPlayState is intentionally absent here — CSS defaults
+                  // it to 'paused' and JS manages it imperatively so React never
+                  // clobbers it on re-renders (e.g. colour changes).
+                  width:           `${3 + ((p + n) % 3)}px`,
+                  height:          `${3 + ((p + n) % 3)}px`,
+                  transform:       `translate(${jx}px, ${jy}px)`,
+                  '--qi-mix-start': `${mixStart}%`,
+                }}
+              />
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 }
