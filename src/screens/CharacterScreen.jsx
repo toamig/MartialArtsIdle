@@ -25,13 +25,11 @@ function CharacterScreen({ cultivation, techniques, artefacts, pills, tree }) {
 
   return (
     <div className="screen character-screen">
-      <header className="char-page-header">
-        <div className="char-page-title-row">
-          <h1>{t('character.title', { defaultValue: 'Character' })}</h1>
-          <span className="char-realm-tag">{realmName}</span>
-        </div>
-        <span className="char-page-meta">
-          {activeLawName ?? t('build.lawUnequipped', { defaultValue: 'No law' })}
+      <header className="coll-page-header">
+        <h1>{t('character.title', { defaultValue: 'Character' })}</h1>
+        <span className="coll-page-subtitle">
+          {realmName}
+          {` · ${activeLawName ?? t('build.lawUnequipped', { defaultValue: 'No law' })}`}
           {` · ${equippedGearCount}/9 gear`}
           {equippedTechCount > 0 ? ` · ${equippedTechCount} techniques` : ''}
         </span>
