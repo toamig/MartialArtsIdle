@@ -130,7 +130,7 @@ function LawPickerModal({ ownedLaws, activeLaw, onSelect, onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content law-picker-modal" onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>x</button>
+        <button className="modal-close" onClick={onClose}>✕</button>
         <h2 className="modal-title">{t('build.selectLaw')}</h2>
         {ownedLaws.length === 0 ? (
           <p className="sel-realm" style={{ padding: '24px 16px' }}>
@@ -236,6 +236,10 @@ function BuildContent({ cultivation, techniques, artefacts }) {
 
   const { activeLaw, setActiveLaw, isLawUnlocked, realmIndex, ownedLaws } = cultivation;
   const noLaws = !(ownedLaws?.length);
+
+  // Count badges for section headers — mirrors col-section-badge pattern from CollectionScreen
+  const equippedGearCount = Object.values(artefacts?.equipped ?? {}).filter(Boolean).length;
+  const equippedTechCount = (techniques?.equippedTechniques ?? []).filter(Boolean).length;
   // Unequipped state is legal — render a prompt card instead of crashing.
   const rarity = activeLaw ? LAW_RARITY[activeLaw.rarity] : null;
   const lawName = activeLaw
@@ -277,7 +281,9 @@ function BuildContent({ cultivation, techniques, artefacts }) {
           className={`build-section build-law-section${noLaws ? ' build-law-section-locked' : ''}`}
           onClick={noLaws ? undefined : () => setLawPickerOpen(true)}
         >
-          <h2 className="build-section-title">{t('build.cultivationLaw')}</h2>
+          <div className="col-section-header">
+            <span className="col-section-title">{t('build.cultivationLaw')}</span>
+          </div>
           {noLaws && (
             <LockTooltip
               desc="Laws amplify your cultivation speed and grant unique modifiers."
@@ -352,7 +358,10 @@ function BuildContent({ cultivation, techniques, artefacts }) {
 
         {/* Artefact grid - RIGHT / BOTTOM on mobile */}
         <section className="build-section build-artefact-section">
-          <h2 className="build-section-title">{t('build.artefacts')}</h2>
+          <div className="col-section-header">
+            <span className="col-section-title">{t('build.artefacts')}</span>
+            <span className="col-section-badge">{equippedGearCount}/{GEAR_SLOTS.length}</span>
+          </div>
           <div className="gear-body-layout">
             {GEAR_SLOTS.map((slot) => {
               const art     = artefacts.getEquipped(slot.id);
@@ -421,22 +430,22 @@ function BuildContent({ cultivation, techniques, artefacts }) {
             const active    = Object.entries(setCounts).filter(([, n]) => n >= 2);
             if (!active.length) return null;
             return (
-              <div className="active-sets-panel" style={{ marginTop: 8, padding: 8, fontSize: 12 }}>
-                <div style={{ opacity: 0.7, marginBottom: 4 }}>
+              <div className="active-sets-panel">
+                <div className="active-sets-title">
                   {t('build.activeSets', { defaultValue: 'Active sets' })}
                 </div>
                 {active.map(([sid, n]) => {
                   const s = ARTEFACT_SETS[sid];
                   if (!s) return null;
                   return (
-                    <div key={sid} style={{ marginTop: 4 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>◆ {s.name}</span>
-                        <span style={{ opacity: 0.8 }}>{n}-piece</span>
+                    <div key={sid} className="active-set-row">
+                      <div className="active-set-row-header">
+                        <span className="active-set-name">◆ {s.name}</span>
+                        <span className="active-set-count">{n}-piece</span>
                       </div>
-                      <div style={{ paddingLeft: 10, opacity: 0.75 }}>· {s.twoPiece?.description}</div>
+                      <div className="active-set-bonus">· {s.twoPiece?.description}</div>
                       {n >= 4 && (
-                        <div style={{ paddingLeft: 10, opacity: 0.75 }}>· {s.fourPiece?.description}</div>
+                        <div className="active-set-bonus">· {s.fourPiece?.description}</div>
                       )}
                     </div>
                   );
@@ -469,7 +478,10 @@ function BuildContent({ cultivation, techniques, artefacts }) {
 
         {/* Secret Techniques */}
         <section className="build-section build-tech-section">
-          <h2 className="build-section-title">{t('build.secretTechniques')}</h2>
+          <div className="col-section-header">
+            <span className="col-section-title">{t('build.secretTechniques')}</span>
+            <span className="col-section-badge">{equippedTechCount}/3</span>
+          </div>
           <div className="card-grid build-tech-grid">
             {[0, 1, 2].map(i => (
               <TechSlotCard

@@ -2344,6 +2344,52 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   opacity: 0.7;
 }
 
+/* ── Active equipped-set summary (Build tab) ─────────────────────────────── */
+.active-sets-panel {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(var(--ui-bg-panel-rgb), 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+}
+
+.active-sets-title {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(var(--ui-label-rgb), 0.4);
+  margin-bottom: 8px;
+}
+
+.active-set-row {
+  margin-top: 6px;
+}
+
+.active-set-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.active-set-name {
+  font-size: 0.78rem;
+  color: rgba(var(--ui-muted-rgb), 0.85);
+}
+
+.active-set-count {
+  font-size: 0.68rem;
+  color: rgba(var(--ui-muted-rgb), 0.55);
+}
+
+.active-set-bonus {
+  font-size: 0.71rem;
+  color: rgba(var(--ui-muted-rgb), 0.6);
+  padding-left: 10px;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
 /* ── Home Screen ──────────────────────────────────────────────────────────── */
 
 /* On iOS PWA the body has padding-top for the safe area, and position-based
