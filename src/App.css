@@ -4622,30 +4622,33 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   }
 }
 
-/* Major breakthrough — white-violet transcendence pulse */
+/* Major breakthrough — overcharged ice-blue: qi pushed past its limit.
+   Same steel/cyan family as the normal bar, but the core goes white-hot
+   and the glow blazes well beyond the boosted state — urgency without
+   losing the bar's visual identity. */
 .realm-fill-breakthrough {
   box-shadow:
-    0 0 14px rgba(255, 255, 255, 0.85),
-    0 0 32px rgba(var(--ui-purple-soft-rgb), 0.70);
-  animation: realmBreakthroughPulse 0.85s ease-in-out infinite alternate;
+    0 0 16px rgba( 61, 220, 255, 0.95),
+    0 0 40px rgba(100, 200, 255, 0.65);
+  animation: realmBreakthroughPulse 0.75s ease-in-out infinite alternate;
 }
 
 .realm-fill-breakthrough .realm-fill-inner {
-  background: linear-gradient(to right, var(--ui-purple-deep), #ffffff, var(--ui-purple-soft));
+  background: linear-gradient(to right, #153a54, #7de0ff, #ffffff, #7de0ff, #153a54);
 }
 
 @keyframes realmBreakthroughPulse {
   from {
     box-shadow:
-      0 0 10px rgba(255, 255, 255, 0.65),
-      0 0 22px rgba(var(--ui-purple-soft-rgb), 0.50);
-    filter: brightness(1.0);
+      0 0 12px rgba( 61, 220, 255, 0.75),
+      0 0 28px rgba(100, 200, 255, 0.45);
+    filter: brightness(1.05);
   }
   to {
     box-shadow:
-      0 0 28px rgba(255, 255, 255, 1.00),
-      0 0 55px rgba(var(--ui-purple-soft-rgb), 0.90);
-    filter: brightness(1.40);
+      0 0 32px rgba( 61, 220, 255, 1.00),
+      0 0 65px rgba(140, 220, 255, 0.90);
+    filter: brightness(1.50);
   }
 }
 
@@ -11626,3 +11629,337 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   }
 }
 
+/* ── Artefact Upgrade Modal — Genshin-style upgrade panel ─────────────────
+   Three stacked sections (preview / cost / sacrifice feed) inside one panel
+   sized for phones. Adapts to desktop with a slightly wider max-width. */
+.artefact-upgrade-overlay { z-index: 230; }
+
+.artefact-upgrade-panel {
+  background: linear-gradient(180deg, rgba(20, 28, 40, 0.96), rgba(10, 14, 22, 0.96));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  width: min(460px, 96vw);
+  max-height: min(86vh, 760px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 0 28px rgba(0, 0, 0, 0.55), 0 8px 32px rgba(0, 0, 0, 0.7);
+  animation: modal-pop 0.2s ease-out;
+}
+
+.artefact-upgrade-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.artefact-upgrade-gem {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.artefact-upgrade-titles { flex: 1; min-width: 0; }
+
+.artefact-upgrade-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artefact-upgrade-curlevel {
+  margin-left: 6px;
+  opacity: 0.85;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.artefact-upgrade-subtitle {
+  font-size: 0.72rem;
+  color: rgba(200, 210, 220, 0.65);
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.artefact-upgrade-close {
+  position: static;
+  font-size: 1.05rem;
+  padding: 2px 8px;
+  line-height: 1;
+}
+
+/* Body — scrolls when content overflows the panel max-height */
+.artefact-upgrade-body {
+  padding: 12px 14px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Preview — level row + stat-delta list ─────────────────────────────── */
+.artefact-upgrade-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.artefact-upgrade-level-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.artefact-upgrade-level-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(200, 210, 220, 0.6);
+}
+
+.artefact-upgrade-level-current {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: rgba(220, 230, 240, 0.85);
+}
+
+.artefact-upgrade-level-arrow {
+  opacity: 0.5;
+  font-size: 0.95rem;
+}
+
+.artefact-upgrade-level-next {
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-shadow: 0 0 8px currentColor;
+}
+
+.artefact-upgrade-level-cap {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: rgba(200, 210, 220, 0.55);
+}
+
+.artefact-upgrade-stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.artefact-upgrade-stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  border-radius: 6px;
+}
+
+.artefact-upgrade-stat-row:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.artefact-upgrade-stat-cur {
+  flex: 1;
+  color: rgba(200, 210, 220, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artefact-upgrade-stat-arrow {
+  opacity: 0.4;
+  font-size: 0.7rem;
+}
+
+.artefact-upgrade-stat-next {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.artefact-upgrade-milestone {
+  font-size: 0.74rem;
+  color: #fde68a;
+  background: rgba(245, 200, 66, 0.08);
+  border: 1px solid rgba(245, 200, 66, 0.25);
+  border-radius: 8px;
+  padding: 6px 10px;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.artefact-upgrade-maxed {
+  font-size: 0.85rem;
+  color: rgba(200, 210, 220, 0.6);
+  text-align: center;
+  padding: 12px 0;
+  font-style: italic;
+}
+
+/* ── Section title shared by Cost + Feed ───────────────────────────────── */
+.artefact-upgrade-section-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(200, 210, 220, 0.55);
+  margin-bottom: 6px;
+}
+
+.artefact-upgrade-section-hint {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 0.68rem;
+  opacity: 0.75;
+}
+
+/* ── Cost gate ──────────────────────────────────────────────────────────── */
+.artefact-upgrade-cost-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.artefact-upgrade-cost-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.artefact-upgrade-cost-gem { flex-shrink: 0; }
+.artefact-upgrade-cost-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgba(220, 230, 240, 0.9);
+}
+
+.artefact-upgrade-cost-have {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.artefact-upgrade-cost-have.is-met   { color: #a3e635; }
+.artefact-upgrade-cost-have.is-short { color: #f87171; }
+
+/* ── Sacrifice feed ────────────────────────────────────────────────────── */
+.artefact-upgrade-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px;
+}
+
+.artefact-upgrade-feed-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 9px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+}
+
+.artefact-upgrade-feed-tile:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.artefact-upgrade-feed-tile.is-pending {
+  outline: 2px solid rgba(245, 200, 66, 0.6);
+  outline-offset: -2px;
+}
+
+.artefact-upgrade-feed-gem { font-size: 0.95rem; line-height: 1; }
+
+.artefact-upgrade-feed-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(230, 235, 240, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.artefact-upgrade-feed-yield {
+  font-size: 0.66rem;
+  color: rgba(200, 210, 220, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.artefact-upgrade-empty {
+  font-size: 0.78rem;
+  color: rgba(200, 210, 220, 0.5);
+  font-style: italic;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.artefact-upgrade-confirm {
+  margin-top: 8px;
+  padding: 10px;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.artefact-upgrade-confirm-msg {
+  font-size: 0.82rem;
+  color: rgba(230, 235, 240, 0.92);
+}
+
+.artefact-upgrade-confirm-btns {
+  display: flex;
+  gap: 6px;
+}
+.artefact-upgrade-confirm-btns .save-btn { flex: 1; }
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+.artefact-upgrade-footer {
+  padding: 10px 14px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.artefact-upgrade-confirm-btn {
+  width: 100%;
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
+}
