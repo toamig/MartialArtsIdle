@@ -172,6 +172,144 @@ export const QI_SPARKS = [
     effect:      { type: 'qi_mult_per_breakthrough_per_stack', value: 0.005 },
   },
 
+  // ── Rare — Mechanic: Crystal Click ─────────────────────────────────────
+  // The Qi Crystal silently stockpiles a fraction of your qi/s into a
+  // reservoir while you cultivate. Tapping the crystal collects everything
+  // at once — it's satisfying offline, like a golden cookie sitting full.
+  // Each tier raises both the fill rate and the reservoir cap.
+  //
+  // Tier curve (rate × qi/s = fill speed; cap = minutes of current qi/s):
+  //   T1  30% · 5 min cap
+  //   T2  50% · 10 min cap
+  //   T3  70% · 20 min cap
+  //   T4  85% · 40 min cap
+  //   T5 100% · 60 min cap   (full rate — crystal mirrors your cultivation)
+  {
+    id:          'crystal_click_t1',
+    rarity:      'rare',
+    name:        'Crystal Reservoir',
+    description: 'The crystal stockpiles 30% of your qi/s (up to 5 min). Tap to collect.',
+    kind:        'mechanic',
+    mechanicId:  'crystal_click',
+    tier:        1,
+    unlockCheck: 'qi_crystal',
+    rate:        0.30,
+    capMinutes:  5,
+  },
+  {
+    id:          'crystal_click_t2',
+    rarity:      'rare',
+    name:        'Crystal Reservoir',
+    description: 'Upgrades to 50% of your qi/s (up to 10 min). Tap to collect.',
+    kind:        'mechanic',
+    mechanicId:  'crystal_click',
+    tier:        2,
+    rate:        0.50,
+    capMinutes:  10,
+  },
+  {
+    id:          'crystal_click_t3',
+    rarity:      'rare',
+    name:        'Crystal Reservoir',
+    description: 'Upgrades to 70% of your qi/s (up to 20 min). Tap to collect.',
+    kind:        'mechanic',
+    mechanicId:  'crystal_click',
+    tier:        3,
+    rate:        0.70,
+    capMinutes:  20,
+  },
+  {
+    id:          'crystal_click_t4',
+    rarity:      'rare',
+    name:        'Crystal Reservoir',
+    description: 'Upgrades to 85% of your qi/s (up to 40 min). Tap to collect.',
+    kind:        'mechanic',
+    mechanicId:  'crystal_click',
+    tier:        4,
+    rate:        0.85,
+    capMinutes:  40,
+  },
+  {
+    id:          'crystal_click_t5',
+    rarity:      'rare',
+    name:        'Crystal Reservoir',
+    description: 'Full rate: 100% of your qi/s (up to 60 min). Tap the crystal to collect.',
+    kind:        'mechanic',
+    mechanicId:  'crystal_click',
+    tier:        5,
+    rate:        1.00,
+    capMinutes:  60,
+  },
+
+  // ── Rare — Mechanic: Divine Qi ─────────────────────────────────────────
+  // A golden orb manifests in the scene at random intervals. Tap it before
+  // it fades to collect a burst of qi. Higher tiers shorten the interval,
+  // widen the tap window, and increase the burst. T5 spawns a second orb
+  // simultaneously; collecting both also grants a short qi/s rate buff.
+  {
+    id:              'divine_qi_t1',
+    rarity:          'rare',
+    name:            'Divine Qi',
+    description:     'A golden orb appears every ~3 min. Tap it within 8s for 30s of qi.',
+    kind:            'mechanic',
+    mechanicId:      'divine_qi',
+    tier:            1,
+    spawnIntervalMs: 180_000,
+    windowMs:        8_000,
+    burstSeconds:    30,
+  },
+  {
+    id:              'divine_qi_t2',
+    rarity:          'rare',
+    name:            'Divine Qi',
+    description:     'Orb every ~2.5 min, 10s window. Tap for 40s of qi.',
+    kind:            'mechanic',
+    mechanicId:      'divine_qi',
+    tier:            2,
+    spawnIntervalMs: 150_000,
+    windowMs:        10_000,
+    burstSeconds:    40,
+  },
+  {
+    id:              'divine_qi_t3',
+    rarity:          'rare',
+    name:            'Divine Qi',
+    description:     'Orb every ~2 min, 12s window. Tap for 50s of qi.',
+    kind:            'mechanic',
+    mechanicId:      'divine_qi',
+    tier:            3,
+    spawnIntervalMs: 120_000,
+    windowMs:        12_000,
+    burstSeconds:    50,
+  },
+  {
+    id:              'divine_qi_t4',
+    rarity:          'rare',
+    name:            'Divine Qi',
+    description:     'Orb every ~90s, 15s window. Tap for 60s of qi.',
+    kind:            'mechanic',
+    mechanicId:      'divine_qi',
+    tier:            4,
+    spawnIntervalMs: 90_000,
+    windowMs:        15_000,
+    burstSeconds:    60,
+  },
+  {
+    id:              'divine_qi_t5',
+    rarity:          'rare',
+    name:            'Divine Qi',
+    description:     'Two orbs every ~60s. Collect both for 60s qi + ×1.5 qi/s for 30s.',
+    kind:            'mechanic',
+    mechanicId:      'divine_qi',
+    tier:            5,
+    spawnIntervalMs: 60_000,
+    windowMs:        15_000,
+    burstSeconds:    60,
+    doubleOrb:       true,
+    rateMult:        1.5,
+    rateBuffMs:      30_000,
+  },
+
   // ── Rare — Mechanic: Consecutive Focus ──────────────────────────────────
   // Each tier ADDS a new threshold rung on top of the previous ones, so
   // holding Focus rewards the player with stepped gains over time.

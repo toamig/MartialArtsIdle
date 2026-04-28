@@ -1,8 +1,8 @@
 # Qi Sparks — Implementation Status
 
-**Status:** Phase 1 + 1B + 2 shipped; Phase 3 in progress (Consecutive Focus done — 1 of 4 mechanics)
-**Last commit:** 726d9ea (fix: Focus multiplier badge reflects Focus Surge bonus)
-**Date:** 2026-04-27
+**Status:** Phase 1 + 1B + 2 shipped; Phase 3 in progress (3 of 4 mechanics done — Pattern Clicking next)
+**Last commit:** (Divine Qi implementation)
+**Date:** 2026-04-28
 
 ---
 
@@ -78,9 +78,9 @@ All functional with proper UI feedback through qi/s readout + focus badge.
 
 **Mechanic status:**
 - ✅ Consecutive Focus (5 tiers shipped — see below)
-- ⏳ Crystal Click — next
-- ⏳ Divine Qi
-- ⏳ Pattern Clicking
+- ✅ Crystal Click (5 tiers shipped — see below)
+- ✅ Divine Qi (5 tiers shipped — see below)
+- ⏳ Pattern Clicking — next
 
 #### Mechanic 0: Consecutive Focus — SHIPPED
 
@@ -100,17 +100,44 @@ Implementation:
 - Tick sums every met rung's bonus into `consecutiveMult`, folded into the rate alongside `boostMult`.
 - T5 dispatches `mai:deep-meditation` on edges; App.jsx toggles `body.deep-meditation`; CSS applies subtle hue-shift + vignette pulse.
 
-#### Mechanic 1: Crystal Click — accumulation reservoir
-- Crystal stockpiles qi at a fraction of qi/s rate, capped at N minutes
-- Tap crystal → collect entire reservoir, reservoir resets to 0
-- Runs **online + offline** (key offline-return hook)
-- Tier curve: T1 (30% rate, 5min cap) → T5 (100% rate, 60min cap)
-- Visual: crystal glow tracks fullness; urgent pulse + chime when capped
+#### Mechanic 1: Crystal Click — SHIPPED
 
-#### Mechanic 2: Consecutive Focus
-- Hold duration thresholds give escalating bonus while held
-- T1 ≥1s = +5% qi/s → T5 ≥10s = +60% qi/s with screen color shift ("deep meditation")
-- Pure passive — wires into existing focus boost logic
+Reservoir fills at `rate × qi/s` per second (online tick) and offline (offline-init reads `mai_crystal_click_snapshot`). Tap the crystal to collect everything at once.
+
+| Tier | Rate | Cap |
+|---|---|---|
+| T1 | 30% qi/s | 5 min |
+| T2 | 50% qi/s | 10 min |
+| T3 | 70% qi/s | 20 min |
+| T4 | 85% qi/s | 40 min |
+| T5 | 100% qi/s | 60 min |
+
+Implementation:
+- `data/qiSparks.js` — 5 crystal_click_t1..t5 cards
+- `useQiSparks.js` — `crystalClickRateRef` + `crystalClickCapMinRef` + `mai_crystal_click_snapshot` localStorage mirror
+- `useCultivation.js` — per-tick accrual into `crystalReservoirRef`; offline fill in the `offlineEarnings` useState initializer; `collectCrystalReservoir()` callback; autosave to `mai_crystal_reservoir`
+- `App.jsx` — mirrors rate + cap refs into cultivation; threads `crystalReservoirRef`, `crystalClickCapMinRef`, `collectCrystalReservoir` to HomeScreen
+- `HomeScreen.jsx` (`KeyCrystal`) — rAF loop drives golden glow overlay opacity (0 → 0.85); CSS pulse when full; anchor tappable when mechanic active
+- `App.css` — `.home-crystal-img-wrap`, `.home-crystal-reservoir-fill`, `.home-crystal-tappable`, `@keyframes crystal-full-pulse`
+- `save.js` — `mai_crystal_reservoir` + `mai_crystal_click_snapshot` added to wipe
+
+#### Mechanic 2: Divine Qi — SHIPPED
+
+A golden orb spawns at random intervals in the home scene. Player taps it within the window for a qi burst. T5 spawns two orbs; collecting both also fires a temporary qi/s rate buff.
+
+| Tier | Interval | Window | Burst | Special |
+|---|---|---|---|---|
+| T1 | ~3 min | 8s | 30s qi |  |
+| T2 | ~2.5 min | 10s | 40s qi |  |
+| T3 | ~2 min | 12s | 50s qi |  |
+| T4 | ~90s | 15s | 60s qi |  |
+| T5 | ~60s | 15s | 60s qi | double orb; collect both → ×1.5 qi/s for 30s |
+
+Implementation:
+- `data/qiSparks.js` — 5 divine_qi_t1..t5 cards
+- `useCultivation.js` — `divineQiMultRef` folded into rate calc; `mai:divine-qi-buff` event listener applies/resets T5 rate mult
+- `HomeScreen.jsx` — `useDivineQi` hook (self-scheduling spawn timer, wave tracking for T5 double-collect buff); `DivineQiOrb` component (alive → expiring → collected/expired phases, `performance.now()` expiresAt)
+- `App.css` — orb spawn/pulse/expiring/collected/expired animations; ±30% jitter interval
 
 #### Mechanic 3: Pattern Clicking (osu-style)
 - Periodic dot pattern appears, player taps in order/rhythm for burst reward
@@ -162,7 +189,7 @@ Implementation:
 ### Modified
 - `src/hooks/useCultivation.js` — sparkQiMultRef, sparkFocusMultBonusRef, sparkPainlessRef, sparkLingeringActiveRef + residual refs; tick logic for painless drain skip + lingering boost residual
 - `src/App.jsx` — mounts useQiSparks, mirrors refs, renders modal app-wide
-- `src/screens/HomeScreen.jsx` — renders ActiveSparksBar; Focus mult badge includes spark bonus; crystal is purely decorative
+- `src/screens/HomeScreen.jsx` — renders ActiveSparksBar; Focus mult badge includes spark bonus; crystal tappable + reservoir glow when Crystal Click active
 - `src/screens/CharacterScreen.jsx` — Perks tab removed
 - `src/screens/StatsTab.jsx` — selection mod bundle removed
 - `src/components/SelectionModal.jsx` — stripped to law-only

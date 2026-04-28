@@ -3714,6 +3714,127 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   }
 }
 
+/* ── Crystal Click — reservoir fill overlay ─────────────────────────────── */
+
+/* Relative container so the fill div can be absolutely positioned over the img */
+.home-crystal-img-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Golden glow that grows from invisible → visible as the reservoir fills.
+   Opacity is driven by the rAF loop in KeyCrystal.
+   When full, the CSS pulse animation overrides inline opacity. */
+.home-crystal-reservoir-fill {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 60%,
+    rgba(255, 210, 70, 0.9)  0%,
+    rgba(255, 150, 20, 0.7) 45%,
+    transparent              80%
+  );
+  pointer-events: none;
+  mix-blend-mode: screen;
+  transition: none;
+}
+
+/* Tappable state — pointer cursor, scale feedback on press */
+.home-crystal-tappable { cursor: pointer; }
+.home-crystal-tappable:active .home-crystal-float {
+  transform: scale(0.93);
+  transition: transform 0.08s ease;
+}
+
+/* Pulse when reservoir is completely full */
+@keyframes crystal-full-pulse {
+  0%, 100% { opacity: 0.65; }
+  50%       { opacity: 1.00; }
+}
+.home-crystal-full .home-crystal-reservoir-fill {
+  animation: crystal-full-pulse 0.75s ease-in-out infinite;
+}
+
+/* ── Divine Qi — golden orb ─────────────────────────────────────────────── */
+
+/* Orb sits absolutely within the .home-cultivation-zone */
+.divine-qi-orb {
+  position:      absolute;
+  width:         52px;
+  height:        52px;
+  border-radius: 50%;
+  transform:     translate(-50%, -50%);
+  border:        none;
+  padding:       0;
+  cursor:        pointer;
+  /* Golden radial core with a bright halo */
+  background: radial-gradient(
+    ellipse at 40% 35%,
+    #fff9c4 0%,
+    #ffe55a 28%,
+    #ffa800 65%,
+    rgba(255, 140, 0, 0) 100%
+  );
+  box-shadow:
+    0 0 18px 6px rgba(255, 200, 30, 0.75),
+    0 0 40px 12px rgba(255, 140, 0, 0.45);
+  animation: divine-qi-spawn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+             divine-qi-pulse  2.2s ease-in-out 0.35s infinite;
+  z-index: 60;
+  touch-action: manipulation;
+}
+
+/* Spawn: pop in from scale 0 with overshoot */
+@keyframes divine-qi-spawn {
+  from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* Idle pulse — gentle size + glow oscillation */
+@keyframes divine-qi-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1);    box-shadow: 0 0 18px 6px rgba(255, 200, 30, 0.75), 0 0 40px 12px rgba(255, 140, 0, 0.45); }
+  50%       { transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 26px 9px rgba(255, 220, 50, 0.9),  0 0 56px 18px rgba(255, 160, 0, 0.55); }
+}
+
+/* Expiring state — rapid urgent flash */
+.divine-qi-orb-expiring {
+  animation: divine-qi-spawn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+             divine-qi-urgent 0.45s ease-in-out 0.35s infinite;
+}
+@keyframes divine-qi-urgent {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.88); opacity: 0.65; }
+  50%       { transform: translate(-50%, -50%) scale(1.06); opacity: 1.00; }
+}
+
+/* Collected — burst out and fade */
+.divine-qi-orb-collected {
+  pointer-events: none;
+  animation: divine-qi-collect 0.3s ease-out forwards !important;
+}
+@keyframes divine-qi-collect {
+  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+  60%  { transform: translate(-50%, -50%) scale(1.5); opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+}
+
+/* Expired — shrink out */
+.divine-qi-orb-expired {
+  pointer-events: none;
+  animation: divine-qi-expire 0.3s ease-in forwards !important;
+}
+@keyframes divine-qi-expire {
+  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+}
+
+/* Tap feedback */
+.divine-qi-orb:active {
+  transform: translate(-50%, -50%) scale(0.88);
+}
+
 /* ── Crystal Feed Modal ─────────────────────────────────────────────────── */
 
 /* ─── Crystal Feed Modal (cfm) ───────────────────────────────────────────────── */

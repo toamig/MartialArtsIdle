@@ -167,6 +167,22 @@ export default function useCultivation() {
     const baseRate = BASE_RATE * lawMult * offlineQiMult * artefactOfflineMult * sparkOfflineMult * (1 + pillQiSpeedBonus);
     const total = baseRate * awaySeconds;
 
+    // Crystal Click offline reservoir fill — silently updates localStorage so
+    // the crystalReservoirRef useRef below reads the already-accrued value.
+    try {
+      const snapRaw = localStorage.getItem('mai_crystal_click_snapshot');
+      if (snapRaw) {
+        const snap = JSON.parse(snapRaw);
+        if (snap.rate > 0 && snap.capMin > 0) {
+          const cap = snap.capMin * 60 * baseRate;
+          const stored = parseFloat(localStorage.getItem('mai_crystal_reservoir')) || 0;
+          const accrued = baseRate * snap.rate * awaySeconds;
+          const filled = Math.min(cap, stored + accrued);
+          localStorage.setItem('mai_crystal_reservoir', String(filled));
+        }
+      }
+    } catch {}
+
     return Math.floor(total);
   });
 
@@ -219,6 +235,21 @@ export default function useCultivation() {
   const sparkLingeringResidualMsRef  = useRef(0);
   const sparkLingeringResidualMultRef = useRef(0);
   const focusReleaseTimeRef          = useRef(0);
+  // Divine Qi mechanic — temporary multiplier applied when the player
+  // collects both T5 orbs. Written by the 'mai:divine-qi-buff' event handler
+  // below; resets to 1 after rateBuffMs via a clearTimeout.
+  const divineQiMultRef = useRef(1);
+
+  // Crystal Click mechanic — rate/cap mirrored from useQiSparks by App.jsx.
+  // crystalReservoirRef holds the accumulated qi waiting to be collected.
+  const sparkCrystalClickRateRef   = useRef(0);
+  const sparkCrystalClickCapMinRef = useRef(0);
+  const crystalReservoirRef = useRef(() => {
+    try {
+      const v = parseFloat(localStorage.getItem('mai_crystal_reservoir'));
+      return Number.isFinite(v) && v > 0 ? v : 0;
+    } catch { return 0; }
+  })();
   const prevBoostStateRef            = useRef(false);
   // Consecutive Focus mechanic — every unlocked tier adds a rung to a
   // cumulative ladder of (holdMs, bonus). Each tick sums every met rung
@@ -376,9 +407,20 @@ export default function useCultivation() {
         adBoostRef.current * heavenlyTree * heavenlyArt *
         pillQiMultRef.current * sparkQiMultRef.current *
         treeQiMultRef.current * rebirthCultBuffRef.current *
+        divineQiMultRef.current *
         debugQiMultRef.current;
       rateRef.current = rate;
       qiRef.current += rate * dt;
+
+      // Crystal Click reservoir accrual — fill at (rate × clickRate) per second
+      // up to (capMinutes × 60 × rate). Paused when mechanic is not unlocked.
+      if (sparkCrystalClickRateRef.current > 0) {
+        const cap = sparkCrystalClickCapMinRef.current * 60 * rate;
+        const prev = crystalReservoirRef.current;
+        if (prev < cap) {
+          crystalReservoirRef.current = Math.min(cap, prev + rate * sparkCrystalClickRateRef.current * dt);
+        }
+      }
 
       if (ascendedRef.current) {
         // Post-ascension free mode: qi grows without bound — nothing to check.
@@ -453,6 +495,23 @@ export default function useCultivation() {
     return () => cancelAnimationFrame(raf);
   }, []); // runs once — reads everything via refs
 
+  // Divine Qi T5 rate buff — fired by HomeScreen when both orbs are collected.
+  // Multiplier applies for `durationMs`; stacking restarts the timer.
+  useEffect(() => {
+    let resetTimer = null;
+    const onBuff = (e) => {
+      const { mult = 1.5, durationMs = 30_000 } = e.detail ?? {};
+      divineQiMultRef.current = mult;
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => { divineQiMultRef.current = 1; }, durationMs);
+    };
+    window.addEventListener('mai:divine-qi-buff', onBuff);
+    return () => {
+      window.removeEventListener('mai:divine-qi-buff', onBuff);
+      clearTimeout(resetTimer);
+    };
+  }, []);
+
   // Auto-save every 2 seconds
   const adBoostEndsAtRef = useRef(adBoostEndsAt);
   useEffect(() => { adBoostEndsAtRef.current = adBoostEndsAt; }, [adBoostEndsAt]);
@@ -465,6 +524,10 @@ export default function useCultivation() {
         adBoostEndsAt: adBoostEndsAtRef.current,
         ascended:      ascendedRef.current,
       });
+      // Crystal reservoir persisted separately — not part of the main save blob.
+      try {
+        localStorage.setItem('mai_crystal_reservoir', String(crystalReservoirRef.current));
+      } catch {}
     }, 2000);
     return () => clearInterval(interval);
   }, []);
@@ -490,6 +553,15 @@ export default function useCultivation() {
     qiRef.current += offlineEarnings * multiplier;
     setOfflineEarnings(0);
   }, [offlineEarnings]);
+
+  /** Tap the crystal — dump everything in the reservoir into qi. */
+  const collectCrystalReservoir = useCallback(() => {
+    const amount = crystalReservoirRef.current;
+    if (amount <= 0) return;
+    qiRef.current += amount;
+    crystalReservoirRef.current = 0;
+    try { localStorage.setItem('mai_crystal_reservoir', '0'); } catch {}
+  }, []);
 
   const realm     = REALMS[realmIndex];
   const nextRealm = REALMS[realmIndex + 1] ?? null;
@@ -540,6 +612,13 @@ export default function useCultivation() {
     sparkConsecutiveLadderRef,
     sparkConsecutiveDeepRef,
     sparkConsecutiveCurrentBonusRef,
+    // Divine Qi rate-buff ref — written by the mai:divine-qi-buff event listener
+    divineQiMultRef,
+    // Crystal Click refs — rate/cap written by App.jsx, reservoir updated each tick
+    sparkCrystalClickRateRef,
+    sparkCrystalClickCapMinRef,
+    crystalReservoirRef,
+    collectCrystalReservoir,
     // Exposed for debug bridges — production code should treat both as
     // private to the cultivation tick.
     boostStartTimeRef,

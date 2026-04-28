@@ -1,5 +1,5 @@
 // @refresh reset
-import { useCallback, useState, useRef, useEffect } from 'react';
+import { useCallback, useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import SpriteAnimator from '../components/SpriteAnimator';
 import RealmProgressBar from '../components/RealmProgressBar';
@@ -359,11 +359,39 @@ const CRYSTAL_COLORS = {
   10:     { glowA: 'rgba(255,170,34,1)',   glowB: 'rgba(220,120,0,0.55)', textName: '#ffb860', particles: ['#ffaa22','#ffe566','#ffbb44','#ff9900','#fff0aa'] },
 };
 
-/** Qi Crystal — locked (dim, greyscale) or unlocked (glowing, decorative).
- *  The feed modal is opened from the top-bar 🪨 button, not by tapping the
- *  crystal itself, so this component is purely visual. */
-function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung }) {
+/** Qi Crystal — locked (dim, greyscale) or unlocked (glowing, tapable when
+ *  Crystal Click mechanic is active). Reservoir fill tracked via rAF. */
+function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reservoirRef, crystalClickCapMinRef, rateRef, onCollect }) {
   const unlockHint = FEATURE_GATES.qi_crystal?.hint ?? 'Reach a higher realm';
+  // true only when the Crystal Click spark is active AND the crystal is unlocked
+  const mechanicOn = !!(crystalClickCapMinRef && onCollect && isUnlocked);
+
+  const fillBarRef = useRef(null);
+  const anchorRef  = useRef(null);
+
+  // rAF loop — drives the golden reservoir-fill glow overlay.
+  // When the reservoir is full, clear the inline opacity so the CSS pulse
+  // animation takes over; otherwise scale opacity with the fill fraction.
+  useEffect(() => {
+    if (!mechanicOn) return;
+    let raf;
+    const tick = () => {
+      const rate   = rateRef?.current   ?? 0;
+      const capMin = crystalClickCapMinRef?.current ?? 0;
+      const cap    = capMin * 60 * rate;
+      const reserv = reservoirRef?.current ?? 0;
+      const fill   = cap > 0 ? Math.min(1, reserv / cap) : 0;
+      const isFull = fill >= 0.999;
+      if (fillBarRef.current) {
+        // isFull: remove inline so CSS @keyframes pulse wins the cascade
+        fillBarRef.current.style.opacity = isFull ? '' : String(fill * 0.85);
+      }
+      anchorRef.current?.classList.toggle('home-crystal-full', isFull);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [mechanicOn, reservoirRef, crystalClickCapMinRef, rateRef]);
 
   if (!isUnlocked) {
     return (
@@ -390,16 +418,25 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung }) {
   const tier = getCrystalTier(level);
   const { glowA, glowB } = CRYSTAL_COLORS[tier];
   return (
-    <div className={`home-crystal-anchor${hidden ? ' home-crystal-anchor-lifted' : ''}`}>
+    <div
+      ref={anchorRef}
+      className={`home-crystal-anchor${hidden ? ' home-crystal-anchor-lifted' : ''}${mechanicOn ? ' home-crystal-tappable' : ''}`}
+      onClick={mechanicOn ? onCollect : undefined}
+    >
       <div className="home-crystal-float" style={{ '--cg-a': glowA, '--cg-b': glowB }}>
         <span className="home-crystal-tag">Qi Crystal</span>
         <span className="home-crystal-evolve">Lv {level}</span>
-        <img
-          src={`${BASE}crystals/crystal_${tier}.png`}
-          className="home-crystal-img"
-          alt="Qi Crystal"
-          draggable="false"
-        />
+        <div className="home-crystal-img-wrap">
+          <img
+            src={`${BASE}crystals/crystal_${tier}.png`}
+            className="home-crystal-img"
+            alt="Qi Crystal"
+            draggable="false"
+          />
+          {mechanicOn && (
+            <div ref={fillBarRef} className="home-crystal-reservoir-fill" style={{ opacity: 0 }} />
+          )}
+        </div>
       </div>
       <QiParticles colors={particleColors} rung={cfRung} />
       <div className="crystal-tooltip">
@@ -408,7 +445,10 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung }) {
         <div className="ctt-bonus">
           <span className="ctt-gem">◆</span> Current bonus: <strong>+{crystalQiBonus} Qi/s</strong>
         </div>
-        <div className="ctt-hint">Feed via 🪨 in the top bar</div>
+        {mechanicOn
+          ? <div className="ctt-hint">Tap to collect stored Qi</div>
+          : <div className="ctt-hint">Feed via 🪨 in the top bar</div>
+        }
       </div>
     </div>
   );
@@ -471,6 +511,147 @@ function HomePCLeftPanel({ realmName, realmStage, qiRef, costRef, rateRef, gateR
       <QiRateReadout rateRef={rateRef} focusMultRef={focusMultRef} sparkFocusMultBonusRef={sparkFocusMultBonusRef} sparkConsecutiveCurrentBonusRef={sparkConsecutiveCurrentBonusRef} boosting={boosting} adBoostActive={adBoostActive} maxed={maxed} />
     </div>
   );
+}
+
+// ── Divine Qi — golden orb mechanic ─────────────────────────────────────────
+
+/**
+ * Single orb: self-destructs after `windowMs`; notifies parent on collect/expire.
+ * Phases: 'alive' → 'expiring' (last 3s) → 'collected' | 'expired'
+ */
+function DivineQiOrb({ orb, onResolve }) {
+  const [phase, setPhase] = useState('alive');
+  const phaseRef = useRef('alive');
+
+  // Switch to 'expiring' 3s before window closes
+  useEffect(() => {
+    const totalMs   = orb.expiresAt - performance.now();
+    const expiringIn = totalMs - 3000;
+    if (expiringIn <= 0) { phaseRef.current = 'expiring'; setPhase('expiring'); }
+    else {
+      const t = setTimeout(() => { phaseRef.current = 'expiring'; setPhase('expiring'); }, expiringIn);
+      return () => clearTimeout(t);
+    }
+  }, [orb.expiresAt]);
+
+  // Auto-expire when the full window closes
+  useEffect(() => {
+    const remaining = orb.expiresAt - performance.now();
+    if (remaining <= 0) { phaseRef.current = 'expired'; setPhase('expired'); return; }
+    const t = setTimeout(() => { phaseRef.current = 'expired'; setPhase('expired'); }, remaining);
+    return () => clearTimeout(t);
+  }, [orb.expiresAt]);
+
+  // Report resolve after exit animation (300ms)
+  useEffect(() => {
+    if (phase !== 'collected' && phase !== 'expired') return;
+    const t = setTimeout(() => onResolve(orb.id, phase === 'collected'), 300);
+    return () => clearTimeout(t);
+  }, [phase, orb.id, onResolve]);
+
+  const handleClick = () => {
+    if (phaseRef.current === 'alive' || phaseRef.current === 'expiring') {
+      phaseRef.current = 'collected';
+      setPhase('collected');
+    }
+  };
+
+  return (
+    <button
+      className={`divine-qi-orb divine-qi-orb-${phase}`}
+      style={{ left: `${orb.x}%`, top: `${orb.y}%` }}
+      onClick={handleClick}
+      aria-label="Divine Qi orb"
+    />
+  );
+}
+
+/**
+ * Manages the Divine Qi orb lifecycle for the current screen.
+ * Reads the active divine_qi spark from activeSparks; sets up a
+ * self-scheduling spawn timer with ±30% jitter.
+ * Returns { orbs, collectOrb } — render orbs in the cultivation zone.
+ */
+function useDivineQi({ activeSparks, rateRef, qiRef }) {
+  const [orbs, setOrbs] = useState([]);
+  const nextIdRef = useRef(0);
+
+  // Find the active divine_qi card (highest tier wins — array is deduped by useQiSparks)
+  const config = useMemo(
+    () => activeSparks?.find(s => s.kind === 'mechanic' && s.mechanicId === 'divine_qi') ?? null,
+    [activeSparks],
+  );
+  const configRef = useRef(config);
+  useEffect(() => { configRef.current = config; }, [config]);
+
+  // Track how many orbs from the current spawn wave have been collected
+  // so T5 can fire the rate buff when BOTH are collected.
+  const pendingWaveRef = useRef({ waveId: -1, total: 0, collected: 0 });
+
+  // Spawn function — creates 1 or 2 orbs (T5 doubleOrb)
+  const spawnWave = useCallback(() => {
+    const cfg = configRef.current;
+    if (!cfg) return;
+    const count = cfg.doubleOrb ? 2 : 1;
+    const waveId = ++nextIdRef.current;
+    pendingWaveRef.current = { waveId, total: count, collected: 0 };
+    const now = performance.now();
+    const newOrbs = Array.from({ length: count }, (_, i) => ({
+      id:        `dqi-${waveId}-${i}`,
+      waveId,
+      // Scatter positions: safe zone within scene (avoid UI edges)
+      x: 12 + Math.random() * 68 + (i === 1 ? 20 : 0), // second orb offset right
+      y: 22 + Math.random() * 45,
+      expiresAt: now + cfg.windowMs,
+    }));
+    setOrbs(prev => [...prev, ...newOrbs]);
+  }, []);
+
+  // Self-scheduling spawn timer — re-arms after each spawn
+  useEffect(() => {
+    if (!config) return; // mechanic not active
+    let timer;
+    const arm = () => {
+      const cfg = configRef.current;
+      if (!cfg) return;
+      // ±30% jitter so spawns feel organic
+      const delay = cfg.spawnIntervalMs * (0.7 + Math.random() * 0.6);
+      timer = setTimeout(() => { spawnWave(); arm(); }, delay);
+    };
+    // First spawn after a brief "discovery" delay so the player notices the new mechanic
+    timer = setTimeout(() => { spawnWave(); arm(); }, Math.min(config.spawnIntervalMs * 0.5, 15_000));
+    return () => clearTimeout(timer);
+  }, [config?.id, spawnWave]); // re-arm if tier changes (config.id changes)
+
+  // Called when an orb is collected or expires (after its exit animation)
+  const collectOrb = useCallback((orbId, wasCollected) => {
+    setOrbs(prev => prev.filter(o => o.id !== orbId));
+    if (!wasCollected) return;
+    const cfg = configRef.current;
+    if (!cfg) return;
+
+    // Qi burst reward
+    const reward = cfg.burstSeconds * (rateRef?.current ?? 1);
+    if (qiRef) qiRef.current += reward;
+
+    // T5: track wave collection for rate buff
+    if (cfg.doubleOrb && cfg.rateMult) {
+      const wave = pendingWaveRef.current;
+      if (orbId.startsWith(`dqi-${wave.waveId}-`)) {
+        wave.collected++;
+        if (wave.collected >= wave.total) {
+          // Both collected — dispatch the rate buff event
+          try {
+            window.dispatchEvent(new CustomEvent('mai:divine-qi-buff', {
+              detail: { mult: cfg.rateMult, durationMs: cfg.rateBuffMs ?? 30_000 },
+            }));
+          } catch {}
+        }
+      }
+    }
+  }, [rateRef, qiRef]);
+
+  return { orbs, collectOrb };
 }
 
 /** Flowing qi-particle stream — energy pours from the crystal and
@@ -667,6 +848,9 @@ function HomeScreen({
   onOpenPills,
   totalOwnedPills,
   activeSparks,
+  crystalReservoirRef,
+  crystalClickCapMinRef,
+  collectCrystalReservoir,
 }) {
   const { t } = useTranslation('ui');
   const {
@@ -757,7 +941,21 @@ function HomeScreen({
     activateAdBoost(AD_BOOST_DURATION_MS);
   }, [activateAdBoost]);
 
+  // ── Crystal Click — collect reservoir on tap ─────────────────────────────
+  const handleCrystalCollect = useCallback(() => {
+    if (!crystalReservoirRef || !collectCrystalReservoir) return;
+    if ((crystalReservoirRef.current ?? 0) <= 0) return;
+    collectCrystalReservoir();
+  }, [crystalReservoirRef, collectCrystalReservoir]);
+
   const cultivationAd = useRewardedAd(onCultivationReward, 30 * 60 * 1000, 'mai_ad_cd_cultivation');
+
+  // ── Divine Qi — golden orb mechanic ─────────────────────────────────────
+  const { orbs: divineOrbs, collectOrb } = useDivineQi({
+    activeSparks,
+    rateRef:    cultivation.rateRef,
+    qiRef:      cultivation.qiRef,
+  });
 
   // ── Consecutive Focus rung — mirrors the body class set in App.jsx so
   // QiParticles can scale particle density without touching the DOM directly.
@@ -975,6 +1173,11 @@ function HomeScreen({
             )}
           </div>
 
+          {/* Divine Qi orbs — float over the scene at random positions */}
+          {divineOrbs.map(orb => (
+            <DivineQiOrb key={orb.id} orb={orb} onResolve={collectOrb} />
+          ))}
+
           {/* Crystal + particles + character — stacked so gap always equals particles height */}
           <div className="home-crystal-char-stack">
           <KeyCrystal
@@ -983,6 +1186,10 @@ function HomeScreen({
             particleColors={isCrystalUnlocked && crystal ? CRYSTAL_COLORS[getCrystalTier(crystal.level)] : CRYSTAL_COLORS[1]}
             hidden={currentEvent?.kind === 'crystal-evolution'}
             cfRung={cfRung}
+            reservoirRef={crystalReservoirRef}
+            crystalClickCapMinRef={crystalClickCapMinRef}
+            rateRef={cultivation.rateRef}
+            onCollect={handleCrystalCollect}
           />
 
           {/* Character + hold-hint group — grounded at scene bottom */}

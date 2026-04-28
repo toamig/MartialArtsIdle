@@ -100,6 +100,10 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
   // Empty array means the mechanic isn't unlocked. `deep` flag tracks T5.
   const consecutiveFocusLadderRef = useRef([]);
   const consecutiveFocusDeepRef   = useRef(false);
+  // Crystal Click mechanic — fill rate (fraction of qi/s) and cap (minutes).
+  // Both are 0 when the mechanic isn't unlocked.
+  const crystalClickRateRef       = useRef(0);
+  const crystalClickCapMinRef     = useRef(0);
 
   const prevRealmIndexRef = useRef(cultivation.realmIndex);
 
@@ -138,6 +142,9 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
     // Consecutive Focus — collect the highest active tier; we'll build the
     // full T1..currentTier ladder from QI_SPARKS at the end.
     let consecutiveTier = 0;
+    // Crystal Click — highest active tier drives rate + cap.
+    let crystalClickRate   = 0;
+    let crystalClickCapMin = 0;
     const now = Date.now();
     for (const s of sparks) {
       if (s.expiresAt && s.expiresAt <= now) continue;
@@ -155,6 +162,14 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
       }
       if (card.kind === 'mechanic' && card.mechanicId === 'consecutive_focus') {
         if (card.tier > consecutiveTier) consecutiveTier = card.tier;
+        continue;
+      }
+      if (card.kind === 'mechanic' && card.mechanicId === 'crystal_click') {
+        // Higher tier always supersedes lower (mechanic upgrade replaces in place).
+        if ((card.rate ?? 0) > crystalClickRate) {
+          crystalClickRate   = card.rate   ?? 0;
+          crystalClickCapMin = card.capMinutes ?? 0;
+        }
         continue;
       }
       if (card.kind === 'permanent') {
@@ -207,9 +222,16 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
     }
     // Deep meditation only fires once T5 is reached.
     consecutiveFocusDeepRef.current = consecutiveTier >= 5;
+    // Crystal Click — expose rate + cap so useCultivation can drive the
+    // reservoir each tick without caring about spark internals.
+    crystalClickRateRef.current   = crystalClickRate;
+    crystalClickCapMinRef.current = crystalClickCapMin;
     // Offline calc runs before React mounts, so mirror its inputs to
     // localStorage every time the spark set changes.
     saveJSON(OFFLINE_SNAPSHOT_KEY, { offlineQiMult: 1 + permOfflineMult });
+    // Crystal Click offline snapshot — useCultivation offline init reads this
+    // to fill the reservoir for time away.
+    saveJSON('mai_crystal_click_snapshot', { rate: crystalClickRate, capMin: crystalClickCapMin });
   }, []);
 
   useEffect(() => { recomputeRefs(activeSparks); }, [activeSparks, recomputeRefs]);
@@ -503,6 +525,8 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
     lingeringResidualMultRef,
     consecutiveFocusLadderRef,
     consecutiveFocusDeepRef,
+    crystalClickRateRef,
+    crystalClickCapMinRef,
     choose,
     reroll,
     nextRerollCost,
