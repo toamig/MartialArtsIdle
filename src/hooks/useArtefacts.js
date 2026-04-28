@@ -47,6 +47,7 @@ function resolveInstance(o) {
     // before the per-level multiplier is applied.
     upgradeLevel: o.upgradeLevel ?? 0,
     affixBonuses: (o.affixBonuses && typeof o.affixBonuses === 'object') ? o.affixBonuses : {},
+    locked:       Boolean(o.locked),
     // Generated name overrides the catalog name when present; fall back
     // to the catalog name for legacy instances without rolled parts.
     name:       displayName ?? cat.name,
@@ -166,6 +167,7 @@ export default function useArtefacts() {
         uid, catalogueId, affixes, firstName, secondName, element, setIds,
         upgradeLevel: 0, affixBonuses: {},
         upgraded: false, craftCount: 0,
+        locked: false,
       };
       const next = { ...prev, owned: [...prev.owned, instance] };
       save(next);
@@ -225,9 +227,9 @@ export default function useArtefacts() {
   }, [state]);
 
   /**
-   * Dismantle an owned artefact. Refuses if currently equipped.
+   * Dismantle an owned artefact. Refuses if currently equipped or locked.
    * Returns the rarity on success so callers can grant the matching
-   * mineral; null if the item is missing / locked.
+   * mineral; null if the item is missing / locked / equipped.
    */
   const dismantleArtefact = useCallback((uid) => {
     let dismantledRarity = null;
@@ -238,6 +240,8 @@ export default function useArtefacts() {
       }
       const inst = prev.owned.find(o => o.uid === uid);
       if (!inst) return prev;
+      // Refuse if the player has explicitly locked this artefact.
+      if (inst.locked) return prev;
       const art = ARTEFACTS_BY_ID[inst.catalogueId];
       dismantledRarity = inst.rarity ?? art?.rarity ?? 'Iron';
       const next = { ...prev, owned: prev.owned.filter(o => o.uid !== uid) };
@@ -245,6 +249,19 @@ export default function useArtefacts() {
       return next;
     });
     return dismantledRarity;
+  }, []);
+
+  /** Toggle the player-set lock flag on an owned artefact. Locked items
+      cannot be dismantled or sacrificed in the upgrade modal. */
+  const toggleArtefactLock = useCallback((uid) => {
+    setState(prev => {
+      const owned = prev.owned.map(o =>
+        o.uid === uid ? { ...o, locked: !o.locked } : o
+      );
+      const next = { ...prev, owned };
+      save(next);
+      return next;
+    });
   }, []);
 
   /**
@@ -395,6 +412,7 @@ export default function useArtefacts() {
     getOwnedForSlot,
     equippedInSlot,
     dismantleArtefact,
+    toggleArtefactLock,
     getStatModifiers,
     getSetBundle,
     getEquippedArtefactsByElement,

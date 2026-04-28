@@ -59,11 +59,13 @@ function ArtefactUpgradeModal({ artefact, artefacts, inventory, onClose }) {
   const costIds = useMemo(() => new Set((cost ?? []).map(c => c.itemId)), [cost]);
 
   // Owned artefacts the player can sacrifice: not the target, not equipped,
-  // AND whose dismantle yield is one of the cost materials. Hides "useless"
-  // sacrifices so the player isn't tempted to burn fodder for nothing.
+  // not locked by the player, AND whose dismantle yield is one of the cost
+  // materials. Hides "useless" sacrifices so the player isn't tempted to
+  // burn fodder for nothing.
   const sacrificeable = useMemo(() => {
     return artefacts.owned
       .filter(o => o.uid !== live.uid)
+      .filter(o => !o.locked)
       .filter(o => !artefacts.equippedInSlot(o.uid))
       .map(o => {
         const c = ARTEFACTS_BY_ID[o.catalogueId];

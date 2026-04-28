@@ -5656,6 +5656,21 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   border-radius: 999px;
   padding: 2px 9px;
   letter-spacing: 0.04em;
+  transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+/* Capacity-aware variants: amber at 80%+ (heads-up), red at 95%+ (urgent)
+   so the player notices before drops start being silently rejected at cap. */
+.col-section-badge.is-warn {
+  color: #fde68a;
+  background: rgba(245, 200, 66, 0.1);
+  border-color: rgba(245, 200, 66, 0.4);
+}
+.col-section-badge.is-critical {
+  color: #fecaca;
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.5);
+  box-shadow: 0 0 8px rgba(248, 113, 113, 0.25);
 }
 
 /* Empty state — dashed block with hint text instead of a bare line. */
@@ -5848,6 +5863,65 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   color: rgba(200, 210, 220, 0.55);
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
+}
+
+/* ── Lock / favourite system ─────────────────────────────────────────────
+   Players lock artefacts via the toggle in the detail modal header. Locked
+   items are protected from dismantle and from the upgrade modal's sacrifice
+   feed. The tile gets a small 🔒 corner badge so locked status is visible
+   at a glance from the grid. */
+
+.inventory-screen .inv-lock-badge {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  font-size: 0.62rem;
+  line-height: 1;
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(245, 200, 66, 0.45);
+  border-radius: 999px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px rgba(245, 200, 66, 0.5));
+}
+
+.inventory-screen .inv-slot-locked {
+  /* Subtle gold-tinted inner glow so locked items read distinct from
+     equipped (also gold) — equipped uses the ring + outer glow combo. */
+  box-shadow: 0 0 0 1px rgba(245, 200, 66, 0.25) inset;
+}
+
+.inventory-screen .inv-slot-equipped.inv-slot-locked {
+  /* When both states apply, equipped wins on the outer ring — the lock
+     badge alone communicates the lock state. */
+  box-shadow:
+    0 0 0 1px rgba(245, 200, 66, 0.5) inset,
+    0 0 14px rgba(245, 200, 66, 0.18);
+}
+
+/* Lock toggle button inside the artefact detail modal header. Sits between
+   title and close so it's discoverable but doesn't crowd the close-tap
+   target on phones. */
+.coll-modal-lock-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: rgba(200, 210, 220, 0.6);
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.coll-modal-lock-btn:hover {
+  border-color: rgba(245, 200, 66, 0.4);
+  color: #fde68a;
+}
+.coll-modal-lock-btn.is-locked {
+  background: rgba(245, 200, 66, 0.12);
+  border-color: rgba(245, 200, 66, 0.5);
+  color: #fde68a;
 }
 
 /* Item Modal */
