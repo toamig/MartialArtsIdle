@@ -1750,10 +1750,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .char-tab-btn.active {
-  background: linear-gradient(135deg, rgba(233, 69, 96, 0.18), rgba(180, 30, 60, 0.1));
-  border-color: rgba(233, 69, 96, 0.6);
+  background: linear-gradient(135deg, var(--ui-accent-surface), rgba(var(--accent-rgb), 0.06));
+  border-color: rgba(var(--accent-rgb), 0.55);
   color: var(--accent);
-  box-shadow: 0 0 18px rgba(233, 69, 96, 0.12), inset 0 1px 0 rgba(255, 100, 120, 0.08);
+  box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.12), inset 0 1px 0 rgba(255, 100, 120, 0.08);
 }
 
 .char-tab-content {
@@ -1843,7 +1843,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .char-page-meta {
   font-size: 0.74rem;
-  color: rgba(200, 210, 220, 0.5);
+  color: var(--ui-text-meta);
   letter-spacing: 0.03em;
   font-variant-numeric: tabular-nums;
 }
@@ -1926,8 +1926,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: rgba(var(--ui-label-rgb), 0.4);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--ui-text-section);
+  border-bottom: 1px solid var(--ui-border-subtle);
   padding-bottom: 4px;
   margin-bottom: 12px;
 }
@@ -2377,8 +2377,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .active-sets-panel {
   margin-top: 12px;
   padding: 10px 12px;
-  background: rgba(var(--ui-bg-panel-rgb), 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--ui-surface-2);
+  border: 1px solid var(--ui-border-subtle);
   border-radius: 10px;
 }
 
@@ -2387,7 +2387,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: rgba(var(--ui-label-rgb), 0.4);
+  color: var(--ui-text-section);
   margin-bottom: 8px;
 }
 
@@ -5541,8 +5541,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: rgba(var(--ui-label-rgb), 0.4);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--ui-text-section);
+  border-bottom: 1px solid var(--ui-border-subtle);
   padding-bottom: 4px;
   margin-bottom: 12px;
 }
@@ -5837,9 +5837,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   flex: 1;
   position: relative;
   padding: 8px 4px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--ui-border-faint);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--ui-surface-subtle);
   color: rgba(var(--ui-muted-rgb), 0.7);
   font-size: 0.85rem;
   font-weight: 600;
@@ -5858,10 +5858,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .inv-tab-active {
-  background: linear-gradient(135deg, rgba(233, 69, 96, 0.16), rgba(180, 30, 60, 0.06));
-  border-color: rgba(233, 69, 96, 0.5);
+  background: linear-gradient(135deg, var(--ui-accent-surface), rgba(var(--accent-rgb), 0.05));
+  border-color: var(--ui-accent-border);
   color: var(--accent);
-  box-shadow: 0 0 12px rgba(233, 69, 96, 0.1), inset 0 1px 0 rgba(255, 100, 120, 0.06);
+  box-shadow: 0 0 12px var(--ui-accent-glow), inset 0 1px 0 rgba(255, 100, 120, 0.06);
 }
 
 .inv-grid {
@@ -6039,9 +6039,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  /* Aligned with .coll-modal-section-title and .artefact-upgrade-section-title
-     so headers across the Collection screen + its modals read as one family. */
-  color: rgba(200, 210, 220, 0.6);
+  /* Uses --ui-text-section so Collection, Character, and any future screen
+     that borrows col-section-header all share the same colour token. */
+  color: var(--ui-text-section);
 }
 
 /* Count pill — matches the rounded badge family used in the upgrade modal. */
@@ -6049,9 +6049,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 0.7rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: rgba(220, 230, 240, 0.7);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(var(--ui-hover-rgb), 0.65);
+  background: var(--ui-surface-subtle);
+  border: 1px solid var(--ui-border-light);
   border-radius: 999px;
   padding: 2px 9px;
   letter-spacing: 0.04em;
@@ -6076,12 +6076,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .col-section-empty {
   font-size: 0.78rem;
   font-style: italic;
-  color: rgba(200, 210, 220, 0.45);
+  color: var(--ui-text-caption);
   text-align: center;
   padding: 16px 12px;
   margin: 0;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
+  background: var(--ui-surface-subtle);
+  border: 1px dashed var(--ui-border-light);
   border-radius: 10px;
 }
 
@@ -6240,7 +6240,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .inventory-screen .inv-slot-label {
   letter-spacing: 0.04em;
-  color: rgba(200, 210, 220, 0.5);
+  color: var(--ui-text-meta);
 }
 
 /* Rarity-coloured glow on the quality gem — `currentColor` resolves to the
@@ -6259,7 +6259,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .coll-page-header h1 { margin: 0; }
 .coll-page-subtitle {
   font-size: 0.74rem;
-  color: rgba(200, 210, 220, 0.55);
+  color: var(--ui-text-meta);
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
 }

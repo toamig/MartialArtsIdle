@@ -76,6 +76,35 @@
   /* Border / divider tint between panels — rgb(30, 18, 48) */
   --ui-border-rgb:      30,  18,  48;
 
+  /* ── Accent RGB decomposition ─────────────────────────────────────────────
+     --accent (#e94560) as an rgb triple so rgba() can vary the opacity.
+     Use these instead of hardcoding 233,69,96 in every active/glow state.  */
+  --accent-rgb:          233,  69,  96;   /* #e94560 */
+
+  /* ── Semantic text layers (opacity ramp on --ui-label-rgb) ───────────────
+     Apply these to text in order of information hierarchy — never hardcode
+     rgba(200,210,220, …) which is the wrong (non-purple) colour family.    */
+  --ui-text-section:  rgba(var(--ui-label-rgb), 0.55);  /* section/group labels    */
+  --ui-text-meta:     rgba(var(--ui-label-rgb), 0.42);  /* subtitles, meta lines   */
+  --ui-text-caption:  rgba(var(--ui-label-rgb), 0.30);  /* hints, empty states     */
+
+  /* ── Semantic surface layers (opacity ramp on --ui-bg-panel-rgb) ─────────
+     Card depth from base panel to subtle tint. Hue-shift these to retint
+     the entire UI without hunting down every rgba.                          */
+  --ui-surface-1:      rgba(var(--ui-bg-panel-rgb), 0.75);  /* card / panel base   */
+  --ui-surface-2:      rgba(var(--ui-bg-panel-rgb), 0.60);  /* nested surface      */
+  --ui-surface-subtle: rgba(255, 255, 255, 0.04);           /* barely-there tint   */
+
+  /* ── Semantic border layers ──────────────────────────────────────────────  */
+  --ui-border-subtle:  rgba(255, 255, 255, 0.07);  /* standard dividers/borders   */
+  --ui-border-faint:   rgba(255, 255, 255, 0.05);  /* very light separators       */
+  --ui-border-light:   rgba(255, 255, 255, 0.10);  /* badge / slot borders        */
+
+  /* ── Accent tint layers (active / selected states) ──────────────────────  */
+  --ui-accent-surface: rgba(var(--accent-rgb), 0.12);  /* active tab fill          */
+  --ui-accent-border:  rgba(var(--accent-rgb), 0.45);  /* active tab/item border   */
+  --ui-accent-glow:    rgba(var(--accent-rgb), 0.10);  /* box-shadow glow strength */
+
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, sans-serif;
   font-size: 16px;
   line-height: 1.5;
