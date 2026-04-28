@@ -502,23 +502,28 @@ function QiParticles({ colors, rung = 0 }) {
     ...(rung >= 4 ? EXTREME_PATHS : []),
   ];
 
-  // Delay spread uses a fixed 2.4 s period so particle spacing stays
-  // consistent regardless of the animation-duration override in CSS.
-  const PERIOD = 2.4;
+  // The delay interval is fixed to PERIOD / 6 (the base particle count) and
+  // never changes regardless of perPath. This means existing particle <span>s
+  // keep identical animationDelay values when the rung goes up — only the
+  // newly added particles (higher n indices) mount fresh. Combined with
+  // path+n as the React key, this prevents running animations from restarting
+  // when a new CF rung unlocks additional particles.
+  const PERIOD   = 2.4;
+  const INTERVAL = PERIOD / 6; // 0.4 s — constant, regardless of perPath
+
   const slots = [];
   for (let p = 0; p < PATHS.length; p++) {
     for (let n = 0; n < perPath; n++) {
       // Particle size grows one step at rung 3+ for extra visual weight.
       const sizeBase = rung >= 3 ? 1 : 0;
-      // Deterministic positional jitter — keeps each particle slightly off
-      // the exact spline so the stream reads as a soft, natural flow rather
-      // than a rigid line of marching dots. Using index math instead of
-      // Math.random() makes the offsets stable across re-renders.
+      // Deterministic positional jitter — stable per (path, n) pair so
+      // re-renders and rung changes never reshuffle existing particles.
       const jx = ((p * 17 + n * 11 + 5) % 19) - 9;   // ±9 px horizontal
       const jy = ((p * 13 + n *  7 + 3) % 11) - 5;   // ±5 px vertical
       slots.push({
         path:  PATHS[p],
-        delay: (p * 0.07 + n * (PERIOD / perPath)).toFixed(2),
+        n,
+        delay: (p * 0.07 + n * INTERVAL).toFixed(2),  // stable per (path, n)
         size:  3 + sizeBase + ((p + n) % 3),
         jx,
         jy,
@@ -531,9 +536,9 @@ function QiParticles({ colors, rung = 0 }) {
       aria-hidden="true"
       style={{ '--qi-particle-start': start }}
     >
-      {slots.map((s, i) => (
+      {slots.map((s) => (
         <span
-          key={i}
+          key={`${s.path}-${s.n}`}
           className={`home-qi-particle home-qi-particle-path${s.path}`}
           style={{
             animationDelay: `${s.delay}s`,
