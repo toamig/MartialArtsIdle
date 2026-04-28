@@ -5462,7 +5462,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   padding: 8px 4px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.04);
   color: rgba(var(--ui-muted-rgb), 0.7);
   font-size: 0.85rem;
   font-weight: 600;
@@ -5610,6 +5610,28 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 /* ── Collection screen — sectioned layout ────────────────────────────────── */
+
+/* Screen-level scrim — sits above the global .app-bg image but below all
+   Collection content. The global .app-vignette only darkens the top 26%
+   and bottom 22% of the viewport; this fills the middle band so chips,
+   stat rows and other transparent surfaces always have a predictable
+   dark backdrop regardless of which scene image is active.
+   `isolation: isolate` gives .inventory-screen its own stacking context so
+   the negative-z pseudo lands behind the children but above .app-bg. */
+.inventory-screen {
+  isolation: isolate;
+}
+.inventory-screen::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg,
+    rgba(8, 12, 18, 0.45) 0%,
+    rgba(8, 12, 18, 0.6) 100%);
+  pointer-events: none;
+}
+
 .col-sections {
   display: flex;
   flex-direction: column;
@@ -5681,8 +5703,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   text-align: center;
   padding: 16px 12px;
   margin: 0;
-  background: rgba(255, 255, 255, 0.015);
-  border: 1px dashed rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
   border-radius: 10px;
 }
 
@@ -11920,8 +11942,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   align-items: baseline;
   gap: 8px;
   padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
   font-variant-numeric: tabular-nums;
 }
@@ -11975,7 +11997,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .artefact-upgrade-stat-row:nth-child(odd) {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .artefact-upgrade-stat-cur {
@@ -12047,8 +12069,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   flex-direction: column;
   gap: 5px;
   padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 8px;
   font-size: 0.82rem;
 }
@@ -12118,8 +12140,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   align-items: flex-start;
   gap: 2px;
   padding: 8px 9px;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
@@ -12347,7 +12369,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .coll-stat-row:nth-child(odd) {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .coll-stat-label {
@@ -12404,8 +12426,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 /* ── Upgrade summary block — shown inside artefact detail modal ──────── */
 .coll-upgrade-block {
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   padding: 10px 12px;
   display: flex;
@@ -12466,8 +12488,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 /* ── Set membership card — shown inside artefact detail modal ───────── */
 .coll-set-card {
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   padding: 8px 12px;
   display: flex;
@@ -12571,8 +12593,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .coll-filter-chip {
   flex-shrink: 0;
   padding: 3px 9px;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
   color: rgba(200, 210, 220, 0.75);
   font-size: 0.7rem;
