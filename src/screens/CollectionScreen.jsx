@@ -76,7 +76,7 @@ function DismantleButton({ label = 'Dismantle', rarity, invested = false, disabl
   );
 }
 
-function CollectionSection({ title, badge, isEmpty, alwaysShow = false, children }) {
+function CollectionSection({ title, badge, isEmpty, emptyMessage, alwaysShow = false, children }) {
   if (!alwaysShow && isEmpty) return null;
   return (
     <div className="col-section">
@@ -84,7 +84,9 @@ function CollectionSection({ title, badge, isEmpty, alwaysShow = false, children
         <span className="col-section-title">{title}</span>
         {badge != null && <span className="col-section-badge">{badge}</span>}
       </div>
-      {isEmpty ? <p className="col-section-empty">Empty</p> : children}
+      {isEmpty ? (
+        <p className="col-section-empty">{emptyMessage ?? 'Empty'}</p>
+      ) : children}
     </div>
   );
 }
@@ -109,7 +111,12 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
 
   return (
     <div className="screen inventory-screen">
-      <h1>{t('collection.title', { defaultValue: 'Collection' })}</h1>
+      <header className="coll-page-header">
+        <h1>{t('collection.title', { defaultValue: 'Collection' })}</h1>
+        <span className="coll-page-subtitle">
+          {artCount} artefacts · {techCount} techniques · {lawCount} laws
+        </span>
+      </header>
 
       <div className="inv-tabs">
         {[
@@ -167,6 +174,7 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
             title={t('inventory.tabArtefacts')}
             badge={`${artCount} / ${MAX_ARTEFACTS}`}
             isEmpty={artCount === 0}
+            emptyMessage={t('collection.emptyArtefacts', { defaultValue: 'Defeat enemies in Worlds to find artefacts.' })}
             alwaysShow
           >
             <div className="inv-grid">
@@ -211,6 +219,7 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
             title={t('inventory.tabTechniques')}
             badge={`${techCount} / ${MAX_TECHNIQUES}`}
             isEmpty={techCount === 0}
+            emptyMessage={t('collection.emptyTechniques', { defaultValue: 'Defeat enemies to drop techniques.' })}
             alwaysShow
           >
             <div className="inv-grid">
@@ -244,6 +253,7 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
             title={t('inventory.tabLaws')}
             badge={`${lawCount} / ${MAX_LAWS}`}
             isEmpty={lawCount === 0}
+            emptyMessage={t('collection.emptyLaws', { defaultValue: 'Reach new realms or defeat elites to drop laws.' })}
             alwaysShow
           >
             <div className="inv-grid">
