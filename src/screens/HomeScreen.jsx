@@ -520,13 +520,13 @@ function HomePCLeftPanel({ realmName, realmStage, qiRef, costRef, rateRef, gateR
  * Single orb: self-destructs after `windowMs`; notifies parent on collect/expire.
  * Phases: 'alive' → 'expiring' (last 3s) → 'collected' | 'expired'
  */
-function DivineQiOrb({ orb, onResolve }) {
+function DivineQiOrb({ orb, onResolve, spawnVFX, rateRef }) {
   const [phase, setPhase] = useState('alive');
   const phaseRef = useRef('alive');
 
   // Switch to 'expiring' 3s before window closes
   useEffect(() => {
-    const totalMs   = orb.expiresAt - performance.now();
+    const totalMs    = orb.expiresAt - performance.now();
     const expiringIn = totalMs - 3000;
     if (expiringIn <= 0) { phaseRef.current = 'expiring'; setPhase('expiring'); }
     else {
@@ -550,10 +550,26 @@ function DivineQiOrb({ orb, onResolve }) {
     return () => clearTimeout(t);
   }, [phase, orb.id, onResolve]);
 
-  const handleClick = () => {
-    if (phaseRef.current === 'alive' || phaseRef.current === 'expiring') {
-      phaseRef.current = 'collected';
-      setPhase('collected');
+  const handleClick = (e) => {
+    if (phaseRef.current !== 'alive' && phaseRef.current !== 'expiring') return;
+    phaseRef.current = 'collected';
+    setPhase('collected');
+    // Spawn "+N Qi" floater at the orb's screen position, offset into
+    // fighter-stage coordinates (where the VFX layer lives).
+    if (spawnVFX && rateRef) {
+      try {
+        const orbRect   = e.currentTarget.getBoundingClientRect();
+        const stageEl   = document.querySelector('.home-fighter-stage');
+        if (stageEl) {
+          const sr = stageEl.getBoundingClientRect();
+          const x  = (orbRect.left + orbRect.width  / 2) - sr.left;
+          const y  = (orbRect.top  + orbRect.height / 2) - sr.top;
+          const reward = orb.burstSeconds * (rateRef.current ?? 1);
+          const fmt = n => n >= 1e6 ? `+${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `+${(n/1e3).toFixed(1)}K` : `+${Math.floor(n)}`;
+          spawnVFX({ type: 'qi-tick', x, y, content: fmt(reward), duration: 1500,
+            style: { '--qi-drift-x': '0px' } });
+        }
+      } catch {}
     }
   };
 
@@ -573,7 +589,7 @@ function DivineQiOrb({ orb, onResolve }) {
  * self-scheduling spawn timer with ±30% jitter.
  * Returns { orbs, collectOrb } — render orbs in the cultivation zone.
  */
-function useDivineQi({ activeSparks, rateRef, qiRef }) {
+function useDivineQi({ activeSparks, rateRef, qiRef, spawnVFX }) {
   const [orbs, setOrbs] = useState([]);
   const nextIdRef = useRef(0);
 
@@ -602,8 +618,9 @@ function useDivineQi({ activeSparks, rateRef, qiRef }) {
     pendingWaveRef.current = { waveId, total: count, collected: 0 };
     const now = performance.now();
     const newOrbs = Array.from({ length: count }, (_, i) => ({
-      id:        `dqi-${waveId}-${i}`,
+      id:           `dqi-${waveId}-${i}`,
       waveId,
+      burstSeconds: cfg.burstSeconds,
       // Scatter positions: safe zone within scene (avoid UI edges)
       x: 12 + Math.random() * 68 + (i === 1 ? 20 : 0), // second orb offset right
       y: 22 + Math.random() * 45,
@@ -974,8 +991,9 @@ function HomeScreen({
   // ── Divine Qi — golden orb mechanic ─────────────────────────────────────
   const { orbs: divineOrbs, collectOrb } = useDivineQi({
     activeSparks,
-    rateRef:    cultivation.rateRef,
-    qiRef:      cultivation.qiRef,
+    rateRef:   cultivation.rateRef,
+    qiRef:     cultivation.qiRef,
+    spawnVFX,
   });
 
   // ── Consecutive Focus rung — mirrors the body class set in App.jsx so
@@ -1196,7 +1214,7 @@ function HomeScreen({
 
           {/* Divine Qi orbs — float over the scene at random positions */}
           {divineOrbs.map(orb => (
-            <DivineQiOrb key={orb.id} orb={orb} onResolve={collectOrb} />
+            <DivineQiOrb key={orb.id} orb={orb} onResolve={collectOrb} spawnVFX={spawnVFX} rateRef={cultivation.rateRef} />
           ))}
 
           {/* Crystal + particles + character — stacked so gap always equals particles height */}
