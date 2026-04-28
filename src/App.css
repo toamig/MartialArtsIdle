@@ -5955,10 +5955,16 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
    dark backdrop regardless of which scene image is active.
    `isolation: isolate` gives .inventory-screen its own stacking context so
    the negative-z pseudo lands behind the children but above .app-bg. */
-.inventory-screen {
+/* Screen-level scrim shared by all non-home content screens.
+   The global .app-vignette only darkens top 26% and bottom 22%; this
+   fills the bright middle band so transparent cards/rows always have a
+   predictable dark backdrop regardless of which scene image is active.   */
+.inventory-screen,
+.character-screen {
   isolation: isolate;
 }
-.inventory-screen::before {
+.inventory-screen::before,
+.character-screen::before {
   content: '';
   position: fixed;
   inset: 0;
