@@ -4622,33 +4622,33 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   }
 }
 
-/* Major breakthrough — overcharged ice-blue: qi pushed past its limit.
-   Same steel/cyan family as the normal bar, but the core goes white-hot
-   and the glow blazes well beyond the boosted state — urgency without
-   losing the bar's visual identity. */
+/* Major breakthrough — golden prize: qi has broken its ceiling.
+   Warm amber/gold signals achievement and reward, distinct from the
+   blue qi family so it reads as "something different just happened".
+   Slower pulse feels majestic rather than urgent. */
 .realm-fill-breakthrough {
   box-shadow:
-    0 0 16px rgba( 61, 220, 255, 0.95),
-    0 0 40px rgba(100, 200, 255, 0.65);
-  animation: realmBreakthroughPulse 0.75s ease-in-out infinite alternate;
+    0 0 16px rgba(230, 170,  30, 0.90),
+    0 0 40px rgba(255, 210,  60, 0.55);
+  animation: realmBreakthroughPulse 1.1s ease-in-out infinite alternate;
 }
 
 .realm-fill-breakthrough .realm-fill-inner {
-  background: linear-gradient(to right, #153a54, #7de0ff, #ffffff, #7de0ff, #153a54);
+  background: linear-gradient(to right, #2c1a00, #d4920a, #fff8d0, #d4920a, #2c1a00);
 }
 
 @keyframes realmBreakthroughPulse {
   from {
     box-shadow:
-      0 0 12px rgba( 61, 220, 255, 0.75),
-      0 0 28px rgba(100, 200, 255, 0.45);
-    filter: brightness(1.05);
+      0 0 12px rgba(220, 160,  20, 0.70),
+      0 0 28px rgba(255, 200,  50, 0.38);
+    filter: brightness(1.0);
   }
   to {
     box-shadow:
-      0 0 32px rgba( 61, 220, 255, 1.00),
-      0 0 65px rgba(140, 220, 255, 0.90);
-    filter: brightness(1.50);
+      0 0 28px rgba(255, 190,  40, 1.00),
+      0 0 60px rgba(255, 215,  80, 0.75);
+    filter: brightness(1.35);
   }
 }
 
@@ -4671,47 +4671,50 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   line-height: 1;
 }
 
+/* Gated — qi bar tones pushed into an alarm state. Deep navy edges
+   compress the electric-blue centre, and the near-white pressure point
+   reads as qi building up against a wall it can't break through yet.
+   Faster pulse (0.9 s) adds urgency without leaving the bar's identity. */
 .realm-track-gated .realm-fill {
-  box-shadow: 0 0 10px rgba(255, 90, 60, 0.55);
-  animation: realmGateFillPulse 1.4s ease-in-out infinite;
+  box-shadow: 0 0 14px rgba(70, 150, 255, 0.80);
+  animation: realmGateFillPulse 0.9s ease-in-out infinite;
 }
 
 .realm-track-gated .realm-fill-inner {
-  background: linear-gradient(to right, #7a1a1a, #ff7a3a, #7a1a1a);
+  background: linear-gradient(to right, #0a1e36, #3a8fff, #cceeff, #3a8fff, #0a1e36);
 }
 
-/* Gated + holding — "fighting through the gate". Same warm/red family
-   as the gated baseline, pushed hotter: red → yellow molten core, faster
-   pulse, heavier glow. Reads as the gate "burning" under player pressure. */
+/* Gated + holding — "surging through the gate". The white-hot core
+   signals the qi is about to burst the threshold; even faster pulse. */
 .realm-track-gated .realm-fill.realm-fill-boosted {
   box-shadow:
-    0 0 14px rgba(255, 130, 50, 0.95),
-    0 0 28px rgba(255,  80, 30, 0.65);
-  animation: realmGateBoostedPulse 0.7s ease-in-out infinite alternate;
+    0 0 16px rgba( 80, 170, 255, 0.95),
+    0 0 32px rgba( 40, 120, 255, 0.65);
+  animation: realmGateBoostedPulse 0.55s ease-in-out infinite alternate;
 }
 
 .realm-track-gated .realm-fill-boosted .realm-fill-inner {
-  background: linear-gradient(to right, #c33010, #ffe066, #c33010);
+  background: linear-gradient(to right, #0a1e36, #60b0ff, #ffffff, #60b0ff, #0a1e36);
 }
 
 @keyframes realmGateBoostedPulse {
   0%   {
     box-shadow:
-      0 0 12px rgba(255, 130, 50, 0.85),
-      0 0 22px rgba(255,  80, 30, 0.55);
+      0 0 12px rgba( 80, 160, 255, 0.80),
+      0 0 24px rgba( 40, 120, 255, 0.50);
     filter: brightness(1.0);
   }
   100% {
     box-shadow:
-      0 0 22px rgba(255, 200, 80, 1.0),
-      0 0 44px rgba(255, 130, 30, 0.85);
-    filter: brightness(1.30);
+      0 0 24px rgba(100, 180, 255, 1.00),
+      0 0 48px rgba( 60, 140, 255, 0.85);
+    filter: brightness(1.35);
   }
 }
 
 @keyframes realmGatePulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(255, 60, 60, 0.40); }
-  50%      { box-shadow: 0 0 16px rgba(255, 90, 90, 0.75); }
+  0%, 100% { box-shadow: 0 0 8px rgba(60, 130, 255, 0.40); }
+  50%      { box-shadow: 0 0 16px rgba(80, 160, 255, 0.75); }
 }
 
 @keyframes realmGateFillPulse {
@@ -11868,6 +11871,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .artefact-upgrade-cost-have.is-met   { color: #a3e635; }
 .artefact-upgrade-cost-have.is-short { color: #f87171; }
 
+/* "+N" chunk shown when queued sacrifices contribute to this cost. */
+.artefact-upgrade-cost-queued {
+  color: #fbbf24;
+  font-weight: 700;
+}
+
 /* ── Sacrifice feed ────────────────────────────────────────────────────── */
 .artefact-upgrade-feed-grid {
   display: grid;
@@ -11876,6 +11885,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .artefact-upgrade-feed-tile {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -11893,6 +11903,22 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .artefact-upgrade-feed-tile:hover {
   transform: translateY(-1px);
   background: rgba(255, 255, 255, 0.05);
+}
+
+.artefact-upgrade-feed-tile.is-queued {
+  background: rgba(251, 191, 36, 0.10);
+  outline: 2px solid rgba(251, 191, 36, 0.65);
+  outline-offset: -2px;
+}
+
+.artefact-upgrade-feed-check {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fbbf24;
+  line-height: 1;
 }
 
 .artefact-upgrade-feed-tile.is-pending {
