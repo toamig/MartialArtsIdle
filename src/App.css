@@ -1808,15 +1808,44 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 0.95rem;
 }
 
-.character-screen .subtitle {
-  display: inline-block;
-  color: var(--accent);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  opacity: 0.8;
+/* ── Character screen page header ───────────────────────────────────────────
+   Title row: screen label (h1) left + realm name (accented badge) right.
+   Meta row: law · gear count in muted small text below.
+   Realm name stays visually prominent — it's meaningful cultivation progress.  */
+.char-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   margin-bottom: 16px;
+}
+
+.char-page-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.char-page-title-row h1 {
+  margin: 0;
+}
+
+.char-realm-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.85;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.char-page-meta {
+  font-size: 0.74rem;
+  color: rgba(200, 210, 220, 0.5);
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Card Grid */

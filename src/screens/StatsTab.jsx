@@ -78,7 +78,9 @@ function StatBreakdownTooltip({ breakdown, style }) {
 function StatGroup({ title, children }) {
   return (
     <div className="secondary-stats">
-      <p className="secondary-stats-title">{title}</p>
+      <div className="col-section-header">
+        <span className="col-section-title">{title}</span>
+      </div>
       {children}
     </div>
   );
