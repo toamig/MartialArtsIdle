@@ -473,22 +473,18 @@ function HomePCLeftPanel({ realmName, realmStage, qiRef, costRef, rateRef, gateR
   );
 }
 
-/** Flowing qi-particle stream — energy pours from the full width of the
- *  crystal area and converges onto the cultivator below.
- *  Base: 6 paths × 6 particles = 36 dots at rung 0.
- *  As the player holds and climbs CF rungs, particle count and path count
- *  escalate: higher rungs add more particles per path and activate wider
- *  outer arc paths (G/H at rung 2, I/J at rung 4) so the absorption
- *  effect visually intensifies alongside the hold bonus.
- *  Each particle interpolates colour along its path from the crystal's
- *  tier colour to the cultivator's active aura colour (CF rung when held,
- *  baseline cyan otherwise). */
+/** Flowing qi-particle stream — energy pours from the crystal and
+ *  converges onto the cultivator below.
+ *  Always 6 particles per path. Rung controls which PATH GROUPS are
+ *  active (WIDE at rung 2, EXTREME at rung 4) — never particle count.
+ *  Each particle colour-interpolates from the crystal tier to the aura. */
 function QiParticles({ colors, rung = 0 }) {
   const start = colors?.glowA ?? colors?.particles?.[0] ?? 'rgba(167, 139, 250, 0.95)';
 
-  const PER_PATH_BY_RUNG = [6, 7, 9, 11, 14, 18];
+  // Fixed 6 particles per path — rung never changes this.
+  const PER_PATH = 6;
   const PERIOD   = 2.4;
-  const INTERVAL = PERIOD / 6; // 0.4 s — constant, regardless of perPath
+  const INTERVAL = PERIOD / PER_PATH; // 0.4 s spacing between slots
 
   // qi-particle-paths-start — managed by QiParticleEditor (?particleEdit)
   const BASE_PATHS    = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -496,16 +492,15 @@ function QiParticles({ colors, rung = 0 }) {
   const EXTREME_PATHS = ['I', 'J', 'K', 'L', 'Q', 'R'];
   // qi-particle-paths-end
 
-  // displayRung drives which paths + how many particles are rendered.
-  // On rung-up it updates immediately (new paths appear at once).
-  // On rung-down it holds at the old value for one full animation period
-  // so in-flight particles on the extra branches can finish their current
-  // cycle before being unmounted, rather than blinking out mid-flow.
+  // displayRung controls which PATH GROUPS are rendered.
+  // Goes UP immediately (new branches appear right away).
+  // Goes DOWN after one full cycle so draining particles finish their
+  // current loop naturally before the spans are unmounted.
   const [displayRung, setDisplayRung] = useState(rung);
   const [isDraining,  setIsDraining]  = useState(false);
-  const prevRungRef    = useRef(rung);
-  const latestRungRef  = useRef(rung);
-  const drainTimerRef  = useRef(null);
+  const prevRungRef   = useRef(rung);
+  const latestRungRef = useRef(rung);
+  const drainTimerRef = useRef(null);
 
   useEffect(() => {
     latestRungRef.current = rung;
@@ -514,21 +509,17 @@ function QiParticles({ colors, rung = 0 }) {
     if (rung === prev) return;
 
     if (rung > prev) {
-      // Rung went up — show new paths immediately, cancel any drain.
       if (drainTimerRef.current) { clearTimeout(drainTimerRef.current); drainTimerRef.current = null; }
       setDisplayRung(rung);
       setIsDraining(false);
     } else {
-      // Rung went down — keep extra paths visible but mark them as draining
-      // (animationIterationCount:1) so current particles finish then stop.
       setIsDraining(true);
       if (drainTimerRef.current) clearTimeout(drainTimerRef.current);
       drainTimerRef.current = setTimeout(() => {
-        // Use the rung at fire-time in case it changed again while waiting.
         setDisplayRung(latestRungRef.current);
         setIsDraining(false);
         drainTimerRef.current = null;
-      }, Math.round(PERIOD * 1000) + 300); // one full cycle + safety margin
+      }, Math.round(PERIOD * 1000) + 300);
     }
   }, [rung]);
 
@@ -536,14 +527,12 @@ function QiParticles({ colors, rung = 0 }) {
     if (drainTimerRef.current) clearTimeout(drainTimerRef.current);
   }, []);
 
-  // Paths that belong to the CURRENT rung (not draining).
   const livePathSet = new Set([
     ...BASE_PATHS,
     ...(rung >= 2 ? WIDE_PATHS    : []),
     ...(rung >= 4 ? EXTREME_PATHS : []),
   ]);
 
-  const perPath = PER_PATH_BY_RUNG[Math.min(displayRung, 5)];
   const PATHS = [
     ...BASE_PATHS,
     ...(displayRung >= 2 ? WIDE_PATHS    : []),
@@ -552,24 +541,24 @@ function QiParticles({ colors, rung = 0 }) {
 
   const slots = [];
   for (let p = 0; p < PATHS.length; p++) {
-    // A path is draining if we're in drain mode AND it's not in the live set.
     const pathDraining = isDraining && !livePathSet.has(PATHS[p]);
-    for (let n = 0; n < perPath; n++) {
-      const sizeBase = displayRung >= 3 ? 1 : 0;
-      // Deterministic positional jitter — stable per (path, n) pair so
-      // re-renders and rung changes never reshuffle existing particles.
+    for (let n = 0; n < PER_PATH; n++) {
+      // Negative delay = pre-seed each particle into its natural phase.
+      // When a new path group activates, its particles appear already
+      // distributed along the path — no burst-spawn wave from zero.
+      const phase = (p * 0.4 + n * INTERVAL) % PERIOD;
+      // Deterministic jitter — stable per (path, n) so re-renders and
+      // rung changes never reshuffle existing particles.
       const jx = ((p * 17 + n * 11 + 5) % 19) - 9;   // ±9 px horizontal
       const jy = ((p * 13 + n *  7 + 3) % 11) - 5;   // ±5 px vertical
-      // Per-particle colour head-start: most begin at the crystal colour
-      // (0%), a handful spawn pre-warmed toward the aura end so some dots
-      // always look like they've "arrived" and blend into the glow.
+      // Colour head-start: most start at crystal colour, a few pre-warmed.
       const MIX_STARTS = [0, 0, 0, 0, 40, 0, 65, 0, 0, 90];
       const mixStart = MIX_STARTS[(p * 7 + n * 3) % MIX_STARTS.length];
       slots.push({
         path:  PATHS[p],
         n,
-        delay:    (p * 0.07 + n * INTERVAL).toFixed(2),
-        size:     3 + sizeBase + ((p + n) % 3),
+        delay:    phase.toFixed(2),   // negative applied below as `-${delay}s`
+        size:     3 + ((p + n) % 3), // 3–5 px, stable, not rung-dependent
         jx, jy,
         mixStart,
         draining: pathDraining,
@@ -588,12 +577,12 @@ function QiParticles({ colors, rung = 0 }) {
           key={`${s.path}-${s.n}`}
           className={`home-qi-particle home-qi-particle-path${s.path}`}
           style={{
-            animationDelay: `${s.delay}s`,
+            animationDelay: `-${s.delay}s`,  // negative = pre-seeded into cycle
             width:  `${s.size}px`,
             height: `${s.size}px`,
             transform: `translate(${s.jx}px, ${s.jy}px)`,
             '--qi-mix-start': `${s.mixStart}%`,
-            // Draining: play once to end (opacity 0) then stop — no new spawns.
+            // Draining: finish current cycle naturally (opacity→0), then stop.
             ...(s.draining ? { animationIterationCount: '1' } : {}),
           }}
         />
