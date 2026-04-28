@@ -244,12 +244,12 @@ export default function useCultivation() {
   // crystalReservoirRef holds the accumulated qi waiting to be collected.
   const sparkCrystalClickRateRef   = useRef(0);
   const sparkCrystalClickCapMinRef = useRef(0);
-  const crystalReservoirRef = useRef(() => {
+  const crystalReservoirRef = useRef((() => {
     try {
       const v = parseFloat(localStorage.getItem('mai_crystal_reservoir'));
       return Number.isFinite(v) && v > 0 ? v : 0;
     } catch { return 0; }
-  })();
+  })());
   const prevBoostStateRef            = useRef(false);
   // Consecutive Focus mechanic — every unlocked tier adds a rung to a
   // cumulative ladder of (holdMs, bonus). Each tick sums every met rung

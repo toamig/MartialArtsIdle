@@ -11,6 +11,7 @@ import DailyBonusWidget from '../components/DailyBonusWidget';
 import ActiveSparksBar from '../components/ActiveSparksBar';
 import { FEATURE_GATES } from '../data/featureGates';
 import { useEventQueue, useBlockingPresence } from '../contexts/EventQueueContext';
+import { QI_SPARK_BY_ID } from '../data/qiSparks';
 import WORLDS from '../data/worlds';
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
@@ -576,11 +577,15 @@ function useDivineQi({ activeSparks, rateRef, qiRef }) {
   const [orbs, setOrbs] = useState([]);
   const nextIdRef = useRef(0);
 
-  // Find the active divine_qi card (highest tier wins — array is deduped by useQiSparks)
-  const config = useMemo(
-    () => activeSparks?.find(s => s.kind === 'mechanic' && s.mechanicId === 'divine_qi') ?? null,
-    [activeSparks],
-  );
+  // Find the active divine_qi card — activeSparks items store only { sparkId, ... };
+  // the kind/mechanicId fields live on the card object in QI_SPARK_BY_ID.
+  const config = useMemo(() => {
+    const inst = activeSparks?.find(s => {
+      const card = QI_SPARK_BY_ID[s.sparkId];
+      return card?.kind === 'mechanic' && card?.mechanicId === 'divine_qi';
+    });
+    return inst ? (QI_SPARK_BY_ID[inst.sparkId] ?? null) : null;
+  }, [activeSparks]);
   const configRef = useRef(config);
   useEffect(() => { configRef.current = config; }, [config]);
 
@@ -944,9 +949,25 @@ function HomeScreen({
   // ── Crystal Click — collect reservoir on tap ─────────────────────────────
   const handleCrystalCollect = useCallback(() => {
     if (!crystalReservoirRef || !collectCrystalReservoir) return;
-    if ((crystalReservoirRef.current ?? 0) <= 0) return;
+    const amount = crystalReservoirRef.current ?? 0;
+    if (amount <= 0) return;
     collectCrystalReservoir();
-  }, [crystalReservoirRef, collectCrystalReservoir]);
+    // Spawn a "+N Qi" floater at the crystal's screen position, offset into
+    // fighter-stage coordinates (where the VFX layer lives).
+    try {
+      const crystalEl = document.querySelector('.home-crystal-img-wrap');
+      const stageEl   = document.querySelector('.home-fighter-stage');
+      if (crystalEl && stageEl) {
+        const cr = crystalEl.getBoundingClientRect();
+        const sr = stageEl.getBoundingClientRect();
+        const x  = (cr.left + cr.width  / 2) - sr.left;
+        const y  = (cr.top  + cr.height / 2) - sr.top;
+        const fmt = n => n >= 1e6 ? `+${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `+${(n/1e3).toFixed(1)}K` : `+${Math.floor(n)}`;
+        spawnVFX({ type: 'qi-tick', x, y, content: fmt(amount), duration: 1600,
+          style: { '--qi-drift-x': '0px' } });
+      }
+    } catch {}
+  }, [crystalReservoirRef, collectCrystalReservoir, spawnVFX]);
 
   const cultivationAd = useRewardedAd(onCultivationReward, 30 * 60 * 1000, 'mai_ad_cd_cultivation');
 
