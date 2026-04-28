@@ -4401,16 +4401,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   box-shadow: 0 0 0 1px color-mix(in oklab,
     var(--qi-particle-start),
     var(--qi-particle-end) var(--qi-mix));
-  opacity: 0;
+  opacity: 0;           /* base: invisible when no animation is running */
   offset-rotate: 0deg;
-  animation:
-    home-qi-flow-pos  2.4s linear infinite,
-    home-qi-flow-fade 2.4s linear infinite;
-  /* MUST come after the animation shorthand — shorthand resets play-state to
-     running, so the longhand overrides it back to paused.  JS sets
-     span.style.animationPlayState = 'running' for active particles, and React
-     never touches that property so it is safe to manage imperatively. */
-  animation-play-state: paused;
+  /* animation is set entirely via inline style by the JS emitter —
+     it is NOT in the CSS rule so React's style reconciliation never
+     touches it.  The emitter uses single-iteration (count:1) A/B name
+     pairs so it can restart particles without a forced reflow. */
 }
 
 /* qi-particle-paths-start — managed by QiParticleEditor (?particleEdit)  */
@@ -4434,16 +4430,20 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .home-qi-particle-pathR { offset-path: path('M  140  -77 C  300    1,  139   31,  149   80'); }
 /* qi-particle-paths-end */
 
-/* Position hops at discrete steps — gives each particle pixel-art
-   choppiness (~7 fps) while travelling along the bezier path. */
-@keyframes home-qi-flow-pos {
-  from { offset-distance: 0%;   }
-  to   { offset-distance: 100%; }
-}
+/* A/B keyframe pairs — identical content, different names.
+   The JS emitter alternates the name on each respawn so the browser
+   sees a brand-new animation and restarts from offset-distance:0%
+   without needing a forced reflow (layout read). */
+@keyframes home-qi-flow-posA { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes home-qi-flow-posB { from { offset-distance: 0%; } to { offset-distance: 100%; } }
 
-/* Opacity + colour fade on a smooth linear curve so the energy
-   feel (gentle appearance / disappearance) isn't lost. */
-@keyframes home-qi-flow-fade {
+@keyframes home-qi-flow-fadeA {
+  0%   { opacity: 0;    --qi-mix: var(--qi-mix-start, 0%); }
+  10%  { opacity: 0.95; }
+  88%  { opacity: 0.65; }
+  100% { opacity: 0;    --qi-mix: 100%; }
+}
+@keyframes home-qi-flow-fadeB {
   0%   { opacity: 0;    --qi-mix: var(--qi-mix-start, 0%); }
   10%  { opacity: 0.95; }
   88%  { opacity: 0.65; }

@@ -490,8 +490,8 @@ function QiParticles({ colors, rung = 0 }) {
   const start = colors?.glowA ?? colors?.particles?.[0] ?? 'rgba(167, 139, 250, 0.95)';
 
   const PER_PATH = 6;
-  const PERIOD   = 2.4;
-  const INTERVAL = PERIOD / PER_PATH; // 0.4 s between slots
+  const PERIOD   = 2.4;              // seconds — one particle lifetime
+  const INTERVAL = PERIOD / PER_PATH; // 0.4 s stagger between slots
 
   // qi-particle-paths-start — managed by QiParticleEditor (?particleEdit)
   const BASE_PATHS    = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -499,20 +499,21 @@ function QiParticles({ colors, rung = 0 }) {
   const EXTREME_PATHS = ['I', 'J', 'K', 'L', 'Q', 'R'];
   // qi-particle-paths-end
 
-  // Static pool — ALL paths are always in the DOM; JS controls which ones
-  // are emitting via animation-play-state (no React state, no re-renders).
+  // Static DOM pool — every path is always mounted.
   const ALL_PATHS = [...BASE_PATHS, ...WIDE_PATHS, ...EXTREME_PATHS];
 
-  // ── Refs (all lifecycle management is imperative, outside React render) ──
-  const containerRef    = useRef(null);
-  // particleRefs[pathName][n] = <span> element
-  const particleRefs    = useRef({});
-  // Paths waiting for animationiteration to pause each particle naturally
-  const drainingRef     = useRef(new Set());
-  // Pending stagger timers per path
-  const resumeTimersRef = useRef({});
-  // Shadow of the current rung for the rung-change effect
-  const rungRef         = useRef(rung);
+  // ── Imperative state (zero React re-renders for particle lifecycle) ───────
+  const containerRef   = useRef(null);
+  // slots[pathName][n] = { span, nameToggle, running }
+  //   nameToggle: 0|1 — alternated each respawn so the browser sees a new
+  //                      animation-name and restarts from 0% without reflow.
+  //   running: bool    — true while the single-iteration animation is active.
+  const slots          = useRef({});
+  // paths currently emitting new particles
+  const emittingRef    = useRef(new Set());
+  // pending stagger timers per path
+  const spawnTimersRef = useRef({});
+  const rungRef        = useRef(rung);
 
   const activePaths = (r) => new Set([
     ...BASE_PATHS,
@@ -520,59 +521,80 @@ function QiParticles({ colors, rung = 0 }) {
     ...(r >= 4 ? EXTREME_PATHS : []),
   ]);
 
-  // Resume a path: stagger-emit particles one by one from slot 0 → PER_PATH-1.
-  // Each particle starts from offset-distance 0% (cycle boundary = invisible),
-  // building the flow naturally without a burst.
+  // Build the inline animation string for a given toggle value (0 or 1).
+  // Single iteration (count:1) — particle travels once and stops.
+  // animationend then fires, and the emitter decides whether to respawn.
+  const animCSS = (toggle) => {
+    const s = toggle ? 'B' : 'A';
+    return `home-qi-flow-pos${s} ${PERIOD}s linear 1, home-qi-flow-fade${s} ${PERIOD}s linear 1`;
+  };
+
+  // Restart a particle's animation from offset-distance:0%.
+  // Toggling the name counts as a new animation → no forced reflow needed.
+  const respawn = (slot) => {
+    slot.nameToggle ^= 1;
+    slot.running = true;
+    slot.span.style.animation = animCSS(slot.nameToggle);
+  };
+
+  // Activate a path: add to emitting set, stagger-spawn idle slots.
+  // Slots already mid-arc are left alone — they respawn themselves via
+  // animationend when they complete their current journey.
   const startPath = (pathName) => {
-    drainingRef.current.delete(pathName); // cancel any in-progress drain
-    (resumeTimersRef.current[pathName] ?? []).forEach(clearTimeout);
-    resumeTimersRef.current[pathName] = Array.from({ length: PER_PATH }, (_, n) =>
+    emittingRef.current.add(pathName);
+    (spawnTimersRef.current[pathName] ?? []).forEach(clearTimeout);
+    spawnTimersRef.current[pathName] = Array.from({ length: PER_PATH }, (_, n) =>
       setTimeout(() => {
-        const span = particleRefs.current[pathName]?.[n];
-        if (span) span.style.animationPlayState = 'running';
+        if (!emittingRef.current.has(pathName)) return;
+        const slot = slots.current[pathName]?.[n];
+        if (slot && !slot.running) respawn(slot); // only idle slots need a kick
       }, n * INTERVAL * 1000)
     );
   };
 
-  // Drain a path: mark it in drainingRef and let the animationiteration
-  // listener pause each particle at the end of its current arc (opacity ≈ 0).
-  // No animation is restarted — particles finish their journey invisibly.
+  // Deactivate a path: remove from emitting set, cancel pending spawn timers.
+  // Particles already in flight continue their single arc and die naturally —
+  // animationend fires, emittingRef check fails, they are not respawned.
   const stopPath = (pathName) => {
-    (resumeTimersRef.current[pathName] ?? []).forEach(clearTimeout);
-    resumeTimersRef.current[pathName] = [];
-    drainingRef.current.add(pathName);
+    emittingRef.current.delete(pathName);
+    (spawnTimersRef.current[pathName] ?? []).forEach(clearTimeout);
+    spawnTimersRef.current[pathName] = [];
   };
 
-  // ── Mount: wire the single event listener + activate initial paths ──────
+  // ── Mount: wire animationend listener + activate initial paths ───────────
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // One delegated listener for the whole particle field.
-    // animationiteration fires at the END of each loop cycle — the particle
-    // is at offset-distance≈100%, opacity≈0 (invisible).  Pausing here means
-    // it freezes at the natural "dead" point without any visible pop.
-    // We only act on one of the two animations (pos) to avoid double-pausing.
-    const onIteration = (e) => {
-      if (e.animationName !== 'home-qi-flow-pos') return;
+    // Single delegated listener — fires when a particle's single-iteration
+    // animation completes (offset-distance:100%, opacity:0 → naturally dead).
+    // With fill-mode:none (default), the element immediately reverts to base
+    // CSS (opacity:0) so there is no visible frozen frame after death.
+    const onEnd = (e) => {
+      // Two animations fire per particle — only handle one (pos) to avoid
+      // double-respawn. The fade animation ends at the same instant.
+      if (!e.animationName.startsWith('home-qi-flow-pos')) return;
       const pathName = e.target.dataset?.path;
-      if (pathName && drainingRef.current.has(pathName)) {
-        e.target.style.animationPlayState = 'paused';
-      }
+      const n        = Number(e.target.dataset?.slot ?? -1);
+      if (!pathName || n < 0) return;
+      const slot = slots.current[pathName]?.[n];
+      if (!slot) return;
+      slot.running = false;
+      if (emittingRef.current.has(pathName)) respawn(slot); // emitter still active → live again
     };
-    container.addEventListener('animationiteration', onIteration);
+    container.addEventListener('animationend', onEnd);
 
-    // Start the paths that are active at mount
+    // Kick off the paths that should be active at mount
     const active = activePaths(rungRef.current);
     ALL_PATHS.forEach(name => { if (active.has(name)) startPath(name); });
 
     return () => {
-      container.removeEventListener('animationiteration', onIteration);
-      Object.values(resumeTimersRef.current).flat().forEach(clearTimeout);
+      container.removeEventListener('animationend', onEnd);
+      Object.values(spawnTimersRef.current).flat().forEach(clearTimeout);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps — mount only, intentional
 
-  // ── Rung changes: start newly active paths, drain newly inactive ones ───
+  // ── Rung changes ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (rung === rungRef.current) return;
     const prevActive = activePaths(rungRef.current);
@@ -596,7 +618,6 @@ function QiParticles({ colors, rung = 0 }) {
       {ALL_PATHS.map((pathName, p) => (
         <div key={pathName} className="home-qi-path-group">
           {Array.from({ length: PER_PATH }, (_, n) => {
-            // Deterministic jitter — stable per (path, n) across re-renders.
             const jx = ((p * 17 + n * 11 + 5) % 19) - 9;
             const jy = ((p * 13 + n *  7 + 3) % 11) - 5;
             const MIX_STARTS = [0, 0, 0, 0, 40, 0, 65, 0, 0, 90];
@@ -605,18 +626,18 @@ function QiParticles({ colors, rung = 0 }) {
               <span
                 key={n}
                 ref={el => {
-                  if (!particleRefs.current[pathName]) particleRefs.current[pathName] = [];
-                  if (el) particleRefs.current[pathName][n] = el;
+                  if (!slots.current[pathName]) slots.current[pathName] = [];
+                  if (el) slots.current[pathName][n] = { span: el, nameToggle: 0, running: false };
                 }}
                 data-path={pathName}
+                data-slot={n}
                 className={`home-qi-particle home-qi-particle-path${pathName}`}
                 style={{
-                  // animationPlayState is intentionally absent here — CSS defaults
-                  // it to 'paused' and JS manages it imperatively so React never
-                  // clobbers it on re-renders (e.g. colour changes).
-                  width:           `${3 + ((p + n) % 3)}px`,
-                  height:          `${3 + ((p + n) % 3)}px`,
-                  transform:       `translate(${jx}px, ${jy}px)`,
+                  // animation managed entirely by JS (respawn() sets inline style).
+                  // React's style reconciler never touches it.
+                  width:            `${3 + ((p + n) % 3)}px`,
+                  height:           `${3 + ((p + n) % 3)}px`,
+                  transform:        `translate(${jx}px, ${jy}px)`,
                   '--qi-mix-start': `${mixStart}%`,
                 }}
               />
