@@ -626,8 +626,14 @@ function QiParticles({ colors, rung = 0 }) {
               <span
                 key={n}
                 ref={el => {
+                  if (!el) return; // ignore the null call React makes before the element call
                   if (!slots.current[pathName]) slots.current[pathName] = [];
-                  if (el) slots.current[pathName][n] = { span: el, nameToggle: 0, running: false };
+                  const existing = slots.current[pathName][n];
+                  if (existing) {
+                    existing.span = el; // update DOM ref only — preserve nameToggle + running
+                  } else {
+                    slots.current[pathName][n] = { span: el, nameToggle: 0, running: false };
+                  }
                 }}
                 data-path={pathName}
                 data-slot={n}
