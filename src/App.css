@@ -4391,11 +4391,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
     var(--qi-particle-end) var(--qi-mix));
   opacity: 0;
   offset-rotate: 0deg;
-  /* Split animation: position hops discretely (pixel art choppiness ~7 fps),
-     while fade + colour stay smooth so the energy-flow feel is preserved. */
   animation:
-    home-qi-flow-pos  2.4s steps(18, jump-none) infinite,
-    home-qi-flow-fade 2.4s linear               infinite;
+    home-qi-flow-pos  2.4s linear infinite,
+    home-qi-flow-fade 2.4s linear infinite;
 }
 
 /* qi-particle-paths-start — managed by QiParticleEditor (?particleEdit)  */
