@@ -38,6 +38,10 @@ import affixPoolsOverride   from './affixPools.override.json';
 import materialsOverride    from './materials.override.json';
 import audioOverride        from './audio.override.json';
 import featureGatesOverride from './featureGates.override.json';
+import qiSparksOverride     from './qiSparks.override.json';
+import artefactSetsOverride from './artefactSets.override.json';
+import techniquesOverride   from './techniques.override.json';
+import reincarnationTreeOverride from './reincarnationTree.override.json';
 
 const OVERRIDES = {
   worlds:       worldsOverride,
@@ -52,6 +56,10 @@ const OVERRIDES = {
   materials:    materialsOverride,
   audio:        audioOverride,
   featureGates: featureGatesOverride,
+  qiSparks:     qiSparksOverride,
+  artefactSets: artefactSetsOverride,
+  techniques:   techniquesOverride,
+  reincarnationTree: reincarnationTreeOverride,
 };
 
 /** Raw access — returns the full override document for a domain. */

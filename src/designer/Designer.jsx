@@ -13,6 +13,10 @@ import AffixPoolsEditor from './categories/AffixPoolsEditor.jsx';
 import MaterialsEditor  from './categories/MaterialsEditor.jsx';
 import AudioEditor         from './categories/AudioEditor.jsx';
 import FeatureGatesEditor  from './categories/FeatureGatesEditor.jsx';
+import QiSparksEditor      from './categories/QiSparksEditor.jsx';
+import ArtefactSetsEditor  from './categories/ArtefactSetsEditor.jsx';
+import TechniquesEditor    from './categories/TechniquesEditor.jsx';
+import ReincarnationTreeEditor from './categories/ReincarnationTreeEditor.jsx';
 import './designer.css';
 
 const EDITORS = {
@@ -28,6 +32,10 @@ const EDITORS = {
   affixPools: AffixPoolsEditor,
   audio:        AudioEditor,
   featureGates: FeatureGatesEditor,
+  qiSparks:     QiSparksEditor,
+  artefactSets: ArtefactSetsEditor,
+  techniques:   TechniquesEditor,
+  reincarnationTree: ReincarnationTreeEditor,
 };
 
 /*
@@ -53,6 +61,12 @@ const CATEGORIES = [
   { id: 'materials',  label: 'Materials',   section: 'Inventory',           path: 'src/data/config/materials.override.json'  },
   { id: 'pills',      label: 'Pills',       section: 'Inventory',           path: 'src/data/config/pills.override.json'      },
   { id: 'artefacts',  label: 'Artefacts',   section: 'Inventory',           path: 'src/data/config/artefacts.override.json'  },
+  { id: 'artefactSets', label: 'Artefact Sets', section: 'Inventory',       path: 'src/data/config/artefactSets.override.json' },
+  // ── Combat ───────────────────────────────────────────────────────────────
+  { id: 'techniques', label: 'Techniques',  section: 'Combat',              path: 'src/data/config/techniques.override.json' },
+  // ── Cultivation ──────────────────────────────────────────────────────────
+  { id: 'qiSparks',   label: 'Qi Sparks',   section: 'Cultivation',         path: 'src/data/config/qiSparks.override.json'   },
+  { id: 'reincarnationTree', label: 'Reincarnation Tree', section: 'Cultivation', path: 'src/data/config/reincarnationTree.override.json' },
   // ── Crafting ─────────────────────────────────────────────────────────────
   { id: 'crafting',   label: 'Crafting',    section: 'Crafting',            path: 'src/data/config/crafting.override.json'   },
   { id: 'affixPools', label: 'Affix Pools', section: 'Crafting',            path: 'src/data/config/affixPools.override.json' },

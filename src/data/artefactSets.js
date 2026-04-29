@@ -20,6 +20,7 @@
 
 import { ELEMENTS } from './elements';
 import { MOD } from './stats';
+import { mergeRecords } from './config/loader';
 
 const SET_NAMES = {
   fire:  ['Ember Legacy',     'Phoenix Coterie',    'Sunforge Compact'],
@@ -244,7 +245,7 @@ function buildCatalogue() {
   return out;
 }
 
-export const ARTEFACT_SETS = buildCatalogue();
+export const ARTEFACT_SETS = mergeRecords(buildCatalogue(), 'artefactSets');
 
 export const SETS_BY_ELEMENT = (() => {
   const out = {};

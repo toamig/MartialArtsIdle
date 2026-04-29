@@ -3,12 +3,11 @@ import { rarityOptions, statOptions } from '../enumSources.js';
 /**
  * Pill schema (src/data/pills.js). Each pill has a rarity and an effects
  * array. Effects are stat modifiers — every stat in statOptions() is wired
- * into gameplay. Pills grant PERMANENT stat bonuses on consumption; there
- * is no duration.
+ * into gameplay. Pills grant PERMANENT stat bonuses on consumption.
  *
  * NOTE: Pill recipes (which 3-herb combo brews this pill) are auto-derived
  * by pills.js at module load from herb tier sums. To shift recipes, edit
- * herb rarities via the Items tab, not here.
+ * herb rarities via the Materials tab, not here.
  */
 
 const TYPE_OPTIONS = [

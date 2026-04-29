@@ -47,6 +47,8 @@ const regionSchema = [
     help: 'Ores + QI stone bonus drops. Ores are primary (always given); cultivation items roll independently.',
     itemSchema: makeDropRow(mineDropItemOptions),
   },
+  { key: 'noScrollOrArtefactDrops', type: 'boolean', label: 'No technique / artefact drops',
+    help: 'When true, enemies in this region do NOT roll technique scrolls or artefacts. Set on Training Grounds for the early-game safety rail.' },
 ];
 
 export default [

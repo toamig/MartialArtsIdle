@@ -49,7 +49,9 @@
  *     ...mechanic-specific fields read by useCultivation / mechanic UI
  */
 
-export const QI_SPARKS = [
+import { mergeRecordArray } from './config/loader';
+
+const QI_SPARKS_RAW = [
   // ── Common (temporary buffs) ────────────────────────────────────────────
   {
     id:          'quick_burst',
@@ -452,6 +454,8 @@ export const QI_SPARKS = [
     deepMeditation: true,
   },
 ];
+
+export const QI_SPARKS = mergeRecordArray(QI_SPARKS_RAW, 'qiSparks', 'id');
 
 export const QI_SPARK_BY_ID = Object.fromEntries(QI_SPARKS.map(s => [s.id, s]));
 

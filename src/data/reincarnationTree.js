@@ -1,3 +1,5 @@
+import { mergeRecordArray } from './config/loader';
+
 /**
  * Reincarnation — Eternal Tree definitions.
  *
@@ -53,7 +55,7 @@ export const BRANCHES = {
   cross:   { label: 'Cross-Branch',          color: '#94a3b8', colorRgb: '148,163,184' },
 };
 
-export const NODES = [
+const NODES_RAW = [
 
   // ── Ancestor's Legacy ────────────────────────────────────────────────────
   {
@@ -236,6 +238,7 @@ export const NODES = [
   },
 ];
 
+export const NODES = mergeRecordArray(NODES_RAW, 'reincarnationTree', 'id');
 export const NODES_BY_ID     = Object.fromEntries(NODES.map(n => [n.id, n]));
 export const TREE_TOTAL_COST = NODES.reduce((s, n) => s + n.cost, 0);
 

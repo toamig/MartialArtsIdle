@@ -1,3 +1,5 @@
+import { mergeRecordArray } from './config/loader';
+
 // ─── Quality tiers ────────────────────────────────────────────────────────────
 //
 // Quality is identity + colour only — it does NOT reduce cooldown. The
@@ -72,7 +74,7 @@ export const TYPE_COLOR = {
 //   exposeBuffUseMaxDefense     Expose buff: enemy hit uses max(def, elemDef) regardless of dmg type
 //   exposeBuffApplyToAttack     Expose buff: opt INTO Attack secret techs (default OFF — basic attacks only)
 
-export const TECHNIQUES = [
+const TECHNIQUES_RAW = [
   // ─── Iron ──────────────────────────────────────────────────────────────────
   // Attack
   {
@@ -500,6 +502,8 @@ export const TECHNIQUES = [
     exposeBuffUseMaxDefense: true,
   },
 ];
+
+export const TECHNIQUES = mergeRecordArray(TECHNIQUES_RAW, 'techniques', 'id');
 
 const TECHNIQUES_BY_ID = Object.fromEntries(TECHNIQUES.map(t => [t.id, t]));
 

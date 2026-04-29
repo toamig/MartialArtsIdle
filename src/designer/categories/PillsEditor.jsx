@@ -13,7 +13,7 @@ export default function PillsEditor({ edited, onChangeRecords }) {
       displayLabel={(rec, key) => rec?.name ?? key}
       allowAdd={true}
       newIdPlaceholder="new_pill_id"
-      initialNewRecord={{ name: 'New Pill', rarity: 'Iron', duration: 60, effects: [] }}
+      initialNewRecord={{ name: 'New Pill', rarity: 'Iron', effects: [] }}
       cardMinWidth="420px"
     />
   );
