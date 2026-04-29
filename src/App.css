@@ -630,7 +630,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 10px;
   font-weight: 700;
   color: rgba(var(--ui-purple-strong-rgb), 0.55);
-  background: rgba(10, 10, 22, 0.85);
+  background: rgba(var(--ui-bg-panel-rgb), 0.92);
   border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.18);
   border-radius: 20px;
   padding: 2px 9px;
@@ -1034,7 +1034,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size:        10px;
   font-weight:      700;
   color:            #7ee8fa;
-  background:       rgba(30, 80, 120, 0.6);
+  background:       rgba(var(--ui-bg-panel-rgb), 0.75);
   border-radius:    8px;
   padding:          1px 5px;
   white-space:      nowrap;
