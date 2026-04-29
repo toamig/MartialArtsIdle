@@ -6,6 +6,7 @@ import RealmProgressBar from '../components/RealmProgressBar';
 import OfflineEarningsModal from '../components/OfflineEarningsModal';
 import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
+import { fmt as fmtNum, fmtRate as fmtRateNum, fmtDelta } from '../utils/format';
 import CrystalFeedModal from '../components/CrystalFeedModal';
 import DailyBonusWidget from '../components/DailyBonusWidget';
 import ActiveSparksBar from '../components/ActiveSparksBar';
@@ -82,19 +83,8 @@ function QiProgressChip({ qiRef, costRef, gateRef, rateRef, maxed, ascended }) {
   const textRef = useRef(null);
   const divRef  = useRef(null);
   useEffect(() => {
-    const fmt = (n) => {
-      if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
-      if (n >= 1e9)  return (n / 1e9).toFixed(2)  + 'B';
-      if (n >= 1e6)  return (n / 1e6).toFixed(2)  + 'M';
-      if (n >= 1e3)  return (n / 1e3).toFixed(1)  + 'K';
-      return String(Math.floor(n));
-    };
-    const fmtRate = (n) => {
-      if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
-      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-      if (n >= 10)  return n.toFixed(0);
-      return n.toFixed(1);
-    };
+    const fmt     = fmtNum;
+    const fmtRate = fmtRateNum;
     let raf;
     const update = () => {
       const gate = gateRef?.current;
@@ -463,19 +453,8 @@ function PCQiProgressText({ qiRef, costRef, gateRef, rateRef, maxed, ascended })
   const textRef = useRef(null);
   const divRef  = useRef(null);
   useEffect(() => {
-    const fmt = (n) => {
-      if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
-      if (n >= 1e9)  return (n / 1e9).toFixed(2)  + 'B';
-      if (n >= 1e6)  return (n / 1e6).toFixed(2)  + 'M';
-      if (n >= 1e3)  return (n / 1e3).toFixed(1)  + 'K';
-      return String(Math.floor(n));
-    };
-    const fmtRate = (n) => {
-      if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
-      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-      if (n >= 10)  return n.toFixed(0);
-      return n.toFixed(1);
-    };
+    const fmt     = fmtNum;
+    const fmtRate = fmtRateNum;
     let raf;
     const tick = () => {
       const gate = gateRef?.current;
@@ -789,7 +768,7 @@ function DivineQiOrb({ orb, onResolve, spawnVFX, rateRef }) {
           const x  = (orbRect.left + orbRect.width  / 2) - sr.left;
           const y  = (orbRect.top  + orbRect.height / 2) - sr.top;
           const reward = orb.burstSeconds * (rateRef.current ?? 1);
-          const fmt = n => n >= 1e6 ? `+${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `+${(n/1e3).toFixed(1)}K` : `+${Math.floor(n)}`;
+          const fmt = fmtDelta;
           spawnVFX({ type: 'qi-tick', x, y, content: fmt(reward), duration: 1500,
             style: { '--qi-drift-x': '0px' } });
         }
@@ -1150,12 +1129,6 @@ function HomeScreen({
   const lastFloaterQiRef = useRef(qiRef.current);
   useEffect(() => {
     lastFloaterQiRef.current = qiRef.current;
-    const fmt = (n) => {
-      if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
-      if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-      return String(Math.floor(n));
-    };
     const id = setInterval(() => {
       if (maxed && !ascended)   return;
       if (gateRef?.current)    { lastFloaterQiRef.current = qiRef.current; return; }
@@ -1174,7 +1147,7 @@ function HomeScreen({
       spawnVFX({
         type: 'qi-tick',
         x, y,
-        content: `+${fmt(whole)}`,
+        content: fmtDelta(whole),
         duration: 1100,
         style: { '--qi-drift-x': `${driftX}px` },
       });
@@ -1203,7 +1176,7 @@ function HomeScreen({
         const sr = stageEl.getBoundingClientRect();
         const x  = (cr.left + cr.width  / 2) - sr.left;
         const y  = (cr.top  + cr.height / 2) - sr.top;
-        const fmt = n => n >= 1e6 ? `+${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `+${(n/1e3).toFixed(1)}K` : `+${Math.floor(n)}`;
+        const fmt = fmtDelta;
         spawnVFX({ type: 'qi-tick', x, y, content: fmt(amount), duration: 1600,
           style: { '--qi-drift-x': '0px' } });
       }

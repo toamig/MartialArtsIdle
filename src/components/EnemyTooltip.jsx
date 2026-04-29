@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { ALL_MATERIALS, RARITY } from '../data/materials';
+import { fmt as fmtNum } from '../utils/format';
 
 const DAMAGE_COLOR = {
   physical:  '#fb923c',
@@ -12,11 +13,7 @@ const DAMAGE_ICON = {
   elemental: '✦',
 };
 
-function formatNum(n) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000)     return `${(n / 1_000).toFixed(1)}k`;
-  return String(n);
-}
+const formatNum = fmtNum;
 
 function calcStats(enemyDef, regionIndex) {
   const idx    = Math.max(0, regionIndex ?? 0);

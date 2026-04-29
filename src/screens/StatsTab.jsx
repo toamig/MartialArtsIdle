@@ -3,14 +3,10 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { computeAllStats, mergeModifiers } from '../data/stats';
+import { fmt } from '../utils/format';
 import { evaluateLawUniques, buildContext } from '../systems/lawEngine';
 
-function fmt(n) {
-  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + 'B';
-  if (n >= 1_000_000)     return (n / 1_000_000).toFixed(1) + 'M';
-  if (n >= 1_000)         return (n / 1_000).toFixed(1) + 'K';
-  return n.toString();
-}
+// fmt imported from utils/format — handles T/B/M/K consistently
 
 // Primary-stat sprites (EssenceSprite / SoulSprite / BodySprite), the
 // TriangleLines connector, the StatCircle wrapper, and the DetailPanel
