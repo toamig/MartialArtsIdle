@@ -397,17 +397,45 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
 
     // All other kinds add an active spark with kind-specific state.
     const now = Date.now();
-    const instance = {
+
+    if (card.kind === 'timed' || card.kind === 'lingering_focus_flag') {
+      const freshExpiry = now + card.duration;
+      setActiveSparks(prev => {
+        // If this spark is already active, refresh its timer rather than
+        // stacking a second instance. This prevents a race where the old
+        // expiring instance is cleaned up at the same tick the new one is
+        // added, leaving the player with nothing.
+        const existing = prev.find(p => p.sparkId === card.id && p.expiresAt);
+        if (existing) {
+          return prev.map(p =>
+            p.instanceId === existing.instanceId
+              ? { ...p, expiresAt: freshExpiry }
+              : p
+          );
+        }
+        return [...prev, {
+          instanceId: ++instanceCounter,
+          sparkId:    card.id,
+          expiresAt:  freshExpiry,
+        }];
+      });
+      return;
+    }
+
+    if (card.kind === 'event_count') {
+      setActiveSparks(prev => [...prev, {
+        instanceId:              ++instanceCounter,
+        sparkId:                 card.id,
+        breakthroughsRemaining:  card.breakthroughs,
+      }]);
+      return;
+    }
+
+    // Fallback for any future kinds
+    setActiveSparks(prev => [...prev, {
       instanceId: ++instanceCounter,
       sparkId:    card.id,
-    };
-    if (card.kind === 'timed' || card.kind === 'lingering_focus_flag') {
-      instance.expiresAt = now + card.duration;
-    }
-    if (card.kind === 'event_count') {
-      instance.breakthroughsRemaining = card.breakthroughs;
-    }
-    setActiveSparks(prev => [...prev, instance]);
+    }]);
   }, [cultivation.rateRef, cultivation.qiRef]);
 
   // ── Player actions ──────────────────────────────────────────────────────
