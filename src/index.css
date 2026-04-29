@@ -171,6 +171,8 @@ body {
   /* Prevent text selection on game UI */
   -webkit-user-select: none;
   user-select: none;
+  /* Disable iOS long-press magnifier loupe + callout menu (Copy/Define/etc.) */
+  -webkit-touch-callout: none;
   /* Prevent iOS tap zoom */
   -webkit-text-size-adjust: 100%;
   /* Safe area padding for notched phones */
@@ -188,6 +190,7 @@ img {
 input, textarea {
   -webkit-user-select: auto;
   user-select: auto;
+  -webkit-touch-callout: default;
 }
 
 #root {
