@@ -45,9 +45,7 @@ function QiRateReadout({ rateRef, focusMultRef, sparkFocusMultBonusRef, sparkCon
     const update = () => {
       const r = rateRef.current;
       if (textRef.current) {
-        textRef.current.textContent = r >= 1000
-          ? `+${(r / 1000).toFixed(1)}K Qi/s`
-          : `+${r.toFixed(1)} Qi/s`;
+        textRef.current.textContent = `+${fmtRateNum(r)} Qi/s`;
       }
       if (boostRef.current && focusMultRef) {
         const baseMult  = (focusMultRef.current ?? 300) / 100;
@@ -592,7 +590,7 @@ function PatternClickOverlay({ pattern, onComplete, rateRef, spawnVFX }) {
             const x      = (dr.left + dr.width  / 2) - sr.left;
             const y      = (dr.top  + dr.height / 2) - sr.top;
             const reward = pattern.burstSeconds * (rateRef.current ?? 1);
-            const fmt    = n => n >= 1e6 ? `+${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `+${(n/1e3).toFixed(1)}K` : `+${Math.floor(n)}`;
+            const fmt    = fmtDelta;
             spawnVFX({ type: 'qi-tick', x, y, content: fmt(reward), duration: 1600,
               style: { '--qi-drift-x': '0px' } });
           }
