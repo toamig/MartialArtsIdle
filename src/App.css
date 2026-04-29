@@ -1129,6 +1129,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   background: rgba(var(--ui-bg-panel-rgb), 0.50);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-left: 3px solid var(--rarity-color, rgba(var(--ui-muted-rgb), 0.45));
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 .active-spark-row-dot {
@@ -1147,7 +1148,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .active-spark-row-top {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   margin-bottom: 2px;
 }
@@ -1157,15 +1158,17 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-weight: 700;
   color: rgba(var(--ui-hover-rgb), 0.90);
   letter-spacing: 0.01em;
+  flex: 1;
+  min-width: 0;
 }
 
+/* Non-timer suffix (stacks, breakthrough count, mechanic tier) */
 .active-spark-row-suffix {
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--rarity-color, rgba(255, 255, 255, 0.7));
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
-  margin-left: auto;
   flex-shrink: 0;
 }
 
@@ -1173,6 +1176,43 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 0.75rem;
   color: rgba(var(--ui-label-rgb), 0.65);
   line-height: 1.4;
+}
+
+/* ── Per-card countdown timer (timed sparks only) ─────────────────────────── */
+.active-spark-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+  min-width: 32px;
+}
+
+.active-spark-timer-val {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: rgba(var(--ui-hover-rgb), 0.85);
+  letter-spacing: 0.03em;
+}
+
+/* Progress bar track */
+.active-spark-timer-bar {
+  width: 48px;
+  height: 3px;
+  background: rgba(var(--ui-muted-rgb), 0.20);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+/* Progress fill — width driven by --spark-progress (0→1 CSS var).
+   Transition smooths the 1-second discrete ticks into a flowing bar. */
+.active-spark-timer-fill {
+  height: 100%;
+  width: calc(var(--spark-progress, 1) * 100%);
+  background: rgba(var(--ui-purple-strong-rgb), 0.80);
+  border-radius: 2px;
+  transition: width 0.95s linear;
 }
 
 /* Expiring-soon row (< 10s remaining) — amber highlight + pulse */
@@ -1185,9 +1225,19 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   from { background: rgba(40, 25, 5, 0.55); }
   to   { background: rgba(60, 35, 5, 0.80); }
 }
+.active-spark-row-urgent .active-spark-timer-val { color: #fbbf24; }
+.active-spark-row-urgent .active-spark-timer-fill { background: rgba(245, 158, 11, 0.90); }
+
 .active-spark-row-suffix-urgent {
   color: #fbbf24;
   font-size: 0.72rem;
+}
+
+/* Expired — fade + slide right, then React removes the element */
+.active-spark-row-expiring {
+  opacity: 0;
+  transform: translateX(10px);
+  pointer-events: none;
 }
 
 /* ── Qi Spark choice modal ────────────────────────────────────────────────
