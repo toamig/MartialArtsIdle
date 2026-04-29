@@ -1,14 +1,16 @@
 :root {
-  --bg-primary: #1a1a2e;
-  --bg-secondary: #16213e;
-  --bg-card: #0f3460;
-  --accent: #e94560;
-  --accent-hover: #ff6b81;
-  --text-primary: #eee;
-  --text-secondary: #aaa;
-  --text-muted: #777;
-  --gold: #f5c842;
-  --border: #2a2a4a;
+  /* ── Legacy tokens — remapped to purple system, kept for compatibility ───
+     Do not use these in new code; use the --ui-* tokens directly instead. */
+  --bg-primary:    rgb(var(--ui-bg-deep-rgb));
+  --bg-secondary:  rgba(var(--ui-bg-panel-rgb), 0.75);
+  --bg-card:       rgba(var(--ui-bg-panel-rgb), 0.88);
+  --accent:        #e94560;
+  --accent-hover:  #ff6b81;
+  --text-primary:  #eee;
+  --text-secondary: rgba(var(--ui-label-rgb), 0.65);
+  --text-muted:    rgba(var(--ui-muted-rgb), 0.55);
+  --gold:          #f5c842;   /* semantic rarity color — do NOT use for UI chrome */
+  --border:        var(--ui-border-light);
 
   /* ── UI Purple family ─────────────────────────────────────────────────
      The hero colour of the game's UI chrome: borders, glows, active
@@ -91,8 +93,8 @@
   /* ── Semantic surface layers (opacity ramp on --ui-bg-panel-rgb) ─────────
      Card depth from base panel to subtle tint. Hue-shift these to retint
      the entire UI without hunting down every rgba.                          */
-  --ui-surface-1:      rgba(var(--ui-bg-panel-rgb), 0.75);  /* card / panel base   */
-  --ui-surface-2:      rgba(var(--ui-bg-panel-rgb), 0.60);  /* nested surface      */
+  --ui-surface-1:      rgba(var(--ui-bg-panel-rgb), 0.88);  /* card / panel base   */
+  --ui-surface-2:      rgba(var(--ui-bg-panel-rgb), 0.75);  /* nested surface      */
   --ui-surface-subtle: rgba(255, 255, 255, 0.04);           /* barely-there tint   */
 
   /* ── Semantic border layers ──────────────────────────────────────────────  */

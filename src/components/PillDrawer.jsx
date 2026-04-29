@@ -18,7 +18,7 @@ function DrawerPillCard({ pill, qty, onUse }) {
 
   const [floats, setFloats] = useState([]);
 
-  const color    = ITEM_RARITY[pill.rarity]?.color ?? '#aaa';
+  const color    = ITEM_RARITY[pill.rarity]?.color ?? 'rgba(160, 155, 190, 0.55)';
   const pillName = tGame(`items.${pill.id}.name`, { defaultValue: pill.name });
 
   function formatPillEffect(eff) {

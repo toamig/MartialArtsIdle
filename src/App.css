@@ -333,7 +333,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .nav-btn.active {
-  color: #f5c842;
+  color: var(--ui-purple-light);
   text-shadow: 0 0 8px rgba(245, 175, 20, 0.5);
 }
 
@@ -359,7 +359,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #f5c842;
+  background: var(--ui-purple-light);
   border: 1.5px solid rgba(var(--ui-bg-deep-rgb), 0.92);
   pointer-events: none;
 }
@@ -551,7 +551,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   height: 52px;
   padding: 0 13px;
   background: linear-gradient(145deg, #0e0e22, #13132e);
-  border: 1px solid rgba(245, 200, 66, 0.28);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.28);
   border-radius: 11px;
   box-shadow:
     0 6px 28px rgba(0, 0, 0, 0.65),
@@ -595,9 +595,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .toast-go {
   font-size: 11px;
   font-weight: 700;
-  color: #f5c842;
-  background: rgba(245, 200, 66, 0.1);
-  border: 1px solid rgba(245, 200, 66, 0.28);
+  color: var(--ui-purple-light);
+  background: rgba(var(--ui-purple-strong-rgb), 0.1);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.28);
   border-radius: 6px;
   padding: 3px 8px;
   cursor: pointer;
@@ -606,7 +606,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
 }
-.toast-go:hover { background: rgba(245, 200, 66, 0.2); }
+.toast-go:hover { background: rgba(var(--ui-purple-strong-rgb), 0.2); }
 
 .toast-dismiss {
   font-size: 14px;
@@ -629,9 +629,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   right: 4px;
   font-size: 10px;
   font-weight: 700;
-  color: rgba(245, 200, 66, 0.55);
+  color: rgba(var(--ui-purple-strong-rgb), 0.55);
   background: rgba(10, 10, 22, 0.85);
-  border: 1px solid rgba(245, 200, 66, 0.18);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.18);
   border-radius: 20px;
   padding: 2px 9px;
   pointer-events: none;
@@ -689,7 +689,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   justify-content: space-between;
   gap: 12px;
   padding: 10px 14px;
-  background: rgba(var(--ui-bg-panel-rgb), 0.75);
+  background: rgba(var(--ui-bg-panel-rgb), 0.88);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
@@ -753,8 +753,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
    gets clipped by the modal's overflow:auto, so use text-shadow (ink overflow,
    never clipped) to carry the gold ambient instead. */
 .sel-modal-law .sel-title {
-  color: #f5c842;
-  text-shadow: 0 0 18px rgba(245, 200, 66, 0.55), 0 0 40px rgba(245, 200, 66, 0.2);
+  color: var(--ui-purple-light);
+  text-shadow: 0 0 18px rgba(var(--ui-purple-strong-rgb), 0.55), 0 0 40px rgba(var(--ui-purple-strong-rgb), 0.2);
 }
 
 .sel-breakthrough-badge {
@@ -771,9 +771,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 /* Law variant — gold badge */
 .sel-breakthrough-badge-law {
-  background: rgba(245, 200, 66, 0.12);
-  color: #f5c842;
-  border-color: rgba(245, 200, 66, 0.50);
+  background: rgba(var(--ui-purple-strong-rgb), 0.12);
+  color: var(--ui-purple-light);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.50);
 }
 
 /* ── Law cards ───────────────────────────────────────────────────────────────
@@ -789,7 +789,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .law-card {
-  border-top: 2px solid rgba(245, 200, 66, 0.45);
+  border-top: 2px solid rgba(var(--ui-purple-strong-rgb), 0.45);
   background: linear-gradient(
     160deg,
     rgba(28, 20, 5, 0.92) 0%,
@@ -841,7 +841,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .augment-card-gold.law-card {
-  border-top-color: rgba(245, 200, 66, 0.80);
+  border-top-color: rgba(var(--ui-purple-strong-rgb), 0.80);
   background: linear-gradient(160deg, rgba(28, 20, 5, 0.92) 0%, rgba(45, 30, 5, 0.90) 100%);
 }
 .augment-card-gold.law-card::before {
@@ -1003,7 +1003,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .augment-card-rare   { border-color: rgba(96,165,250,0.35); box-shadow: 0 0 10px rgba(96,165,250,0.1); }
 .augment-card-epic   { border-color: rgba(192,132,252,0.45); box-shadow: 0 0 14px rgba(192,132,252,0.15); }
 
-/* ── Active Sparks chip — cyan-themed sibling of home-pill-chip / home-idle-chip.
+/* ── Active Sparks chip — sibling of home-pill-chip / home-idle-chip.
    Same shape, sizing and behaviour as the rest of the home-chips-tl stack;
    tapping opens the Active Sparks modal listing every active bonus. */
 .home-sparks-chip {
@@ -1011,21 +1011,21 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  background: linear-gradient(135deg, rgba(15, 40, 70, 0.85), rgba(25, 70, 110, 0.85));
-  border: 1px solid rgba(126, 184, 255, 0.50);
+  background: rgba(var(--ui-purple-rgb), 0.18);
+  border: 1px solid rgba(var(--ui-purple-rgb), 0.45);
   border-radius: 20px;
-  color: #cfe4ff;
+  color: rgba(var(--ui-hover-rgb), 0.90);
   font-size: 11px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   backdrop-filter: blur(4px);
-  box-shadow: 0 0 8px rgba(92, 216, 255, 0.30);
+  box-shadow: 0 0 8px rgba(var(--ui-purple-rgb), 0.25);
   transition: transform 0.15s, box-shadow 0.15s;
 }
 .home-sparks-chip:hover {
   transform: scale(1.04);
-  box-shadow: 0 0 14px rgba(92, 216, 255, 0.50);
+  box-shadow: 0 0 14px rgba(var(--ui-purple-rgb), 0.45);
 }
 .home-sparks-chip-icon  { font-size: 12px; }
 .home-sparks-chip-label { white-space: nowrap; }
@@ -1062,8 +1062,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .active-sparks-panel {
-  background: linear-gradient(180deg, #0e1a2a 0%, #061018 100%);
-  border: 1px solid rgba(126, 184, 255, 0.22);
+  background: rgba(var(--ui-bg-panel-rgb), 0.95);
+  border: 1px solid rgba(var(--ui-purple-rgb), 0.30);
   border-radius: 14px;
   width: min(420px, 96vw);
   max-height: min(80vh, 640px);
@@ -1071,7 +1071,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   flex-direction: column;
   overflow: hidden;
   box-shadow:
-    0 0 24px rgba(92, 216, 255, 0.14),
+    0 0 24px rgba(var(--ui-purple-rgb), 0.15),
     0 8px 32px rgba(0, 0, 0, 0.65);
   animation: modal-pop 0.2s ease-out;
 }
@@ -1087,7 +1087,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .active-sparks-panel-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #cfe4ff;
+  color: rgba(var(--ui-hover-rgb), 0.90);
   letter-spacing: 0.03em;
   flex: 1;
 }
@@ -1095,9 +1095,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .active-sparks-panel-count {
   font-size: 0.72rem;
   font-weight: 600;
-  color: rgba(207, 228, 255, 0.7);
-  background: rgba(126, 184, 255, 0.1);
-  border: 1px solid rgba(126, 184, 255, 0.22);
+  color: rgba(var(--ui-label-rgb), 0.70);
+  background: rgba(var(--ui-purple-rgb), 0.10);
+  border: 1px solid rgba(var(--ui-purple-rgb), 0.25);
   border-radius: 999px;
   padding: 2px 9px;
   font-variant-numeric: tabular-nums;
@@ -1126,9 +1126,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: rgba(20, 30, 45, 0.55);
+  background: rgba(var(--ui-bg-panel-rgb), 0.50);
   border: 1px solid rgba(255, 255, 255, 0.04);
-  border-left: 3px solid var(--rarity-color, rgba(156, 163, 175, 0.5));
+  border-left: 3px solid var(--rarity-color, rgba(var(--ui-muted-rgb), 0.45));
 }
 
 .active-spark-row-dot {
@@ -1155,7 +1155,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .active-spark-row-name {
   font-size: 0.86rem;
   font-weight: 700;
-  color: rgba(230, 240, 250, 0.95);
+  color: rgba(var(--ui-hover-rgb), 0.90);
   letter-spacing: 0.01em;
 }
 
@@ -1171,7 +1171,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .active-spark-row-desc {
   font-size: 0.75rem;
-  color: rgba(200, 215, 230, 0.72);
+  color: rgba(var(--ui-label-rgb), 0.65);
   line-height: 1.4;
 }
 
@@ -1201,11 +1201,11 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .qi-spark-modal {
-  background: linear-gradient(180deg, #0e1a2a 0%, #061018 100%);
-  border: 1px solid rgba(126, 184, 255, 0.25);
+  background: rgba(var(--ui-bg-panel-rgb), 0.95);
+  border: 1px solid rgba(var(--ui-purple-rgb), 0.30);
   border-radius: 14px;
   box-shadow:
-    0 0 24px rgba(92, 216, 255, 0.18),
+    0 0 24px rgba(var(--ui-purple-rgb), 0.18),
     0 4px 24px rgba(0, 0, 0, 0.65);
   padding: 18px 16px 14px;
   width: min(540px, 92vw);
@@ -1222,16 +1222,16 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   margin: 0;
   font-size: 1.4rem;
   font-weight: 800;
-  color: #cfe4ff;
+  color: rgba(var(--ui-hover-rgb), 0.90);
   letter-spacing: 0.04em;
-  text-shadow: 0 0 10px rgba(92, 216, 255, 0.5);
+  text-shadow: 0 0 10px rgba(var(--ui-purple-rgb), 0.50);
 }
 
 .qi-spark-subtitle {
   margin: 4px 0 0;
   font-size: 0.85rem;
   font-style: italic;
-  color: rgba(180, 210, 240, 0.65);
+  color: rgba(var(--ui-label-rgb), 0.60);
 }
 
 .qi-spark-grid {
@@ -1242,8 +1242,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .qi-spark-card {
-  background: linear-gradient(180deg, rgba(20, 35, 55, 0.95) 0%, rgba(10, 20, 32, 0.95) 100%);
-  border: 1px solid var(--rarity-color, rgba(156, 163, 175, 0.3));
+  background: rgba(var(--ui-bg-panel-rgb), 0.92);
+  border: 1px solid var(--rarity-color, rgba(var(--ui-muted-rgb), 0.30));
   border-radius: 10px;
   padding: 12px 12px 14px;
   cursor: pointer;
@@ -1292,14 +1292,14 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   margin: 0 0 6px;
   font-size: 1.05rem;
   font-weight: 700;
-  color: #e5efff;
+  color: var(--text-primary);
 }
 
 .qi-spark-desc {
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.35;
-  color: rgba(200, 220, 240, 0.85);
+  color: rgba(var(--ui-label-rgb), 0.75);
 }
 
 .qi-spark-footer {
@@ -1310,10 +1310,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .qi-spark-reroll-btn {
-  background: rgba(126, 184, 255, 0.10);
-  border: 1px solid rgba(126, 184, 255, 0.30);
+  background: rgba(var(--ui-purple-rgb), 0.10);
+  border: 1px solid rgba(var(--ui-purple-rgb), 0.30);
   border-radius: 8px;
-  color: #cfe4ff;
+  color: rgba(var(--ui-hover-rgb), 0.90);
   font-size: 0.9rem;
   font-weight: 600;
   padding: 8px 16px;
@@ -1322,8 +1322,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .qi-spark-reroll-btn:hover:not(:disabled) {
-  background: rgba(126, 184, 255, 0.18);
-  border-color: rgba(126, 184, 255, 0.5);
+  background: rgba(var(--ui-purple-rgb), 0.18);
+  border-color: rgba(var(--ui-purple-rgb), 0.50);
 }
 
 .qi-spark-reroll-free {
@@ -1347,7 +1347,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .augment-card-iron         { border-color: rgba(156,163,175,0.30); }
 .augment-card-bronze       { border-color: rgba(205,127,50,0.50);  box-shadow: 0 0 12px rgba(205,127,50,0.18); }
 .augment-card-silver       { border-color: rgba(192,192,192,0.50); box-shadow: 0 0 14px rgba(192,192,192,0.14); }
-.augment-card-gold         { border-color: rgba(245,200,66,0.60);  box-shadow: 0 0 18px rgba(245,200,66,0.22); }
+.augment-card-gold         { border-color: rgba(var(--ui-purple-strong-rgb),0.60);  box-shadow: 0 0 18px rgba(var(--ui-purple-strong-rgb),0.22); }
 .augment-card-transcendent { border-color: rgba(192,132,252,0.60); box-shadow: 0 0 22px rgba(192,132,252,0.28); }
 
 /* Category strip and body sit above the ::before sheen layer */
@@ -1443,10 +1443,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   align-self: center;
   margin: 0 0 8px;
   padding: 4px 12px;
-  background: rgba(245, 200, 66, 0.10);
-  border: 1px solid rgba(245, 200, 66, 0.32);
+  background: rgba(var(--ui-purple-strong-rgb), 0.10);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.32);
   border-radius: 20px;
-  color: rgba(245, 200, 66, 0.72);
+  color: rgba(var(--ui-purple-strong-rgb), 0.72);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -1454,10 +1454,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   transition: color 0.15s, border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 .augment-reroll:hover:not(:disabled) {
-  color: #f5c842;
-  border-color: rgba(245, 200, 66, 0.65);
-  background: rgba(245, 200, 66, 0.18);
-  box-shadow: 0 0 10px rgba(245, 200, 66, 0.28);
+  color: var(--ui-purple-light);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.65);
+  background: rgba(var(--ui-purple-strong-rgb), 0.18);
+  box-shadow: 0 0 10px rgba(var(--ui-purple-strong-rgb), 0.28);
 }
 .augment-reroll:active:not(:disabled) {
   transform: scale(0.94);
@@ -1545,7 +1545,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   box-shadow: 0 0 0 1px rgba(0,0,0,0.40), 0 0 10px rgba(217,160,20,0.35);
 }
 .augment-reroll-btn.augment-reroll-free:hover {
-  border-color: #f5c842;
+  border-color: var(--ui-purple-light);
   background: rgba(180,110,10,0.60);
   box-shadow: 0 0 0 1px rgba(0,0,0,0.40), 0 0 18px rgba(217,160,20,0.55);
   transform: rotate(-25deg);
@@ -1580,7 +1580,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   letter-spacing: 0.02em;
   text-shadow: 0 1px 3px rgba(0,0,0,0.70);
 }
-.augment-reroll-cost-free  { color: #fde68a; }
+.augment-reroll-cost-free  { color: var(--ui-purple-light); }
 .augment-reroll-cost-short { color: #fca5a5; }
 
 
@@ -1621,7 +1621,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   background: linear-gradient(135deg, rgba(146, 64, 14, 0.55), rgba(180, 100, 0, 0.55));
   border: 1px solid rgba(217, 119, 6, 0.60);
   border-radius: 10px;
-  color: #fde68a;
+  color: var(--ui-purple-light);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -1740,7 +1740,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   padding: 10px 4px;
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 9px;
-  background: rgba(var(--ui-bg-panel-rgb), 0.75);
+  background: rgba(var(--ui-bg-panel-rgb), 0.88);
   color: rgba(var(--ui-muted-rgb), 0.7);
   font-size: 0.85rem;
   font-weight: 600;
@@ -1803,7 +1803,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .screen .subtitle {
-  color: var(--text-muted);
+  color: var(--ui-text-meta);
   margin-bottom: 20px;
   font-size: 0.95rem;
 }
@@ -1868,7 +1868,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .card h2 {
   font-size: 1.1rem;
   margin-bottom: 6px;
-  color: var(--gold);
+  color: rgba(var(--ui-hover-rgb), 0.90);
 }
 
 .card p {
@@ -1894,22 +1894,13 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 /* ── Gear slots: dark transparent, match world-card depth ──────────────────── */
 .build-artefact-section .inv-slot {
-  background: rgba(var(--ui-bg-panel-rgb), 0.75);
+  background: rgba(var(--ui-bg-panel-rgb), 0.88);
   border-color: rgba(255, 255, 255, 0.1);
   border-width: 1px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
-/* ── Technique cards: same world-card treatment ─────────────────────────────── */
-.build-tech-section .card {
-  background: rgba(var(--ui-bg-panel-rgb), 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
-}
-
-.build-tech-section .card:hover {
-  border-color: rgba(255, 255, 255, 0.14);
-}
+/* Technique cards use inv-slot as base — no override needed here. */
 
 /* ── Build layout: stack on mobile → 3-col grid (law|artefacts|techniques) on desktop */
 .build-layout {
@@ -1966,19 +1957,21 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .gear-slot-glyph {
   font-size: 1.4rem;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.55);
   line-height: 1;
 }
 
 .gear-slot-name {
   font-size: 0.6rem;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.55);
   max-width: 64px;
 }
 
-/* Filled gear slot */
+/* Filled gear slot — border switches from dashed to solid, rarity color applied */
 .gear-slot-filled {
   gap: 4px;
+  border-style: solid;
+  border-color: var(--slot-quality, rgba(var(--accent-rgb), 0.50));
 }
 
 .gear-slot-quality-dot {
@@ -1986,6 +1979,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
+  background: var(--slot-quality, rgba(var(--ui-muted-rgb), 0.45));
 }
 
 .gear-slot-name-filled {
@@ -2000,6 +1994,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+  color: var(--slot-quality, var(--text-primary));
 }
 
 /* ── Artefact picker modal ── */
@@ -2015,13 +2010,13 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.55);
   margin: 4px 0 2px;
 }
 
 .art-pick-empty {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.60);
   font-style: italic;
   padding: 8px 0;
 }
@@ -2033,7 +2028,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .art-pick-card {
-  background: var(--bg-secondary);
+  background: rgba(var(--ui-bg-panel-rgb), 0.85);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 12px;
@@ -2073,17 +2068,17 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .art-pick-bonus {
   font-size: 0.72rem;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.60);
 }
 
 .art-pick-tag {
   font-size: 0.65rem;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.60);
   font-style: italic;
 }
 
 .art-pick-tag-elsewhere {
-  color: var(--gold);
+  color: var(--ui-purple-light);
 }
 
 /* Gear slot modal empty icon */
@@ -2093,60 +2088,44 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   justify-content: center;
   width: 96px;
   height: 96px;
-  border: 2px dashed var(--border);
+  border: 2px dashed var(--ui-border-subtle);
   border-radius: 12px;
   margin: 0 auto 16px;
 }
 
 .gear-slot-empty-glyph {
   font-size: 2.5rem;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.55);
 }
 
-.build-slot {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-height: 80px;
-  justify-content: center;
-}
-
-.build-slot-wide {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
 
 .build-slot-label {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--gold);
+  color: var(--ui-text-section);
 }
 
 .build-slot-empty {
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.60);
   font-size: 0.9rem;
   font-style: italic;
 }
 
-/* Law Card */
+/* Law Card — visual properties match inv-slot's canonical card style */
 .build-law-card {
   background: rgba(var(--ui-bg-panel-rgb), 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
   padding: 14px;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 10px;
   height: auto;
   overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .build-law-locked {
@@ -2178,8 +2157,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .law-name {
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--gold);
-  text-shadow: 0 0 16px rgba(245, 200, 66, 0.2);
+  color: var(--text-primary);
   line-height: 1.2;
 }
 
@@ -2205,7 +2183,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .law-rarity-badge {
-  /* color and borderColor set inline from rarity config */
+  color: var(--rarity-color, var(--ui-purple-light));
+  border-color: var(--rarity-color, rgba(var(--ui-purple-rgb), 0.40));
 }
 
 .law-flavour {
@@ -2237,7 +2216,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .law-stat-value {
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--gold);
+  color: rgba(var(--ui-hover-rgb), 0.90);
 }
 
 .law-passives {
@@ -2260,7 +2239,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .law-passive-desc {
   font-size: 0.72rem;
-  color: var(--text-secondary);
+  /* Tier rarity color set via --rarity-color; muted fallback when uncolored */
+  color: var(--rarity-color, rgba(var(--ui-muted-rgb), 0.70));
   line-height: 1.35;
 }
 
@@ -2280,7 +2260,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .law-req-locked {
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.65);
 }
 
 /* Compact law card for the build screen left column */
@@ -2292,12 +2272,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .build-law-card-compact:active {
-  background: rgba(233, 69, 96, 0.06);
+  background: var(--ui-accent-surface);
 }
 
 .build-law-card-compact:hover {
-  border-color: rgba(233, 69, 96, 0.5);
-  box-shadow: 0 0 18px rgba(233, 69, 96, 0.1);
+  border-color: var(--ui-accent-border);
+  box-shadow: 0 0 18px var(--ui-accent-glow);
 }
 
 .build-law-card-compact .law-name {
@@ -2420,17 +2400,17 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   display: flex;
   align-items: center;
   gap: 5px;
-  background: rgba(245, 200, 66, 0.10);
-  border: 1px solid rgba(245, 200, 66, 0.28);
+  background: rgba(var(--ui-purple-strong-rgb), 0.10);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.28);
   border-radius: 20px;
   padding: 4px 11px 4px 6px;
   font-size: 13px;
   font-weight: 700;
-  color: #f5c842;
+  color: var(--ui-purple-light);
   cursor: pointer;
   transition: background 0.15s;
 }
-.home-hud-blood-lotus:hover { background: rgba(245, 200, 66, 0.20); }
+.home-hud-blood-lotus:hover { background: rgba(var(--ui-purple-strong-rgb), 0.20); }
 
 .home-hud-blood-lotus-icon {
   width: 22px;
@@ -2453,7 +2433,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .topbar-realm-name {
   font-size: 13px;
   font-weight: 700;
-  color: #f5c842;
+  color: var(--ui-purple-light);
   letter-spacing: 0.02em;
   white-space: nowrap;
   overflow: hidden;
@@ -2570,7 +2550,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .home-realm-name {
   font-family: 'Press Start 2P', 'Courier New', monospace;
   font-size: 0.65rem;
-  color: var(--gold, #f5c842);
+  color: var(--ui-purple-light);
   text-shadow:
     0 0 8px rgba(0,0,0,0.9),
     0 2px 6px rgba(0,0,0,0.8);
@@ -2700,8 +2680,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 .qi-rate-value::before { content: ''; }
 .qi-rate-boosted {
-  color: var(--gold);
-  box-shadow: 0 0 10px rgba(245, 200, 66, 0.35);
+  color: var(--ui-purple-light);
+  box-shadow: 0 0 10px rgba(var(--ui-purple-strong-rgb), 0.35);
 }
 .qi-rate-ad {
   color: #c2e6ff;
@@ -2722,8 +2702,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   display: inline-block;
   padding: 0 6px;
   border-radius: 10px;
-  background: rgba(245, 200, 66, 0.22);
-  color: var(--gold);
+  background: rgba(var(--ui-purple-strong-rgb), 0.22);
+  color: var(--ui-purple-light);
   font-size: 0.68rem;
   font-weight: 700;
 }
@@ -3162,7 +3142,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
       var(--ce-b, rgba(100, 0, 180, 0.35)) 0%,
       rgba(0, 0, 0, 0) 70%),
     radial-gradient(ellipse at center,
-      rgba(var(--ui-bg-panel-rgb), 0.75) 0%,
+      rgba(var(--ui-bg-panel-rgb), 0.88) 0%,
       rgba(var(--ui-bg-panel-rgb), 0.4) 40%,
       rgba(0, 0, 0, 0) 75%);
   filter: blur(6px);
@@ -3577,17 +3557,17 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .home-pc-section-label {
   font-size: 9px;
   font-weight: 700;
-  color: var(--gold, #f5c842);
+  color: var(--ui-purple-light);
   text-transform: uppercase;
   letter-spacing: 0.10em;
-  border-bottom: 1px solid rgba(245, 200, 66, 0.20);
+  border-bottom: 1px solid rgba(var(--ui-purple-strong-rgb), 0.20);
   padding-bottom: 7px;
 }
 
 .home-pc-realm-name {
   font-size: 17px;
   font-weight: 800;
-  color: #f5c842;
+  color: var(--ui-purple-light);
   letter-spacing: 0.05em;
   text-shadow:
     0 0 18px rgba(245, 175, 20, 0.9),
@@ -4371,9 +4351,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .cfm-levelup-tag {
-  background: rgba(245, 200, 66, 0.15);
-  border: 1px solid rgba(245, 200, 66, 0.35);
-  color: #f5c842;
+  background: rgba(var(--ui-purple-strong-rgb), 0.15);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.35);
+  color: var(--ui-purple-light);
   border-radius: 20px;
   font-size: 10px;
   font-weight: 700;
@@ -4401,7 +4381,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   transition: color 0.2s;
 }
 .cfm-level-preview strong {
-  color: #f5c842;
+  color: var(--ui-purple-light);
   font-size: 13px;
   transition: color 0.2s;
 }
@@ -4412,9 +4392,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .cfm-level-preview-idle .cfm-level-arrow { opacity: 0.4; }
 
 .cfm-level-delta {
-  background: rgba(245, 200, 66, 0.18);
-  border: 1px solid rgba(245, 200, 66, 0.4);
-  color: #f5c842;
+  background: rgba(var(--ui-purple-strong-rgb), 0.18);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.4);
+  color: var(--ui-purple-light);
   font-size: 10px;
   font-weight: 700;
   padding: 1px 6px;
@@ -4587,13 +4567,13 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   border-color: rgba(var(--ui-purple-rgb), 0.45);
 }
 .cfm-quick-max {
-  background: rgba(245, 200, 66, 0.10);
-  border-color: rgba(245, 200, 66, 0.35);
-  color: #f5c842;
+  background: rgba(var(--ui-purple-strong-rgb), 0.10);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.35);
+  color: var(--ui-purple-light);
 }
 .cfm-quick-max:hover:not(:disabled) {
-  background: rgba(245, 200, 66, 0.18);
-  border-color: rgba(245, 200, 66, 0.55);
+  background: rgba(var(--ui-purple-strong-rgb), 0.18);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.55);
 }
 
 /* ── Consumption preview ("Will consume: 30 Iron, 12 Bronze") ─────────────── */
@@ -4665,16 +4645,16 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .cfm-refine-levelup {
-  background: linear-gradient(135deg, var(--ui-purple-deep), var(--ui-purple-strong), #f5c842);
-  border-color: rgba(245, 200, 66, 0.5);
+  background: linear-gradient(135deg, var(--ui-purple-deep), var(--ui-purple-strong), var(--ui-purple-light));
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.5);
   color: #fff;
-  box-shadow: 0 0 16px rgba(245, 200, 66, 0.25);
+  box-shadow: 0 0 16px rgba(var(--ui-purple-strong-rgb), 0.25);
   animation: cfm-levelup-pulse 1.5s ease-in-out infinite;
 }
 
 @keyframes cfm-levelup-pulse {
-  0%, 100% { box-shadow: 0 0 16px rgba(245, 200, 66, 0.25); }
-  50%       { box-shadow: 0 0 28px rgba(245, 200, 66, 0.5);  }
+  0%, 100% { box-shadow: 0 0 16px rgba(var(--ui-purple-strong-rgb), 0.25); }
+  50%       { box-shadow: 0 0 28px rgba(var(--ui-purple-strong-rgb), 0.5);  }
 }
 
 /* ── Qi-particle stream between crystal and character ───────────────────── */
@@ -4833,14 +4813,14 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-weight: 400; /* Press Start 2P only ships one weight */
   letter-spacing: 0.02em;
   line-height: 1.25;
-  color: var(--gold);
+  color: var(--ui-purple-light);
   padding: 4px 12px 6px;
   margin: 0 auto 2px;
   text-shadow:
     2px 2px 0   rgba(0, 0, 0, 0.95),
-    0 0 12px   rgba(245, 200, 66, 0.35);
-  /* Subtle bronze underline keeps it anchored above the bar */
-  border-bottom: 1px solid rgba(245, 200, 66, 0.22);
+    0 0 12px   rgba(var(--ui-purple-strong-rgb), 0.35);
+  /* Subtle underline keeps it anchored above the bar */
+  border-bottom: 1px solid rgba(var(--ui-purple-strong-rgb), 0.22);
   width: fit-content;
   image-rendering: auto;
 }
@@ -4858,7 +4838,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .realm-next {
-  color: var(--gold);
+  color: var(--ui-purple-light);
 }
 
 .realm-current {
@@ -5101,8 +5081,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .stage-boosted {
-  border-color: var(--gold);
-  box-shadow: inset 0 0 12px rgba(245, 200, 66, 0.06);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.55);
+  box-shadow: inset 0 0 12px rgba(var(--ui-purple-strong-rgb), 0.06);
 }
 
 /* Aura intensifies when cultivating hard */
@@ -5155,7 +5135,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   top: 10px;
   left: 0; right: 0;
   text-align: center;
-  color: var(--gold);
+  color: var(--ui-purple-light);
   font-weight: 700;
   font-size: 0.9rem;
   animation: pulse-glow 0.6s ease-in-out infinite alternate;
@@ -5166,8 +5146,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 @keyframes pulse-glow {
-  from { opacity: 0.8; text-shadow: 0 0 2px rgba(245, 200, 66, 0.15); }
-  to { opacity: 1; text-shadow: 0 0 6px rgba(245, 200, 66, 0.3); }
+  from { opacity: 0.8; text-shadow: 0 0 2px rgba(var(--ui-purple-strong-rgb), 0.15); }
+  to { opacity: 1; text-shadow: 0 0 6px rgba(var(--ui-purple-strong-rgb), 0.3); }
 }
 
 .tap-hint {
@@ -5220,7 +5200,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 /* VFX: Float up text */
 .vfx-float-up .vfx-content {
   display: block;
-  color: var(--gold);
+  color: var(--ui-purple-light);
   font-weight: 700;
   font-size: 1.2rem;
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
@@ -5264,7 +5244,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .vfx-burst {
   width: 60px;
   height: 60px;
-  border: 3px solid var(--gold);
+  border: 3px solid rgba(var(--ui-purple-strong-rgb), 0.55);
   border-radius: 50%;
   animation: vfx-burst-anim 0.5s ease-out forwards;
 }
@@ -5512,11 +5492,11 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   align-items: center;
   gap: 8px;
   padding: 7px 12px;
-  background: rgba(var(--ui-bg-panel-rgb), 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 8px;
+  background: rgba(var(--ui-bg-panel-rgb), 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
   margin-bottom: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   transition: border-color 0.15s;
 }
 
@@ -5525,7 +5505,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
     border-color: rgba(255, 255, 255, 0.15);
   }
   .secondary-stat-row-interactive:hover {
-    border-color: rgba(167, 243, 232, 0.25);
+    border-color: rgba(var(--ui-purple-rgb), 0.30);
     cursor: default;
   }
 }
@@ -5571,7 +5551,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .sbt-bonus {
-  color: #a7f3e8;
+  color: rgba(var(--ui-purple-light-rgb), 0.90);
 }
 
 .sbt-divider {
@@ -5587,7 +5567,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .sbt-total .sbt-val {
-  color: rgba(245, 200, 66, 0.9);
+  color: rgba(var(--ui-hover-rgb), 0.95);
 }
 
 .secondary-stat-label {
@@ -5600,16 +5580,21 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .secondary-stat-formula {
   flex: 1;
   font-size: 0.68rem;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.50);
   font-style: italic;
 }
 
 .secondary-stat-value {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--gold);
+  color: rgba(var(--ui-hover-rgb), 0.90);
   margin-left: auto;
   flex-shrink: 0;
+}
+
+.secondary-stat-value-locked {
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 /* Combat + Utility grid — stacked on mobile, side-by-side on PC.
@@ -5742,14 +5727,14 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .save-btn-active {
-  border-color: rgba(245, 200, 66, 0.55);
-  background: rgba(245, 200, 66, 0.10);
-  color: #f5c842;
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.55);
+  background: rgba(var(--ui-purple-strong-rgb), 0.10);
+  color: var(--ui-purple-light);
 }
 
 .save-btn-active:hover:not(:disabled) {
-  background: rgba(245, 200, 66, 0.20);
-  border-color: rgba(245, 200, 66, 0.75);
+  background: rgba(var(--ui-purple-strong-rgb), 0.20);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.75);
 }
 
 .save-btn .res-sub {
@@ -5843,7 +5828,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   align-items: center;
   gap: 4px;
   padding: 10px 6px;
-  background: rgba(var(--ui-bg-panel-rgb), 0.75);
+  background: rgba(var(--ui-bg-panel-rgb), 0.88);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   cursor: pointer;
@@ -5911,7 +5896,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .item-stat-label {
-  color: var(--text-secondary);
+  color: rgba(var(--ui-label-rgb), 0.65);
 }
 
 .item-stat-value {
@@ -6141,49 +6126,15 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   }
 }
 
-/* ── Inventory tile aesthetic refresh (Collection-only) ─────────────────
-   Visual overrides on top of the breakpoint sizing above. Other screens
-   that use .inv-slot (Build / Character / Transmutation) keep their own
-   look since these rules sit under the .inventory-screen scope.
+/* Inventory tiles share the same visual base as all other inv-slot usage —
+   no aesthetic overrides here, only sizing is scoped to .inventory-screen. */
 
-   The rarity colour border is set inline via JSX (`borderColor: q.color`)
-   and overrides the baseline border-color below. */
-.inventory-screen .inv-slot {
-  background: linear-gradient(180deg, rgba(20, 28, 40, 0.82), rgba(10, 14, 22, 0.82));
-  border-color: rgba(255, 255, 255, 0.06);
-  border-radius: 9px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-@media (hover: hover) {
-  .inventory-screen .inv-slot:hover {
-    transform: translateY(-2px);
-    box-shadow:
-      0 4px 14px rgba(0, 0, 0, 0.55),
-      0 0 12px rgba(255, 255, 255, 0.04);
-  }
-}
-
-/* Equipped state — gold ring + soft outer glow so it reads distinct from
-   the rarity border. */
-.inventory-screen .inv-slot-equipped {
-  box-shadow:
-    0 0 0 1px rgba(245, 200, 66, 0.5) inset,
-    0 0 14px rgba(245, 200, 66, 0.18);
-}
-
-/* Equipped pill — rounded with subtle backdrop, sits above qty when both
-   exist (e.g. on a stackable consumable equipped via a future feature). */
+/* Equipped pill — compact sizing for the dense inventory grid.
+   Colors inherit from global .inv-equipped-badge (purple tokens). */
 .inventory-screen .inv-equipped-badge {
   top: 3px;
   right: 3px;
   font-size: 0.52rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #fde68a;
-  background: rgba(245, 200, 66, 0.18);
-  border: 1px solid rgba(245, 200, 66, 0.45);
   border-radius: 999px;
   padding: 1px 5px;
   backdrop-filter: blur(2px);
@@ -6244,24 +6195,20 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   line-height: 1;
   padding: 2px 4px;
   background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(245, 200, 66, 0.45);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.45);
   border-radius: 999px;
   pointer-events: none;
-  filter: drop-shadow(0 0 3px rgba(245, 200, 66, 0.5));
+  filter: drop-shadow(0 0 3px rgba(var(--ui-purple-strong-rgb), 0.5));
 }
 
 .inventory-screen .inv-slot-locked {
-  /* Subtle gold-tinted inner glow so locked items read distinct from
-     equipped (also gold) — equipped uses the ring + outer glow combo. */
-  box-shadow: 0 0 0 1px rgba(245, 200, 66, 0.25) inset;
+  box-shadow: 0 0 0 1px rgba(var(--ui-muted-rgb), 0.25) inset;
 }
 
 .inventory-screen .inv-slot-equipped.inv-slot-locked {
-  /* When both states apply, equipped wins on the outer ring — the lock
-     badge alone communicates the lock state. */
   box-shadow:
-    0 0 0 1px rgba(245, 200, 66, 0.5) inset,
-    0 0 14px rgba(245, 200, 66, 0.18);
+    0 0 0 1px rgba(var(--ui-purple-strong-rgb), 0.55) inset,
+    0 0 14px rgba(var(--ui-purple-strong-rgb), 0.18);
 }
 
 /* Lock toggle button inside the artefact detail modal header. Sits between
@@ -6276,17 +6223,17 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
-  color: rgba(200, 210, 220, 0.6);
+  color: rgba(var(--ui-label-rgb), 0.55);
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 .coll-modal-lock-btn:hover {
-  border-color: rgba(245, 200, 66, 0.4);
-  color: #fde68a;
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.4);
+  color: var(--ui-purple-light);
 }
 .coll-modal-lock-btn.is-locked {
-  background: rgba(245, 200, 66, 0.12);
-  border-color: rgba(245, 200, 66, 0.5);
-  color: #fde68a;
+  background: rgba(var(--ui-purple-strong-rgb), 0.12);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.5);
+  color: var(--ui-purple-light);
 }
 
 /* Item Modal */
@@ -6331,7 +6278,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   right: 14px;
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.60);
   font-size: 1.2rem;
   cursor: pointer;
   padding: 4px 8px;
@@ -6363,34 +6310,40 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .modal-desc {
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: rgba(var(--ui-label-rgb), 0.65);
   line-height: 1.5;
   margin-bottom: 16px;
 }
 
 .modal-qty {
   font-size: 0.9rem;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.60);
 }
 
 .modal-qty strong {
-  color: var(--gold);
+  color: rgba(var(--ui-hover-rgb), 0.90);
 }
 
 /* ─────────────────────────────────────────────
    Build screen — technique slots
    ───────────────────────────────────────────── */
 
+/* Technique slot — modifier on top of .inv-slot.
+   .inv-slot provides: dark bg, border, border-radius, box-shadow, flex-col, gap, padding, cursor.
+   We only add/override what's unique to tech cards. */
 .build-tech-slot {
-  cursor: pointer;
+  /* stack children top-to-left, minimum usable tap height */
+  min-height: 80px;
+  justify-content: center;
   text-align: left;
-  border: 1px solid var(--border);
-  transition: border-color 0.2s;
+  /* Transition is on inv-slot already; override border only when filled */
 }
 
 .build-tech-slot.build-tech-filled {
   border: 2px solid var(--tech-quality, var(--accent));
-  box-shadow: 0 0 6px color-mix(in srgb, var(--tech-quality, var(--accent)) 25%, transparent);
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--tech-quality, var(--accent)) 25%, transparent),
+    0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .build-tech-name {
@@ -6403,12 +6356,14 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .build-tech-cd {
   font-size: 0.7rem;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.55);
 }
 
 /* ─────────────────────────────────────────────
    Tech icon chip — used in Collection grid,
-   equip modal cards, build slots, modal headings
+   equip modal cards, build slots, modal headings.
+   Callers set --type-color and --type-bg (typeCol + '22');
+   CSS consumes them so all visual decisions live here.
    ───────────────────────────────────────────── */
 
 .tech-icon {
@@ -6418,7 +6373,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  border: 2px solid;
+  border: 2px solid var(--type-color, rgba(255, 255, 255, 0.25));
+  background: var(--type-bg, rgba(255, 255, 255, 0.06));
   flex-shrink: 0;
   line-height: 1;
 }
@@ -6449,7 +6405,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .tech-item-stats-modal {
   font-size: 0.78rem;
-  color: var(--text-secondary);
+  color: rgba(var(--ui-label-rgb), 0.65);
   margin: 8px 0;
 }
 
@@ -6492,11 +6448,13 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   transition: all 0.15s;
 }
 
+/* "All" selected: accent gradient (no --type-color set, fallback kicks in).
+   Specific type selected: caller sets --type-color, solid color takes over. */
 .tech-type-btn-active {
-  background: linear-gradient(135deg, rgba(233, 69, 96, 0.2), rgba(180, 30, 60, 0.12));
-  border-color: rgba(233, 69, 96, 0.55);
+  background: var(--type-color, linear-gradient(135deg, rgba(var(--accent-rgb), 0.20), rgba(var(--accent-rgb), 0.12)));
+  border-color: var(--type-color, rgba(var(--accent-rgb), 0.55));
   color: var(--accent);
-  box-shadow: 0 0 10px rgba(233, 69, 96, 0.1);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.10);
 }
 
 .tech-list {
@@ -6554,7 +6512,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   flex-direction: column;
   gap: 3px;
   font-size: 0.72rem;
-  color: var(--text-secondary);
+  color: rgba(var(--ui-label-rgb), 0.65);
   margin: 0 0 6px 0;
   padding: 0;
 }
@@ -6569,13 +6527,13 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   content: '·';
   position: absolute;
   left: 2px;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.45);
 }
 
 .tech-item-flavour {
   font-size: 0.65rem;
   font-style: italic;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.55);
   line-height: 1.3;
   opacity: 0.8;
 }
@@ -6624,18 +6582,31 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .art-tooltip-name {
   font-size: 0.8rem;
   font-weight: 700;
+  /* --quality-color set on .art-tooltip root */
+  color: var(--quality-color, var(--text-primary));
+}
+
+/* "+N" upgrade level suffix inside the name */
+.art-tooltip-level {
+  margin-left: 6px;
 }
 
 .art-tooltip-quality {
   font-size: 0.65rem;
   font-weight: 600;
   margin-bottom: 2px;
+  color: var(--quality-color, rgba(var(--ui-label-rgb), 0.65));
 }
 
 .art-tooltip-section {
   display: flex;
   flex-direction: column;
   gap: 1px;
+}
+
+/* Sets section — slightly dimmed vs affix section */
+.art-tooltip-sets {
+  opacity: 0.85;
 }
 
 .art-tooltip-affixes {
@@ -6646,11 +6617,29 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .art-tooltip-line {
   font-size: 0.7rem;
-  color: var(--text-secondary);
+  color: rgba(var(--ui-label-rgb), 0.60);
+}
+
+/* Sub-description lines inside set bonuses (2p/4p text) */
+.art-tooltip-line-sub {
+  font-size: 11px;
+  opacity: 0.7;
+  padding-left: 10px;
 }
 
 .art-tooltip-affix {
-  color: var(--gold, #f5c842);
+  color: var(--ui-purple-light);
+}
+
+/* Unique affix — pink star prefix */
+.art-tooltip-affix-unique {
+  color: #ff7ae6;
+}
+
+/* Bonus upgrade count badge "(+N)" */
+.art-tooltip-count {
+  opacity: 0.7;
+  margin-left: 6px;
 }
 
 /* ── Enemy Tooltip ── */
@@ -6947,12 +6936,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   align-items: center;
   gap: 4px;
   padding: 10px 6px;
-  background: rgba(var(--ui-bg-panel-rgb), 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background: rgba(var(--ui-bg-panel-rgb), 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   transition: transform 0.12s, background 0.12s, border-color 0.12s;
 }
 
@@ -6969,9 +6958,16 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .art-inline-card-equipped {
-  background: rgba(233, 69, 96, 0.08);
-  border-color: rgba(233, 69, 96, 0.45);
-  box-shadow: 0 0 10px rgba(233, 69, 96, 0.1), 0 2px 6px rgba(0, 0, 0, 0.3);
+  background: var(--ui-accent-surface);
+  /* Rarity border when equipped; accent as fallback */
+  border-color: var(--item-quality, var(--ui-accent-border));
+  box-shadow: 0 0 10px var(--ui-accent-glow), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Equipped in a different slot — dimmer treatment */
+.art-inline-card-equipped-other {
+  border-color: var(--item-quality, rgba(var(--ui-label-rgb), 0.4));
+  opacity: 0.75;
 }
 
 .art-inline-card-name {
@@ -6980,25 +6976,27 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   text-align: center;
   line-height: 1.3;
   word-break: break-word;
+  /* Rarity color set on parent via --item-quality */
+  color: var(--item-quality, var(--text-primary));
 }
 
 .art-inline-card-tag {
   font-size: 0.62rem;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.60);
   font-style: italic;
 }
 
 /* "Equipped elsewhere" — dimmer accent to differentiate from the
    currently-selected-slot equipped state. */
 .art-inline-card-tag-other {
-  color: #f5c842;
+  color: var(--ui-purple-light);
   font-style: normal;
   opacity: 0.85;
 }
 
 /* Equipped badge + subtle ring on inventory tiles (Collection, Transmutation). */
 .inv-slot-equipped {
-  box-shadow: 0 0 0 1px rgba(245, 200, 66, 0.55) inset;
+  box-shadow: 0 0 0 1px rgba(var(--ui-purple-strong-rgb), 0.55) inset;
 }
 
 .inv-equipped-badge {
@@ -7009,15 +7007,23 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: #f5c842;
+  color: var(--ui-purple-light);
   background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(245, 200, 66, 0.6);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.50);
   border-radius: 4px;
   padding: 1px 4px;
   pointer-events: none;
 }
 
 /* ── Law Picker Modal ── */
+/* Empty state — "no laws yet" message */
+.law-picker-empty {
+  padding: 24px 16px;
+  font-size: 0.85rem;
+  color: var(--ui-text-caption);
+  text-align: center;
+}
+
 .law-picker-modal {
   max-width: 380px;
   max-height: var(--modal-max-h);
@@ -7053,15 +7059,15 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 @media (hover: hover) {
   .law-picker-card:hover {
-    border-color: rgba(233, 69, 96, 0.45);
+    border-color: var(--ui-accent-border);
     background: rgba(255, 255, 255, 0.03);
   }
 }
 
 .law-picker-card-active {
-  background: rgba(233, 69, 96, 0.07);
-  border-color: rgba(233, 69, 96, 0.5);
-  box-shadow: 0 0 14px rgba(233, 69, 96, 0.1), 0 2px 10px rgba(0, 0, 0, 0.35);
+  background: var(--ui-accent-surface);
+  border-color: var(--ui-accent-border);
+  box-shadow: 0 0 14px var(--ui-accent-glow), 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 
 .law-picker-card-header {
@@ -7081,12 +7087,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   flex-direction: column;
   gap: 2px;
   font-size: 0.7rem;
-  color: var(--text-secondary);
+  color: rgba(var(--ui-label-rgb), 0.55);
 }
 
 .law-picker-card-active-tag {
   font-size: 0.6rem;
-  color: rgba(233, 69, 96, 0.9);
+  color: rgba(var(--accent-rgb), 0.9);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -7121,7 +7127,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.55);
 }
 
 .combat-hp-wrap {
@@ -7156,14 +7162,14 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .hp-bar-text {
   font-size: 0.72rem;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.55);
   font-variant-numeric: tabular-nums;
 }
 
 .combat-vs {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.55);
   flex-shrink: 0;
 }
 
@@ -7205,6 +7211,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   justify-content: center;
   border-radius: 7px;
   overflow: hidden;
+  background: var(--type-bg, transparent);
 }
 
 /* Sprite — sits above glyph; if src 404s the glyph shows through */
@@ -7224,6 +7231,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   line-height: 1;
   z-index: 0;
   user-select: none;
+  color: var(--tech-color, var(--text-muted));
 }
 
 /* Countdown number — patched by rAF loop, NO CSS transition */
@@ -7260,6 +7268,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   position: relative;
   z-index: 11;
   text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  color: var(--tech-color, var(--text-muted));
 }
 
 /* ─────────────────────────────────────────────
@@ -7336,7 +7345,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .combat-log-empty {
-  color: var(--text-muted);
+  color: rgba(var(--ui-muted-rgb), 0.55);
   font-style: italic;
 }
 
@@ -7434,7 +7443,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   transform: translate(-50%, -50%);
   font-family: 'Press Start 2P', monospace;
   font-size: 7px;
-  color: #f5c842;
+  color: var(--ui-purple-light);
   text-shadow: 1px 0.7px 0.5px rgba(0,0,0,1), -1px -0.7px 8px rgba(0,0,0,1);
   line-height: 1;
   white-space: nowrap;
@@ -7646,8 +7655,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   display: flex;
   pointer-events: none;
   z-index: 6;
-  color: #f5c842;
-  filter: drop-shadow(1px 1px 0px rgba(0,0,0,1)) drop-shadow(-1px -1px 4px rgba(0,0,0,0.4)) drop-shadow(0 0 6px rgba(245,200,66,0.7));
+  color: var(--ui-purple-light);
+  filter: drop-shadow(1px 1px 0px rgba(0,0,0,1)) drop-shadow(-1px -1px 4px rgba(0,0,0,0.4)) drop-shadow(0 0 6px rgba(var(--ui-purple-strong-rgb),0.7));
   animation: dmg-float 1250ms ease-out forwards;
 }
 
@@ -7717,10 +7726,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 100%;
   max-width: 340px;
   padding: 12px 20px;
-  background: linear-gradient(135deg, rgba(245,200,66,0.12), rgba(192,132,252,0.12));
-  border: 1px solid rgba(245,200,66,0.4);
+  background: linear-gradient(135deg, rgba(var(--ui-purple-strong-rgb),0.12), rgba(192,132,252,0.12));
+  border: 1px solid rgba(var(--ui-purple-strong-rgb),0.4);
   border-radius: 10px;
-  color: var(--gold);
+  color: var(--ui-purple-light);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -7734,7 +7743,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .ad-reward-btn:not(:disabled):active {
-  border-color: var(--gold);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.55);
 }
 
 .stage-ad-boosted {
@@ -7892,10 +7901,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .offline-double-btn {
   width: 100%;
   padding: 11px 20px;
-  background: linear-gradient(135deg, rgba(245, 200, 66, 0.1), rgba(192, 132, 252, 0.1));
-  border: 1px solid rgba(245, 200, 66, 0.35);
+  background: linear-gradient(135deg, rgba(var(--ui-purple-strong-rgb), 0.1), rgba(192, 132, 252, 0.1));
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.35);
   border-radius: 10px;
-  color: var(--gold);
+  color: var(--ui-purple-light);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -7904,7 +7913,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .offline-double-btn:active {
-  border-color: var(--gold);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.55);
   opacity: 0.85;
 }
 
@@ -8396,7 +8405,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .worlds-tab-btn {
   position: relative;
   border-radius: 9px;
-  background: rgba(var(--ui-bg-panel-rgb), 0.75);
+  background: rgba(var(--ui-bg-panel-rgb), 0.88);
   border: 1px solid rgba(255, 255, 255, 0.07);
   color: rgba(var(--ui-muted-rgb), 0.7);
   font-weight: 600;
@@ -8515,8 +8524,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .world-name {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--gold);
-  text-shadow: 0 0 16px rgba(245, 200, 66, 0.2);
+  color: var(--ui-purple-light);
+  text-shadow: 0 0 16px rgba(var(--ui-purple-strong-rgb), 0.2);
 }
 
 .world-header-right {
@@ -8581,7 +8590,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .region-row.region-row-idling {
-  border-left: 3px solid rgba(245, 200, 66, 0.55);
+  border-left: 3px solid rgba(var(--ui-purple-strong-rgb), 0.55);
   background: rgba(180, 140, 0, 0.05);
 }
 
@@ -8603,11 +8612,11 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
-/* Currently idling — yellow */
+/* Currently idling — purple */
 .region-idle-stamp.region-idle-stamp-active {
-  border-color: rgba(245, 200, 66, 0.55);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.55);
   background: rgba(180, 140, 0, 0.12);
-  color: rgba(245, 200, 66, 0.9);
+  color: rgba(var(--ui-purple-strong-rgb), 0.9);
 }
 
 /* Idle-target rows tint the stamp green on row hover for click affordance */
@@ -9058,7 +9067,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(200, 185, 220, 0.65);
+  color: rgba(var(--ui-label-rgb), 0.65);
   padding: 10px 14px 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
@@ -9067,7 +9076,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .alc-section-title-quiet {
   border-bottom: none;
   padding: 12px 14px 6px;
-  color: rgba(200, 185, 220, 0.42);
+  color: rgba(var(--ui-label-rgb), 0.42);
   font-size: 0.66rem;
 }
 
@@ -9088,7 +9097,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: 0.01em;
-  color: var(--text-primary);
+  color: var(--rarity-color, var(--text-primary));
   line-height: 1.2;
   margin-bottom: 6px;
   overflow: hidden;
@@ -9141,6 +9150,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
   animation: alc-float-up 1.3s ease-out forwards;
   z-index: 5;
+  color: var(--float-color, rgba(var(--ui-hover-rgb), 0.95));
 }
 
 @keyframes alc-float-up {
@@ -9190,17 +9200,17 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .alc-qty-btn-active {
-  color: #f5c842;
-  background: rgba(245, 200, 66, 0.10);
+  color: var(--ui-purple-light);
+  background: rgba(var(--ui-purple-strong-rgb), 0.10);
 }
 
 .alc-brew-btn {
   flex: 1;
   height: 38px;
   border-radius: 8px;
-  border: 1px solid rgba(245, 200, 66, 0.5);
-  background: rgba(245, 200, 66, 0.16);
-  color: #f5c842;
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.5);
+  background: rgba(var(--ui-purple-strong-rgb), 0.16);
+  color: var(--ui-purple-light);
   font-family: inherit;
   font-size: 0.88rem;
   font-weight: 700;
@@ -9211,12 +9221,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .alc-brew-btn:hover:not(:disabled) {
-  background: rgba(245, 200, 66, 0.26);
-  border-color: rgba(245, 200, 66, 0.78);
+  background: rgba(var(--ui-purple-strong-rgb), 0.26);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.78);
 }
 
 .alc-brew-btn:active:not(:disabled) {
-  background: rgba(245, 200, 66, 0.32);
+  background: rgba(var(--ui-purple-strong-rgb), 0.32);
 }
 
 .alc-brew-btn:disabled {
@@ -9266,9 +9276,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .alc-slot-active {
-  border-color: #f5c842;
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.55);
   border-style: solid;
-  background: rgba(245, 200, 66, 0.04);
+  background: rgba(var(--ui-purple-strong-rgb), 0.04);
 }
 
 .alc-slot-name {
@@ -9280,6 +9290,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   -webkit-box-orient: vertical;
   overflow: hidden;
   padding-right: 14px; /* room for clear × */
+  color: var(--rarity-color, var(--text-primary));
 }
 
 .alc-slot-clear {
@@ -9307,7 +9318,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .alc-slot-active .alc-slot-placeholder {
-  color: rgba(245, 200, 66, 0.55);
+  color: rgba(var(--ui-purple-strong-rgb), 0.55);
 }
 
 /* Cost line — plain inline text. Always rendered, fixed min-height. */
@@ -9325,7 +9336,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(200, 185, 220, 0.45);
+  color: rgba(var(--ui-muted-rgb), 0.45);
   margin-right: 4px;
 }
 
@@ -9398,6 +9409,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--rarity-color, var(--text-primary));
 }
 
 .alc-herb-qty {
@@ -9435,8 +9447,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .alc-codex-tab:hover { color: var(--text-primary); }
 
 .alc-codex-tab-active {
-  color: #f5c842;
-  border-bottom-color: #f5c842;
+  color: var(--ui-purple-light);
+  border-bottom-color: var(--ui-purple-light);
 }
 
 .alc-codex-tab-count {
@@ -9447,7 +9459,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .alc-codex-tab-active .alc-codex-tab-count {
-  color: rgba(245, 200, 66, 0.7);
+  color: rgba(var(--ui-purple-strong-rgb), 0.7);
 }
 
 .alc-codex-list {
@@ -9503,8 +9515,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   -webkit-tap-highlight-color: transparent;
 }
 
-.alc-recipe-pin:hover { color: #f5c842; }
-.alc-recipe-pin-on { color: #f5c842; }
+.alc-recipe-pin:hover { color: var(--ui-purple-light); }
+.alc-recipe-pin-on { color: var(--ui-purple-light); }
 
 .alc-recipe-body {
   display: grid;
@@ -9536,6 +9548,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-weight: 700;
   white-space: nowrap;
   letter-spacing: 0.01em;
+  color: var(--rarity-color, var(--text-muted));
 }
 
 .alc-recipe-missing {
@@ -9581,10 +9594,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   gap: 8px;
   margin: 8px 16px 0;
   padding: 8px 16px;
-  border: 1px solid rgba(245, 200, 66, 0.45);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.45);
   border-radius: 22px;
   background: linear-gradient(180deg, rgba(50, 35, 15, 0.92), rgba(25, 16, 6, 0.92));
-  color: var(--gold);
+  color: var(--ui-purple-light);
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: 700;
@@ -9594,9 +9607,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 .home-pill-btn:hover {
-  border-color: var(--gold);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.55);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(245, 200, 66, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--ui-purple-strong-rgb), 0.3);
 }
 .home-pill-btn-icon {
   font-size: 1rem;
@@ -9608,7 +9621,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .home-pill-btn-count {
   padding: 1px 8px;
   border-radius: 10px;
-  background: rgba(245, 200, 66, 0.25);
+  background: rgba(var(--ui-purple-strong-rgb), 0.25);
   font-size: 0.72rem;
 }
 
@@ -9621,7 +9634,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   gap: 6px;
   padding: 5px 12px;
   background: linear-gradient(135deg, rgba(60, 42, 0, 0.85), rgba(90, 65, 5, 0.85));
-  border: 1px solid rgba(245, 200, 66, 0.50);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.50);
   border-radius: 20px;
   color: #fef3c7;
   font-size: 11px;
@@ -9629,12 +9642,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-family: inherit;
   cursor: pointer;
   backdrop-filter: blur(4px);
-  box-shadow: 0 0 8px rgba(245, 200, 66, 0.30);
+  box-shadow: 0 0 8px rgba(var(--ui-purple-strong-rgb), 0.30);
   transition: transform 0.15s, box-shadow 0.15s;
 }
 .home-pill-chip:hover {
   transform: scale(1.04);
-  box-shadow: 0 0 14px rgba(245, 200, 66, 0.50);
+  box-shadow: 0 0 14px rgba(var(--ui-purple-strong-rgb), 0.50);
 }
 .home-pill-chip-icon  { font-size: 12px; }
 .home-pill-chip-label { white-space: nowrap; }
@@ -9642,7 +9655,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 /* ── Pill Modal ───────────────────────────────────────────────────────────── */
 .pill-modal {
   background: linear-gradient(160deg, #120e04, #0b0804);
-  border: 1px solid rgba(245, 200, 66, 0.22);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.22);
   border-radius: 18px;
   width: min(96vw, 480px);
   max-height: var(--modal-max-h);
@@ -9668,7 +9681,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   gap: 8px;
   font-size: 16px;
   font-weight: 700;
-  color: #f5c842;
+  color: var(--ui-purple-light);
   letter-spacing: 0.03em;
   flex: 1;
 }
@@ -9676,9 +9689,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .pill-modal-count-badge {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(245, 200, 66, 0.7);
-  background: rgba(245, 200, 66, 0.09);
-  border: 1px solid rgba(245, 200, 66, 0.2);
+  color: rgba(var(--ui-purple-strong-rgb), 0.7);
+  background: rgba(var(--ui-purple-strong-rgb), 0.09);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.2);
   border-radius: 20px;
   padding: 2px 10px;
   flex-shrink: 0;
@@ -9703,9 +9716,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   flex-shrink: 0;
   padding: 5px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(245, 200, 66, 0.38);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.38);
   background: rgba(180, 130, 0, 0.14);
-  color: #f5c842;
+  color: var(--ui-purple-light);
   font-family: inherit;
   font-size: 0.7rem;
   font-weight: 700;
@@ -9716,7 +9729,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 .pill-modal-consume-all:hover {
   background: rgba(180, 130, 0, 0.28);
-  border-color: rgba(245, 200, 66, 0.60);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.60);
 }
 
 .pill-drawer-tab {
@@ -9740,9 +9753,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   color: rgba(255, 255, 255, 0.8);
 }
 .pill-drawer-tab.active {
-  background: rgba(245, 200, 66, 0.14);
-  border-color: rgba(245, 200, 66, 0.40);
-  color: #f5c842;
+  background: rgba(var(--ui-purple-strong-rgb), 0.14);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.40);
+  color: var(--ui-purple-light);
 }
 .pill-drawer-tab-count {
   padding: 0 5px;
@@ -9752,8 +9765,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-weight: 700;
 }
 .pill-drawer-tab.active .pill-drawer-tab-count {
-  background: rgba(245, 200, 66, 0.18);
-  color: #f5c842;
+  background: rgba(var(--ui-purple-strong-rgb), 0.18);
+  color: var(--ui-purple-light);
 }
 
 .pill-drawer-body {
@@ -9761,7 +9774,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   overflow-y: auto;
   padding: 12px 14px 18px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(245, 200, 66, 0.12) transparent;
+  scrollbar-color: rgba(var(--ui-purple-strong-rgb), 0.12) transparent;
 }
 .pill-drawer-empty {
   text-align: center;
@@ -9803,7 +9816,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 .pill-drawer-card-qty {
   font-size: 0.72rem;
-  color: rgba(245, 200, 66, 0.65);
+  color: rgba(var(--ui-purple-strong-rgb), 0.65);
   font-weight: 600;
 }
 .pill-drawer-card-effects {
@@ -9819,10 +9832,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .pill-drawer-card-use {
   margin-top: 4px;
   padding: 7px 0;
-  border: 1px solid rgba(245, 200, 66, 0.38);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.38);
   border-radius: 8px;
   background: rgba(180, 130, 0, 0.14);
-  color: #f5c842;
+  color: var(--ui-purple-light);
   font-family: inherit;
   font-size: 0.72rem;
   font-weight: 700;
@@ -9831,7 +9844,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 .pill-drawer-card-use:hover {
   background: rgba(180, 130, 0, 0.30);
-  border-color: rgba(245, 200, 66, 0.60);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.60);
 }
 .pill-drawer-card-use:disabled {
   opacity: 0.35;
@@ -9966,7 +9979,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   left: 8px;
   z-index: 200;
   background: rgba(14, 12, 30, 0.97);
-  border: 1px solid rgba(245, 200, 66, 0.35);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.35);
   border-radius: 16px;
   width: min(380px, calc(100vw - 16px));
   max-height: calc(100svh - var(--top-bar-h) - var(--nav-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
@@ -10001,7 +10014,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   flex: 1;
   font-size: 18px;
   font-weight: 700;
-  color: #f5c842;
+  color: var(--ui-purple-light);
 }
 
 .blood-lotus-shop-close {
@@ -10043,7 +10056,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .blood-lotus-shop-item {
   position: relative;
   background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(245, 200, 66, 0.2);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.2);
   border-radius: 12px;
   padding: 14px 10px;
   display: flex;
@@ -10054,8 +10067,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   transition: background 0.15s, border-color 0.15s;
 }
 .blood-lotus-shop-item:hover:not(:disabled) {
-  background: rgba(245, 200, 66, 0.08);
-  border-color: rgba(245, 200, 66, 0.5);
+  background: rgba(var(--ui-purple-strong-rgb), 0.08);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.5);
 }
 .blood-lotus-shop-item:disabled { opacity: 0.5; cursor: default; }
 .blood-lotus-shop-item-pending { opacity: 0.7; }
@@ -10065,7 +10078,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   top: -8px;
   left: 50%;
   transform: translateX(-50%);
-  background: #f5c842;
+  background: var(--ui-purple-light);
   color: #12112a;
   font-size: 10px;
   font-weight: 800;
@@ -10084,12 +10097,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .blood-lotus-shop-item-amount {
   font-size: 20px;
   font-weight: 800;
-  color: #f5c842;
+  color: var(--ui-purple-light);
 }
 
 .blood-lotus-shop-item-label {
   font-size: 11px;
-  color: #aaa;
+  color: rgba(var(--ui-label-rgb), 0.65);
   text-align: center;
 }
 
@@ -10117,8 +10130,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .home-hud-trophy {
   width: 34px;
   height: 34px;
-  background: rgba(245, 200, 66, 0.08);
-  border: 1px solid rgba(245, 200, 66, 0.22);
+  background: rgba(var(--ui-purple-strong-rgb), 0.08);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.22);
   border-radius: 9px;
   display: flex;
   align-items: center;
@@ -10129,7 +10142,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   position: relative;
 }
 .home-hud-trophy:hover {
-  background: rgba(245, 200, 66, 0.18);
+  background: rgba(var(--ui-purple-strong-rgb), 0.18);
 }
 .home-hud-trophy-badge {
   position: absolute;
@@ -10146,7 +10159,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .achievements-modal {
   background: rgb(var(--ui-bg-panel-rgb));
-  border: 1px solid rgba(245, 200, 66, 0.25);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.25);
   border-radius: 16px;
   width: min(96vw, 460px);
   max-height: var(--modal-max-h);
@@ -10172,7 +10185,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   gap: 8px;
   font-size: 16px;
   font-weight: 700;
-  color: #f5c842;
+  color: var(--ui-purple-light);
   letter-spacing: 0.03em;
   flex: 1;
 }
@@ -10182,9 +10195,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .ach-modal-progress {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(245, 200, 66, 0.7);
-  background: rgba(245, 200, 66, 0.09);
-  border: 1px solid rgba(245, 200, 66, 0.2);
+  color: rgba(var(--ui-purple-strong-rgb), 0.7);
+  background: rgba(var(--ui-purple-strong-rgb), 0.09);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.2);
   border-radius: 20px;
   padding: 2px 10px;
   flex-shrink: 0;
@@ -10198,7 +10211,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .ach-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #f5c842, #ffdd80);
+  background: linear-gradient(90deg, var(--ui-purple-light), var(--ui-purple-light));
   transition: width 0.4s ease;
 }
 
@@ -10230,9 +10243,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   color: rgba(255, 255, 255, 0.8);
 }
 .ach-tab-active {
-  background: rgba(245, 200, 66, 0.14);
-  border-color: rgba(245, 200, 66, 0.4);
-  color: #f5c842;
+  background: rgba(var(--ui-purple-strong-rgb), 0.14);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.4);
+  color: var(--ui-purple-light);
 }
 
 .ach-list {
@@ -10257,8 +10270,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .ach-card-unlocked {
-  background: rgba(245, 200, 66, 0.07);
-  border-color: rgba(245, 200, 66, 0.2);
+  background: rgba(var(--ui-purple-strong-rgb), 0.07);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.2);
 }
 
 .ach-card-locked {
@@ -10287,7 +10300,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   margin-bottom: 2px;
 }
 
-.ach-card-unlocked .ach-card-title { color: #f5c842; }
+.ach-card-unlocked .ach-card-title { color: var(--ui-purple-light); }
 
 .ach-card-desc {
   font-size: 11px;
@@ -10300,14 +10313,14 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba(245, 200, 66, 0.15);
-  border: 1px solid rgba(245, 200, 66, 0.4);
+  background: rgba(var(--ui-purple-strong-rgb), 0.15);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 700;
-  color: #f5c842;
+  color: var(--ui-purple-light);
 }
 
 /* ─── Journey HUD button ─────────────────────────────────────────────────────── */
@@ -10959,15 +10972,15 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .js-current .js-dot {
-  border-color: #f5c842;
-  background: rgba(245, 200, 66, 0.2);
+  border-color: rgba(var(--ui-purple-strong-rgb), 0.55);
+  background: rgba(var(--ui-purple-strong-rgb), 0.2);
 }
 
 .js-dot-pulse {
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  border: 2px solid rgba(245, 200, 66, 0.5);
+  border: 2px solid rgba(var(--ui-purple-strong-rgb), 0.5);
   animation: js-pulse 1.8s ease-in-out infinite;
 }
 
@@ -10997,7 +11010,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .js-current .js-label {
-  color: #f5c842;
+  color: var(--ui-purple-light);
   font-weight: 700;
 }
 
@@ -11009,7 +11022,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   flex-shrink: 0;
 }
 
-.js-current .js-cost { color: rgba(245, 200, 66, 0.5); }
+.js-current .js-cost { color: rgba(var(--ui-purple-strong-rgb), 0.5); }
 
 /* In-flow close button for journey / achievements headers */
 .journey-close {
@@ -11033,7 +11046,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgba(245, 200, 66, 0.6);
+  background: rgba(var(--ui-purple-strong-rgb), 0.6);
   flex-shrink: 0;
   margin-left: 2px;
 }
@@ -11054,6 +11067,13 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .home-hud-reinc:hover {
   color: rgba(200, 130, 255, 1);
   transform: scale(1.15) rotate(-20deg);
+}
+
+/* ── Reincarnation screen ─────────────────────────────────────────────────── */
+.reinc-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* ── Reincarnation modal ──────────────────────────────────────────────────── */
@@ -11540,7 +11560,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 0.74rem;
-  color: rgba(200, 185, 235, 0.78);
+  color: rgba(var(--ui-hover-rgb), 0.75);
   line-height: 1.48;
   z-index: 10;
   pointer-events: none;
@@ -11653,7 +11673,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .et-info-col-kept .et-info-col-title  { color: rgba(100, 220, 140, 0.7); }
 .et-info-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
 .et-info-col li {
-  font-size: 0.75rem; color: rgba(200, 185, 235, 0.65);
+  font-size: 0.75rem; color: rgba(var(--ui-label-rgb), 0.65);
   padding-left: 10px; position: relative;
 }
 .et-info-col li::before { content: '•'; position: absolute; left: 0; color: rgba(var(--ui-purple-strong-rgb), 0.4); }
@@ -11683,10 +11703,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 .et-keystone-badge {
   font-size: 0.68rem; font-weight: 700;
-  background: rgba(245, 200, 66, 0.15);
-  border: 1px solid rgba(245, 200, 66, 0.4);
+  background: rgba(var(--ui-purple-strong-rgb), 0.15);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.4);
   border-radius: 4px; padding: 1px 5px;
-  color: rgba(245, 200, 66, 0.9);
+  color: rgba(var(--ui-purple-strong-rgb), 0.9);
 }
 .et-tooltip-desc { font-size: 0.78rem; color: rgba(185, 165, 225, 0.65); margin-top: 2px; line-height: 1.45; }
 .et-tooltip-cost { font-size: 0.74rem; font-weight: 700; color: rgba(var(--ui-purple-strong-rgb), 0.6); margin-top: 3px; }
@@ -11880,7 +11900,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   position: absolute;
   top: 4px; right: 6px;
   font-size: 0.65rem;
-  color: rgba(245, 200, 66, 0.85);
+  color: rgba(var(--ui-purple-strong-rgb), 0.85);
   font-weight: 700;
 }
 
@@ -12204,7 +12224,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .artefact-upgrade-overlay { z-index: 230; }
 
 .artefact-upgrade-panel {
-  background: linear-gradient(180deg, rgba(20, 28, 40, 0.96), rgba(10, 14, 22, 0.96));
+  background: rgba(var(--ui-bg-panel-rgb), 0.95);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   width: min(460px, 96vw);
@@ -12251,7 +12271,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .artefact-upgrade-subtitle {
   font-size: 0.72rem;
-  color: rgba(200, 210, 220, 0.65);
+  color: rgba(var(--ui-label-rgb), 0.60);
   letter-spacing: 0.04em;
   margin-top: 2px;
 }
@@ -12295,13 +12315,13 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(200, 210, 220, 0.6);
+  color: rgba(var(--ui-label-rgb), 0.55);
 }
 
 .artefact-upgrade-level-current {
   font-size: 1.15rem;
   font-weight: 700;
-  color: rgba(220, 230, 240, 0.85);
+  color: rgba(var(--ui-hover-rgb), 0.80);
 }
 
 .artefact-upgrade-level-arrow {
@@ -12318,7 +12338,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .artefact-upgrade-level-cap {
   margin-left: auto;
   font-size: 0.72rem;
-  color: rgba(200, 210, 220, 0.55);
+  color: rgba(var(--ui-muted-rgb), 0.55);
 }
 
 .artefact-upgrade-stats {
@@ -12345,7 +12365,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .artefact-upgrade-stat-cur {
   flex: 1;
-  color: rgba(200, 210, 220, 0.7);
+  color: rgba(var(--ui-label-rgb), 0.65);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -12364,9 +12384,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .artefact-upgrade-milestone {
   font-size: 0.74rem;
-  color: #fde68a;
-  background: rgba(245, 200, 66, 0.08);
-  border: 1px solid rgba(245, 200, 66, 0.25);
+  color: var(--ui-purple-light);
+  background: rgba(var(--ui-purple-strong-rgb), 0.08);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.25);
   border-radius: 8px;
   padding: 6px 10px;
   text-align: center;
@@ -12375,7 +12395,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .artefact-upgrade-maxed {
   font-size: 0.85rem;
-  color: rgba(200, 210, 220, 0.6);
+  color: rgba(var(--ui-label-rgb), 0.55);
   text-align: center;
   padding: 12px 0;
   font-style: italic;
@@ -12386,7 +12406,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: rgba(200, 210, 220, 0.55);
+  color: rgba(var(--ui-muted-rgb), 0.55);
   margin-bottom: 6px;
 }
 
@@ -12430,7 +12450,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: rgba(220, 230, 240, 0.9);
+  color: rgba(var(--ui-hover-rgb), 0.85);
 }
 
 .artefact-upgrade-cost-have {
@@ -12441,7 +12461,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   flex-shrink: 0;
 }
 .artefact-upgrade-cost-have.is-met   { color: #a3e635; }
-.artefact-upgrade-cost-have.is-short { color: rgba(220, 230, 240, 0.7); }
+.artefact-upgrade-cost-have.is-short { color: rgba(var(--ui-label-rgb), 0.65); }
 
 /* Progress bar — `have` segment (green) + `queued` segment (gold) stacked
    horizontally inside a dark track. Each segment's width is set inline as
@@ -12464,8 +12484,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .artefact-upgrade-cost-bar-queued {
-  background: linear-gradient(90deg, #d97706, #fbbf24);
-  box-shadow: 0 0 6px rgba(251, 191, 36, 0.45);
+  background: linear-gradient(90deg, var(--ui-purple-deep), var(--ui-purple-light));
+  box-shadow: 0 0 6px rgba(var(--ui-purple-strong-rgb), 0.45);
   transition: width 0.18s ease;
 }
 
@@ -12498,8 +12518,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .artefact-upgrade-feed-tile.is-queued {
-  background: rgba(251, 191, 36, 0.10);
-  outline: 2px solid rgba(251, 191, 36, 0.65);
+  background: rgba(var(--ui-purple-strong-rgb), 0.10);
+  outline: 2px solid rgba(var(--ui-purple-strong-rgb), 0.65);
   outline-offset: -2px;
 }
 
@@ -12509,12 +12529,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   right: 6px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #fbbf24;
+  color: var(--ui-purple-light);
   line-height: 1;
 }
 
 .artefact-upgrade-feed-tile.is-pending {
-  outline: 2px solid rgba(245, 200, 66, 0.6);
+  outline: 2px solid rgba(var(--ui-purple-strong-rgb), 0.6);
   outline-offset: -2px;
 }
 
@@ -12532,7 +12552,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .artefact-upgrade-feed-yield {
   font-size: 0.66rem;
-  color: rgba(200, 210, 220, 0.6);
+  color: rgba(var(--ui-label-rgb), 0.55);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -12541,7 +12561,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .artefact-upgrade-empty {
   font-size: 0.78rem;
-  color: rgba(200, 210, 220, 0.5);
+  color: rgba(var(--ui-muted-rgb), 0.50);
   font-style: italic;
   text-align: center;
   padding: 10px 0;
@@ -12590,7 +12610,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
    tuned for the three supported resolutions. */
 
 .coll-modal-panel {
-  background: linear-gradient(180deg, rgba(20, 28, 40, 0.96), rgba(10, 14, 22, 0.96));
+  background: rgba(var(--ui-bg-panel-rgb), 0.95);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   width: min(440px, 96vw);
@@ -12637,7 +12657,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .coll-modal-subtitle {
   font-size: 0.72rem;
-  color: rgba(200, 210, 220, 0.65);
+  color: rgba(var(--ui-label-rgb), 0.60);
   letter-spacing: 0.04em;
   margin-top: 2px;
 }
@@ -12662,13 +12682,13 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: rgba(200, 210, 220, 0.55);
+  color: rgba(var(--ui-muted-rgb), 0.55);
   margin-bottom: 6px;
 }
 
 .coll-modal-desc {
   font-size: 0.85rem;
-  color: rgba(200, 210, 220, 0.78);
+  color: rgba(var(--ui-hover-rgb), 0.75);
   line-height: 1.5;
   margin: 0;
 }
@@ -12676,7 +12696,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .coll-modal-flavour {
   font-size: 0.78rem;
   font-style: italic;
-  color: rgba(200, 210, 220, 0.55);
+  color: rgba(var(--ui-muted-rgb), 0.55);
   line-height: 1.5;
   margin: 0;
   padding: 6px 10px;
@@ -12717,7 +12737,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .coll-stat-label {
   flex: 1;
-  color: rgba(220, 230, 240, 0.85);
+  color: rgba(var(--ui-hover-rgb), 0.80);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -12726,21 +12746,21 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .coll-stat-value {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  color: rgba(220, 230, 240, 0.95);
+  color: rgba(var(--ui-hover-rgb), 0.90);
   flex-shrink: 0;
 }
 
 .coll-stat-bonus {
   font-size: 0.66rem;
-  color: #fbbf24;
+  color: var(--ui-purple-light);
   font-weight: 700;
   margin-left: 4px;
   letter-spacing: 0.04em;
 }
 
 .coll-stat-row.is-unique {
-  background: rgba(245, 200, 66, 0.06);
-  border: 1px solid rgba(245, 200, 66, 0.2);
+  background: rgba(var(--ui-purple-strong-rgb), 0.06);
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.2);
 }
 
 /* ── Sprite slot — used by ItemModal for material icons ───────────────── */
@@ -12759,11 +12779,11 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .coll-modal-qty {
   font-size: 0.85rem;
   text-align: center;
-  color: rgba(200, 210, 220, 0.75);
+  color: rgba(var(--ui-label-rgb), 0.65);
   font-variant-numeric: tabular-nums;
 }
 .coll-modal-qty strong {
-  color: var(--gold, #f5c842);
+  color: var(--ui-purple-light);
   font-weight: 700;
 }
 
@@ -12788,7 +12808,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(200, 210, 220, 0.6);
+  color: rgba(var(--ui-label-rgb), 0.55);
 }
 
 .coll-upgrade-block-value {
@@ -12804,7 +12824,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .coll-upgrade-block-maxed {
   font-size: 0.78rem;
-  color: rgba(200, 210, 220, 0.55);
+  color: rgba(var(--ui-muted-rgb), 0.55);
   font-style: italic;
   text-align: center;
 }
@@ -12861,7 +12881,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .coll-set-card-element {
   font-size: 0.7rem;
-  color: rgba(200, 210, 220, 0.6);
+  color: rgba(var(--ui-label-rgb), 0.55);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   flex-shrink: 0;
@@ -12869,7 +12889,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .coll-set-card-piece {
   font-size: 0.74rem;
-  color: rgba(200, 210, 220, 0.7);
+  color: rgba(var(--ui-label-rgb), 0.65);
   line-height: 1.4;
   padding-left: 10px;
   border-left: 2px solid rgba(255, 255, 255, 0.06);
@@ -12877,7 +12897,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .coll-set-card-piece-tag {
   font-weight: 700;
-  color: rgba(220, 230, 240, 0.9);
+  color: rgba(var(--ui-hover-rgb), 0.85);
   margin-right: 6px;
   font-variant-numeric: tabular-nums;
 }
@@ -12918,7 +12938,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(200, 210, 220, 0.5);
+  color: rgba(var(--ui-muted-rgb), 0.50);
   flex-shrink: 0;
   width: 48px;
 }
@@ -12939,7 +12959,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  color: rgba(200, 210, 220, 0.75);
+  color: rgba(var(--ui-label-rgb), 0.65);
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -12960,7 +12980,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
      active state borrows it; otherwise falls back to the brand red accent. */
   background: color-mix(in srgb, var(--chip-accent, #e94560) 15%, transparent);
   border-color: color-mix(in srgb, var(--chip-accent, #e94560) 60%, transparent);
-  color: var(--chip-accent, #fde68a);
+  color: var(--chip-accent, var(--ui-purple-light));
 }
 
 

@@ -29,26 +29,28 @@ export default function ArtefactTooltip({ artefact, affixes, style, element, set
   // mobile bottom-sheet picker) don't trap a position:fixed tooltip inside
   // their containing block.
   const content = (
-    <div className="art-tooltip" style={style}>
-      <span className="art-tooltip-name" style={{ color: quality?.color }}>
-        {artName}{level > 0 && <span style={{ marginLeft: 6 }}>+{level}</span>}
+    // --quality-color is consumed by .art-tooltip-name and .art-tooltip-quality
+    // via CSS — single source of truth for the rarity tint.
+    <div className="art-tooltip" style={{ ...style, '--quality-color': quality?.color }}>
+      <span className="art-tooltip-name">
+        {artName}{level > 0 && <span className="art-tooltip-level">+{level}</span>}
       </span>
-      <span className="art-tooltip-quality" style={{ color: quality?.color }}>
+      <span className="art-tooltip-quality">
         {t(`quality.${artefact.rarity}`, { defaultValue: quality?.label })}
         {elem && <> · {t(`elements.${elem}`, { defaultValue: elem })}</>}
       </span>
       {Array.isArray(sets) && sets.length > 0 && (
-        <div className="art-tooltip-section" style={{ opacity: 0.85 }}>
+        <div className="art-tooltip-section art-tooltip-sets">
           {sets.map(sid => {
             const s = ARTEFACT_SETS[sid];
             if (!s) return <span key={sid} className="art-tooltip-line">◆ {sid}</span>;
             return (
               <div key={sid}>
                 <span className="art-tooltip-line">◆ {s.name}</span>
-                <span className="art-tooltip-line" style={{ fontSize: 11, opacity: 0.7, paddingLeft: 10 }}>
+                <span className="art-tooltip-line art-tooltip-line-sub">
                   2p: {s.twoPiece?.description}
                 </span>
-                <span className="art-tooltip-line" style={{ fontSize: 11, opacity: 0.7, paddingLeft: 10 }}>
+                <span className="art-tooltip-line art-tooltip-line-sub">
                   4p: {s.fourPiece?.description}
                 </span>
               </div>
@@ -70,10 +72,9 @@ export default function ArtefactTooltip({ artefact, affixes, style, element, set
               <span
                 key={i}
                 className={`art-tooltip-line art-tooltip-affix${a.unique ? ' art-tooltip-affix-unique' : ''}`}
-                style={a.unique ? { color: AFFIX_UNIQUE_COLOR } : undefined}
               >
                 {a.unique && '★ '}{formatAffixValue(display)}
-                {count > 0 && <span style={{ opacity: 0.7, marginLeft: 6 }}>(+{count})</span>}
+                {count > 0 && <span className="art-tooltip-count">(+{count})</span>}
               </span>
             );
           })}

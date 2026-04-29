@@ -186,8 +186,10 @@ function CombatScreen({ cultivation, techniques, combat, inventory, artefacts = 
       {onBack && (
         <button className="back-btn" onClick={onBack}>{t('common.back')}</button>
       )}
-      <h1>{t('combat.title')}</h1>
-      <p className="subtitle">{subtitle}</p>
+      <header className="coll-page-header">
+        <h1>{t('combat.title')}</h1>
+        <span className="coll-page-subtitle">{subtitle}</span>
+      </header>
 
       {/* ── Fighter stage ───────────────────────────────────────────────── */}
       <CombatStage
@@ -224,18 +226,15 @@ function CombatScreen({ cultivation, techniques, combat, inventory, artefacts = 
               <div
                 key={i}
                 className="tech-icon-slot"
-                style={{ '--tech-color': color }}
+                style={{ '--tech-color': color, '--type-bg': `${color}22` }}
               >
-                <div
-                  className="tech-icon-top"
-                  style={{ background: tech ? `${color}22` : undefined }}
-                >
+                <div className="tech-icon-top">
                   <img
                     src={`${BASE}sprites/techniques/${tech?.type?.toLowerCase() ?? 'empty'}.png`}
                     className="tech-icon-img"
                     alt=""
                   />
-                  <span className="tech-icon-glyph" style={{ color }}>
+                  <span className="tech-icon-glyph">
                     {TECH_GLYPH[tech?.type] ?? '—'}
                   </span>
                   <span
@@ -243,7 +242,7 @@ function CombatScreen({ cultivation, techniques, combat, inventory, artefacts = 
                     ref={el => { combat.cdBarRefs.current[i] = el; }}
                   />
                 </div>
-                <span className="tech-icon-name" style={{ color }}>
+                <span className="tech-icon-name">
                   {techName}
                 </span>
               </div>

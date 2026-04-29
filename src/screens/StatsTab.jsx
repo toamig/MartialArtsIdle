@@ -106,10 +106,7 @@ function StatRow({ label, hint, value, unit = '', locked = false, breakdown = nu
     >
       <span className="secondary-stat-label">{label}</span>
       {hint && <span className="secondary-stat-formula">{hint}</span>}
-      <span
-        className="secondary-stat-value"
-        style={locked ? { color: 'var(--text-muted)', fontWeight: 400 } : undefined}
-      >
+      <span className={`secondary-stat-value${locked ? ' secondary-stat-value-locked' : ''}`}>
         {locked ? t('common.locked') : `${fmt(value)}${unit}`}
       </span>
       {tooltipStyle && breakdown && !locked && (

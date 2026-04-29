@@ -69,7 +69,7 @@ function InlineArtefactPicker({ slot, artefacts, onClose }) {
               <button
                 key={a.uid}
                 className={`art-inline-card${isEquipped ? ' art-inline-card-equipped' : ''}${isEquippedElsewhere ? ' art-inline-card-equipped-other' : ''}`}
-                style={{ borderColor: (isEquipped || isEquippedElsewhere) ? quality?.color : undefined }}
+                style={{ '--item-quality': quality?.color }}
                 onClick={() => {
                   if (isEquipped) {
                     artefacts.unequip(slot.id);
@@ -97,7 +97,7 @@ function InlineArtefactPicker({ slot, artefacts, onClose }) {
                 }}
                 onTouchMove={tooltip.handlers.onTouchMove}
               >
-                <span className="art-inline-card-name" style={{ color: quality?.color }}>{artName}</span>
+                <span className="art-inline-card-name">{artName}</span>
                 {(isEquipped || isEquippedElsewhere) && (
                   <span className={`art-inline-card-tag${isEquippedElsewhere ? ' art-inline-card-tag-other' : ''}`}>
                     {t('common.equipped')}
@@ -133,7 +133,7 @@ function LawPickerModal({ ownedLaws, activeLaw, onSelect, onClose }) {
         <button className="modal-close" onClick={onClose}>✕</button>
         <h2 className="modal-title">{t('build.selectLaw')}</h2>
         {ownedLaws.length === 0 ? (
-          <p className="sel-realm" style={{ padding: '24px 16px' }}>
+          <p className="law-picker-empty">
             {t('build.noLawsOwned', { defaultValue: 'You haven\'t earned any laws yet.' })}
           </p>
         ) : (
@@ -164,7 +164,7 @@ function LawPickerModal({ ownedLaws, activeLaw, onSelect, onClose }) {
                   <span className="law-picker-card-name">{lawName}</span>
                   <div className="law-badges">
                     <span className="law-badge law-element">{t(`elements.${law.element}`, { defaultValue: law.element })}</span>
-                    <span className="law-badge law-rarity-badge" style={{ color: rarity.color, borderColor: rarity.color }}>
+                    <span className="law-badge law-rarity-badge" style={{ '--rarity-color': rarity.color }}>
                       {t(`quality.${law.rarity}`, { defaultValue: rarity.label })}
                     </span>
                   </div>
@@ -191,7 +191,7 @@ function TechSlotCard({ index, tech, onClick }) {
 
   if (!tech) {
     return (
-      <button className="card build-slot build-tech-slot" onClick={onClick}>
+      <button className="inv-slot build-tech-slot" onClick={onClick}>
         <span className="build-slot-label">{t(`build.technique${index + 1}`)}</span>
         <p className="build-slot-empty">{t('common.none')}</p>
       </button>
@@ -206,14 +206,14 @@ function TechSlotCard({ index, tech, onClick }) {
 
   return (
     <button
-      className="card build-slot build-tech-slot build-tech-filled"
+      className="inv-slot build-tech-slot build-tech-filled"
       style={{ '--tech-quality': quality.color }}
       onClick={onClick}
     >
       <span className="build-slot-label">{t(`build.technique${index + 1}`)}</span>
       <span
         className="tech-icon tech-icon-large"
-        style={{ background: typeCol + '22', borderColor: typeCol }}
+        style={{ '--type-color': typeCol, '--type-bg': typeCol + '22' }}
         title={tooltip}
       >
         <span className="tech-icon-glyph">{tech.icon ?? '?'}</span>
@@ -312,7 +312,7 @@ function BuildContent({ cultivation, techniques, artefacts }) {
               <span className="law-name">{lawName}</span>
               <div className="law-badges">
                 <span className="law-badge law-element">{t(`elements.${activeLaw.element}`, { defaultValue: activeLaw.element })}</span>
-                <span className="law-badge law-rarity-badge" style={{ color: rarity.color, borderColor: rarity.color }}>
+                <span className="law-badge law-rarity-badge" style={{ '--rarity-color': rarity.color }}>
                   {t(`quality.${activeLaw.rarity}`, { defaultValue: rarity.label })}
                 </span>
               </div>
@@ -334,7 +334,7 @@ function BuildContent({ cultivation, techniques, artefacts }) {
               {activeLaw.uniques && Object.entries(activeLaw.uniques).map(([tier, u]) => (
                 u && (
                   <div key={tier} className="law-passive">
-                    <span className="law-passive-desc" style={{ color: LAW_RARITY[tier]?.color }}>
+                    <span className="law-passive-desc" style={{ '--rarity-color': LAW_RARITY[tier]?.color }}>
                       {formatUniqueDescription(u.id, u.value)}
                     </span>
                   </div>
@@ -373,10 +373,9 @@ function BuildContent({ cultivation, techniques, artefacts }) {
                   key={slot.id}
                   className={`inv-slot gear-slot${art ? ' gear-slot-filled' : ''}`}
                   style={{
-                    gridColumn:  slot.col,
-                    gridRow:     slot.row,
-                    borderColor: quality?.color,
-                    borderStyle: art ? 'solid' : undefined,
+                    gridColumn: slot.col,
+                    gridRow:    slot.row,
+                    '--slot-quality': quality?.color,
                   }}
                   onClick={() => setSelectedSlot(selectedSlot?.id === slot.id ? null : slot)}
                   onMouseEnter={(e) => {
@@ -406,8 +405,8 @@ function BuildContent({ cultivation, techniques, artefacts }) {
                 >
                   {art ? (
                     <>
-                      <span className="gear-slot-quality-dot" style={{ background: quality.color }} />
-                      <span className="gear-slot-name gear-slot-name-filled" style={{ color: quality.color }}>
+                      <span className="gear-slot-quality-dot" />
+                      <span className="gear-slot-name gear-slot-name-filled">
                         {artName}
                       </span>
                     </>

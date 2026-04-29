@@ -36,7 +36,7 @@ function TechniqueCard({ tech, equipped, onClick }) {
       <div className="tech-item-header">
         <span
           className="tech-icon"
-          style={{ background: typeCol + '22', borderColor: typeCol }}
+          style={{ '--type-color': typeCol, '--type-bg': typeCol + '22' }}
           title={tooltip}
         >
           <span className="tech-icon-glyph">{tech.icon ?? '?'}</span>
@@ -79,7 +79,7 @@ function TechniqueSlotModal({ slotIndex, currentId, ownedTechniques = {}, onEqui
                 key={f}
                 className={`tech-type-btn${filter === f ? ' tech-type-btn-active' : ''}`}
                 style={filter === f && f !== 'All'
-                  ? { background: TYPE_COLOR[f], borderColor: TYPE_COLOR[f] }
+                  ? { '--type-color': TYPE_COLOR[f] }
                   : undefined}
                 onClick={() => setFilter(f)}
               >

@@ -81,7 +81,7 @@ function ForgeCard({
       <div className="alc-forge-body">
         {showPill && (
           <>
-            <div className="alc-forge-name" style={{ color: rarityColor }}>
+            <div className="alc-forge-name" style={{ '--rarity-color': rarityColor }}>
               {tGame(`items.${resultPill.id}.name`, { defaultValue: resultPill.name })}
             </div>
             <ul className="alc-forge-effects">
@@ -112,7 +112,7 @@ function ForgeCard({
 
         {/* Floating "+N Pill" feedback — anchored top-center over the body */}
         {floatMsgs.map(m => (
-          <span key={m.id} className="alc-float-msg" style={{ color: m.color }}>
+          <span key={m.id} className="alc-float-msg" style={{ '--float-color': m.color }}>
             {m.text}
           </span>
         ))}
@@ -174,7 +174,7 @@ function MixerCard({
             >
               {herb ? (
                 <>
-                  <span className="alc-slot-name" style={{ color }}>
+                  <span className="alc-slot-name">
                     {tGame(`items.${herb.id}.name`, { defaultValue: herb.name })}
                   </span>
                   <span
@@ -224,9 +224,10 @@ function MixerCard({
                 key={h.id}
                 type="button"
                 className="alc-herb"
+                style={{ '--rarity-color': color }}
                 onClick={() => assignHerb(h.id)}
               >
-                <span className="alc-herb-name" style={{ color }}>
+                <span className="alc-herb-name">
                   {tGame(`items.${h.id}.name`, { defaultValue: h.name })}
                 </span>
                 <span className="alc-herb-qty">×{inventory.getQuantity(h.id)}</span>
@@ -338,7 +339,7 @@ function RecipeBrowser({ inventory, pills, onFillSlots }) {
                 onClick={() => onFillSlots(herbs)}
               >
                 <span className="alc-recipe-herbs">{herbNames.join(' + ')}</span>
-                <span className="alc-recipe-pill" style={{ color }}>{pillName}</span>
+                <span className="alc-recipe-pill" style={{ '--rarity-color': color }}>{pillName}</span>
                 {!affordable && missing.length > 0 && (
                   <span className="alc-recipe-missing">
                     {t('production.missing')}{' '}
@@ -490,8 +491,10 @@ function ProductionScreen({ inventory, pills, tree }) {
 
   return (
     <div className="screen production-screen">
-      <h1>{t('production.title')}</h1>
-      <p className="subtitle">{t('production.subtitle')}</p>
+      <header className="coll-page-header">
+        <h1>{t('production.title')}</h1>
+        <span className="coll-page-subtitle">{t('production.subtitle')}</span>
+      </header>
       <AlchemyPanel inventory={inventory} pills={pills} tree={tree} />
     </div>
   );

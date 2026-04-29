@@ -374,7 +374,7 @@ function CollectionScreen({ inventory, artefacts, techniques, cultivation }) {
                     >
                       <span
                         className="tech-icon"
-                        style={{ background: typeCol + '22', borderColor: typeCol }}
+                        style={{ '--type-color': typeCol, '--type-bg': typeCol + '22' }}
                       >
                         <span className="tech-icon-glyph">{tech.icon ?? '?'}</span>
                       </span>

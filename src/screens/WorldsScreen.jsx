@@ -331,8 +331,10 @@ function WorldsScreen({ cultivation, onNavigate, expandWorldId, activeTab, clear
 
   return (
     <div className="screen worlds-screen">
-      <h1>{t('worlds.title')}</h1>
-      <p className="subtitle">{cultivation.realmName}</p>
+      <header className="coll-page-header">
+        <h1>{t('worlds.title')}</h1>
+        <span className="coll-page-subtitle">{cultivation.realmName}</span>
+      </header>
 
       <div className="worlds-tab-bar">
         <button
