@@ -13,6 +13,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { getRefinedQi } from '../data/materials';
+import { trackCrystalFed } from '../analytics';
 
 const SAVE_KEY = 'mai_qi_crystal';
 
@@ -175,6 +176,7 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
       ? { tierChanged: true, previousTier: startTier, newTier: endTier, newLevel: level }
       : empty;
     applyState({ level, refinedQi });
+    try { trackCrystalFed(level, result.tierChanged, endTier); } catch {}
     return result;
   }, [state.level, state.refinedQi, getQuantity, removeItem, applyState]);
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { saveTechniques, loadTechniques, saveOwnedTechniques, loadOwnedTechniques } from '../systems/save';
 import { getTechnique, getTechniqueBaseId } from '../data/techniques';
+import { trackTechniqueDrop } from '../analytics';
 
 // One-shot save migration flag. The 2026-04-26 secret-tech overhaul switched
 // the technique system from procedural generation + passive pool to a fixed
@@ -71,6 +72,7 @@ export default function useTechniques({ extraSlots = 0 } = {}) {
     const isDuplicate = Object.values(current)
       .some(t => getTechniqueBaseId(t.id) === baseId);
     if (isDuplicate) {
+      try { trackTechniqueDrop(baseId, tech.quality ?? 'Iron', tech.type ?? 'unknown', true); } catch {}
       return { added: false, duplicate: true, baseId, quality: tech.quality ?? 'Iron' };
     }
     if (Object.keys(current).length >= MAX_TECHNIQUES) {
@@ -79,6 +81,7 @@ export default function useTechniques({ extraSlots = 0 } = {}) {
     const next = { ...current, [tech.id]: tech };
     ownedRef.current = next;  // sync update so subsequent calls in this tick see the addition
     setOwned(next);
+    try { trackTechniqueDrop(baseId, tech.quality ?? 'Iron', tech.type ?? 'unknown', false); } catch {}
     return { added: true, duplicate: false, baseId, quality: tech.quality ?? 'Iron' };
   }, []);
 

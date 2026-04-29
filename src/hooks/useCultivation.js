@@ -6,6 +6,7 @@ import AudioManager from '../audio/AudioManager';
 import { saveGame, loadGame } from '../systems/save';
 import { evaluateLawUniques, buildContext } from '../systems/lawEngine';
 import { computeStat, MOD } from '../data/stats';
+import { trackRealmAdvance, trackQiSink, trackAscension, trackActiveLawSwitch, trackFirstTime, trackOfflineQiCollected } from '../analytics';
 
 const OWNED_LAWS_KEY   = 'mai_owned_laws';
 const ACTIVE_LAW_KEY   = 'mai_active_law';
@@ -66,8 +67,16 @@ export default function useCultivation() {
   }, [activeLawId]);
 
   const setActiveLaw = useCallback((lawId) => {
-    setActiveLawIdRaw(lawId);
-  }, []);
+    setActiveLawIdRaw(prev => {
+      if (prev !== lawId && lawId) {
+        try {
+          const law = ownedLaws.find(l => l.id === lawId);
+          trackActiveLawSwitch(lawId, law?.element);
+        } catch {}
+      }
+      return lawId;
+    });
+  }, [ownedLaws]);
 
   // Derive active law from ownedLaws + activeLawId.
   // Unequipped state is legal: when the library is empty OR the player
@@ -435,6 +444,11 @@ export default function useCultivation() {
           ascendedRef.current = true;
           setAscended(true);
           try { AudioManager.playSfx('cult_breakthrough'); } catch {}
+          try {
+            trackRealmAdvance(indexRef.current, REALMS[indexRef.current].name, false, true);
+            trackAscension(indexRef.current);
+            trackFirstTime('Ascension', indexRef.current);
+          } catch {}
           setMajorBreakthrough({
             id:      Date.now(),
             label:   REALMS[indexRef.current].name,
@@ -477,8 +491,14 @@ export default function useCultivation() {
               qiRef.current += costRef.current * reservoir;
             }
             setRealmIndex(nextIndex);
+            try { trackQiSink(REALMS[fromIndex].cost, 'Breakthrough', `r${nextIndex}`); } catch {}
+            try { trackFirstTime('RealmAdvance', nextIndex); } catch {}
             if (isMajor || isPeak) {
               try { AudioManager.playSfx('cult_breakthrough'); } catch {}
+              try {
+                trackRealmAdvance(nextIndex, REALMS[nextIndex].name, isPeak, false);
+                if (isMajor) trackFirstTime('RealmMajor', nextIndex);
+              } catch {}
               setMajorBreakthrough({
                 id:    Date.now(),
                 label: isPeak
@@ -571,7 +591,12 @@ export default function useCultivation() {
   /** Called when the player collects offline earnings (optionally doubled by ad). */
   const collectOfflineEarnings = useCallback((multiplier = 1) => {
     if (offlineEarnings <= 0) return;
-    qiRef.current += offlineEarnings * multiplier;
+    const total = offlineEarnings * multiplier;
+    qiRef.current += total;
+    try {
+      const lastSeen = saved?.lastSeen ?? Date.now();
+      trackOfflineQiCollected(Math.floor(total), Date.now() - lastSeen, multiplier);
+    } catch {}
     setOfflineEarnings(0);
   }, [offlineEarnings]);
 

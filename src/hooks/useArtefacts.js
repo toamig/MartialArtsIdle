@@ -7,10 +7,11 @@ import { generateArtefactName, formatArtefactName } from '../data/artefactNames'
 // identity now lives in its element + set membership + standard affixes.
 // The artefactEngine + artefactUniqueEffects files were deleted with that
 // pass; only set-bonus aggregation remains in this hook.
-import { rollElementAndSet, getSetBonusModifiers } from '../data/artefactSets';
+import { rollElementAndSet, getSetBonusModifiers, countEquippedSets } from '../data/artefactSets';
 import {
   MAX_UPGRADE_BY_RARITY, effectiveAffixValue, upgradeCost, rollUpgradeBonus, isBonusLevel,
 } from '../data/artefactUpgrades';
+import { trackArtefactEquipped, trackSetCompleted, trackFirstTime } from '../analytics';
 
 const SAVE_KEY = 'mai_artefacts';
 // Bump whenever the artefact schema changes in a way existing saves can't
@@ -179,6 +180,7 @@ export default function useArtefacts() {
   // If the uid is already equipped elsewhere, it is moved (prevents double-equip).
   const equip = useCallback((slotId, uid) => {
     setState(prev => {
+      const before = countEquippedSets(prev.equipped, prev.owned);
       const equipped = { ...prev.equipped };
       // Remove the uid from any other slot it currently occupies
       for (const [sid, suid] of Object.entries(equipped)) {
@@ -187,6 +189,24 @@ export default function useArtefacts() {
       equipped[slotId] = uid;
       const next = { ...prev, equipped };
       save(next);
+      try {
+        const inst = prev.owned.find(o => o.uid === uid);
+        const cat  = inst ? ARTEFACTS_BY_ID[inst.catalogueId] : null;
+        trackArtefactEquipped(slotId, cat?.rarity, inst?.element);
+        // Set-bonus thresholds: fire `Set:Completed:<id>` whenever a set's
+        // equipped piece count crosses the 2 / 4 / 6 thresholds (most sets in
+        // this game cap out at 4-piece, so we cover them all).
+        const after = countEquippedSets(equipped, prev.owned);
+        for (const [sid, n] of Object.entries(after)) {
+          const wasN = before[sid] ?? 0;
+          if (wasN < 2 && n >= 2) trackSetCompleted(sid, 2);
+          if (wasN < 4 && n >= 4) {
+            trackSetCompleted(sid, 4);
+            trackFirstTime(`Set4:${sid}`);
+          }
+          if (wasN < 6 && n >= 6) trackSetCompleted(sid, 6);
+        }
+      } catch {}
       return next;
     });
   }, []);

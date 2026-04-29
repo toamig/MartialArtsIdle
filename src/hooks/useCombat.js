@@ -4,6 +4,7 @@ import { ALL_MATERIALS } from '../data/materials';
 import { pickTechnique } from '../data/techniqueDrops';
 import { pickRandomArtefact } from '../data/artefactDrops';
 import { ARTEFACTS_BY_ID } from '../data/artefacts';
+import { trackCombatWin, trackCombatLoss, trackFirstTime } from '../analytics';
 
 // PoE-style armour mitigation cap. Past this, even infinite armour can't
 // fully negate a hit. Standard PoE convention.
@@ -416,6 +417,9 @@ export default function useCombat() {
       techDropChance:   enemyDef?.techniqueDrop?.chance ?? 0,
       artefactDropChance: (enemyDef?.techniqueDrop?.chance ?? 0) * ARTEFACT_DROP_MULT,
       worldId,
+      regionIndex,
+      enemyName: eName,
+      startedAt:  performance.now(),
       // Reincarnation tree state
       undyingUsed: false,
       castCount:   0,
@@ -662,6 +666,11 @@ export default function useCombat() {
 
             setLog(prev => [...newLogs, ...prev].slice(0, MAX_LOG));
             patchBars(s2);
+            try {
+              const dur = Math.round(performance.now() - (s2.startedAt ?? performance.now()));
+              trackCombatWin(s2.worldId, s2.regionIndex, s2.enemyName, dur, s2.castCount);
+              trackFirstTime('CombatWin');
+            } catch {}
             setPhase('won');
           } else {
             setTimeout(() => {
@@ -861,6 +870,11 @@ export default function useCombat() {
             s2.phase = 'lost';
             setLog(prev => [{ msg: 'You were defeated…', kind: 'system' }, ...prev].slice(0, MAX_LOG));
             patchBars(s2);
+            try {
+              const dur = Math.round(performance.now() - (s2.startedAt ?? performance.now()));
+              trackCombatLoss(s2.worldId, s2.regionIndex, s2.enemyName, dur, s2.castCount);
+              trackFirstTime('CombatLoss');
+            } catch {}
             setPhase('lost');
           } else {
             setTimeout(() => {

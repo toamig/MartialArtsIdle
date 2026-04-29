@@ -45,6 +45,7 @@
     "@capacitor/cli": "^8.3.0",
     "@capacitor/core": "^8.3.0",
     "@revenuecat/purchases-capacitor": "^13.0.0",
+    "gameanalytics": "^4.4.7",
     "howler": "^2.2.4",
     "i18next": "^26.0.4",
     "react": "^19.2.4",

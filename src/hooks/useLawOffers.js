@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import REALMS, { lawOfferRaritiesForRealm } from '../data/realms';
 import { generateLaw } from '../data/affixPools';
 import { addBloodLotus, spendBloodLotus, getBloodLotusBalance, BLOOD_LOTUS_COSTS } from '../systems/bloodLotus';
+import { trackLawPicked, trackLawSkipped } from '../analytics';
 
 const PENDING_KEY = 'mai_pending_selections';
 
@@ -118,7 +119,10 @@ export default function useLawOffers({ cultivation }) {
       const entry = prev.find(s => s.id === selectionId);
       if (!entry || entry.kind !== 'law') return prev;
       const law = entry.lawOptions?.[lawIndex];
-      if (law) cultivation.addOwnedLaw?.(law);
+      if (law) {
+        cultivation.addOwnedLaw?.(law);
+        try { trackLawPicked(law.id ?? 'unknown', law.element, cultivation.realmIndex); } catch {}
+      }
       return prev.filter(s => s.id !== selectionId);
     });
   }, [cultivation]);
@@ -128,9 +132,10 @@ export default function useLawOffers({ cultivation }) {
     setPending(prev => {
       const entry = prev.find(s => s.id === selectionId);
       if (!entry || entry.kind !== 'law' || entry.isFirst) return prev;
+      try { trackLawSkipped(cultivation.realmIndex); } catch {}
       return prev.filter(s => s.id !== selectionId);
     });
-  }, []);
+  }, [cultivation.realmIndex]);
 
   /** Reroll all 3 law offers. Free first time, then BLOOD_LOTUS_COSTS.reroll_law_extra. */
   const rerollLaw = useCallback((selectionId) => {

@@ -168,8 +168,15 @@ export default defineConfig(({ command, mode }) => {
   // visitors are unaffected, and the SW is required for Android install + iOS cache busting.
   const enablePWA = !isNative && !isSteam;
 
+  // Read package.json version so analytics can tag every event with the
+  // build that produced it (lets you split dashboards by version).
+  const pkgVersion = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf-8')).version;
+
   return {
     base,
+    define: {
+      __MAI_VERSION__: JSON.stringify(pkgVersion),
+    },
     plugins: [
       treeEditorPlugin(),
       react(),

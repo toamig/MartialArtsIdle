@@ -12,6 +12,7 @@ import {
   SAINT_UNLOCK_INDEX,
   PEAK_INDEX,
 } from '../data/reincarnationTree';
+import { trackKarmaSource, trackKarmaSink } from '../analytics';
 
 const SAVE_KEY = 'mai_reincarnation';
 
@@ -53,6 +54,7 @@ export default function useReincarnationKarma() {
       for (let i = prev.maxAwarded + 1; i <= index; i++) {
         awarded += karmaForReachingIndex(i);
       }
+      try { if (awarded > 0) trackKarmaSource(awarded, `r${index}`); } catch {}
       return {
         ...prev,
         karma:          prev.karma + awarded,
@@ -68,13 +70,14 @@ export default function useReincarnationKarma() {
   }, []);
 
   /** Spend karma on a tree node. Returns true on success. */
-  const spendKarma = useCallback((cost) => {
+  const spendKarma = useCallback((cost, nodeId = 'unknown') => {
     let ok = false;
     setState(prev => {
       if (prev.karma < cost) return prev;
       ok = true;
       return { ...prev, karma: prev.karma - cost };
     });
+    if (ok) { try { trackKarmaSink(cost, nodeId); } catch {} }
     return ok;
   }, []);
 

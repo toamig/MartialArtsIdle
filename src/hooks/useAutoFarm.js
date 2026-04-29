@@ -32,6 +32,7 @@ import {
   mergeGains,
   hasGains,
 } from '../systems/autoFarm';
+import { trackAutoFarmToggled } from '../analytics';
 
 const TICK_INTERVAL_MS  = 1_000; // background tick rate
 const MIN_OFFLINE_SEC   = 5 * 60; // skip offline calc if away less than 5 minutes
@@ -240,15 +241,28 @@ export default function useAutoFarm({ worlds, getStats }) {
    * @param {number}  regionIndex  — index into world.regions
    */
   const setAutoFarm = useCallback((activity, enabled, worldIndex, regionIndex) => {
-    setConfigRaw(prev => ({
-      ...prev,
-      [activity]: {
-        ...prev[activity],
-        enabled,
-        worldIndex:  worldIndex  ?? prev[activity].worldIndex,
-        regionIndex: regionIndex ?? prev[activity].regionIndex,
-      },
-    }));
+    setConfigRaw(prev => {
+      const wasEnabled = !!prev[activity]?.enabled;
+      if (wasEnabled !== !!enabled) {
+        try {
+          trackAutoFarmToggled(
+            activity,
+            !!enabled,
+            worldIndex ?? prev[activity].worldIndex,
+            regionIndex ?? prev[activity].regionIndex,
+          );
+        } catch {}
+      }
+      return {
+        ...prev,
+        [activity]: {
+          ...prev[activity],
+          enabled,
+          worldIndex:  worldIndex  ?? prev[activity].worldIndex,
+          regionIndex: regionIndex ?? prev[activity].regionIndex,
+        },
+      };
+    });
   }, []);
 
   /**

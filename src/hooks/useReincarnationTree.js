@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { NODES, NODES_BY_ID, MAIN_KEYSTONES, RETIRED_NODE_IDS } from '../data/reincarnationTree';
+import { trackTreeNodePurchased } from '../analytics';
 
 const SAVE_KEY = 'mai_reincarnation_tree';
 
@@ -65,8 +66,9 @@ export default function useReincarnationTree({ karma, spendKarma, lives = 0 } = 
   const buy = useCallback((id) => {
     const node = NODES_BY_ID[id];
     if (!node || !isAvailable(id)) return false;
-    const ok = spendKarma(node.cost);
+    const ok = spendKarma(node.cost, id);
     if (!ok) return false;
+    try { trackTreeNodePurchased(id, node.cost); } catch {}
     setPurchased(prev => {
       const next = new Set(prev);
       next.add(id);

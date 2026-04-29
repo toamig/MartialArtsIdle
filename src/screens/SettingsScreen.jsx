@@ -5,6 +5,7 @@ import { exportSave, importSave, wipeSave } from '../systems/save';
 import { setLanguage, SUPPORTED_LANGUAGES } from '../i18n';
 import { loadGraphics, applyGraphics, saveGraphics } from '../systems/graphics';
 import useAudio from '../audio/useAudio';
+import { trackSettingChanged } from '../analytics';
 
 const RENDERING_MODES = [
   { mode: 'auto',      label: 'Smooth',    sub: 'bilinear',  icon: '〜' },
@@ -107,6 +108,7 @@ function SettingsScreen({ onClose }) {
     setGraphicsState(next);
     saveGraphics(next);
     applyGraphics(next);
+    try { trackSettingChanged('graphics', next?.preset ?? next?.quality ?? 'custom'); } catch {}
   };
 
   const flash = (text, isError) => {
@@ -237,7 +239,7 @@ function SettingsScreen({ onClose }) {
                 <button
                   key={lang.code}
                   className={`stg-lang-btn${i18n.language === lang.code ? ' stg-lang-active' : ''}`}
-                  onClick={() => setLanguage(lang.code)}
+                  onClick={() => { setLanguage(lang.code); try { trackSettingChanged('language', lang.code); } catch {} }}
                 >
                   {lang.label}
                 </button>

@@ -18,6 +18,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { PILLS_BY_ID } from '../data/pills';
+import { trackPillConsumed, trackPillCrafted, trackPillDiscovered, trackFirstTime } from '../analytics';
 
 const SAVE_KEY = 'mai_pills';
 const PERM_KEY = 'mai_permanent_pill_stats';
@@ -106,7 +107,12 @@ export default function usePills() {
       ...prev,
       [pillId]: (prev[pillId] || 0) + n,
     }));
-    setDiscoveredPills(prev => (prev[pillId] ? prev : { ...prev, [pillId]: true }));
+    setDiscoveredPills(prev => {
+      if (prev[pillId]) return prev;
+      try { trackPillDiscovered(pillId); } catch {}
+      return { ...prev, [pillId]: true };
+    });
+    try { trackPillCrafted(pillId, n); } catch {}
   }, []);
 
   const isDiscovered = useCallback((pillId) => !!discoveredPills[pillId], [discoveredPills]);
@@ -142,6 +148,11 @@ export default function usePills() {
     });
 
     if (!didConsume) return null;
+
+    try {
+      trackPillConsumed(pillId, pill.effects?.length ?? 0);
+      trackFirstTime('PillConsumed');
+    } catch {}
 
     // Accumulate stats permanently
     setPermanentStats(prev => {

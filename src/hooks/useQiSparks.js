@@ -25,6 +25,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { QI_SPARKS, QI_SPARK_BY_ID, drawOffer } from '../data/qiSparks';
 import { spendBloodLotus, getBloodLotusBalance } from '../systems/bloodLotus';
+import { trackSparkPicked, trackSparkRerolled, trackSparkExpired } from '../analytics';
 
 const ACTIVE_KEY           = 'mai_qi_sparks_active';
 const PENDING_KEY          = 'mai_qi_sparks_pending';
@@ -253,7 +254,13 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
       const now = Date.now();
       setActiveSparks(prev => {
         const filtered = prev.filter(s => !s.expiresAt || s.expiresAt > now);
-        return filtered.length === prev.length ? prev : filtered;
+        if (filtered.length === prev.length) return prev;
+        try {
+          for (const s of prev) {
+            if (s.expiresAt && s.expiresAt <= now) trackSparkExpired(s.sparkId);
+          }
+        } catch {}
+        return filtered;
       });
     }, 1000);
     return () => clearInterval(id);
@@ -443,6 +450,7 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
   const choose = useCallback((sparkId) => {
     setPendingOffer(prev => {
       if (!prev || !prev.cards.includes(sparkId)) return prev;
+      try { trackSparkPicked(sparkId, prev.cards.length); } catch {}
       applySparkChoice(sparkId);
       return null;
     });
@@ -472,7 +480,9 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
         const cost = PAID_REROLL_COSTS[Math.max(0, paidIdx)];
         if (!spendBloodLotus(cost)) return prev;
         try { setBloodLotusBalance(getBloodLotusBalance()); } catch {}
+        try { trackSparkRerolled(false, cost); } catch {}
       }
+      if (isFree) { try { trackSparkRerolled(true, 0); } catch {} }
       const fresh = drawOffer(2, drawOfferCtx());
       if (fresh.length === 0) return prev;
       result = true;

@@ -51,6 +51,9 @@ jobs:
       # ?designer=1 on the deployed URL. PAT-gated, so end users visiting
       # without a token can't commit anything.
       - run: npm run build:designer
+        env:
+          VITE_GA_GAME_KEY:   ${{ secrets.VITE_GA_GAME_KEY }}
+          VITE_GA_SECRET_KEY: ${{ secrets.VITE_GA_SECRET_KEY }}
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:

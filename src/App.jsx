@@ -11,6 +11,13 @@ import DailyBonusModal from './components/DailyBonusModal';
 import { useDailyBonus } from './hooks/useDailyBonus';
 import EternalTreeScreen from './components/EternalTreeScreen';
 import { initAds } from './ads/adService';
+import {
+  initAnalytics,
+  trackReincarnation,
+  trackAchievementUnlocked,
+  trackScreenView,
+  trackFirstTime,
+} from './analytics';
 import CombatScreen from './screens/CombatScreen';
 import WorldsScreen from './screens/WorldsScreen';
 import CharacterScreen from './screens/CharacterScreen';
@@ -99,6 +106,7 @@ function AppInner() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { initAds(); }, []);
+  useEffect(() => { initAnalytics(); }, []);
   useEffect(() => { preloadImages(PLAYER_SPRITE_SRCS); }, []);
   useEffect(() => { applyGraphics(loadGraphics()); }, []);
 
@@ -610,7 +618,10 @@ function AppInner() {
   const notifications = useNotifications({ cultivation, inventory });
 
   const achievements = useAchievements({
-    onUnlock: (a) => notifications.addToast({ message: `🏆 Achievement: ${a.title}` }),
+    onUnlock: (a) => {
+      notifications.addToast({ message: `🏆 Achievement: ${a.title}` });
+      try { trackAchievementUnlocked(a.id); } catch {}
+    },
   });
 
   const prevAchCountRef = useRef(achievements.unlockedCount);
@@ -684,12 +695,17 @@ function AppInner() {
     setScreenParam(param);
     setSelectionModalOpen(false);
     notifications.clearBadge(screen);
+    try { trackScreenView(screen); } catch {}
   };
 
   const handleReincarnate = useCallback(() => {
     // Safety net — the button is already disabled below Saint, but we
     // refuse here too so any future callsite can't bypass the gate.
     if (cultivation.realmIndex < 24) return;
+    try {
+      trackReincarnation(cultivation.realmIndex, (karma.lives ?? 0) + 1);
+      trackFirstTime('Reincarnation', cultivation.realmIndex);
+    } catch {}
     karma.reincarnate();
 
     // ─── Reincarnation tree carry-overs (al_2 / al_4 / al_k) ───────────────

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { loadRewardedAd, showRewardedAd } from './adService';
 import AudioManager from '../audio/AudioManager';
+import { trackAdEvent } from '../analytics';
 
 /**
  * Manages the full lifecycle of a single rewarded ad slot:
@@ -78,6 +79,9 @@ export function useRewardedAd(onReward, cooldownMs = 30 * 60 * 1000, storageKey 
     if (status !== 'ready') return;
     setStatus('showing');
 
+    const placement = storageKey || 'default';
+    try { trackAdEvent('show', placement); } catch {}
+
     AudioManager.pauseForAd();
     let rewarded = false;
     try {
@@ -87,6 +91,7 @@ export function useRewardedAd(onReward, cooldownMs = 30 * 60 * 1000, storageKey 
     }
 
     if (rewarded) {
+      try { trackAdEvent('reward', placement); } catch {}
       onRewardRef.current();
 
       // Start cooldown
@@ -107,10 +112,11 @@ export function useRewardedAd(onReward, cooldownMs = 30 * 60 * 1000, storageKey 
         }
       }, 1000);
     } else {
+      try { trackAdEvent('failed', placement); } catch {}
       // Ad dismissed without reward — reload silently
       load();
     }
-  }, [status, cooldownMs, load]);
+  }, [status, cooldownMs, load, storageKey]);
 
   return {
     isReady:           status === 'ready',

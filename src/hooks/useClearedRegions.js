@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { trackRegionCleared } from '../analytics';
 
 const KEY = 'mai_cleared_regions';
 
@@ -35,6 +36,7 @@ export default function useClearedRegions() {
     ref.current = next;
     persist(next);
     setClearedRegions(next);
+    try { trackRegionCleared(name); } catch {}
     return true;
   }, []);
 
