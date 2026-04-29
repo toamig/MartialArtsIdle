@@ -3,28 +3,41 @@ import { combatDropItemOptions, spriteOptions } from '../enumSources.js';
 /**
  * Per-enemy schema. Values match the shape declared in src/data/enemies.js:
  *   {
- *     id, name, sprite, description,
- *     statMult: { hp, atk },
+ *     id, name, sprite, description, damageType,
+ *     statMult: { hp, atk, def, elemDef },
  *     drops: [{ itemId, chance, qty: [min, max] }],
  *     techniqueDrop?: { chance },
  *   }
  *
  * Combat drops are restricted to blood_core + cultivation (QI stone) item types.
  * Minerals are gathering/mining-only and must NOT appear in enemy drops.
+ *
+ * `damageType` is auto-derived from DAMAGE_TYPE_BY_ID for built-in enemies, but
+ * is editable via override so designer-added enemies can pick a damage type.
  */
+
+const DAMAGE_TYPE_OPTIONS = [
+  { value: 'physical',   label: 'physical' },
+  { value: 'elemental',  label: 'elemental' },
+];
+
 export default [
   { key: 'name',        type: 'string',   label: 'Display name' },
   { key: 'sprite',      type: 'enum',     label: 'Sprite',       options: spriteOptions,
     help: 'Base filename under public/sprites/enemies/. Pairs as {name}-idle.png and {name}-attack.png.' },
   { key: 'description', type: 'textarea', label: 'Description',  rows: 3 },
+  { key: 'damageType',  type: 'enum',     label: 'Damage type',  options: DAMAGE_TYPE_OPTIONS,
+    help: 'physical hits player DEF, elemental hits ELEM_DEF. Defaults to physical for designer-added enemies.' },
 
   {
     key: 'statMult',
     type: 'object',
     label: 'Stat multipliers',
     fields: [
-      { key: 'hp',  type: 'number', label: 'HP mult',     step: 0.05, help: 'Scales enemy max HP vs. player base stats.' },
-      { key: 'atk', type: 'number', label: 'Attack mult', step: 0.05, help: 'Scales enemy attack damage vs. player base stats.' },
+      { key: 'hp',      type: 'number', label: 'HP mult',           step: 0.05, help: 'Scales enemy max HP vs. player base stats.' },
+      { key: 'atk',     type: 'number', label: 'Attack mult',       step: 0.05, help: 'Scales enemy attack damage vs. player base stats.' },
+      { key: 'def',     type: 'number', label: 'DEF mult',          step: 0.05, help: 'Scales physical mitigation. Default 1.0.' },
+      { key: 'elemDef', type: 'number', label: 'ELEM_DEF mult',     step: 0.05, help: 'Scales elemental mitigation. Default 1.0.' },
     ],
   },
 

@@ -2,7 +2,12 @@
  * Affix pools per equipment slot (src/data/affixPools.js).
  *
  * Each slot has a list of affixes; each affix has a stat, a modifier type
- * (FLAT / INCREASED / MORE), and per-rarity value ranges.
+ * (FLAT / BASE_FLAT / INCREASED), and per-rarity value ranges.
+ *
+ * MORE was removed from artefact affix rolls 2026-04-27 — fresh affixes can
+ * only roll FLAT / BASE_FLAT / INCREASED. Existing affixes carrying MORE on
+ * older saves still work, so the editor preserves any unknown type, but the
+ * dropdown is restricted to the currently-rollable types.
  *
  * The override file replaces the WHOLE pool for any slot it touches —
  * so editing here is "swap in this complete pool for weapons" rather than
@@ -14,13 +19,8 @@ import { statOptions } from '../enumSources.js';
 
 const MOD_TYPE_OPTIONS = [
   { value: 'FLAT',      label: 'FLAT (additive raw)' },
+  { value: 'BASE_FLAT', label: 'BASE_FLAT (flat into base stage)' },
   { value: 'INCREASED', label: 'INCREASED (% additive)' },
-  { value: 'MORE',      label: 'MORE (multiplicative)' },
-];
-
-const rangePair = [
-  { key: 'min', type: 'number', label: 'Min' },
-  { key: 'max', type: 'number', label: 'Max' },
 ];
 
 // A range-tuple as a 2-element number array (e.g. [10, 20])

@@ -21,6 +21,8 @@ export default [
   { key: 'id',                     type: 'string', label: 'Id (immutable)' },
   { key: 'name',                   type: 'string', label: 'Display name' },
   { key: 'element',                type: 'enum',   label: 'Element', options: ELEMENTS },
+  { key: 'types',                  type: 'array',  label: 'Unique pool types', itemType: 'string',
+    help: 'Element ids whose unique pools this law can roll from (e.g. ["fire", "general"]). The Phase Technique uses every element + "general".' },
   { key: 'rarity',                 type: 'enum',   label: 'Rarity', options: rarityOptions },
   { key: 'realmRequirement',       type: 'number', label: 'Realm requirement (index)', min: 0, step: 1 },
   { key: 'realmRequirementLabel',  type: 'string', label: 'Realm requirement label' },

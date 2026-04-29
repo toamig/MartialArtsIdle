@@ -17,8 +17,11 @@ export default function LawsEditor({ edited, onChangeRecords }) {
         id: 'new_law',
         name: 'New Law',
         element: 'metal',
+        types: ['metal'],
         rarity: 'Iron',
         realmRequirement: 0,
+        realmRequirementLabel: 'Tempered Body',
+        flavour: '',
         cultivationSpeedMult: 1.0,
         uniques: {},
       }}
