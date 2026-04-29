@@ -7,7 +7,7 @@ export default function WorldsEditor({ edited, onChangeRecords }) {
   // Strip runtime-added worldId from regions so the editor shows the source shape.
   const baseline = WORLDS.map((w) => ({
     ...w,
-    regions: (w.regions || []).map(({ worldId, ...r }) => r),
+    regions: (w.regions || []).map(({ worldId: _worldId, ...r }) => r),
   }));
 
   return (

@@ -14,8 +14,6 @@
  * shown in the UI but survive round-trips, so schema drift doesn't eat data.
  */
 
-import { useState } from 'react';
-
 export default function SchemaForm({ schema, value, onChange, path = '', compact = false }) {
   const v = value || {};
   const update = (key, newVal) => {
