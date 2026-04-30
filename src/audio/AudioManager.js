@@ -32,6 +32,11 @@ let bgmTrackId    = null;   // key into BGM_TRACKS
 let bgmPaused     = false;  // true while tab is hidden
 let adPlaying     = false;  // true while an ad has audio focus
 
+// Browser autoplay policies block the AudioContext until a user gesture.
+// We buffer any playBgm/playSfx calls before that, then flush on unlock().
+let unlocked          = false;
+let pendingBgmTrackId = null;
+
 // BGM preload cache: { [trackId]: Howl } — keyed instances ready to play
 const bgmCache    = {};
 
@@ -147,6 +152,11 @@ const AudioManager = {
    * @param {{ fade?: boolean }} [opts]
    */
   playBgm(trackId, { fade = true } = {}) {
+    // Defer until first user gesture — browsers block AudioContext otherwise.
+    if (!unlocked) {
+      pendingBgmTrackId = trackId;
+      return;
+    }
     if (bgmTrackId === trackId && bgmHowl?.playing()) return;
 
     // Fade out old track simultaneously with new one fading in (true crossfade)
@@ -189,14 +199,18 @@ const AudioManager = {
    * @param {string} sfxId - Key from SFX (e.g. 'ui_click', 'combat_hit_player')
    */
   playSfx(sfxId) {
+    if (!unlocked) return;
+
     const vol = effectiveSfxVol();
     if (vol === 0) return;
 
     const howl = _getSfxHowl(sfxId);
     if (!howl) return;
 
-    const id = howl.play();
-    howl.volume(vol, id);
+    // Set howl-group volume BEFORE play() — setting per-id volume on the id
+    // returned by play() races when the howl is still loading (id is a placeholder).
+    howl.volume(vol);
+    howl.play();
   },
 
   /**
@@ -252,6 +266,31 @@ const AudioManager = {
   subscribe(fn) {
     subscribers.add(fn);
     return () => subscribers.delete(fn);
+  },
+
+  /**
+   * Unlock audio playback after the first user gesture.
+   *
+   * Resumes the suspended AudioContext, preloads SFX, preloads both BGM tracks,
+   * and starts any BGM that was requested before unlock. Idempotent.
+   */
+  unlock() {
+    if (unlocked) return;
+    unlocked = true;
+
+    if (Howler.ctx && Howler.ctx.state === 'suspended') {
+      Howler.ctx.resume().catch(() => {});
+    }
+
+    // Preload everything now that the context is allowed to run.
+    this.preloadBgm(['cultivation', 'combat']);
+    this.preload();
+
+    if (pendingBgmTrackId) {
+      const trackId = pendingBgmTrackId;
+      pendingBgmTrackId = null;
+      this.playBgm(trackId);
+    }
   },
 
   /**

@@ -676,10 +676,25 @@ function AppInner() {
   hooksRef.current = { cultivation, inventory, techniques, combat, artefacts, pills, autoFarm, crystal, qiSparks };
   useEffect(() => { initDebug(hooksRef); }, []);
 
-  // Preload both BGM tracks once on mount so crossfades are instant
+  // Audio unlock: browsers block the AudioContext until a user gesture.
+  // Defer preload + BGM start until the first pointerdown/keydown so we
+  // don't get stuck in a half-suspended state.
   useEffect(() => {
-    AudioManager.preloadBgm(['cultivation', 'combat']);
+    const onFirstGesture = () => {
+      AudioManager.unlock();
+      document.removeEventListener('pointerdown', onFirstGesture);
+      document.removeEventListener('keydown',     onFirstGesture);
+    };
+    document.addEventListener('pointerdown', onFirstGesture);
+    document.addEventListener('keydown',     onFirstGesture);
+
+    // Request the initial track now — playBgm buffers it until unlock fires.
     AudioManager.playBgm('cultivation');
+
+    return () => {
+      document.removeEventListener('pointerdown', onFirstGesture);
+      document.removeEventListener('keydown',     onFirstGesture);
+    };
   }, []);
 
   // BGM: combat screen uses combat track; everything else uses cultivation
