@@ -85,13 +85,43 @@ function persistFirsts() {
 }
 
 /**
+ * Returns true when we should NOT initialise GameAnalytics for this session.
+ *
+ *   - localhost / 127.0.0.1 / *.local hostnames (dev + local preview builds)
+ *   - file:// origins (Electron packaged build, opening dist/index.html directly)
+ *   - Capacitor desktop in dev mode
+ *
+ * Real players on the deployed web build still get full telemetry. This just
+ * stops the SDK from spamming "Failed to send events to collector" warnings
+ * during local QA where the requests have nowhere useful to go.
+ */
+function isLocalEnvironment() {
+  if (typeof window === 'undefined') return true;
+  const { protocol, hostname } = window.location;
+  if (protocol === 'file:') return true;
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
+  if (hostname.endsWith('.local')) return true;
+  // Electron-packaged build: process.versions.electron is set
+  try {
+    if (globalThis?.process?.versions?.electron) return true;
+  } catch {}
+  return false;
+}
+
+/**
  * Initialise the SDK exactly once. Call from App boot.
  * Reads keys from Vite env (VITE_GA_GAME_KEY / VITE_GA_SECRET_KEY).
  * Missing keys → analytics stays disabled (no-op).
+ * Local/desktop environments → analytics stays disabled (no-op).
  */
 export function initAnalytics() {
   if (initialized) return;
   initialized = true;
+
+  if (isLocalEnvironment()) {
+    if (import.meta.env.DEV) console.info('[analytics] local environment → disabled');
+    return;
+  }
 
   const gameKey   = import.meta.env.VITE_GA_GAME_KEY;
   const secretKey = import.meta.env.VITE_GA_SECRET_KEY;
