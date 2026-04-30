@@ -168,15 +168,18 @@ html {
 body {
   min-height: 100vh;
   min-height: 100dvh;
-  /* Prevent text selection on game UI */
-  -webkit-user-select: none;
-  user-select: none;
-  /* Disable iOS long-press magnifier loupe + callout menu (Copy/Define/etc.) */
-  -webkit-touch-callout: none;
   /* Prevent iOS tap zoom */
   -webkit-text-size-adjust: 100%;
   /* Safe area padding for notched phones */
   padding: env(safe-area-inset-top) 0 0 0;
+}
+
+/* Universal: kill iOS long-press loupe + callout menu everywhere.
+   Class-scoped overrides (.import-input, .stg-import-input) still win on specificity. */
+*, *::before, *::after {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Prevent saving/copying game images */
@@ -186,10 +189,10 @@ img {
   pointer-events: none;
 }
 
-/* Allow text selection in specific places if needed */
-input, textarea {
-  -webkit-user-select: auto;
-  user-select: auto;
+/* Allow text input/edit where it's actually needed */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
   -webkit-touch-callout: default;
 }
 
