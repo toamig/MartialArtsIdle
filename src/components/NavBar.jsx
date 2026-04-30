@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import { AudioManager } from '../audio';
 import LockTooltip from './LockTooltip';
 
 const BASE = import.meta.env.BASE_URL;
@@ -28,7 +27,7 @@ function NavBar({ currentScreen, onNavigate, badges = {}, isUnlocked = () => tru
           <button
             key={screen.id}
             className={`nav-btn ${currentScreen === screen.id ? 'active' : ''}${!unlocked ? ' nav-btn-locked' : ''}`}
-            onClick={() => { if (!unlocked) return; AudioManager.playSfx('ui_click'); onNavigate(screen.id); }}
+            onClick={() => { if (!unlocked) return; onNavigate(screen.id); }}
             aria-label={hint ? `${label} — ${hint}` : label}
           >
             <div className="nav-icon-wrap">

@@ -54,6 +54,7 @@ import ToastStack from './components/ToastStack';
 import SelectionModal from './components/SelectionModal';
 import QiSparkChoiceModal from './components/QiSparkChoiceModal';
 import { AudioManager } from './audio';
+import { installGlobalClickSfx } from './audio/clickSfx';
 import { EventQueueProvider, useEventQueue, useBlockingPresence } from './contexts/EventQueueContext';
 import './App.css';
 
@@ -69,8 +70,7 @@ function AppInner() {
 
   const openModal = useCallback((key, sideEffect) => {
     setActiveModal(prev => {
-      if (prev === key) { AudioManager.playSfx('ui_close'); return null; }
-      AudioManager.playSfx('ui_open');
+      if (prev === key) return null;
       if (sideEffect) sideEffect();
       // Broadcast so other modals (ActiveSparksBar, CrystalFeedModal, …) close.
       window.dispatchEvent(new CustomEvent('mai:modal-opened', { detail: { id: key } }));
@@ -688,6 +688,10 @@ function AppInner() {
     document.addEventListener('pointerdown', onFirstGesture);
     document.addEventListener('keydown',     onFirstGesture);
 
+    // One global click→ui_click handler for every <button> in the app.
+    // Idempotent; safe to call before unlock (playSfx no-ops until unlocked).
+    installGlobalClickSfx();
+
     // Request the initial track now — playBgm buffers it until unlock fires.
     AudioManager.playBgm('cultivation');
 
@@ -705,7 +709,6 @@ function AppInner() {
 
   // Navigate to a screen, optionally carrying a parameter (e.g. region data).
   const navigate = (screen, param = null) => {
-    AudioManager.playSfx('ui_click');
     setCurrentScreen(screen);
     setScreenParam(param);
     setSelectionModalOpen(false);
@@ -770,7 +773,6 @@ function AppInner() {
   }, [karma, cultivation.realmIndex, tree.modifiers]);
 
   const goBack = () => {
-    AudioManager.playSfx('ui_close');
     navigate('worlds', {
       expandWorldId: screenParam?.worldId ?? null,
       activeTab:     screenParam?.fromTab  ?? null,
@@ -893,19 +895,18 @@ function AppInner() {
           onSkip={qiSparks.skip}
         />
       )}
-      {activeModal === 'settings'     && <SettingsScreen onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} />}
-      {activeModal === 'shop'         && <BloodLotusShopModal  onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} onBalanceChange={null} />}
-      {activeModal === 'journey'      && <JourneyModal   realmIndex={cultivation.realmIndex} onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} />}
-      {activeModal === 'achievements' && achievements && <AchievementsModal achievements={achievements} onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} />}
-      {activeModal === 'pills'        && pills        && <PillDrawer open pills={pills} onClose={() => { AudioManager.playSfx('ui_close'); setActiveModal(null); }} />}
+      {activeModal === 'settings'     && <SettingsScreen onClose={() => setActiveModal(null)} />}
+      {activeModal === 'shop'         && <BloodLotusShopModal  onClose={() => setActiveModal(null)} onBalanceChange={null} />}
+      {activeModal === 'journey'      && <JourneyModal   realmIndex={cultivation.realmIndex} onClose={() => setActiveModal(null)} />}
+      {activeModal === 'achievements' && achievements && <AchievementsModal achievements={achievements} onClose={() => setActiveModal(null)} />}
+      {activeModal === 'pills'        && pills        && <PillDrawer open pills={pills} onClose={() => setActiveModal(null)} />}
       {(activeModal === 'daily' || currentEvent?.kind === 'daily-bonus') && (
         <DailyBonusModal
           streak={dailyBonus.streak}
           todayReward={dailyBonus.todayReward}
           isAvailable={dailyBonus.isAvailable}
-          onCollect={() => { AudioManager.playSfx('ui_confirm'); dailyBonus.collect(); }}
+          onCollect={() => dailyBonus.collect()}
           onClose={() => {
-            AudioManager.playSfx('ui_close');
             setActiveModal(null);
             if (currentEvent?.kind === 'daily-bonus') dismiss(currentEvent.id);
           }}
