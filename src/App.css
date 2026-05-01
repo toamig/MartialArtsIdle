@@ -2812,11 +2812,22 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .home-cf-meter-label {
-  font-size:     0.7rem;
-  letter-spacing:0.02em;
-  color:         rgba(255, 255, 255, 0.92);
-  text-shadow:   0 1px 2px rgba(0, 0, 0, 0.7);
-  white-space:   nowrap;
+  font-size:      0.78rem;
+  font-weight:    600;
+  letter-spacing: 0.02em;
+  color:          #ffffff;
+  /* Pill backing matches .home-hold-hint so the swap feels cohesive and the
+     text reads cleanly over the busy home-scene art. */
+  padding:        3px 10px;
+  border-radius:  10px;
+  background:     rgba(0, 0, 0, 0.62);
+  border:         1px solid rgba(255, 255, 255, 0.10);
+  /* Layered shadow keeps glyph edges defined when particles or boost VFX
+     bleed behind the pill. */
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 4px rgba(0, 0, 0, 0.6);
+  white-space:    nowrap;
 }
 
 .home-cf-meter-track {
@@ -2860,8 +2871,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   to   { box-shadow: 0 0 14px rgba(251, 191, 36, 0.9); }
 }
 .home-cf-meter-deep .home-cf-meter-label {
-  color:       #fde68a;
-  text-shadow: 0 0 6px rgba(251, 191, 36, 0.5);
+  color:        #fde68a;
+  border-color: rgba(251, 191, 36, 0.45);
+  background:   rgba(20, 12, 0, 0.7);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 6px rgba(251, 191, 36, 0.45);
 }
 
 /* ── Heavenly Qi chip — purple pill floating in scene, top-right ─────────── */
