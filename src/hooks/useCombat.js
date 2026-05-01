@@ -381,9 +381,14 @@ export default function useCombat() {
     const eDmgType = enemyDef?.damageType ?? 'physical';
 
     const pMaxHp = stats?.health ?? 100;
-    const hpBase = 150 * Math.pow(1.12, Math.max(0, regionIndex ?? 0));
+    // Per-region exponential growth tuned 2026-05-01 from 1.12 → 1.10 to soften
+    // the endgame curve. At idx 50 this drops the multiplier from 289× to 117×
+    // (~60% reduction), bringing W6 enemies into a clearable range for max-build
+    // first-life players while leaving early game intact (idx 4 only −7%).
+    // See obsidian/Audits/Playthrough Sim 2026-05-01.md (v3) for the math.
+    const hpBase = 150 * Math.pow(1.10, Math.max(0, regionIndex ?? 0));
     const eMaxHp = Math.max(100, Math.floor(hpBase * hpMult));
-    const atkBase = 18 * Math.pow(1.12, Math.max(0, regionIndex ?? 0));
+    const atkBase = 18 * Math.pow(1.10, Math.max(0, regionIndex ?? 0));
     const eAtk    = Math.max(10, Math.floor(atkBase * atkMult));
     const defBase  = ENEMY_DEF_PER_REGION * Math.max(0, regionIndex ?? 0);
     const eDef     = Math.max(10, Math.floor(defBase * defMultE));

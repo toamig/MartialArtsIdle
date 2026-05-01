@@ -94,33 +94,31 @@ HP = max(100, (Essence + Body) × 12 + Soul × 4)
 
 ### Enemy Stats
 ```
-Enemy HP       = max(100, 150 × 1.12^region_index × enemy_hp_mult)
-Enemy ATK      = max(10,  18 × 1.12^region_index × enemy_atk_mult)
+Enemy HP       = max(100, 150 × 1.10^region_index × enemy_hp_mult)
+Enemy ATK      = max(10,  18 × 1.10^region_index × enemy_atk_mult)
 Enemy DEF      = max(10,  region_index × 8 × enemy_def_mult)        // physical mitigation
 Enemy ELEM_DEF = max(10,  region_index × 8 × enemy_elem_def_mult)   // elemental mitigation
 ```
 
 > `enemy_def_mult` and `enemy_elem_def_mult` are STARTING VALUES added in the 2026-04-26 secret-tech overhaul (defaults 1.0; per-enemy overrides go in `data/enemies.js` `statMult`). Tune after the next balance pass — direction is to lower if player damage feels ineffectual at high realm.
 `region_index` is the region's `minRealmIndex` (0–50 across the six worlds).
-The 1.12×-per-index curve gives a ~300× HP spread from W1 R1 to W6 R4, independent of
-the qi economy. Early zones always have low HP, late zones always have high HP,
-regardless of the player's current power.
+The growth exponent was tuned 2026-05-01 from 1.12 → 1.10 to soften the endgame curve. The 1.10×-per-index curve gives a ~117× HP spread from W1 R1 to W6 R6 (down from ~300× under 1.12), keeping the early-game encounter math intact while pulling endgame stats into a clearable range for max-build first-life players. See [[Audits/Playthrough Sim 2026-05-01]] for the analysis.
 
 Enemy ATK still scales with the player's current stats — it measures danger TO this player.
 `hp_mult` and `atk_mult` are per-enemy constants defined in `data/enemies.js`.
 
-Reference HP (before `hp_mult`):
+Reference HP (before `hp_mult`, post-2026-05-01 curve):
 
 | Region | Index | Base HP |
 |---|---|---|
-| W1 R1 Outer Sect Training Grounds | 0  | 150   |
-| W1 R5 Misty Spirit Forest         | 14 | 647   |
-| W2 R1 Shattered Sky Desert        | 18 | 981   |
-| W3 R1 Saint Burial Grounds        | 24 | 1 836 |
-| W4 R1 Origin Qi Spring Depths     | 30 | 3 435 |
-| W5 R1 Fractured Space Corridors   | 36 | 6 427 |
-| W6 R1 Heaven Pillar Ascent        | 45 | 16 775 |
-| W6 R4 Heaven's Core               | 51 | 31 392 |
+| W1 R1 Outer Sect Training Grounds | 0  | 150    |
+| W1 R5 Misty Spirit Forest         | 14 | 569    |
+| W2 R1 Shattered Sky Desert        | 18 | 833    |
+| W3 R1 Saint Burial Grounds        | 24 | 1 478  |
+| W4 R1 Origin Qi Spring Depths     | 30 | 2 617  |
+| W5 R1 Fractured Space Corridors   | 36 | 4 631  |
+| W6 R1 Heaven Pillar Ascent        | 45 | 10 935 |
+| W6 R4 Heaven's Core               | 50 | 17 609 |
 
 ### Mitigation Pipeline (added 2026-04-26 secret-tech overhaul)
 

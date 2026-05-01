@@ -10,7 +10,7 @@ Full catalogue of enemy types, stat profiles, technique pools, and region assign
 > `useCombat.startFight` uses a simpler model than the power-roll /
 > rank design below. Today each enemy entry has a
 > fixed `statMult: { hp, atk }` and HP is anchored to the region index
-> via `150 × 1.12^regionIndex × hp_mult` (see [[Combat#Enemy Stats]]).
+> via `150 × 1.10^regionIndex × hp_mult` (curve softened from 1.12 on 2026-05-01; see [[Combat#Enemy Stats]]).
 > The richer system in this doc is the **target design** — the rank
 > and power-roll tables are not yet wired in.
 

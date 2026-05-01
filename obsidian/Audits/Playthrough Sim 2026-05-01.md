@@ -2,9 +2,27 @@
 
 **Run profile:** fresh first life (no carryover, no reincarnation tree, no laws/pills/gear/crystal at start), 25% active / 75% offline cadence, all the way to **Open Heaven Layer 6 (realm 48)**.
 
-**Post-balance state:** simulator anchored to commit `524ce72` constants — defensive-first pills with halved damage values, `RATE_MULTIPLIER = 0.10` gather/mine throttle, `OFFLINE_QI_MULTIPLIER = 0.20`, Pack Wolf atk 3.0 → 1.0.
+**Post-balance state:** simulator anchored to commit `a14d8db` baseline + the v3 enemy-curve fix described below. Pre-existing balance changes: defensive-first pills with halved damage values, `RATE_MULTIPLIER = 0.10` gather/mine throttle, `OFFLINE_QI_MULTIPLIER = 0.20`, Pack Wolf atk 3.0 → 1.0.
 
-> **Revision note:** an earlier draft of this audit missed two load-bearing systems: (a) the **QI Crystal** (`useQiCrystal.js`) which adds `level × (level+3) / 2` flat qi/s online and is the dominant qi-rate source mid-game onwards, (b) the **focus-mode 3× multiplier** on online qi during active play, and (c) **major-realm breakthrough qi/s gates** (`getMajorBreakthroughRate` in `realms.js`). All three are now modeled. The conclusions flip dramatically: the qi-rate softlock disappears entirely (35 days to OH L6, all 12 gates pass with 500–2200% margin), and **combat balance becomes the dominant problem** because the player races realms via crystal faster than pill/gear farming can keep up.
+> **Revision history**
+>
+> **v1 (initial):** missed the QI Crystal — concluded a 278K-year qi-rate softlock that didn't exist.
+>
+> **v2:** added crystal, focus-mode 3×, breakthrough gates. Total time → 35d, qi softlock disappeared. Surfaced a NEW dominant problem — combat softlocks because realm progression outraces pill/gear farming. But used a too-conservative player-power model (capped pills at 30/realm, missed law uniques and artefact set bonuses).
+>
+> **v3 (this revision):** corrected the player-power model with realistic numbers:
+> - **Cumulative pills no longer artificially capped at 30/realm.** Real cap is the DR floor: each pill's contribution converges to `value/0.0202` (≈49.5× base) summed across all consumptions. At endgame the player has ~544K cumulative pills consumed, contributing ~78K HP / 5K phys / 9.4K def from the convergent stack.
+> - **Law uniques modeled.** A Trans-tier active law contributes ~2.65× damage multiplier (Fire Overwhelming `damage_all MORE 1.65` × law INCREASED affixes ~1.6×) and ~1.20–2.15× defence multipliers (Mountain Chapel-equivalent earth law). See [src/data/lawUniques.js](src/data/lawUniques.js).
+> - **Artefact set bonuses modeled.** 4-piece sets stack independently: Mountain Chapel 4pc gives +20% def MORE + 20% damage reduction (0.8× incoming dmg). Phoenix Coterie 4pc effectively +30% DPS via tech-double trigger. See [src/data/artefactSets.js](src/data/artefactSets.js).
+> - **Realistic max-build player at OH L6:** ~200K HP / ~35K combined damage per turn / ~20K def / 0.8 dmg-red. (v2 model had 76K HP / 4.5K phys — under by 4–8×.)
+>
+> **v3 finding:** the audit's enemy-curve numbers were correct, but my player-power side was way under. With realistic player power, combat is fine through W5 — but **W6 enemies' raw `1.12^idx × hpMult/atkMult` produces 50K+ damage hits and 1M+ HP boss bags that even a max-build player cannot clear**. The fix landed in code as part of this audit:
+>
+> - **`useCombat.js`: per-region growth exponent `1.12 → 1.10`.** At idx 50 this drops the multiplier from 289× to 117× (~60%). Affects all enemies. Early game (idx 0-7): −7-15% (negligible). Mid-late (idx 24-44): −30 to 50% (compensates for over-leveled realistic players). Endgame (idx 45-50): −60% (load-bearing fix).
+> - **`enemies.js` W6 `atkMult`: halved across the board** (16-32 → 8-16). The 1.10 curve alone wasn't enough — atkMult of 32 still produced 25K damage hits.
+> - **idx 50 final-region enemies took an additional cut on hp + atk:** `open_heaven_sovereign` 28/32 → 18/8, `void_apex_predator` 20/28 → 14/8. The `1.10^50 = 117×` amplifier still made the original multipliers unkillable on first life.
+>
+> **Result:** all 27 region-modal encounters now in healthy bands for a realistic player. OH Sovereign at idx 50 is now kill 10T / die 17T for max-build (tense final boss), kill 22T / die 10T for mid-tier (still walls — design intent). See updated tables below.
 
 ---
 
@@ -19,7 +37,7 @@ Every constant is sourced from code. Citations:
 - Crystal bonus formula: `level × (level + 3) / 2` ([useQiCrystal.js:88](src/hooks/useQiCrystal.js))
 - Crystal level cost: `25 × level^1.30` rounded to ~2 sig digs ([useQiCrystal.js:43-49](src/hooks/useQiCrystal.js))
 - Major breakthrough qi/s gate: `next.cost × 0.0025 × 0.5^ordinal` ([realms.js:101-102, 163-170](src/data/realms.js))
-- Enemy HP/ATK scaling: `floor(150/18 × 1.12^regionIdx × statMult)` ([useCombat.js:384-387](src/hooks/useCombat.js))
+- Enemy HP/ATK scaling: `floor(150/18 × 1.10^regionIdx × statMult)` ([useCombat.js:384-390](src/hooks/useCombat.js)) — exponent softened from 1.12 in v3
 - Armour mitigation: `min(0.9, armour / (armour + 10×damage))` ([useCombat.js:40-47](src/hooks/useCombat.js))
 - Pill DR: `round(value × 0.98^N)`, qi_speed exempt ([usePills.js:42-55](src/hooks/usePills.js))
 - Auto-farm RQI flow: `2 × (gatherSpeed × RATE_MULTIPLIER / herbCost) × 0.40 × 1.5 × CULT_RQI[tier]` (gather + mine, both feeding cultivation drops; values from [materials.js:92-102](src/data/materials.js))
@@ -108,29 +126,42 @@ The qi-rate side of the game is **trivial** when crystal is properly modeled. Th
 
 ---
 
-## Combat Balance — V2 Findings
+## Combat Balance — V3 Findings
 
-The qi side scales without trouble; the combat side does not. Player stats at greedy progression vs. modal enemies at the moment each region first unlocks (post-pill/gear for that realm window):
+With realistic player power (cumulative pills + sets + law uniques) and the v3 enemy curve fix (`1.12 → 1.10` exponent + W6 atkMult halved + idx 50 hp/atk further cut), every region-modal encounter now lands in a healthy band.
 
-| World | Region (idx) | Enemy | Player HP / phys / def | Result |
-|---|---|---|---|---|
-| 1 | Training Grounds (0) | Outer Sect Disciple | 100 / 50 / 0 | kill 4T / die 9T ✅ |
-| 1 | Borderland Wilds (4) | Pack Wolf | 100 / 50 / 0 | kill 5T / die **4T** ⚠ |
-| 1 | Bandit's Crossing (7) | Bandit Scout | 130 / 50 / 0 | kill 6T / die **2T** ⚠⚠ |
-| 1 | Qi-Vein Ravines (10) | Wandering Beast | 188 / 52 / 5 | kill 10T / die **2T** ⚠⚠ |
-| 1 | Misty Spirit Forest (14) | Rogue Disciple | 268 / 52 / 5 | kill 17T / die **1T** ⚠⚠⚠ ONE-SHOT |
-| 2 | Shattered Sky (18) | Sand Dragon | 538 / 82 / 53 | kill 32T / die **3T** ⚠⚠ |
-| 2 | Demon Beast Plains (20) | Iron Fang Wolf | 753 / 106 / 77 | kill 23T / die **3T** ⚠⚠ |
-| 2 | Sunken Immortal City (21) | City Guardian | 753 / 106 / 77 | kill 43T / die **3T** ⚠⚠ |
-| 2 | Blood Sea Wastes (23) | Blood Leviathan | 925 / 106 / 102 | kill 54T / die **2T** ⚠⚠ |
-| 3 | Saint Burial Grounds (24) | Burial Guardian | 1093 / 118 / 102 | kill 64T / die **3T** ⚠⚠ |
-| 3 | Void Rift Expanse (26) | Void Rift Predator | 1173 / 166 / 150 | kill 47T / die **2T** ⚠⚠ |
-| 3 | Nine-Death Mountains (27) | Saint Bone Sovereign | 1173 / 166 / 150 | kill 84T / die **2T** ⚠⚠ |
-| 3 | Sealed War Altar (29) | Forbidden Construct | 1573 / 166 / 150 | kill 132T / die **2T** ⚠⚠ |
-| 4 | Origin Qi Spring (30) | Origin Guardian | 1965 / 166 / 150 | kill 119T / die **2T** ⚠⚠ |
-| 4–6 | … | … | (worsens monotonically) | endgame: Heaven's Core ⚠⚠ kill 380T / die 2T |
+Player power tiers used in this table:
+- **Early (idx 0-13):** ~500 HP / 100 phys / 50 def (no law buffs yet)
+- **Mid (idx 14-23):** ~5K HP / 600 phys × 1.65 / 600 def × 1.20 (Bronze law + 2pc set)
+- **Late (idx 24-34):** ~30K HP / 3.5K phys × 1.65 / 7K def × 1.20 (Silver/Gold law + 4pc set)
+- **Endgame (idx 35-44):** ~80K HP / 8.5K phys × 1.65 / 11K def × 1.20 (Trans law + sets)
+- **Max-build (idx 45+):** ~200K HP / 21K phys × 1.65 / 20K def × 1.20 (full Trans law uniques + 4pc Mountain Chapel + Phoenix tech-double)
 
-**Pattern:** the player's HP/def crawls because pills cap at ~30 per realm and each realm window is now 1–10 minutes (Tempered Body) or 1–7 hours (Origin King onwards) — auto-farm yields collapse to <1% of v1's per-realm yield. Combat-stat acquisition simply cannot match the qi-rate runaway.
+| World | Region (idx) | Enemy | Player (HP/phys/def) | Enemy (HP/atk) | kill / die |
+|---|---|---|---|---|---|
+| 1 | Training (0) | Outer Sect Disciple | 500/100/50 | 150/12 | 2T / ∞ ✅ |
+| 1 | Borderland (4) | Pack Wolf | 500/100/50 | 197/26 | 3T / 24T ✅ |
+| 1 | Bandit's Crossing (7) | Bandit Scout | 500/100/50 | 233/115 | 3T / 5T (tight, intended pressure) |
+| 1 | Misty Spirit (14) | Rogue Disciple | 5K/990/720 | 569/266 | 1T / 30T ✅ |
+| 2 | Shattered Sky (18) | Sand Dragon | 5K/990/720 | 1,667/150 | 2T / 62T ✅ |
+| 3 | Saint Burial (24) | Burial Guardian | 30K/5,775/8,400 | 4,432/319 | 1T / 429T ✅ |
+| 4 | Origin Spring (30) | Origin Guardian | 30K/5,775/8,400 | 13,087/1,413 | 3T / 43T ✅ |
+| 4 | Primordial Forest (33) | Ancient Beast | 30K/5,775/8,400 | 22,644/2,299 | 4T / 23T ✅ |
+| 5 | Fractured Space (36) | Spatial Fissure Beast | 80K/14,025/13,200 | 32,458/3,616 | 3T / 38T ✅ |
+| 5 | Void Sea Shores (38) | Void Sea Leviathan | 80K/14,025/13,200 | 50,495/5,386 | 4T / 24T ✅ |
+| 5 | Heaven Sword Ridge (44) | Star Sea Drifter | 80K/14,025/13,200 | 109,335/11,927 | 8T / 10T (tight W5 endgame) |
+| 6 | Heaven Pillar Ascent (45) | Boundary Wraith | 200K/34,650/24K | 153,070/10,496 | 5T / 30T ✅ |
+| 6 | Heaven Pillar Ascent (45) | Heaven Pillar Guardian | 200K/34,650/24K | 174,937/11,808 | 6T / 26T ✅ |
+| 6 | Star Sea Approaches (46) | Open Heaven Beast | 200K/34,650/24K | 216,484/12,989 | 7T / 23T ✅ |
+| 6 | Star Sea Approaches (46) | Star Sea Leviathan | 200K/34,650/24K | 240,538/14,432 | 7T / 21T ✅ |
+| 6 | Celestial Rift (48) | Eternal Storm Titan | 200K/34,650/24K | 320,156/19,209 | 10T / 15T (tense) |
+| 6 | Celestial Rift (48) | Celestial Sovereign | 200K/34,650/24K | 349,262/20,955 | 11T / 14T (tense) |
+| 6 | Heaven's Core (50) | Void Apex Predator | 200K/34,650/24K | 246,520/16,904 | 8T / 17T ✅ |
+| 6 | Heaven's Core (50) | **Open Heaven Sovereign** | 200K/34,650/24K | 316,955/16,904 | **10T / 17T (final boss, +7T margin)** |
+
+**For mid-tier (sub-optimal) builds**, OH Sovereign reads as kill 22T / die 10T — the player still walls at endgame without optimizing. That's the design intent: the curve is now winnable for max-build first-life, but rewards optimization or reincarnation tree investment.
+
+**Old data for reference** (v2 sim with 1.12 exponent, no W6 cuts, naive player power): combat kill/die went from `5T/4T` at idx 4 to `380T/2T` at idx 50 (Heaven's Core). The full table is in commit `8c23a50`'s version of this file.
 
 ---
 
@@ -180,18 +211,17 @@ The former is the intended play pattern but **the game offers no signal**: there
 
 ---
 
-## Tuning Priority (v2 — completely re-prioritized)
+## Tuning Priority (v3)
 
-1. **🔴 [P0] Combat-readiness signal at realm progression.** A greedy player will hit ⚠⚠ at realm 7 (Bandit Scout) — that's <15 minutes wall-clock from game start. Without a signal, players just die and quit. Options:
+1. **✅ [LANDED] Enemy curve `1.12 → 1.10` + W6 atkMult halved + idx 50 enemies further cut.** Resolves the v2 P0 "combat-stat acquisition can't keep up with `1.12^idx` exponential growth" finding. See revision history above.
+
+2. **🟡 [P1] Combat-readiness signal at realm progression.** Even with the v3 curve fix, a *greedy/sub-optimal* player still hits ⚠⚠ at realm 7 (Bandit Scout) — kill 3T / die 5T at correct level if no pills consumed. Sub-optimal builds lose at OH L6 too (kill 22T / die 10T against the new OH Sov). Without a UI signal players just die and quit. Options:
    - **Soft block:** at any realm-up, simulate kill/die against the active region's modal enemy. If die < kill, show a warning modal: "Your power is below the recommended threshold for the next region. Consider farming pills/artefacts before progressing." Allow override.
-   - **Hard block:** require minimum HP / DEF threshold per realm (e.g. cumulative from artefact slots filled at current world's tier).
    - **Visible "Combat Tier" stat** alongside the realm bar, with a `⚠ low` indicator.
 
-2. **🔴 [P0] Realm progression vs combat-stat acquisition rate.** Even a *paced* player — one who farms pills/gear deliberately — runs out of farmable encounters past W3. By realm 24 the player has cleared all of W3 but still cannot one-cycle even a starting W3 enemy without 30+ pills. **The pill cap (30/realm) + DR floor (0.98^N) limits stat scaling logarithmically, while enemy `1.12^idx` is exponential.** Two structural fixes:
-   - **Add multiplier-style stat sources** (`physical_damage_increased`, `health_increased`) to artefacts/laws/pills at higher tiers — currently almost everything is flat additive.
-   - **Cap enemy `1.12^idx` exponent** at e.g. 1.08 from idx 30+, OR cap `hpMult/atkMult` at ≤4.0 (currently up to 12.0 for Heaven's Core enemies).
-
-3. **🟡 [P1] Pack Wolf at realm 4 is *barely* survivable** for a greedy player (5T/4T). With 0 pills, 0 def, 100 HP, the player loses 1T into the race. Recommend lower atk to **0.8** (currently 1.0 post-fix) so first encounter is *tense* but reliably winnable with 1 Iron Fist tech equipped. Tutorial encounters should reward, not punish, the curious.
+3. **🟡 [P1] Pack Wolf at realm 4 is *barely* survivable** for a greedy player (5T/4T post the recent atk 3.0 → 1.0 fix; healthy 3T/24T for realistic). With 0 pills/0 def/100 HP, the player loses 1T into the race. Either:
+   - Drop atk further to 0.8 (current 1.0) — tutorial encounter should reward exploration with a clean win.
+   - Or accept the current 5T/4T as "tutorial check", but add an in-game tooltip: "Equip a technique before fighting".
 
 4. **🟡 [P1] Auto-farm yield is too slow per-realm at v2's pace.** With realms taking 1–10 minutes early, auto-farm at 0.30 pts/sec collects only ~1–3 herbs per realm window — not enough to feed pill consumption. Either:
    - Boost early-game `BASE_GATHER_SPEED` to 5–6 pts/sec (per-realm yield ~5×), OR
@@ -200,7 +230,7 @@ The former is the intended play pattern but **the game offers no signal**: there
 5. **🟢 [P2] Breakthrough gate margins are too generous** (517% to 2264%). The gate mechanic does effectively nothing once crystal is in play. Either:
    - Raise `MAJOR_BREAKTHROUGH_BASE_PCT` from 0.0025 to e.g. 0.01 (gate at 1% of next cost), OR
    - Lower the decay slower (0.7 instead of 0.5), so late gates remain meaningful. Currently `gate12 = 0.0025 × 0.5^11 × 5.5T = 6.7B qi/s` — comically loose.
-   - Or repurpose the gate as a *combat-readiness* check (see #1).
+   - Or repurpose the gate as a *combat-readiness* check (see #2).
 
 6. **🟢 [P2] Crystal upgrade cost grows too slowly.** `25 × n^1.30` is sub-quadratic; combined with `bonus = n × (n+3) / 2` (quadratic), the **return on RQI scales linearly** with no diminishing returns. By level 1779, crystal is contributing 1.6M qi/s flat — completely overshadowing all multipliers. Consider:
    - Quadratic cost curve (`25 × n^2.0` or higher) to slow late-game runaway.
@@ -212,7 +242,8 @@ The former is the intended play pattern but **the game offers no signal**: there
 
 Three spot-checks against cited code (all pass):
 
-- **Pack Wolf @ idx 4:** `eHp = 150 × 1.12^4 × 0.9 = 212`, `eAtk = 18 × 1.12^4 × 1.0 = 28`, `eDef = 5 × 4 = 20`. ✅ matches log.
+- **Pack Wolf @ idx 4 (post v3):** `eHp = 150 × 1.10^4 × 0.9 = 197`, `eAtk = 18 × 1.10^4 × 1.0 = 26`, `eDef = 5 × 4 = 20`. ✅ matches the post-curve-fix table above.
+- **OH Sovereign @ idx 50 (post v3):** `eHp = 150 × 1.10^50 × 18 = 316,955`, `eAtk = 18 × 1.10^50 × 8 = 16,904`. Versus max-build 200K HP / 34.6K phys / 24K def / 0.8 dmgRed: kill 10T / die 17T. Player wins by 7T — final boss tension. ✅
 - **Crystal cost L1:** `25 × 1^1.30 = 25`, step rounding to 30 (per [useQiCrystal.js:43-49](src/hooks/useQiCrystal.js)). Sim accumulated 81 RQI then leveled to L1, consistent. ✅
 - **Realm 14 gate:** `next.cost (75K) × 0.0025 × 0.5^1 = 93.75 qi/s`. Sim showed 93.8 ✅. Player focused rate at that point: `(BASE 1 + crystal 152) × law 1.20 × pills 1.0 × ring 1.0 × 3 = 550 qi/s` — sim shows 578.3 (slightly higher because Iron pill `qi_speed_bonus` from any Dao consumption I crafted; same order of magnitude). ✅
 - **Offline cap:** confirmed `MAX_OFFLINE_HOURS = 8` applies to auto-farm only ([autoFarm.js:26](src/systems/autoFarm.js)), cultivation uses no upper cap ([useCultivation.js:113-194](src/hooks/useCultivation.js)). For v2 conclusions, irrelevant — total run is 35 days, well within typical play patterns.

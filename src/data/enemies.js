@@ -541,15 +541,25 @@ const ENEMIES_RAW = {
 
   // ── World 6 — The Open Heaven ─────────────────────────────────────────────
   // Theme: heaven pillars, star sea, celestial rifts, eternal storms, cosmic beasts
-  // statMult targets: hp 14.0–28.0, atk 16.0–32.0
+  // statMult targets: hp 14.0–24.0, atk 8.0–12.0
   // Blood core tier: Transcendent
+  //
+  // Tuned 2026-05-01 alongside the useCombat 1.12 → 1.10 curve fix:
+  // - All W6 enemy atk values halved from the prior 16–32 range. The 1.12
+  //   curve produced 50K+ damage hits after armour mitigation that one-shot
+  //   even max-build first-life players.
+  // - The two final-region (R4 / idx 50) enemies took an additional cut on
+  //   both hp and atk — open_heaven_sovereign (28/32 → 18/8) and
+  //   void_apex_predator (20/28 → 14/8) — because the 1.10^50 = 117× curve
+  //   amplifier still made the original multipliers unkillable on first life.
+  // Sub-optimal builds still wall here — that's the design intent.
 
   boundary_wraith: {
     id:          'boundary_wraith',
     name:        'Boundary Wraith',
     sprite:      null,
     description: 'A wraith born at the boundary between mortal heavens and Open Heaven space, feeding on the qi of those attempting the crossing. Its form is torn and flickering as if caught permanently between two states of existence.',
-    statMult: { hp: 14.0, atk: 16.0 },
+    statMult: { hp: 14.0, atk: 8.0 },
     drops: [
       { itemId: 'transcendent_cultivation_2', chance: 1.0, qty: [3, 4] },
     ],
@@ -560,7 +570,7 @@ const ENEMIES_RAW = {
     name:        'Heaven Pillar Guardian',
     sprite:      null,
     description: 'A massive construct forged to maintain and protect the pillars that hold heaven in place. Angular and enormous, covered in astronomical inscriptions, with a gravitational presence that subtly warps the space around it.',
-    statMult: { hp: 16.0, atk: 18.0 },
+    statMult: { hp: 16.0, atk: 9.0 },
     drops: [
       { itemId: 'transcendent_cultivation_2', chance: 1.0, qty: [3, 4] },
     ],
@@ -571,7 +581,7 @@ const ENEMIES_RAW = {
     name:        'Open Heaven Beast',
     sprite:      null,
     description: 'A beast born and raised inside Open Heaven space. Its physique is fundamentally different from mortal beasts — exuding an ambient pressure that distorts the space around it and instantly overwhelms anyone below the Open Heaven threshold.',
-    statMult: { hp: 18.0, atk: 18.0 },
+    statMult: { hp: 18.0, atk: 9.0 },
     drops: [
       { itemId: 'transcendent_blood_core_2', chance: 1.0, qty: [3, 4] },
     ],
@@ -582,7 +592,7 @@ const ENEMIES_RAW = {
     name:        'Star Sea Leviathan',
     sprite:      null,
     description: 'A leviathan of colossal scale that swims through the star sea as a fish swims through water, leaving nebula trails and gravitational ripples behind it. In the eternal storm arena it moves like a natural disaster.',
-    statMult: { hp: 20.0, atk: 20.0 },
+    statMult: { hp: 20.0, atk: 10.0 },
     drops: [
       { itemId: 'transcendent_blood_core_2', chance: 1.0, qty: [3, 4] },
     ],
@@ -593,7 +603,7 @@ const ENEMIES_RAW = {
     name:        'Eternal Storm Titan',
     sprite:      null,
     description: 'A titan entity born from and composed of the Open Heaven\'s eternal storms — a cyclone given humanoid form, crackling with continuous lightning. It has never been still and cannot be; stopping would mean ceasing to exist.',
-    statMult: { hp: 22.0, atk: 22.0 },
+    statMult: { hp: 22.0, atk: 11.0 },
     drops: [
       { itemId: 'bronze_blood_core_1',       chance: 1.0, qty: [3, 4] },
       { itemId: 'bronze_blood_core_2',       chance: 1.0, qty: [3, 4] },
@@ -608,7 +618,7 @@ const ENEMIES_RAW = {
     name:        'Celestial Sovereign',
     sprite:      null,
     description: 'A cultivator who achieved Open Heaven and chose to remain as a guardian of the celestial rift. Their physical body has half-dissolved into celestial energy, leaving a radiant, semi-materialised form that patrols the rift with sovereign authority.',
-    statMult: { hp: 24.0, atk: 24.0 },
+    statMult: { hp: 24.0, atk: 12.0 },
     drops: [
       { itemId: 'transcendent_cultivation_2', chance: 1.0, qty: [3, 4] },
     ],
@@ -620,7 +630,7 @@ const ENEMIES_RAW = {
     name:        'Void Apex Predator',
     sprite:      null,
     description: 'The apex predator of void space — its body is an absence of light shaped like a predator. Capable of consuming spatial laws themselves to move instantaneously, it hunts at the intersection of void and Open Heaven.',
-    statMult: { hp: 20.0, atk: 28.0 },
+    statMult: { hp: 14.0, atk: 8.0 },
     drops: [
       { itemId: 'iron_blood_core_1',         chance: 1.0, qty: [3, 4] },
       { itemId: 'iron_blood_core_2',         chance: 1.0, qty: [3, 4] },
@@ -637,7 +647,7 @@ const ENEMIES_RAW = {
     name:        'Open Heaven Sovereign',
     sprite:      null,
     description: 'An ancient Open Heaven cultivator whose physical body fully dissolved into pure energy. Manifests as a sovereign-scale presence of condensed Open Heaven pressure in vaguely humanoid form — confronting it is like standing inside a collapsing star.',
-    statMult: { hp: 28.0, atk: 32.0 },
+    statMult: { hp: 18.0, atk: 8.0 },
     drops: [
       { itemId: 'transcendent_cultivation_2', chance: 1.0, qty: [3, 4] },
       { itemId: 'transcendent_blood_core_2',  chance: 1.0, qty: [3, 4] },
