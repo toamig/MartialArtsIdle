@@ -2696,7 +2696,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   min-height: 0;
   flex: none;
   z-index: 2;
-  touch-action: none;
+  touch-action: manipulation;
   overflow: visible;
 }
 
@@ -5198,7 +5198,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
-  touch-action: none;
+  /* manipulation (not none) so iOS still respects touchstart preventDefault
+     for cancelling the double-tap-and-hold magnifier loupe gesture. */
+  touch-action: manipulation;
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
