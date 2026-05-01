@@ -111,15 +111,17 @@ Rarity is determined by the enemy's power level, not the world number.
 
 ---
 
-## Gather / Mine Costs (Base Speed = 3 pts/sec)
+## Gather / Mine Costs (Effective Speed = 0.3 pts/sec)
+
+Base 3 pts/sec × `RATE_MULTIPLIER` (0.10) = 0.3 effective pts/sec before stat bonuses. The throttle was tuned 2026-05-01 to slow the production loop by 10×.
 
 | Rarity | Cost (pts) | Time (base) |
 |---|---|---|
-| Iron | 15 | ~5s |
-| Bronze | 60 | ~20s |
-| Silver | 180 | ~1 min |
-| Gold | 600 | ~3.3 min |
-| Transcendent | 1800 | ~10 min |
+| Iron | 15 | ~50s |
+| Bronze | 60 | ~3.5 min |
+| Silver | 180 | ~10 min |
+| Gold | 600 | ~33 min |
+| Transcendent | 1800 | ~1.7 hr |
 
 ---
 

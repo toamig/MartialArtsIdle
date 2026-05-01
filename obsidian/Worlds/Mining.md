@@ -48,30 +48,31 @@ Each region tier yields minerals of a corresponding rarity range. Lower-rarity o
 ## Mining Mechanics
 
 - An ore is randomly chosen from the region's available list when mining starts or an ore is collected
-- Mining progresses at **mine speed** (base: **3 points/sec**) toward the ore's **mine cost**
+- Mining progresses at **mine speed** (base **3 points/sec**, then × **0.10** global throttle = **0.3 effective pts/sec** before stat bonuses) toward the ore's **mine cost**
 - When cost is reached → ore is collected and a new ore is chosen
 
 ### Mine Costs by Rarity
 
-| Rarity | Mine Cost | Time at 3/s |
+| Rarity | Mine Cost | Time at 0.3/s |
 |---|---|---|
-| Common | 15 | ~5 sec |
-| Uncommon | 60 | ~20 sec |
-| Rare | 180 | ~1 min |
-| Epic | 600 | ~3.5 min |
-| Legendary | 1800 | ~10 min |
+| Common | 15 | ~50 sec |
+| Uncommon | 60 | ~3.5 min |
+| Rare | 180 | ~10 min |
+| Epic | 600 | ~33 min |
+| Legendary | 1800 | ~1.7 hr |
 
 ### Mine Rate Formula
 
 ```
-Mine Rate = Body × RealmMult × (1 + LawBonus)
+Effective Speed = (BASE_MINE_SPEED + miningSpeed) × RATE_MULTIPLIER
+Mine Rate       = Effective Speed / MineCost(item)
 ```
 
 | Variable | Notes |
 |---|---|
-| Base | 3 points/sec (before stat scaling) |
-| `RealmMult` | ~1.5× per major realm |
-| `LawBonus` | Earth/Metal-attribute Laws grant +10–25% mining speed |
+| Base | 3 points/sec (BASE_MINE_SPEED in `src/systems/autoFarm.js`) |
+| `RATE_MULTIPLIER` | 0.10 — global throttle on whole pipeline (base + stats), tuned 2026-05-01 |
+| `miningSpeed` | Additive stat from pills / artefacts / laws (Earth/Metal attribute) |
 
 ---
 

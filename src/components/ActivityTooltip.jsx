@@ -1,8 +1,9 @@
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { ALL_MATERIALS, RARITY, getGatherCost, getMineCost } from '../data/materials';
+import { RATE_MULTIPLIER } from '../systems/autoFarm';
 
-const BASE_SPEED = 3; // pts/sec — must match autoFarm.js
+const BASE_SPEED = 3; // pts/sec — must match autoFarm.js BASE_GATHER_SPEED / BASE_MINE_SPEED
 
 function formatTime(sec) {
   if (sec < 60)   return `${Math.round(sec)}s`;
@@ -19,7 +20,7 @@ function computeRates(drops, tab, activityStats) {
   const bonus    = isGather
     ? Math.max(0, activityStats?.harvestSpeed ?? 0)
     : Math.max(0, activityStats?.miningSpeed  ?? 0);
-  const speed      = BASE_SPEED + bonus;
+  const speed      = (BASE_SPEED + bonus) * RATE_MULTIPLIER;
   const luckPct    = isGather
     ? (activityStats?.harvestLuck ?? 0)
     : (activityStats?.miningLuck  ?? 0);

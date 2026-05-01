@@ -173,7 +173,13 @@ export default function useCultivation() {
       if (raw) sparkOfflineMult = JSON.parse(raw).offlineQiMult ?? 1;
     } catch {}
 
-    const baseRate = BASE_RATE * lawMult * offlineQiMult * artefactOfflineMult * sparkOfflineMult * (1 + pillQiSpeedBonus);
+    // Offline qi accrues at OFFLINE_QI_MULTIPLIER × the equivalent online
+    // rate. Tuned to 0.20 on 2026-05-01 — players should feel rewarded for
+    // sitting at the screen, while still earning meaningful catch-up qi
+    // when away. Law / artefact / spark / pill modifiers still compound on
+    // top so investment in those continues to matter offline.
+    const OFFLINE_QI_MULTIPLIER = 0.20;
+    const baseRate = BASE_RATE * lawMult * offlineQiMult * artefactOfflineMult * sparkOfflineMult * (1 + pillQiSpeedBonus) * OFFLINE_QI_MULTIPLIER;
     const total = baseRate * awaySeconds;
 
     // Crystal Click offline reservoir fill — silently updates localStorage so

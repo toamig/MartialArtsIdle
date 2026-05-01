@@ -48,30 +48,31 @@ Each region tier yields herbs of a corresponding rarity range. Lower-rarity herb
 ## Gathering Mechanics
 
 - A herb is randomly chosen from the region's available list when gathering starts or a herb is collected
-- Gathering progresses at **gather speed** (base: **3 points/sec**) toward the herb's **gather cost**
+- Gathering progresses at **gather speed** (base **3 points/sec**, then × **0.10** global throttle = **0.3 effective pts/sec** before stat bonuses) toward the herb's **gather cost**
 - When cost is reached → herb is collected and a new herb is chosen
 
 ### Gather Costs by Rarity
 
-| Rarity | Gather Cost | Time at 3/s |
+| Rarity | Gather Cost | Time at 0.3/s |
 |---|---|---|
-| Common | 15 | ~5 sec |
-| Uncommon | 60 | ~20 sec |
-| Rare | 180 | ~1 min |
-| Epic | 600 | ~3.5 min |
-| Legendary | 1800 | ~10 min |
+| Common | 15 | ~50 sec |
+| Uncommon | 60 | ~3.5 min |
+| Rare | 180 | ~10 min |
+| Epic | 600 | ~33 min |
+| Legendary | 1800 | ~1.7 hr |
 
 ### Gather Rate Formula
 
 ```
-Gather Rate = Soul × RealmMult × (1 + LawBonus)
+Effective Speed = (BASE_GATHER_SPEED + harvestSpeed) × RATE_MULTIPLIER
+Gather Rate     = Effective Speed / GatherCost(item)
 ```
 
 | Variable | Notes |
 |---|---|
-| Base | 3 points/sec (before stat scaling) |
-| `RealmMult` | ~1.5× per major realm |
-| `LawBonus` | Wood/Nature-attribute Laws grant +10–25% gather speed |
+| Base | 3 points/sec (BASE_GATHER_SPEED in `src/systems/autoFarm.js`) |
+| `RATE_MULTIPLIER` | 0.10 — global throttle on whole pipeline (base + stats), tuned 2026-05-01 |
+| `harvestSpeed` | Additive stat from pills / artefacts / laws (Wood/Nature attribute) |
 
 ---
 

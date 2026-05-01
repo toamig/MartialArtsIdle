@@ -23,6 +23,7 @@ damage type bonuses. See [[Laws]] for the full schema.
 |---|---|
 | Passive (idle) | `BASE_RATE = 1` qi/sec |
 | Focused (hold-to-boost) | `BASE_RATE × focusMult` (focus mult = `qi_focus_mult` stat, base **300%** = 3×; modifiable by artefacts, pills, law uniques, selections) |
+| Offline | `BASE_RATE × law × artefact × spark × (1 + pill_qi_speed) × OFFLINE_QI_MULTIPLIER` — `OFFLINE_QI_MULTIPLIER = 0.20` (tuned 2026-05-01); offline qi is 20% of the equivalent online rate so being at the screen always pays the most |
 
 The game loop runs via `requestAnimationFrame` with delta-time so rates are frame-rate independent.
 

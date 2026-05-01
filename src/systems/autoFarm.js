@@ -16,8 +16,13 @@ import { ALL_MATERIALS, getGatherCost, getMineCost } from '../data/materials';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export const AUTO_FARM_KEY  = 'mai_auto_farm';
-const BASE_GATHER_SPEED     = 3;   // gather points/sec — must match GatheringScreen
-const BASE_MINE_SPEED       = 3;   // mine points/sec — must match MiningScreen
+const BASE_GATHER_SPEED     = 3;   // gather points/sec — must match ActivityTooltip
+const BASE_MINE_SPEED       = 3;   // mine points/sec — must match ActivityTooltip
+// Global throttle on production rate. Multiplies the effective speed (base +
+// stat bonuses) so the *whole* throughput — base, pills, artefacts, laws —
+// scales together. Tuned to 0.10 on 2026-05-01 to slow mid-game gathering /
+// mining loops by 10×. Mirror in ActivityTooltip.RATE_MULTIPLIER.
+export const RATE_MULTIPLIER = 0.10;
 const MAX_OFFLINE_HOURS     = 8;   // cap offline simulation to prevent startup lag
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -100,7 +105,7 @@ export function simulateGathering(seconds, region, stats = null) {
   const bonusDrops   = gatherDrops.filter(d => (ALL_MATERIALS[d.itemId]?.type ?? '') === 'cultivation');
   const activePools  = primaryDrops.length ? primaryDrops : gatherDrops;
 
-  const speed        = BASE_GATHER_SPEED + Math.max(0, stats?.harvestSpeed ?? 0);
+  const speed        = (BASE_GATHER_SPEED + Math.max(0, stats?.harvestSpeed ?? 0)) * RATE_MULTIPLIER;
   const luckPct      = Math.min(100, Math.max(0, stats?.harvestLuck ?? 0));
   const tierUpChance = stats?.gatherMineRarityUpChance ?? 0;
   const capped       = Math.min(seconds, (stats?.maxOfflineHours ?? MAX_OFFLINE_HOURS) * 3600);
@@ -187,7 +192,7 @@ export function simulateMining(seconds, region, stats = null) {
   const bonusDrops   = mineDrops.filter(d => (ALL_MATERIALS[d.itemId]?.type ?? '') === 'cultivation');
   const activePools  = primaryDrops.length ? primaryDrops : mineDrops;
 
-  const speed        = BASE_MINE_SPEED + Math.max(0, stats?.miningSpeed ?? 0);
+  const speed        = (BASE_MINE_SPEED + Math.max(0, stats?.miningSpeed ?? 0)) * RATE_MULTIPLIER;
   const luckPct      = Math.min(100, Math.max(0, stats?.miningLuck ?? 0));
   const tierUpChance = stats?.gatherMineRarityUpChance ?? 0;
   const capped       = Math.min(seconds, (stats?.maxOfflineHours ?? MAX_OFFLINE_HOURS) * 3600);
