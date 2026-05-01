@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-01T03:13:52.834Z",
+  "updatedAt": "2026-05-01T03:30:18.128Z",
   "records": {
     "ui_click": {
       "src": [
@@ -40,6 +40,31 @@
     "item_craft": {
       "src": [
         "audio/sfx/item_craft.mp3"
+      ]
+    },
+    "combat_hit_player": {
+      "variations": [
+        {
+          "src": [
+            "audio/sfx/combat_hit_player_1.mp3"
+          ]
+        },
+        null,
+        {
+          "src": [
+            "audio/sfx/combat_hit_player_3.mp3"
+          ]
+        }
+      ]
+    },
+    "spark_pattern_miss": {
+      "src": [
+        "audio/sfx/spark_pattern_miss.mp3"
+      ]
+    },
+    "spark_pattern_clear": {
+      "src": [
+        "audio/sfx/spark_pattern_clear.mp3"
       ]
     }
   }
