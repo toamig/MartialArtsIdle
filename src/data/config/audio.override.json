@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-01T02:33:30.384Z",
+  "updatedAt": "2026-05-01T03:13:52.834Z",
   "records": {
     "ui_click": {
       "src": [
@@ -35,6 +35,11 @@
     "ui_notify": {
       "src": [
         "audio/sfx/ui_notify.mp3"
+      ]
+    },
+    "item_craft": {
+      "src": [
+        "audio/sfx/item_craft.mp3"
       ]
     }
   }
