@@ -22,11 +22,19 @@ html, body, * {
   animation: none !important;
 }
 
-.rendering-pixelated img {
-  image-rendering: pixelated !important;
-}
+/* Global rendering-mode binding — every image and background-image element
+   inherits its smoothness from this single class on <html>. Default state
+   (no class) leaves browsers at `auto` (smooth). When the user picks
+   "Pixelated" in Settings, graphics.js adds `.rendering-pixelated` and
+   every visual switches together.
 
+   New images and background-image elements should be added to this rule
+   instead of hardcoding `image-rendering` per-class. */
+.rendering-pixelated img,
 .rendering-pixelated .home-bg,
+.rendering-pixelated .app-bg,
+.rendering-pixelated .combat-stage,
+.rendering-pixelated .sprite-animator,
 .rendering-pixelated .screen-container:not(.sc-fullbleed)::before {
   image-rendering: pixelated;
 }
@@ -298,7 +306,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .nav-icon-img {
   width: 24px;
   height: 24px;
-  image-rendering: auto;
   opacity: 0.5;
   transition: opacity 0.2s;
 }
@@ -2465,7 +2472,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .home-hud-blood-lotus-icon {
   width: 22px;
   height: 22px;
-  image-rendering: pixelated;
   filter: brightness(1.3);
   pointer-events: none;
 }
@@ -2579,7 +2585,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   background-size: cover;
   background-position: center bottom;
   background-repeat: no-repeat;
-  image-rendering: auto;
   pointer-events: none;
 }
 
@@ -2619,7 +2624,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 100%;
   height: auto;
   margin: 0 auto 4px;
-  image-rendering: auto;
   pointer-events: none;
   user-select: none;
   filter:
@@ -3149,8 +3153,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
   filter: drop-shadow(0 0 18px var(--ce-a, rgba(136,0,221,0.9)))
           drop-shadow(0 0 32px var(--ce-b, rgba(100,0,180,0.5)));
 }
@@ -3421,8 +3423,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
   filter: drop-shadow(0 0 22px var(--ce-a, rgba(136,0,221,1)))
           drop-shadow(0 0 48px var(--ce-a, rgba(136,0,221,0.85)))
           drop-shadow(0 0 80px var(--ce-b, rgba(100,0,180,0.6)));
@@ -4122,7 +4122,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .cfm-crystal-img {
   width: auto;
   height: 44px;
-  image-rendering: pixelated;
   filter: drop-shadow(0 0 8px rgba(var(--ui-purple-rgb), 0.6));
   flex-shrink: 0;
 }
@@ -4757,7 +4756,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 4px;
   height: 4px;
   border-radius: 0;          /* square pixel blocks — no smooth circles */
-  image-rendering: pixelated;
   /* Gradient along path — start at crystal colour, transition to
      cultivator aura colour via @property --qi-mix interpolation. */
   background: color-mix(in oklab,
@@ -4872,7 +4870,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   /* Subtle underline keeps it anchored above the bar */
   border-bottom: 1px solid rgba(var(--ui-purple-strong-rgb), 0.22);
   width: fit-content;
-  image-rendering: auto;
 }
 @media (min-width: 768px) {
   .realm-stage-title {
@@ -4908,7 +4905,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 100%;
   height: auto;
   position: relative;
-  image-rendering: auto;
   z-index: 2;
   pointer-events: none;
   user-select: none;
@@ -5903,7 +5899,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .inv-icon {
   width: 40px;
   height: 40px;
-  image-rendering: auto;
 }
 
 .inv-qty {
@@ -6342,7 +6337,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .modal-icon {
   width: 96px;
   height: 96px;
-  image-rendering: auto;
 }
 
 .modal-title {
@@ -7271,7 +7265,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  image-rendering: auto;
   z-index: 1;
 }
 
@@ -7441,7 +7434,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   display: block;
   width: 100%;
   height: auto;
-  image-rendering: auto;
   pointer-events: none;
   position: relative;
   z-index: 2;
@@ -7605,7 +7597,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   object-fit:      contain;
   padding:         5px;
   border-radius:   50%;
-  image-rendering: pixelated;
   display:         block;
   /* slight brightness boost so pixel-art icons read clearly on dark bg */
   filter:          brightness(1.10) drop-shadow(0 1px 2px rgba(0,0,0,0.6));
@@ -7647,7 +7638,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   background-size: cover;
   background-position: center bottom;
   background-repeat: no-repeat;
-  image-rendering: auto;
 }
 
 @media (min-width: 431px) {
@@ -7867,7 +7857,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   width: 34px;
   height: 34px;
   object-fit: contain;
-  image-rendering: pixelated;
 }
 
 .offline-title {
@@ -8857,13 +8846,11 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  image-rendering: auto;
   flex-shrink: 0;
 }
 
 .enemy-chip-sprite img {
   display: block;
-  image-rendering: auto;
 }
 
 .enemy-chip-name {
@@ -10056,7 +10043,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .blood-lotus-shop-icon {
   width: 32px;
   height: 32px;
-  image-rendering: pixelated;
   filter: brightness(1.3);
 }
 
@@ -10140,7 +10126,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .blood-lotus-shop-item-icon {
   width: 36px;
   height: 36px;
-  image-rendering: pixelated;
   filter: brightness(1.3);
 }
 
@@ -12822,7 +12807,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .coll-modal-sprite-img {
   width: 88px;
   height: 88px;
-  image-rendering: auto;
 }
 
 /* Centered owned-quantity readout for ItemModal */
