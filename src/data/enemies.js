@@ -69,7 +69,9 @@ const ENEMIES_RAW = {
     name:        'Pack Wolf',
     sprite:      'wolf',
     description: 'A lean, grey-furred wolf with faintly glowing eyes, suggesting minor qi absorption from years of roaming spirit-rich wilderness.',
-    statMult: { hp: 0.9, atk: 3.0 },
+    // atk cut 3.0 → 1.0 on 2026-05-01 — Borderland Wilds wolves were
+    // one-shotting underleveled players entering W1R2.
+    statMult: { hp: 0.9, atk: 1.0 },
     drops: [
       { itemId: 'iron_blood_core_2', chance: 1.0, qty: [3, 4] },
     ],

@@ -41,42 +41,48 @@ export { RARITY as ITEM_RARITY };
 //   elemental_defense→ Ward
 //   health           → Vigor
 //   qi_speed         → Dao  (Gold + Trans only)
+//
+// Order revised 2026-05-01: defensive pills (vigor → skin → ward) appear
+// first, then offensive (fist → ember). RECIPE_MAP assigns combos round-robin
+// within each tier band starting at the array index, so the lowest-tier-sum
+// recipes now resolve to vigor/skin/ward instead of fist/ember. Damage pill
+// values were halved in the same revision to soften early-zone one-shots.
 const PILL_DEFS_RAW = [
   // ── Iron (5 pills) ────────────────────────────────────────────────────────
-  { id: 'iron_fist_pill',  name: 'Iron Fist Pill',  rarity: 'Iron', effects: [{ stat: 'physical_damage',  type: 'flat', value: 5  }] },
-  { id: 'iron_ember_pill', name: 'Iron Ember Pill', rarity: 'Iron', effects: [{ stat: 'elemental_damage', type: 'flat', value: 5  }] },
+  { id: 'iron_vigor_pill', name: 'Iron Vigor Pill', rarity: 'Iron', effects: [{ stat: 'health',            type: 'flat', value: 30 }] },
   { id: 'iron_skin_pill',  name: 'Iron Skin Pill',  rarity: 'Iron', effects: [{ stat: 'defense',           type: 'flat', value: 5  }] },
   { id: 'iron_ward_pill',  name: 'Iron Ward Pill',  rarity: 'Iron', effects: [{ stat: 'elemental_defense', type: 'flat', value: 5  }] },
-  { id: 'iron_vigor_pill', name: 'Iron Vigor Pill', rarity: 'Iron', effects: [{ stat: 'health',            type: 'flat', value: 30 }] },
+  { id: 'iron_fist_pill',  name: 'Iron Fist Pill',  rarity: 'Iron', effects: [{ stat: 'physical_damage',  type: 'flat', value: 2  }] },
+  { id: 'iron_ember_pill', name: 'Iron Ember Pill', rarity: 'Iron', effects: [{ stat: 'elemental_damage', type: 'flat', value: 2  }] },
 
   // ── Bronze (5 pills) ──────────────────────────────────────────────────────
-  { id: 'bronze_fist_pill',  name: 'Bronze Fist Pill',  rarity: 'Bronze', effects: [{ stat: 'physical_damage',  type: 'flat', value: 12 }] },
-  { id: 'bronze_ember_pill', name: 'Bronze Ember Pill', rarity: 'Bronze', effects: [{ stat: 'elemental_damage', type: 'flat', value: 12 }] },
+  { id: 'bronze_vigor_pill', name: 'Bronze Vigor Pill', rarity: 'Bronze', effects: [{ stat: 'health',            type: 'flat', value: 80 }] },
   { id: 'bronze_skin_pill',  name: 'Bronze Skin Pill',  rarity: 'Bronze', effects: [{ stat: 'defense',           type: 'flat', value: 12 }] },
   { id: 'bronze_ward_pill',  name: 'Bronze Ward Pill',  rarity: 'Bronze', effects: [{ stat: 'elemental_defense', type: 'flat', value: 12 }] },
-  { id: 'bronze_vigor_pill', name: 'Bronze Vigor Pill', rarity: 'Bronze', effects: [{ stat: 'health',            type: 'flat', value: 80 }] },
+  { id: 'bronze_fist_pill',  name: 'Bronze Fist Pill',  rarity: 'Bronze', effects: [{ stat: 'physical_damage',  type: 'flat', value: 6  }] },
+  { id: 'bronze_ember_pill', name: 'Bronze Ember Pill', rarity: 'Bronze', effects: [{ stat: 'elemental_damage', type: 'flat', value: 6  }] },
 
   // ── Silver (5 pills) ──────────────────────────────────────────────────────
-  { id: 'silver_fist_pill',  name: 'Silver Fist Pill',  rarity: 'Silver', effects: [{ stat: 'physical_damage',  type: 'flat', value: 25  }] },
-  { id: 'silver_ember_pill', name: 'Silver Ember Pill', rarity: 'Silver', effects: [{ stat: 'elemental_damage', type: 'flat', value: 25  }] },
+  { id: 'silver_vigor_pill', name: 'Silver Vigor Pill', rarity: 'Silver', effects: [{ stat: 'health',            type: 'flat', value: 175 }] },
   { id: 'silver_skin_pill',  name: 'Silver Skin Pill',  rarity: 'Silver', effects: [{ stat: 'defense',           type: 'flat', value: 25  }] },
   { id: 'silver_ward_pill',  name: 'Silver Ward Pill',  rarity: 'Silver', effects: [{ stat: 'elemental_defense', type: 'flat', value: 25  }] },
-  { id: 'silver_vigor_pill', name: 'Silver Vigor Pill', rarity: 'Silver', effects: [{ stat: 'health',            type: 'flat', value: 175 }] },
+  { id: 'silver_fist_pill',  name: 'Silver Fist Pill',  rarity: 'Silver', effects: [{ stat: 'physical_damage',  type: 'flat', value: 12  }] },
+  { id: 'silver_ember_pill', name: 'Silver Ember Pill', rarity: 'Silver', effects: [{ stat: 'elemental_damage', type: 'flat', value: 12  }] },
 
   // ── Gold (6 pills — qi_speed unlocks here) ────────────────────────────────
-  { id: 'gold_fist_pill',  name: 'Gold Fist Pill',  rarity: 'Gold', effects: [{ stat: 'physical_damage',  type: 'flat', value: 50  }] },
-  { id: 'gold_ember_pill', name: 'Gold Ember Pill', rarity: 'Gold', effects: [{ stat: 'elemental_damage', type: 'flat', value: 50  }] },
+  { id: 'gold_vigor_pill', name: 'Gold Vigor Pill', rarity: 'Gold', effects: [{ stat: 'health',            type: 'flat', value: 400 }] },
   { id: 'gold_skin_pill',  name: 'Gold Skin Pill',  rarity: 'Gold', effects: [{ stat: 'defense',           type: 'flat', value: 50  }] },
   { id: 'gold_ward_pill',  name: 'Gold Ward Pill',  rarity: 'Gold', effects: [{ stat: 'elemental_defense', type: 'flat', value: 50  }] },
-  { id: 'gold_vigor_pill', name: 'Gold Vigor Pill', rarity: 'Gold', effects: [{ stat: 'health',            type: 'flat', value: 400 }] },
+  { id: 'gold_fist_pill',  name: 'Gold Fist Pill',  rarity: 'Gold', effects: [{ stat: 'physical_damage',  type: 'flat', value: 25  }] },
+  { id: 'gold_ember_pill', name: 'Gold Ember Pill', rarity: 'Gold', effects: [{ stat: 'elemental_damage', type: 'flat', value: 25  }] },
   { id: 'gold_dao_pill',   name: 'Gold Dao Pill',   rarity: 'Gold', effects: [{ stat: 'qi_speed',          type: 'flat', value: 0.05 }] },
 
   // ── Transcendent (6 pills) ────────────────────────────────────────────────
-  { id: 'transcendent_fist_pill',  name: 'Transcendent Fist Pill',  rarity: 'Transcendent', effects: [{ stat: 'physical_damage',  type: 'flat', value: 110 }] },
-  { id: 'transcendent_ember_pill', name: 'Transcendent Ember Pill', rarity: 'Transcendent', effects: [{ stat: 'elemental_damage', type: 'flat', value: 110 }] },
+  { id: 'transcendent_vigor_pill', name: 'Transcendent Vigor Pill', rarity: 'Transcendent', effects: [{ stat: 'health',            type: 'flat', value: 900 }] },
   { id: 'transcendent_skin_pill',  name: 'Transcendent Skin Pill',  rarity: 'Transcendent', effects: [{ stat: 'defense',           type: 'flat', value: 110 }] },
   { id: 'transcendent_ward_pill',  name: 'Transcendent Ward Pill',  rarity: 'Transcendent', effects: [{ stat: 'elemental_defense', type: 'flat', value: 110 }] },
-  { id: 'transcendent_vigor_pill', name: 'Transcendent Vigor Pill', rarity: 'Transcendent', effects: [{ stat: 'health',            type: 'flat', value: 900 }] },
+  { id: 'transcendent_fist_pill',  name: 'Transcendent Fist Pill',  rarity: 'Transcendent', effects: [{ stat: 'physical_damage',  type: 'flat', value: 55  }] },
+  { id: 'transcendent_ember_pill', name: 'Transcendent Ember Pill', rarity: 'Transcendent', effects: [{ stat: 'elemental_damage', type: 'flat', value: 55  }] },
   { id: 'transcendent_dao_pill',   name: 'Transcendent Dao Pill',   rarity: 'Transcendent', effects: [{ stat: 'qi_speed',          type: 'flat', value: 0.10 }] },
 ];
 

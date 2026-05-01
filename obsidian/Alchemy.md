@@ -45,90 +45,90 @@ The pill's rarity is determined by the **total rarity tier sum** of the three he
 
 | Tier Sum | Pill Rarity | Pill Count |
 |---|---|---|
-| 3–5 | Iron | 10 |
-| 6–7 | Bronze | 10 |
-| 8–9 | Silver | 10 |
-| 10–11 | Gold | 10 |
+| 3–5 | Iron | 5 |
+| 6–7 | Bronze | 5 |
+| 8–9 | Silver | 5 |
+| 10–11 | Gold | 6 |
 | 12–15 | Transcendent | 6 |
 
-Within each band the 92 valid combinations are distributed round-robin across that band's pill slots, so each pill has a deterministic set of recipes that brew it.
+Within each band the 92 valid combinations are distributed round-robin across that band's pill slots, so each pill has a deterministic set of recipes that brew it. The first recipe (lowest tier-sum) in each band always resolves to that band's **Vigor (Health)** pill — defensive pills come first in the array, so the earliest recipes a player crafts are health/defense oriented rather than damage. This was tuned 2026-05-01 to soften the early-zone "you one-shot or get one-shot" feel.
 
 ---
 
-## Pill Catalogue (46 pills)
+## Diminishing Returns
 
-Pills at Iron / Bronze / Silver / Gold follow a fixed 10-pill template: 3 primary-stat pills, 3 damage pills, 3 defense pills, 1 health pill. Transcendent is a premium tier of 6 utility-grade pills.
+Each pill stacks with diminishing returns: the N-th consumption of a given pill id contributes `round(baseValue * 0.98^N)` to its stat. Counting is **per pill id** (so all recipes that brew the same pill share the counter) and **per incarnation** (the counter wipes alongside `permanentStats` on reincarnation).
 
-### Iron Pills (+3 primary, +5 damage, +5 defense, +40 health)
+`qi_speed` (Gold + Transcendent Dao pills) is exempt from DR — its sub-1 base values would round to 0 immediately. Dao pills always grant their full 0.05 / 0.10 each consumption.
+
+State key: `mai_pills_consumed` → `{ [pillId]: count }`. See `scaledEffectValue()` in `src/hooks/usePills.js`.
+
+---
+
+## Pill Catalogue (27 pills)
+
+Catalogue narrowed to 6 stats only (2026-04-27): physical_damage, elemental_damage, defense, elemental_defense, health, qi_speed. Order revised 2026-05-01 — defensive pills (Vigor → Skin → Ward) appear first in every band, then offensive (Fist → Ember), then Dao (Gold + Transcendent only). Damage pill values were halved in the same revision.
+
+| Theme | Stat |
+|---|---|
+| Vigor | Health |
+| Skin | Defense |
+| Ward | Elemental Defense |
+| Fist | Physical Damage |
+| Ember | Elemental Damage |
+| Dao | Qi Speed (Gold + Trans only) |
+
+### Iron Pills
 
 | Pill | Permanent Effect |
 |---|---|
-| Iron Essence Pill | +3 Essence |
-| Iron Soul Pill | +3 Soul |
-| Iron Body Pill | +3 Body |
-| Iron Fist Pill | +5 Physical Damage |
-| Iron Ember Pill | +5 Elemental Damage |
-| Iron Mind Pill | +5 Psychic Damage |
+| Iron Vigor Pill | +30 Health |
 | Iron Skin Pill | +5 Defense |
 | Iron Ward Pill | +5 Elemental Defense |
-| Iron Anchor Pill | +5 Soul Toughness |
-| Iron Vigor Pill | +40 Health |
+| Iron Fist Pill | +2 Physical Damage |
+| Iron Ember Pill | +2 Elemental Damage |
 
-### Bronze Pills (+6 primary, +10 damage, +10 defense, +100 health)
-
-| Pill | Permanent Effect |
-|---|---|
-| Bronze Essence Pill | +6 Essence |
-| Bronze Soul Pill | +6 Soul |
-| Bronze Body Pill | +6 Body |
-| Bronze Fist Pill | +10 Physical Damage |
-| Bronze Ember Pill | +10 Elemental Damage |
-| Bronze Mind Pill | +10 Psychic Damage |
-| Bronze Skin Pill | +10 Defense |
-| Bronze Ward Pill | +10 Elemental Defense |
-| Bronze Anchor Pill | +10 Soul Toughness |
-| Bronze Vigor Pill | +100 Health |
-
-### Silver Pills (+12 primary, +20 damage, +20 defense, +250 health)
+### Bronze Pills
 
 | Pill | Permanent Effect |
 |---|---|
-| Silver Essence Pill | +12 Essence |
-| Silver Soul Pill | +12 Soul |
-| Silver Body Pill | +12 Body |
-| Silver Fist Pill | +20 Physical Damage |
-| Silver Ember Pill | +20 Elemental Damage |
-| Silver Mind Pill | +20 Psychic Damage |
-| Silver Skin Pill | +20 Defense |
-| Silver Ward Pill | +20 Elemental Defense |
-| Silver Anchor Pill | +20 Soul Toughness |
-| Silver Vigor Pill | +250 Health |
+| Bronze Vigor Pill | +80 Health |
+| Bronze Skin Pill | +12 Defense |
+| Bronze Ward Pill | +12 Elemental Defense |
+| Bronze Fist Pill | +6 Physical Damage |
+| Bronze Ember Pill | +6 Elemental Damage |
 
-### Gold Pills (+25 primary, +40 damage, +40 defense, +600 health)
+### Silver Pills
 
 | Pill | Permanent Effect |
 |---|---|
-| Gold Essence Pill | +25 Essence |
-| Gold Soul Pill | +25 Soul |
-| Gold Body Pill | +25 Body |
-| Gold Fist Pill | +40 Physical Damage |
-| Gold Ember Pill | +40 Elemental Damage |
-| Gold Mind Pill | +40 Psychic Damage |
-| Gold Skin Pill | +40 Defense |
-| Gold Ward Pill | +40 Elemental Defense |
-| Gold Anchor Pill | +40 Soul Toughness |
-| Gold Vigor Pill | +600 Health |
+| Silver Vigor Pill | +175 Health |
+| Silver Skin Pill | +25 Defense |
+| Silver Ward Pill | +25 Elemental Defense |
+| Silver Fist Pill | +12 Physical Damage |
+| Silver Ember Pill | +12 Elemental Damage |
 
-### Transcendent Pills (6 premium)
+### Gold Pills
 
 | Pill | Permanent Effect |
 |---|---|
-| Transcendent Essence Pill | +50 Essence, +50 Soul, +50 Body |
-| Exploit Mastery Pill | +5 Exploit Chance, +10 Exploit Attack Mult |
-| World Harvest Pill | +50% Harvest Speed, +50% Mining Speed, +30 Harvest Luck, +30 Mining Luck |
-| Cataclysm Pill | +75 Physical Damage, +75 Elemental Damage, +75 Psychic Damage |
-| Dao Bulwark Pill | +75 Defense, +75 Elemental Defense, +75 Soul Toughness |
-| Eternal Vigor Pill | +2000 Health |
+| Gold Vigor Pill | +400 Health |
+| Gold Skin Pill | +50 Defense |
+| Gold Ward Pill | +50 Elemental Defense |
+| Gold Fist Pill | +25 Physical Damage |
+| Gold Ember Pill | +25 Elemental Damage |
+| Gold Dao Pill | +0.05 Qi Speed |
+
+### Transcendent Pills
+
+| Pill | Permanent Effect |
+|---|---|
+| Transcendent Vigor Pill | +900 Health |
+| Transcendent Skin Pill | +110 Defense |
+| Transcendent Ward Pill | +110 Elemental Defense |
+| Transcendent Fist Pill | +55 Physical Damage |
+| Transcendent Ember Pill | +55 Elemental Damage |
+| Transcendent Dao Pill | +0.10 Qi Speed |
 
 ---
 

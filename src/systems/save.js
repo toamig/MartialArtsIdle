@@ -59,6 +59,9 @@ export function wipeSave() {
   localStorage.removeItem('mai_crystal_click_snapshot');
   localStorage.removeItem('mai_achievements');
   localStorage.removeItem('mai_permanent_pill_stats');
+  // Per-pill consumption counter that drives diminishing returns. Lives
+  // alongside permanentStats — both are per-incarnation, both wipe together.
+  localStorage.removeItem('mai_pills_consumed');
   // mai_blood_lotus is intentionally NOT wiped — paid currency survives a save reset
   // mai_lang is intentionally NOT wiped — language preference survives a save reset
   // mai_reincarnation + mai_reincarnation_tree also survive — karma and
