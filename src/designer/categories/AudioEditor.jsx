@@ -35,15 +35,17 @@ const SFX_GROUPS = [
   {
     label: 'Combat',
     items: [
-      { id: 'combat_hit_player', label: 'Player Hit',   desc: 'Player lands a hit on an enemy'   },
-      { id: 'combat_hit_enemy',  label: 'Enemy Hit',    desc: 'Enemy lands a hit on the player'  },
-      { id: 'combat_critical',   label: 'Critical',     desc: 'Critical hit — either side'       },
-      { id: 'combat_dodge',      label: 'Dodge',        desc: 'Dodge / miss'                     },
-      { id: 'combat_technique',  label: 'Technique',    desc: 'Secret technique activated'       },
-      { id: 'combat_heal',       label: 'Heal',         desc: 'Heal effect applied'              },
-      { id: 'combat_victory',    label: 'Victory',      desc: 'Player wins the fight'            },
-      { id: 'combat_defeat',     label: 'Defeat',       desc: 'Player is defeated'               },
-      { id: 'combat_enemy_die',  label: 'Enemy Death',  desc: 'Enemy dies mid-wave'              },
+      // Hit / dodge / death sounds use 3-variant pools — every trigger picks one
+      // at random + applies a small rate jitter to break up repetition.
+      { id: 'combat_hit_player', label: 'Player Hit',   desc: 'Player lands a hit on an enemy',     variants: 3 },
+      { id: 'combat_hit_enemy',  label: 'Enemy Hit',    desc: 'Enemy lands a hit on the player',    variants: 3 },
+      { id: 'combat_critical',   label: 'Critical',     desc: 'Critical hit — either side',         variants: 3 },
+      { id: 'combat_dodge',      label: 'Dodge',        desc: 'Dodge / miss',                       variants: 3 },
+      { id: 'combat_enemy_die',  label: 'Enemy Death',  desc: 'Enemy dies mid-wave',                variants: 3 },
+      { id: 'combat_technique',  label: 'Technique',    desc: 'Secret technique activated'                       },
+      { id: 'combat_heal',       label: 'Heal',         desc: 'Heal effect applied'                              },
+      { id: 'combat_victory',    label: 'Victory',      desc: 'Player wins the fight'                            },
+      { id: 'combat_defeat',     label: 'Defeat',       desc: 'Player is defeated'                               },
     ],
   },
   {
@@ -84,9 +86,10 @@ export default function AudioEditor({ edited, onChangeRecords }) {
   const [activeTab, setActiveTab] = useState('bgm');
   const records = edited.records || {};
 
-  function updateRecord(id, patch) {
+  function updateRecord(id, patch, replace = false) {
     const current = records[id] || {};
-    onChangeRecords({ ...records, [id]: { ...current, ...patch } });
+    const next = replace ? patch : { ...current, ...patch };
+    onChangeRecords({ ...records, [id]: next });
   }
 
   function resetRecord(id) {
@@ -183,7 +186,7 @@ function BgmPanel({ records, onUpdate, onReset }) {
             )}
 
             <AudioUploadRow
-              soundId={track.id}
+              fileStem={track.id}
               folder="bgm"
               onUploaded={(src) => onUpdate(recKey, { src })}
             />
@@ -203,6 +206,26 @@ function BgmPanel({ records, onUpdate, onReset }) {
 // ── SFX panel ─────────────────────────────────────────────────────────────────
 
 function SfxPanel({ records, onUpdate, onReset }) {
+  // Replace the entire single-src field with a fresh src array (clears variations).
+  function setSingleSrc(id, src) {
+    const cur = { ...(records[id] || {}) };
+    delete cur.variations;
+    cur.src = src;
+    onUpdate(id, cur, /* replace */ true);
+  }
+
+  // Update one variant slot. Pads the variations array to `count` length first
+  // so the JSON shape stays stable even if earlier slots are still empty.
+  function setVariantSrc(id, count, index, src) {
+    const cur = { ...(records[id] || {}) };
+    delete cur.src;
+    const variations = Array.isArray(cur.variations) ? cur.variations.slice() : [];
+    while (variations.length < count) variations.push(null);
+    variations[index] = { src };
+    cur.variations = variations;
+    onUpdate(id, cur, /* replace */ true);
+  }
+
   return (
     <div className="au-sfx-panel">
       {SFX_GROUPS.map((group) => (
@@ -212,19 +235,18 @@ function SfxPanel({ records, onUpdate, onReset }) {
             {group.items.map((item) => {
               const rec     = records[item.id] || {};
               const vol     = rec.volume ?? 1.0;
-              const hasSrc  = Array.isArray(rec.src) && rec.src.length > 0;
               const isDirty = Object.keys(rec).length > 0;
 
               return (
                 <SfxRow
                   key={item.id}
                   item={item}
+                  rec={rec}
                   vol={vol}
-                  hasSrc={hasSrc}
-                  srcPaths={rec.src}
                   isDirty={isDirty}
                   onVolumeChange={(v) => onUpdate(item.id, { volume: v })}
-                  onUploaded={(src) => onUpdate(item.id, { src })}
+                  onUploadedSingle={(src) => setSingleSrc(item.id, src)}
+                  onUploadedVariant={(index, src) => setVariantSrc(item.id, item.variants ?? 1, index, src)}
                   onReset={() => onReset(item.id)}
                 />
               );
@@ -236,14 +258,23 @@ function SfxPanel({ records, onUpdate, onReset }) {
   );
 }
 
-function SfxRow({ item, vol, hasSrc, srcPaths, isDirty, onVolumeChange, onUploaded, onReset }) {
+function SfxRow({ item, rec, vol, isDirty, onVolumeChange, onUploadedSingle, onUploadedVariant, onReset }) {
   const [expanded, setExpanded] = useState(false);
+  const variantCount = item.variants ?? 1;
+  const isVariant    = variantCount > 1;
+
+  // Per-variant uploaded paths (null = empty slot).
+  const variationSlots = isVariant
+    ? Array.from({ length: variantCount }, (_, i) => rec.variations?.[i]?.src ?? null)
+    : null;
+  const singleSrc = !isVariant && Array.isArray(rec.src) && rec.src.length > 0 ? rec.src : null;
 
   return (
     <div className={`au-sfx-row ${isDirty ? 'au-dirty' : ''}`}>
       <div className="au-sfx-row-main">
         <div className="au-sfx-row-info">
           <span className="au-sound-label">{item.label}</span>
+          {isVariant && <span className="au-badge-variant">×{variantCount}</span>}
           {isDirty && <span className="au-badge-dirty">edited</span>}
           <span className="au-sound-desc">{item.desc}</span>
         </div>
@@ -265,7 +296,7 @@ function SfxRow({ item, vol, hasSrc, srcPaths, isDirty, onVolumeChange, onUpload
             className={`dz-btn dz-btn-ghost au-upload-toggle ${expanded ? 'au-upload-toggle-open' : ''}`}
             onClick={() => setExpanded((x) => !x)}
           >
-            {expanded ? 'Cancel' : 'Upload'}
+            {expanded ? 'Cancel' : (isVariant ? 'Variations' : 'Upload')}
           </button>
 
           {isDirty && (
@@ -274,16 +305,15 @@ function SfxRow({ item, vol, hasSrc, srcPaths, isDirty, onVolumeChange, onUpload
         </div>
       </div>
 
-      {(hasSrc || expanded) && (
+      {/* Single-sample mode: one upload row, one src list */}
+      {!isVariant && (singleSrc || expanded) && (
         <div className="au-sfx-row-extra">
-          {hasSrc && (
+          {singleSrc && (
             <div className="au-src-list">
-              {srcPaths.map((s) => (
-                <code key={s} className="au-src-path">{s}</code>
-              ))}
+              {singleSrc.map((s) => <code key={s} className="au-src-path">{s}</code>)}
             </div>
           )}
-          {!hasSrc && expanded && (
+          {!singleSrc && expanded && (
             <div className="au-src-list">
               <code className="au-src-path au-src-default">/audio/sfx/{item.id}.ogg</code>
               <code className="au-src-path au-src-default">/audio/sfx/{item.id}.mp3</code>
@@ -291,11 +321,46 @@ function SfxRow({ item, vol, hasSrc, srcPaths, isDirty, onVolumeChange, onUpload
           )}
           {expanded && (
             <AudioUploadRow
-              soundId={item.id}
+              fileStem={item.id}
               folder="sfx"
-              onUploaded={(src) => { onUploaded(src); setExpanded(false); }}
+              onUploaded={(src) => { onUploadedSingle(src); setExpanded(false); }}
             />
           )}
+        </div>
+      )}
+
+      {/* Variation pool: stack of N upload rows, each with its own slot status */}
+      {isVariant && (variationSlots.some(Boolean) || expanded) && (
+        <div className="au-sfx-row-extra">
+          {variationSlots.map((slotSrc, i) => {
+            const stem = `${item.id}_${i + 1}`;
+            return (
+              <div key={i} className="au-variant-block">
+                <div className="au-variant-header">
+                  <span className="au-variant-label">Variation {i + 1}</span>
+                  {!slotSrc && <span className="au-variant-empty">empty</span>}
+                </div>
+                {slotSrc && (
+                  <div className="au-src-list">
+                    {slotSrc.map((s) => <code key={s} className="au-src-path">{s}</code>)}
+                  </div>
+                )}
+                {!slotSrc && expanded && (
+                  <div className="au-src-list">
+                    <code className="au-src-path au-src-default">/audio/sfx/{stem}.ogg</code>
+                    <code className="au-src-path au-src-default">/audio/sfx/{stem}.mp3</code>
+                  </div>
+                )}
+                {expanded && (
+                  <AudioUploadRow
+                    fileStem={stem}
+                    folder="sfx"
+                    onUploaded={(src) => onUploadedVariant(i, src)}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -305,13 +370,15 @@ function SfxRow({ item, vol, hasSrc, srcPaths, isDirty, onVolumeChange, onUpload
 // ── Audio upload row ──────────────────────────────────────────────────────────
 
 /**
- * Upload a .ogg and/or .mp3 for a single sound.
+ * Upload a .ogg/.mp3/.wav for a single sound (or one variant of a pool).
  * Commits directly via the GitHub API (same as SpriteUpload).
- * Calls onUploaded([oggPath, mp3Path]) with whatever was successfully uploaded.
+ * `fileStem` is the basename without extension — e.g. 'ui_click' for a single
+ * sample, 'combat_hit_player_2' for variant 2 of a pool.
+ * Calls onUploaded([oggPath, mp3Path, wavPath]) with whatever was successfully uploaded.
  */
 const WAV_BGM_WARNING_MB = 4; // warn if a WAV uploaded for BGM exceeds this
 
-function AudioUploadRow({ soundId, folder, onUploaded }) {
+function AudioUploadRow({ fileStem, folder, onUploaded }) {
   const [oggFile, setOggFile] = useState(null);
   const [mp3File, setMp3File] = useState(null);
   const [wavFile, setWavFile] = useState(null);
@@ -321,7 +388,7 @@ function AudioUploadRow({ soundId, folder, onUploaded }) {
   const mp3Ref = useRef(null);
   const wavRef = useRef(null);
 
-  const basePath = `public/audio/${folder}/${soundId}`;
+  const basePath = `public/audio/${folder}/${fileStem}`;
 
   function pickFile(ext, setter) {
     return (e) => {
@@ -351,16 +418,16 @@ function AudioUploadRow({ soundId, folder, onUploaded }) {
   }
 
   async function uploadOne(file, ext, label) {
-    setMsg({ type: 'info', text: `Uploading ${soundId}.${ext}…` });
+    setMsg({ type: 'info', text: `Uploading ${fileStem}.${ext}…` });
     const bytes = new Uint8Array(await file.arrayBuffer());
     const res = await putBinaryFile(loadPat(), {
       path:    `${basePath}.${ext}`,
       bytes,
-      message: `design: audio — upload ${folder}/${soundId}.${ext}`,
+      message: `design: audio — upload ${folder}/${fileStem}.${ext}`,
     });
     if (!res.ok) throw new Error(uploadError(label, res));
     // Store as a BASE-relative path so it works on any deployment base URL.
-    return `audio/${folder}/${soundId}.${ext}`;
+    return `audio/${folder}/${fileStem}.${ext}`;
   }
 
   async function upload() {

@@ -40,8 +40,19 @@ let pendingBgmTrackId = null;
 // BGM preload cache: { [trackId]: Howl } — keyed instances ready to play
 const bgmCache    = {};
 
-// SFX cache: { [sfxId]: Howl }
+// SFX cache: { [sfxId]: Howl[] } — one Howl per variation. Single-sample
+// sounds collapse to a one-element array; variation pools (combat hits) hold
+// one Howl per uploaded sample so playSfx can pick at random.
 const sfxCache    = {};
+
+// Combat hit SFXs — get a small random rate jitter on every play so even the
+// same variation sample doesn't sound bit-perfect identical twice in a row.
+// Range: ±SFX_JITTER (so 0.04 → rate falls in [0.96, 1.04]).
+const COMBAT_HIT_SFX = new Set([
+  'combat_hit_player', 'combat_hit_enemy', 'combat_critical',
+  'combat_dodge',      'combat_enemy_die',
+]);
+const SFX_JITTER = 0.04;
 
 // Subscribers for settings changes (useAudio hooks)
 const subscribers = new Set();
@@ -99,7 +110,7 @@ function _fadeOutAndStop(howl, duration = BGM_FADE_OUT) {
 
 // ── SFX ───────────────────────────────────────────────────────────────────────
 
-function _getSfxHowl(sfxId) {
+function _getSfxHowls(sfxId) {
   if (sfxCache[sfxId]) return sfxCache[sfxId];
 
   const config = SFX[sfxId];
@@ -108,21 +119,32 @@ function _getSfxHowl(sfxId) {
     return null;
   }
 
-  const howl = new Howl({
-    src:    config.src,
+  // Normalise: variation pool wins over single src; otherwise wrap src.
+  const variations = config.variations?.length
+    ? config.variations
+    : (config.src ? [{ src: config.src }] : []);
+
+  if (variations.length === 0) {
+    console.warn(`[Audio] SFX "${sfxId}" has no audio sources`);
+    sfxCache[sfxId] = [];
+    return sfxCache[sfxId];
+  }
+
+  const howls = variations.map((variant, i) => new Howl({
+    src:    variant.src,
     volume: config.volume ?? 1.0,
     html5:  false,
     preload: false,
-    onloaderror: (id, err) => {
-      console.error(`[Audio] SFX "${sfxId}" failed to load (tried: ${config.src.join(', ')}):`, err);
+    onloaderror: (_id, err) => {
+      console.error(`[Audio] SFX "${sfxId}"${variations.length > 1 ? ` variant ${i + 1}` : ''} failed to load (tried: ${variant.src.join(', ')}):`, err);
     },
-    onplayerror: (id, err) => {
-      console.error(`[Audio] SFX "${sfxId}" failed to play:`, err);
+    onplayerror: (_id, err) => {
+      console.error(`[Audio] SFX "${sfxId}"${variations.length > 1 ? ` variant ${i + 1}` : ''} failed to play:`, err);
     },
-  });
+  }));
 
-  sfxCache[sfxId] = howl;
-  return howl;
+  sfxCache[sfxId] = howls;
+  return howls;
 }
 
 // ── Page Visibility ───────────────────────────────────────────────────────────
@@ -194,7 +216,9 @@ const AudioManager = {
   get currentBgm() { return bgmTrackId; },
 
   /**
-   * Play a one-shot SFX.
+   * Play a one-shot SFX. If the SFX has a variation pool, picks one variant at
+   * random. Combat hit SFXs additionally get a small ±SFX_JITTER rate jitter so
+   * back-to-back triggers never sound bit-perfect identical.
    *
    * @param {string} sfxId - Key from SFX (e.g. 'ui_click', 'combat_hit_player')
    * @param {{ rate?: number }} [opts] - rate=1 is normal speed; >1 raises pitch.
@@ -206,13 +230,21 @@ const AudioManager = {
     const vol = effectiveSfxVol();
     if (vol === 0) return;
 
-    const howl = _getSfxHowl(sfxId);
-    if (!howl) return;
+    const howls = _getSfxHowls(sfxId);
+    if (!howls || howls.length === 0) return;
+
+    const howl = howls.length === 1
+      ? howls[0]
+      : howls[Math.floor(Math.random() * howls.length)];
 
     // Set howl-group volume + rate BEFORE play() — setting these on the id
     // returned by play() races when the howl is still loading (id is a placeholder).
     howl.volume(vol);
-    if (rate != null) howl.rate(rate);
+    let finalRate = rate ?? 1;
+    if (COMBAT_HIT_SFX.has(sfxId)) {
+      finalRate *= 1 + (Math.random() * 2 - 1) * SFX_JITTER;
+    }
+    howl.rate(finalRate);
     howl.play();
   },
 
@@ -348,8 +380,11 @@ const AudioManager = {
    */
   preload(sfxIds = Object.keys(SFX)) {
     for (const id of sfxIds) {
-      const howl = _getSfxHowl(id);
-      if (howl && howl.state() === 'unloaded') howl.load();
+      const howls = _getSfxHowls(id);
+      if (!howls) continue;
+      for (const howl of howls) {
+        if (howl.state() === 'unloaded') howl.load();
+      }
     }
   },
 };

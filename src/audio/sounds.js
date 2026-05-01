@@ -12,7 +12,18 @@
  * audio.override.json (committed via the Designer) can patch any entry.
  * BGM record keys are prefixed "bgm_" (e.g. "bgm_cultivation").
  * SFX record keys are the SFX id directly (e.g. "ui_click").
- * Supported patch fields: volume, loop (BGM only), src (replaces the array).
+ * Supported patch fields:
+ *   - volume     — number 0..1 (BGM + SFX)
+ *   - loop       — boolean (BGM only)
+ *   - src        — string[] of file URLs (single sample; legacy + non-variant SFX)
+ *   - variations — { src: string[] }[] (multi-sample pool; combat hit variants)
+ *
+ * Variation pool model
+ * ──────────────────────────────────────────────────────────────────────────
+ * Some sounds are randomised at playback to avoid the machine-gun feel — every
+ * combat hit picks one of N samples at random. A SFX entry can declare either
+ * `src` (single sample) OR `variations: [{ src }, ...]`. AudioManager normalises
+ * single-src entries to a one-element variation list internally.
  */
 
 import audioOverride from '../data/config/audio.override.json';
@@ -44,15 +55,36 @@ function _applyBgm(id, cfg) {
 function _applySfx(id, cfg) {
   const patch = _overrides[id];
   if (!patch) return cfg;
-  return {
+  // When the override declares variations, it fully replaces the base entry's
+  // src/variations — we don't merge per-variant. (Keeps the model simple: the
+  // designer either uploads variants or doesn't.)
+  const next = {
     ...cfg,
     ...(patch.volume !== undefined && { volume: patch.volume }),
-    ...(patch.src    !== undefined && { src:    _prefixSrc(patch.src) }),
   };
+  if (patch.variations !== undefined) {
+    next.variations = patch.variations.map(v => ({ ...v, src: _prefixSrc(v.src ?? []) }));
+    delete next.src;
+  } else if (patch.src !== undefined) {
+    next.src = _prefixSrc(patch.src);
+    delete next.variations;
+  }
+  return next;
 }
 
 function sfx(stem, ...exts) {
   return exts.map(e => `${BASE}audio/sfx/${stem}.${e}`);
+}
+
+/**
+ * Build N variation entries for a base stem, e.g. sfxVariants('combat_hit_player', 3, 'ogg', 'mp3')
+ * → [{src: [..._1.ogg, _1.mp3]}, {src: [..._2.ogg, _2.mp3]}, {src: [..._3.ogg, _3.mp3]}].
+ * Each Howl falls back through its own ogg/mp3 chain (browser format support).
+ */
+function sfxVariants(stem, count, ...exts) {
+  return Array.from({ length: count }, (_, i) => ({
+    src: exts.map(e => `${BASE}audio/sfx/${stem}_${i + 1}.${e}`),
+  }));
 }
 
 // ── Background music ─────────────────────────────────────────────────────────
@@ -94,15 +126,18 @@ const _SFX_BASE = {
   cult_boost_active:   { src: sfx('cult_boost_active',   'ogg', 'mp3') },
 
   // ── Combat ────────────────────────────────────────────────────────────────
-  combat_hit_player:   { src: sfx('combat_hit_player',   'ogg', 'mp3') },
-  combat_hit_enemy:    { src: sfx('combat_hit_enemy',    'ogg', 'mp3') },
-  combat_critical:     { src: sfx('combat_critical',     'ogg', 'mp3') },
-  combat_dodge:        { src: sfx('combat_dodge',        'ogg', 'mp3') },
+  // Hit / dodge / death sounds use 3-variant pools so consecutive triggers don't
+  // sound identical. Once-per-fight sounds (technique / heal / victory / defeat)
+  // stay single-sample.
+  combat_hit_player:   { variations: sfxVariants('combat_hit_player', 3, 'ogg', 'mp3') },
+  combat_hit_enemy:    { variations: sfxVariants('combat_hit_enemy',  3, 'ogg', 'mp3') },
+  combat_critical:     { variations: sfxVariants('combat_critical',   3, 'ogg', 'mp3') },
+  combat_dodge:        { variations: sfxVariants('combat_dodge',      3, 'ogg', 'mp3') },
+  combat_enemy_die:    { variations: sfxVariants('combat_enemy_die',  3, 'ogg', 'mp3') },
   combat_technique:    { src: sfx('combat_technique',    'ogg', 'mp3') },
   combat_heal:         { src: sfx('combat_heal',         'ogg', 'mp3') },
   combat_victory:      { src: sfx('combat_victory',      'ogg', 'mp3') },
   combat_defeat:       { src: sfx('combat_defeat',       'ogg', 'mp3') },
-  combat_enemy_die:    { src: sfx('combat_enemy_die',    'ogg', 'mp3') },
 
   // ── Qi Crystal ────────────────────────────────────────────────────────────
   crystal_tap:         { src: sfx('crystal_tap',         'ogg', 'mp3') },
