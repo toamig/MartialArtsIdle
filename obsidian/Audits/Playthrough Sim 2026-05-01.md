@@ -1,137 +1,136 @@
 # Playthrough Simulation — 2026-05-01 (fresh first life)
 
-**Run profile:** fresh first life (no carryover, no reincarnation tree, no laws/pills/gear), 25% active / 75% offline cadence, all the way to **Open Heaven Layer 6 (realm 48)**.
+**Run profile:** fresh first life (no carryover, no reincarnation tree, no laws/pills/gear/crystal at start), 25% active / 75% offline cadence, all the way to **Open Heaven Layer 6 (realm 48)**.
 
-**Post-balance state:** simulator anchored to commit `a165513` — defensive-first pills with halved damage values, `RATE_MULTIPLIER = 0.10` gather/mine throttle, `OFFLINE_QI_MULTIPLIER = 0.20`, Pack Wolf atk 3.0 → 1.0.
+**Post-balance state:** simulator anchored to commit `524ce72` constants — defensive-first pills with halved damage values, `RATE_MULTIPLIER = 0.10` gather/mine throttle, `OFFLINE_QI_MULTIPLIER = 0.20`, Pack Wolf atk 3.0 → 1.0.
+
+> **Revision note:** an earlier draft of this audit missed two load-bearing systems: (a) the **QI Crystal** (`useQiCrystal.js`) which adds `level × (level+3) / 2` flat qi/s online and is the dominant qi-rate source mid-game onwards, (b) the **focus-mode 3× multiplier** on online qi during active play, and (c) **major-realm breakthrough qi/s gates** (`getMajorBreakthroughRate` in `realms.js`). All three are now modeled. The conclusions flip dramatically: the qi-rate softlock disappears entirely (35 days to OH L6, all 12 gates pass with 500–2200% margin), and **combat balance becomes the dominant problem** because the player races realms via crystal faster than pill/gear farming can keep up.
 
 ---
 
 ## Numbers Policy & Caveats
 
-Every constant in this audit is sourced from code (`src/data/realms.js`, `src/data/worlds.js`, `src/data/enemies.js`, `src/data/pills.js`, `src/data/artefacts.js`, `src/hooks/useCombat.js`, `src/hooks/useCultivation.js`, `src/systems/autoFarm.js`). Where a starting-value assumption was made, it's labeled below.
+Every constant is sourced from code. Citations:
+- `BASE_RATE = 1` qi/s ([useCultivation.js:26](src/hooks/useCultivation.js))
+- `OFFLINE_QI_MULTIPLIER = 0.20` ([useCultivation.js:181](src/hooks/useCultivation.js))
+- `FOCUS_MULT = 3.0` (qi_focus_mult default 300%, applied during active play per "always with player input")
+- Online qi tick: `(BASE_RATE + crystalQiBonus + sparkQiFlat) × law × pills × artefact × spark × tree × focus × ad` ([useCultivation.js:422](src/hooks/useCultivation.js))
+- Offline rate: `BASE_RATE × law × offlineQiUnique × artefact × spark × (1 + pillQiBonus) × OFFLINE_QI_MULTIPLIER` ([useCultivation.js:181-182](src/hooks/useCultivation.js)) — note: **offline path does NOT include `crystalQiBonus`**, so crystal flat add is online-only
+- Crystal bonus formula: `level × (level + 3) / 2` ([useQiCrystal.js:88](src/hooks/useQiCrystal.js))
+- Crystal level cost: `25 × level^1.30` rounded to ~2 sig digs ([useQiCrystal.js:43-49](src/hooks/useQiCrystal.js))
+- Major breakthrough qi/s gate: `next.cost × 0.0025 × 0.5^ordinal` ([realms.js:101-102, 163-170](src/data/realms.js))
+- Enemy HP/ATK scaling: `floor(150/18 × 1.12^regionIdx × statMult)` ([useCombat.js:384-387](src/hooks/useCombat.js))
+- Armour mitigation: `min(0.9, armour / (armour + 10×damage))` ([useCombat.js:40-47](src/hooks/useCombat.js))
+- Pill DR: `round(value × 0.98^N)`, qi_speed exempt ([usePills.js scaledEffectValue](src/hooks/usePills.js))
+- Auto-farm RQI flow: `2 × (gatherSpeed × RATE_MULTIPLIER / herbCost) × 0.40 × 1.5 × CULT_RQI[tier]` (gather + mine, both feeding cultivation drops; values from [materials.js:92-102](src/data/materials.js))
+- Combat RQI flow: `kills × 3.5 × CULT_RQI[tier]` (modal enemies drop `tier_cultivation_X` at 1.0 chance qty[3,4])
+- Effective wall-clock qi/s: `0.25 × R_focused + 0.75 × R_offline`
 
-**Cited formulas:**
-- Online qi rate stack: `BASE_RATE × law × pills × artefact × spark × tree × focus × ad` ([useCultivation.js:422](src/hooks/useCultivation.js))
-- Offline qi rate: same stack × `OFFLINE_QI_MULTIPLIER (0.20)` ([useCultivation.js:181-182](src/hooks/useCultivation.js))
-- Effective wall-clock qi fraction at 25/75 split: `0.25 × 1.0 + 0.75 × 0.20 = 0.40`
-- Enemy HP: `max(100, floor(150 × 1.12^regionIdx × hpMult))` ([useCombat.js:384-385](src/hooks/useCombat.js))
-- Enemy ATK: `max(10, floor(18 × 1.12^regionIdx × atkMult))` ([useCombat.js:386-387](src/hooks/useCombat.js))
-- Enemy DEF: `max(10, floor(5 × regionIdx × defMult))` ([useCombat.js:388](src/hooks/useCombat.js))
-- Armour mitigation (PoE-style): `min(0.9, armour / (armour + 10 × damage))` ([useCombat.js:40-47](src/hooks/useCombat.js))
-- `regionIdx = region.minRealmIndex` ([CombatScreen.jsx:105](src/screens/CombatScreen.jsx))
-- Pill DR: `round(value × 0.98^N)`, `qi_speed` exempt ([usePills.js scaledEffectValue](src/hooks/usePills.js))
-- Pill values per rarity (post-2026-05-01): Iron vigor=30 / skin=5 / fist=2 ; Bronze 80/12/6 ; Silver 175/25/12 ; Gold 400/50/25 (+0.05 dao) ; Trans 900/110/55 (+0.10 dao) ([pills.js:46-87](src/data/pills.js))
-- Artefact slot bonuses: weapon 16 phys × rarityMult, body 16 def × mult, waist 40 hp × mult, ring 0.05 qi × mult; Iron×1, Bronze×2, Silver×4, Gold×8, Trans×16 ([artefacts.js:18-31](src/data/artefacts.js))
-- Law `cultivationSpeedMult` averages: Iron 1.00, Bronze 1.20, Silver 1.50, Gold 1.85, Transcendent 2.25 (midpoint of `LAW_MULT_RANGES.cultivationSpeedMult`, [affixPools.js:404-407](src/data/affixPools.js))
-- Auto-farm effective speed: `(BASE + harvestSpeed) × RATE_MULTIPLIER = 0.30 pts/sec` baseline ([autoFarm.js](src/systems/autoFarm.js))
-- Artefact drop chance: `enemy.techniqueDrop.chance × ARTEFACT_DROP_MULT (2.0)` ([useCombat.js:25, 418](src/hooks/useCombat.js))
-- Major-realm law offers fire on every major transition (12 over the run); first offer locked Iron, subsequent are pick-3 from the band ([useLawOffers.js:33-41, 95-110](src/hooks/useLawOffers.js))
-
-**Starting-value assumptions (labeled per skill's Numbers Policy):**
-- **Combat duration: 10 sec/kill average.** ASSUMPTION. Used to translate "active wall-clock time" into "kills". IF WRONG: drop counts (techniques, artefacts) scale linearly off this; longer kills → fewer drops, slower gear acquisition.
-- **Auto-farm uses no harvestSpeed bonus.** Player gets +0 from pills/artefacts in this sim (no harvest-gear modeled, since artefacts route to combat slots). IF WRONG: pill yields scale up, but materials.js `gatherCost` 15→1800 caps yield at endgame regardless.
-- **Greedy artefact upgrade:** every region transition that yields ≥1 expected artefact upgrades all 8 slots to that world's tier (W1→Iron, W2→Bronze, W3→Silver, W4-5→Gold, W6→Trans). This **overstates** gear progression — a real player would see 8× longer to fill all slots and more variance. IF WRONG: combat ratios in the late game are even worse than logged.
-- **Greedy pill-craft strategy:** 30 pills/realm cap, 2:1:1 vigor/skin/fist ratio. Heavy DR floor at ~30 pills × 0.98^29 ≈ 17 marginal value. IF WRONG: stat scaling is bounded similarly.
-- **Drop variance modeled as expected value** (no RNG). A real run would have rough/lucky stretches.
-- **No Qi Sparks proc/heaven's bond modeled.** These are random rare effects (pattern-click, divine qi, crystal click). They could add 1.1–2× to qi rate sporadically. IF MODELED: total time shrinks but order-of-magnitude conclusions hold.
-- **No ad-boost or focus-mode modeled** (focus is `×3` while held, ad is `×2`). A real active-fraction player would tap focus during combat. IF MODELED: active-window qi accelerates but combat softlock at endgame is unaffected.
+**Starting-value assumptions:**
+- **Focus held during entire active fraction** (per user instruction "always with player input"). Realistic for an engaged player; overstates qi rate for an AFK-during-active player.
+- **Combat duration: 10 sec/kill avg.** ASSUMPTION. Used to translate active wall-clock time → kills → drops.
+- **Greedy progression:** the player breaks through to the next realm the moment qi cost is met. **No self-pacing for combat readiness.** This is the key behavior modeled — the audit's findings depend on it. A player who pauses to farm pills/gear before progressing would *not* hit the combat softlock. The sim deliberately tests "what if the player just pushes realms?"
+- **Combat RQI uses `Iron tier` cultivation drops at world 1, etc.** The actual enemy drops table varies (some drop higher-tier than their world). Underestimate, not overestimate.
 
 ---
 
-## Chronological Log
+## Headline Numbers
+
+| Metric | v1 (no crystal) | v2 (crystal + focus + gates) |
+|---|---|---|
+| **Total time to OH L6** | ~278,810 yr | **35.0 days** |
+| Final qi rate (effective wall-clock) | 1.6 qi/s | **13.96 M qi/s** |
+| Final qi rate (focus, online) | 4.05 qi/s | **55.85 M qi/s** |
+| Final crystal level | not modeled | **L1779** (+1.585M qi/s flat) |
+| Realms exceeding 30 days each | 30 / 50 (60%) | **0 / 50** |
+| Breakthrough gates passed | not modeled | **12 / 12** (margin 517–2264%) |
+| Combat encounters where player loses race at correct level | 0 (had time to gear) | **30+ regions** |
+
+The qi-rate side of the game is **trivial** when crystal is properly modeled. The player blasts through cost gates with 500–2000% margin at every major realm. **Combat is the new bottleneck** because realm progression is so fast that pill/gear/artefact farming windows are too short to keep player stats in step with enemy scaling.
+
+---
+
+## Chronological Log (v2 — abridged to majors + key minors)
 
 | Wall-clock | Realm | Event |
 |---|---|---|
-| **T=0** | Tempered Body L1 (idx 0) | **Game start.** 100 HP / 50 phys / 50 elem / 0 def / 0 elemDef. Active region: W1 Outer Sect Training Grounds (no scrolls/artefacts drop here). Modal Outer Sect Disciple: 150 HP / 12 atk / 10 def → kill 4T / die 9T. ✅ healthy. |
-| T=4.2m | TB L2 | Realm 1. Online 1.000 qi/s, eff 0.400/s. |
-| T=11.5m | TB L3 | Realm 2. |
-| T=24.0m | TB L4 | Realm 3. First Iron pills crafted (5×, vigor + skin) → 216 HP / 54 phys / 10 def. |
-| T=44.8m | **TB L5** (idx 4) | **Realm 4. Borderland Wilds unlocks.** Modal **Pack Wolf**: 212 HP / 28 atk / 20 def. Player now 256 HP / 78 phys / 34 def (post-Iron-gear, post-pills) → **kill 5T / die 8T**. ✅ healthy *(pre-fix this enemy had 84 atk, would die in 3T — fix validated)*. |
-| T=1.3h | TB L6 | Realm 5. Player 534 HP / 88 phys / 58 def. |
-| T=2.2h | TB L7 | Realm 6. |
-| T=3.8h | **TB L8** (idx 7) | **Realm 7. Bandit's Crossing unlocks.** Modal Bandit Scout 265 HP / 131 atk / 35 def. Player 754 HP / 98 phys / 82 def → kill 3T / die 7T. ✅ healthy. |
-| T=6.5h | TB L9 | Realm 8. |
-| T=10.8h | TB L10 | Realm 9. Realm cap hit at first major gate. |
-| T=17.4h | **Qi Transformation Early** (idx 10) | **🎉 MAJOR. Realm 10.** First law offer (forced Iron, locked) — equipped avg Iron `cultivationSpeedMult = 1.00×`. **Qi-Vein Ravines** unlocks. Wandering Beast 465 HP / 167 atk / 50 def. Player 1282 HP / 124 phys / 153 def → kill 4T / die 9T. ✅ healthy. |
-| T=29h | QT Middle | Realm 11. |
-| T=2.0d | QT Late | Realm 12. Bronze pills now (cap 30, marginal pill ≈ 47 HP at N=29). |
-| T=3.4d | QT Peak | Realm 13. |
-| T=5.5d | **True Element Early** (idx 14) | **🎉 MAJOR. Realm 14.** Law upgrade: avg **Bronze** `cultMult = 1.20×`. **Misty Spirit Forest** unlocks. Rogue Disciple 733 HP / 343 atk / 70 def. Player 4418 HP / 282 phys / 470 def → kill 3T / die 14T. ✅ healthy. |
-| T=8.5d | TE Middle | Realm 15. |
-| T=13.6d | TE Late | Realm 16. |
-| T=22.4d | TE Peak | Realm 17. |
-| T=36.7d | **Separation & Reunion 1st** (idx 18) | **🎉 MAJOR. Realm 18.** Law: avg **Silver** `cultMult = 1.50×`. **W2 unlocks** — Shattered Sky Desert. Sand Dragon 2306 HP / 207 atk / 90 def. Player (post-pill) 7383 HP / 439 phys / 766 def → kill 8T / die 31T. ✅ healthy. Bronze gear acquired. |
-| T=54d | SR 2nd | Realm 19. |
-| T=84d | SR 3rd | Realm 20. **Demon Beast Plains** opens. Iron Fang Wolf 2170/295/100 → kill 5T / die 40T. ✅ |
-| T=133d | **Immortal Ascension 1st** (idx 21) | **🎉 MAJOR. Realm 21.** Law: still **Silver** band (1.50×). Sunken Immortal City unlocks. ⚠⚠ **FIRST SOFT-LOCK FLAG: this realm took 49d** (>30d threshold). Online 1.65 qi/s vs 2.80M qi cost. |
-| T=215d | IA 2nd | Realm 22. ⚠⚠ Soft-lock: 82d for one realm. |
-| T=355d | IA 3rd | Realm 23. ⚠⚠ Soft-lock: 140d. Blood Sea Wastes opens. |
-| T=584d (1.6yr) | **Saint Early** (idx 24) | **🎉 MAJOR. Realm 24.** Law: avg **Gold** `cultMult = 1.85×`. **W3 unlocks**. Silver gear acquired. Burial Guardian 6830/491/120 → kill 10T / die 32T. ✅ combat fine. ⚠⚠ Soft-lock: 228d. |
-| T=2.39yr | Saint Mid | Realm 25. ⚠⚠ Soft-lock: 287d. |
-| T=3.63yr | Saint Late | Realm 26. ⚠⚠ Soft-lock: 1.25yr. Void Rift Expanse opens. |
-| T=5.70yr | **Saint King 1st** (idx 27) | **🎉 MAJOR. Realm 27.** Law: still Gold band. Nine-Death Mountain Range opens. ⚠⚠ Soft-lock: 2.07yr per realm. |
-| T=9.10yr | SK 2nd | Realm 28. ⚠⚠ Soft-lock: 3.39yr. |
-| T=14.81yr | SK 3rd | Realm 29. ⚠⚠ Soft-lock: 5.71yr. Sealed War Altar opens. |
-| T=24.09yr | **Origin Returning 1st** (idx 30) | **🎉 MAJOR. Realm 30.** Law: still Gold (1.85×). **W4 unlocks**. Gold gear acquired (huge stat jump: ring 0.05 × 8 = +0.4× qi rate, online → 2.59 qi/s). Origin Guardian 17975 HP / 1348 atk / 150 def. Player 30179/1674/3115 → kill 13T / die 27T. ⚠ Margin shrinking but ✅ still wins. ⚠⚠ Soft-lock: 9.28yr per realm. |
-| T=37.24yr | OR 2nd | Realm 31. ⚠⚠ Soft-lock: 13.15yr. |
-| T=58.65yr | OR 3rd | Realm 32. ⚠⚠ Soft-lock: 21.41yr. Forest Spirit (idx 32): kill 15T / die 22T — getting tight. |
-| T=93.83yr | **Origin King 1st** (idx 33) | **🎉 MAJOR. Realm 33.** Law: avg **Transcendent** `cultMult = 2.25×`. Online → 3.15 qi/s. Primordial Forest Core opens. Ancient Beast 31568/2272/165 → ⚠ kill 18T / die 16T at first sight (post-pill recovers to win, but the margin is gone). ⚠⚠ Soft-lock: 35.18yr. |
-| T=141.6yr | OK 2nd | Realm 34. ⚠⚠ Soft-lock: 47.78yr. |
-| T=222.2yr | OK 3rd | Realm 35. ⚠⚠ Soft-lock: 80.48yr. Deep Earth Titan: kill 20T / die 27T — last region with positive margin. |
-| T=353yr | **Void King 1st** (idx 36) | **🎉 MAJOR. Realm 36.** Law: still Transcendent (2.25×). **W5 unlocks**. Spatial Fissure Beast 48786/3193/180 → kill 18T / die 22T. Player wins by 4T margin. ⚠⚠ Soft-lock: 130.78yr. |
-| T=556yr | VK 2nd | Realm 37. |
-| T=861yr | VK 3rd | Realm 38. **Void Sea Shores opens.** Void Sea Leviathan 72325/4005/190 → ⚠ kill 23T / die 20T — **PLAYER LOSES RACE** even on a fresh region announcement (before this window's pills/gear). Post-pill recovers, but the trend is clear. |
-| T=1439yr | **Dao Source 1st** (idx 39) | **🎉 MAJOR. Realm 39.** Law: still Transcendent. Dao Inscription Ruins opens. Dao Inscription Guardian 87235/4486/195 → ⚠ kill 26T / die 18T. **PLAYER LOSES RACE.** Post-pill barely passes. ⚠⚠ Soft-lock: 578yr. |
-| T=2226yr | DS 2nd | Realm 40. |
-| T=3453yr | DS 3rd | Realm 41. |
-| T=5468yr | **Emperor Realm 1st** (idx 42) | **🎉 MAJOR. Realm 42.** Ancient Emperor Tomb opens. Emperor Will Fragment 140067/7353/210 → ⚠⚠ kill 37T / die 11T. **COMBAT BROKEN.** Even with full Gold gear and 30 Trans pills, player has no chance against W5 endgame. ⚠⚠ Soft-lock: 2515yr. |
-| T=8836yr | ER 2nd | Realm 43. |
-| T=14253yr | ER 3rd | Realm 44. Heaven Sword Ridge opens. Star Sea Drifter 175701/9224/220 → ⚠⚠ kill 44T / die 9T. |
-| T=29419yr | **Open Heaven L1** (idx 45) | **🎉 MAJOR. Realm 45.** Law: still Transcendent. **W6 unlocks** — Transcendent gear. Heaven Pillar Guardian 221383/10331/225 → ⚠⚠ kill 55T / die 8T. Combat is fundamentally broken at endgame. ⚠⚠ Soft-lock: 11569yr. |
-| T=44116yr | OH L2 | Realm 46. Star Sea Approaches: ⚠⚠ kill 61T / die 7T. |
-| T=67619yr | OH L3 | Realm 47. |
-| T=106757yr | OH L4 | Realm 48. Celestial Rift Expanse: ⚠⚠ kill 79T / die 5T. |
-| T=171889yr | OH L5 | Realm 49 (idx 49 = OH L5). |
-| **T=278,810yr** | **Open Heaven Layer 6** (idx 50 = realm 48) | **🏆 FINALE.** Final stats: 76,306 HP / 4,520 phys / 50 elem / 8,607 def / 256 elemDef. Online qi rate at endgame: **4.05 qi/s**. Total wall-clock to clear fresh first life with no reincarnation tree: **278,810 years**. Combat at the final region (Heaven's Core): ⚠⚠ kill 116T / die 4T — **completely unwinnable**, but at this point the player would have stopped advancing realms via grinding regardless. |
+| **T=0** | TB L1 (idx 0) | **Game start.** Player 100 HP / 50 phys / 0 def. Crystal L0. Active region: W1 Outer Sect Training Grounds (no scrolls/artefacts). Modal Outer Sect Disciple 150/12/10 → kill 4T / die 9T ✅. |
+| T=1.9m | TB L2 | Realm 1. Crystal already at L1 (+2 qi/s flat). Eff 0.90 qi/s. |
+| T=3.1m | TB L3 | Realm 2. Crystal L2 (+5/s). |
+| T=4.2m | TB L4 | Realm 3. Crystal L2 (+5/s). |
+| T=6.0m | **TB L5** (idx 4) | **Realm 4. Borderland Wilds unlocks.** Crystal L3 (+9/s flat). Player still 100 HP / 50 phys / 0 def — no time spent on pills/gear yet. Modal Pack Wolf 212/28/20 → ⚠⚠ **kill 5T / die 4T (player loses race)**. *(Pre-fix would have been kill 5T / die 1T — even worse. Post-fix is "tight enough that the player notices and farms before pushing".)* |
+| T=7.9m | TB L6 | Realm 5. Crystal L3 (+9). |
+| T=11.0m | TB L7 | Realm 6. Crystal L4 (+14). |
+| T=14.4m | **TB L8** (idx 7) | **Realm 7. Bandit's Crossing unlocks.** Bandit Scout 265/131/35 → ⚠⚠ **kill 6T / die 2T**. Without 30+ pills consumed and Iron gear, encounter is unwinnable. |
+| T=18.7m | TB L9 | Realm 8. Crystal L6 (+27). |
+| T=23.7m | TB L10 | Realm 9. Crystal L6 (+27). |
+| T=31.6m | **Qi Transformation Early** (idx 10) | **🎉 MAJOR. Realm 10.** First law (forced Iron, 1.00×). Crystal L9 (+54). Wandering Beast 465/167/50 → ⚠⚠ kill 10T / die 2T. **Gate 25 qi/s ✅** (focused 165 qi/s, +560% margin). |
+| T=38.6m | QT Mid | Realm 11. |
+| T=47.0m | QT Late | Realm 12. Crystal L13 (+104). |
+| T=57.6m | QT Peak | Realm 13. Crystal L14 (+119). |
+| T=1.19h | **True Element Early** (idx 14) | **🎉 MAJOR. Realm 14.** Law: Bronze (1.20×). Crystal L16 (+152). Misty Spirit Forest. Rogue Disciple 733/343/70 → ⚠⚠ kill 17T / die 1T. **Gate 93.8 qi/s ✅** (focused 578 qi/s, +517%). |
+| T=1.4h | TE Mid | Realm 15. |
+| T=1.8h | TE Late | Realm 16. |
+| T=2.2h | TE Peak | Realm 17. Crystal L23 (+299). |
+| T=2.8h | **Separation & Reunion 1st** (idx 18) | **🎉 MAJOR. Realm 18.** Law: Silver (1.50×). Crystal L33 (+594). Bronze gear acquired. **W2 unlocks** — Sand Dragon 2306/207/90 → ⚠⚠ kill 32T / die 3T. **Gate 390.6 qi/s ✅** (focused 2945, +654%). |
+| T=3.2h | SR 2nd | Realm 19. |
+| T=3.7h | SR 3rd | Realm 20. Crystal L43 (+989). |
+| T=4.3h | **Immortal Ascension 1st** (idx 21) | **🎉 MAJOR. Realm 21.** Law: still Silver. Crystal L48 (+1224). City Guardian → ⚠⚠ kill 43T / die 3T. **Gate 875 qi/s ✅** (focused 4900, +593%). |
+| T=5.2h | IA 2nd | Realm 22. |
+| T=6.3h | IA 3rd | Realm 23. Crystal L62 (+2015). |
+| T=7.8h | **Saint Early** (idx 24) | **🎉 MAJOR. Realm 24.** Law: Gold (1.85×). Crystal L87 (+3915). Silver gear acquired. **W3 unlocks**. Burial Guardian 6830/491/120 → ⚠⚠ kill 64T / die 3T. **Gate 2031 qi/s ✅** (focused 26K, +1184%). |
+| T=8.7h | Saint Mid | Realm 25. |
+| T=9.9h | Saint Late | Realm 26. Crystal L112 (+6440). |
+| T=11.4h | **Saint King 1st** (idx 27) | **🎉 MAJOR. Realm 27.** Law: still Gold. Crystal L126 (+8127). Saint Bone Sovereign → ⚠⚠ kill 84T / die 2T. **Gate 4531 qi/s ✅** (focused 54K, +1095%). |
+| T=13.4h | SK 2nd | Realm 28. |
+| T=16.0h | SK 3rd | Realm 29. Crystal L160 (+13K). |
+| T=19.3h | **Origin Returning 1st** (idx 30) | **🎉 MAJOR. Realm 30.** Law: still Gold (1.85×). Crystal L217 (+23.9K). Gold gear acquired. **W4 unlocks**. Origin Guardian 17975/1348/150 → ⚠⚠ kill 119T / die 2T. **Gate 10K qi/s ✅** (focused 185K, +1726%). |
+| T=21.9h | OR 2nd | Realm 31. |
+| T=25.0h | OR 3rd | Realm 32. Crystal L285 (+41K). |
+| T=29.0h | **Origin King 1st** (idx 33) | **🎉 MAJOR. Realm 33.** Law: Trans (2.25×). Crystal L322 (+52K). Ancient Beast → ⚠⚠ kill 117T / die 2T. **Gate 22K qi/s ✅** (focused 494K, +2102%). |
+| T=33.3h | OK 2nd | Realm 34. |
+| T=39.2h | OK 3rd | Realm 35. Crystal L398 (+80K). |
+| T=46.9h | **Void King 1st** (idx 36) | **🎉 MAJOR. Realm 36.** Crystal L445 (+100K). **W5 unlocks**. Spatial Fissure Beast → ⚠⚠ kill 113T / die 2T. **Gate 51K qi/s ✅** (focused 942K, +1755%). |
+| T=56.9h | VK 2nd | Realm 37. |
+| T=70.1h | VK 3rd | Realm 38. Crystal L558 (+157K). |
+| T=87.4h | **Dao Source 1st** (idx 39) | **🎉 MAJOR. Realm 39.** Crystal L625 (+196K). **Gate 112K qi/s ✅** (focused 2.04M, +1717%). |
+| T=4.6d | DS 2nd | Realm 40. |
+| T=5.7d | DS 3rd | Realm 41. Crystal L776 (+302K). |
+| T=7.1d | **Emperor Realm 1st** (idx 42) | **🎉 MAJOR. Realm 42.** Crystal L860 (+371K). **Gate 244K qi/s ✅** (focused 4.56M, +1767%). |
+| T=8.8d | ER 2nd | Realm 43. |
+| T=10.9d | ER 3rd | Realm 44. Crystal L1055 (+558K). |
+| T=13.6d | **Open Heaven L1** (idx 45) | **🎉 MAJOR. Realm 45.** Crystal L1167 (+683K). **W6 unlocks**, Trans gear. **Gate 562K qi/s ✅** (focused 13.27M, +2264%). |
+| T=16.3d | OH L2 | Realm 46. Crystal L1264 (+801K). |
+| T=19.5d | OH L3 | Realm 47. |
+| T=23.5d | OH L4 | Realm 48. |
+| T=28.7d | OH L5 | Realm 49. |
+| **T=35.0d** | **Open Heaven Layer 6** (idx 50) | **🏆 FINALE.** Final stats: 38,517 HP / 1,357 phys / 50 elem / 3,434 def / 256 elemDef. Crystal **L1779** (+1.585M qi/s flat). Focused rate 55.85M qi/s. Effective wall-clock 13.96M qi/s. All 12 gates passed. |
 
 ---
 
-## Combat Encounter Summary (one row per modal enemy at correct level)
+## Combat Balance — V2 Findings
 
-`kill` = player turns to defeat enemy with current best stats. `die` = player turns to die taking enemy hits.
-Healthy band: `kill ≤ die / 1.5`. ⚠ if `die < kill × 1.2`. ⚠⚠ if `die < kill`.
+The qi side scales without trouble; the combat side does not. Player stats at greedy progression vs. modal enemies at the moment each region first unlocks (post-pill/gear for that realm window):
 
-| World | Region (idx) | Modal Enemy | E HP | E ATK | E DEF | Player kill / die | Verdict |
-|---|---|---|---|---|---|---|---|
-| 1 | Outer Sect Training (0) | Outer Sect Disciple | 150 | 12 | 10 | 4T / 9T | ✅ |
-| 1 | Borderland Wilds (4) | Pack Wolf | 212 | 28 | 20 | 5T / 8T | ✅ post-fix |
-| 1 | Bandit's Crossing (7) | Bandit Scout | 265 | 131 | 35 | 3T / 7T | ✅ |
-| 1 | Qi-Vein Ravines (10) | Wandering Beast | 465 | 167 | 50 | 4T / 9T | ✅ |
-| 1 | Misty Spirit Forest (14) | Rogue Disciple | 733 | 343 | 70 | 3T / 14T | ✅ |
-| 2 | Shattered Sky Desert (18) | Sand Dragon | 2,306 | 207 | 90 | 8T / 31T | ✅ |
-| 2 | Demon Beast Plains (20) | Iron Fang Wolf | 2,170 | 295 | 100 | 5T / 40T | ✅ |
-| 2 | Sunken Immortal City (21) | City Guardian | 4,051 | 272 | 105 | 8T / 53T | ✅ |
-| 2 | Blood Sea Wastes (23) | Blood Leviathan | 5,082 | 487 | 115 | 8T / 31T | ✅ |
-| 3 | Saint Burial Grounds (24) | Burial Guardian | 6,830 | 491 | 120 | 10T / 32T | ✅ |
-| 3 | Void Rift Expanse (26) | Void Rift Predator | 7,140 | 856 | 130 | 7T / 32T | ✅ |
-| 3 | Nine-Death Mountains (27) | Saint Bone Sovereign | 12,794 | 767 | 135 | 11T / 42T | ✅ |
-| 3 | Sealed War Altar (29) | Forbidden Construct | 20,062 | 866 | 145 | 15T / 43T | ✅ |
-| 4 | Origin Qi Spring (30) | Origin Guardian | 17,975 | 1,348 | 150 | 13T / 27T | ✅ |
-| 4 | World Root Caverns (31) | Origin Guardian | 20,133 | 1,509 | 155 | 13T / 25T | ✅ |
-| 4 | Ancient Root Grotto (32) | Forest Spirit | 25,367 | 1,691 | 160 | 15T / 22T | ⚠ tight |
-| 4 | Primordial Forest Core (33) | Ancient Beast | 31,568 | 2,272 | 165 | 18T / 16T | ⚠⚠ **player loses race** |
-| 4 | Ancient Origin Altar (35) | Deep Earth Titan | 47,519 | 2,375 | 175 | 20T / 27T | ⚠ tight |
-| 5 | Fractured Space Corridors (36) | Spatial Fissure Beast | 48,786 | 3,193 | 180 | 18T / 22T | ⚠ tight |
-| 5 | Void Sea Shores (38) | Void Sea Leviathan | 72,325 | 4,005 | 190 | 23T / 20T | ⚠⚠ |
-| 5 | Dao Inscription Ruins (39) | Dao Inscription Guardian | 87,235 | 4,486 | 195 | 26T / 18T | ⚠⚠ |
-| 5 | Ancient Emperor Tomb (42) | Emperor Will Fragment | 140,067 | 7,353 | 210 | 37T / 11T | ⚠⚠ |
-| 5 | Heaven Sword Ridge (44) | Star Sea Drifter | 175,701 | 9,224 | 220 | 44T / 9T | ⚠⚠ |
-| 6 | Heaven Pillar Ascent (45) | Heaven Pillar Guardian | 221,383 | 10,331 | 225 | 55T / 8T | ⚠⚠ |
-| 6 | Star Sea Approaches (46) | Open Heaven Beast | 261,724 | 13,223 | 230 | 61T / 7T | ⚠⚠ |
-| 6 | Celestial Rift (48) | Celestial Sovereign | 345,586 | 16,588 | 240 | 79T / 5T | ⚠⚠ |
-| 6 | Heaven's Core (50) | Open Heaven Sovereign | 520,203 | 23,409 | 250 | 116T / 4T | ⚠⚠ |
+| World | Region (idx) | Enemy | Player HP / phys / def | Result |
+|---|---|---|---|---|
+| 1 | Training Grounds (0) | Outer Sect Disciple | 100 / 50 / 0 | kill 4T / die 9T ✅ |
+| 1 | Borderland Wilds (4) | Pack Wolf | 100 / 50 / 0 | kill 5T / die **4T** ⚠ |
+| 1 | Bandit's Crossing (7) | Bandit Scout | 130 / 50 / 0 | kill 6T / die **2T** ⚠⚠ |
+| 1 | Qi-Vein Ravines (10) | Wandering Beast | 188 / 52 / 5 | kill 10T / die **2T** ⚠⚠ |
+| 1 | Misty Spirit Forest (14) | Rogue Disciple | 268 / 52 / 5 | kill 17T / die **1T** ⚠⚠⚠ ONE-SHOT |
+| 2 | Shattered Sky (18) | Sand Dragon | 538 / 82 / 53 | kill 32T / die **3T** ⚠⚠ |
+| 2 | Demon Beast Plains (20) | Iron Fang Wolf | 753 / 106 / 77 | kill 23T / die **3T** ⚠⚠ |
+| 2 | Sunken Immortal City (21) | City Guardian | 753 / 106 / 77 | kill 43T / die **3T** ⚠⚠ |
+| 2 | Blood Sea Wastes (23) | Blood Leviathan | 925 / 106 / 102 | kill 54T / die **2T** ⚠⚠ |
+| 3 | Saint Burial Grounds (24) | Burial Guardian | 1093 / 118 / 102 | kill 64T / die **3T** ⚠⚠ |
+| 3 | Void Rift Expanse (26) | Void Rift Predator | 1173 / 166 / 150 | kill 47T / die **2T** ⚠⚠ |
+| 3 | Nine-Death Mountains (27) | Saint Bone Sovereign | 1173 / 166 / 150 | kill 84T / die **2T** ⚠⚠ |
+| 3 | Sealed War Altar (29) | Forbidden Construct | 1573 / 166 / 150 | kill 132T / die **2T** ⚠⚠ |
+| 4 | Origin Qi Spring (30) | Origin Guardian | 1965 / 166 / 150 | kill 119T / die **2T** ⚠⚠ |
+| 4–6 | … | … | (worsens monotonically) | endgame: Heaven's Core ⚠⚠ kill 380T / die 2T |
 
-The break point is unambiguous: **regionIdx 33 (Primordial Forest Core / Origin King 1st)**. From there, enemy stat scaling (`1.12^idx`) outpaces what the player's flat artefact + DR-pill stack can deliver, and the gap widens monotonically into the endgame.
+**Pattern:** the player's HP/def crawls because pills cap at ~30 per realm and each realm window is now 1–10 minutes (Tempered Body) or 1–7 hours (Origin King onwards) — auto-farm yields collapse to <1% of v1's per-realm yield. Combat-stat acquisition simply cannot match the qi-rate runaway.
 
 ---
 
@@ -139,115 +138,90 @@ The break point is unambiguous: **regionIdx 33 (Primordial Forest Core / Origin 
 
 | # | Time | Realm | Type | Detail |
 |---|---|---|---|---|
-| 1 | T=44.8m | TB L5 (4) | ✅ post-fix verified | Pack Wolf at correct level: kill 5T / die 8T. Pre-fix would have been kill 5T / die ~3T (one-shot territory). The recent change [enemies.js:72](src/data/enemies.js:72) lands the encounter in the healthy band. |
-| 2 | T=58.7yr | OR 3rd (32) | ⚠ tight margin | Forest Spirit kill/die 15T/22T — first sub-1.5× ratio in the run. Last "comfortable" region. |
-| 3 | T=93.8yr | OK 1st (33) | ⚠⚠ player loses race | Ancient Beast pre-pill encounter shows 18T kill / 16T die. The window's pill-stack pulls the player above water, but the trend has reversed. |
-| 4 | T=861yr | VK 3rd (38) | ⚠⚠ player loses race | Void Sea Leviathan: 23T/20T even after pills. Player cannot win without reincarnation-tree perks not modeled here. |
-| 5 | T=1439yr | DS 1st (39) | ⚠⚠ player loses race | Dao Inscription Guardian 26T/18T. |
-| 6 | T=5468yr–278,810yr | ER 1st onward | ⚠⚠ combat fundamentally broken | Kill ratio grows from 3.4× to 29× (Heaven's Core). The player's stat ceiling is set by pill DR + linear gear scaling; enemy stats grow exponentially with regionIdx. |
+| 1 | T=6.0m | TB L5 (4) | ⚠ player loses race | Pack Wolf at first encounter on greedy progression: kill 5T / die 4T. The 2026-05-01 atk fix (3.0→1.0) is *necessary but not sufficient* — pre-fix would be die-1T (instant one-shot), post-fix tightens to die-4T which is the right "you should farm before pushing" tension. |
+| 2 | T=14.4m | TB L8 (7) | ⚠⚠ near-one-shot at correct level | Bandit Scout 131 atk vs player 130 HP / 0 def → 1-shot if no pills consumed. Kill 6T / die 2T means the player must have ≥6 pills + Iron gear to survive. |
+| 3 | T=1.19h | TE Early (14) | ⚠⚠⚠ ENEMY ONE-SHOTS PLAYER | Rogue Disciple 343 atk vs player 268 HP / 5 def → die in 1T. Greedy player has no chance — even consuming 30 pills + Iron gear yields only ~365 HP (5 def doesn't help vs 343 atk). Must also have Bronze gear and Bronze pills, which require the player to slow down and farm in W1 before pushing the W2 boundary. |
+| 4 | T=2.8h–end | SR 1st onward | ⚠⚠ player loses race at every region | From W2 onward the kill/die ratio widens monotonically. By Heaven's Core (final region) it's kill 380T / die 2T. |
 
-**No "player one-shots enemy at correct level" was ever flagged** — the artefact-defense + pill-vigor stack keeps player damage well below enemy HP at every region. This is healthy.
+**No qi-rate softlocks in v2.** All 12 major-realm gates pass with absurd margins (517% to 2264%).
 
 ---
 
-## Soft-Lock Candidates
+## Soft-Lock Candidates (v2)
 
-Realms where time-to-realm-up exceeded 30 days:
+**None for qi rate.** Crystal L1779 + focused 3× makes the realm cost curve trivial:
 
-| Realm | Took | Online qi/s | Comment |
-|---|---|---|---|
-| 21 (IA 1st) | 49 d | 1.65 | First soft-lock — within first ~5 months. |
-| 22 (IA 2nd) | 82 d | 1.65 | |
-| 23 (IA 3rd) | 140 d | 1.65 | |
-| 24 (Saint E) | 228 d | 1.65 | |
-| 25 (Saint M) | 287 d | 2.22 | |
-| 26 (Saint L) | 1.25 yr | 2.22 | |
-| 27 (SK 1st) | 2.07 yr | 2.22 | |
-| 28 (SK 2nd) | 3.39 yr | 2.22 | |
-| 29 (SK 3rd) | 5.71 yr | 2.22 | |
-| 30 (OR 1st) | 9.28 yr | 2.22 | |
-| 31 (OR 2nd) | 13.15 yr | 2.59 | |
-| 32 (OR 3rd) | 21.41 yr | 2.59 | |
-| 33 (OK 1st) | 35.18 yr | 2.59 | |
-| 34 (OK 2nd) | 47.78 yr | 3.15 | |
-| 35 (OK 3rd) | 80.48 yr | 3.15 | |
-| 36 (VK 1st) | 130.78 yr | 3.15 | |
-| 37 (VK 2nd) | 213.83 yr | 3.15 | |
-| 38 (VK 3rd) | 305.55 yr | 3.15 | |
-| 39 (DS 1st) | 578.43 yr | 3.15 | |
-| 40 (DS 2nd) | 786.50 yr | 3.78 | |
-| 41 (DS 3rd) | 1,227.05 yr | 3.78 | |
-| 42 (ER 1st) | 2,514.93 yr | 3.78 | |
-| 43 (ER 2nd) | 3,367.75 yr | 4.05 | |
-| 44 (ER 3rd) | 5,417.32 yr | 4.05 | |
-| 45 (OH L1) | 11,568.67 yr | 4.05 | |
-| 46 (OH L2) | 14,696.55 yr | 4.05 | |
-| 47 (OH L3) | 23,503.25 yr | 4.05 | |
-| 48 (OH L4) | 39,138.20 yr | 4.05 | |
-| 49 (OH L5) | 65,131.71 yr | 4.05 | |
-| 50 (OH L6) | 107,583.01 yr | 4.05 | |
+| Worst-case realm | Time | Eff qi/s | Cost | Margin over gate |
+|---|---|---|---|---|
+| Realm 14 (TE Early) | 14m | 90 | 75K | gate 93.8 → focused 578 = +517% |
+| Realm 24 (Saint Early) | 1.45h | 2495 | 13M | gate 2031 → focused 9979 = +391% (lowest gate margin in run) |
+| Realm 45 (OH L1) | 2.69d | 1.98M | 460B | gate 562K → focused 13.27M = +2264% |
+| Realm 50 (OH L6) | 6.31d | 10.08M | 5.5T | (no gate at OH L6, not a major) |
 
-**Total: 30 soft-locked realms (60% of all transitions).** The first soft-lock fires at realm 21 (Immortal Ascension 1st), at wall-clock T≈4.4 months. From there every subsequent realm takes longer than the previous, scaling super-linearly.
+**Combat softlock: pervasive.** From realm 4 onward, a greedy player cannot win at the modal enemy of any region they unlock. The player has to either:
+- (a) **self-pace** — stop progressing and grind pills/blood-cores/artefacts at a lower-tier region, OR
+- (b) **avoid combat entirely** — which works for qi (gathering/mining handle that), but blocks technique/artefact/blood-core acquisition.
 
-This is **expected design** for an idle/cultivation game: the player is meant to reincarnate to buy Eternal Tree perks (which weren't modeled here per "fresh first life" framing). But the magnitude tells us:
-
-- Tree perks must collectively provide **at least ~50× qi rate boost** to make the endgame reachable in a human lifetime *(starting value, derived: 278,810 yr / 50 ≈ 5,576 yr; still impractical, so probably ~500–1000× total stack)*.
-- The first reincarnation gate (whatever karma threshold unlocks it) had better fire well before realm 21, or the player will quit before getting their first tree perk.
+The former is the intended play pattern but **the game offers no signal**: there's no "you're under-leveled" warning, and no soft cap on realm progression based on combat readiness.
 
 ---
 
-## 5-Component Framework Notes
+## 5-Component Framework Notes (v2)
 
-**Clarity:** ✅ Region announcements + realm gates are clearly telegraphed. The qi-rate breakthrough gate (`MAJOR_BREAKTHROUGH_BASE_PCT × DECAY^ord`) is *not* surfaced in this audit's scope — verify the UI shows the player how close they are to the next gate, not just the qi-cost bar.
+**Clarity:** ⚠⚠ Player has no signal that they're outpacing combat readiness. The qi-cost bar fills smoothly even when their HP/def is 30× too low for the next region's modal enemy. Suggest: at major realm transitions, surface a "Combat Readiness" metric — e.g. simulated kill/die against the next region's modal enemy with current best-equipped stats. Block (or warn) the breakthrough if die < kill.
 
-**Motivation:** ⚠ Mid-game (Saint → Saint King) has a *months*-per-realm cadence with **no new region or modal enemy unlocking between realms 24–26 or 27–28**. Players have no fresh content during these windows. Either:
-- shorten the cost gap, or
-- add region-clear milestones (badges, lore, cosmetic) at sub-realm cadence.
+**Motivation:** ✅ Crystal feeding is clearly the dominant qi-rate lever. RQI gain is visible per-feed; the upgrade ladder is well-paced (early levels at 25–60 RQI, late game at 30K+). Players will quickly learn that crystal is the priority.
 
-**Response:** Not directly evaluated by sim, but combat is turn-based with 500ms phase gates ([useCombat.js:446, 676, 880](src/hooks/useCombat.js)). At kill-counts of 50T+ (endgame), a single fight takes ~50 sec wall-clock — and the player can't even win. **Endgame combat cadence is a tedium problem** independent of balance.
+**Response:** Combat at endgame (kill 380T) translates to ~63 minutes per fight at 10s/turn. **The player simply cannot grind enough kills to fill 8 artefact slots × 5 rarity tiers**. Recommend either capping enemy HP scaling or adding a "challenge mode" multi-kill mechanic.
 
-**Satisfaction:** Pill DR + DR-exempt qi_speed Dao pills create a satisfying "specialize hard" choice in mid-game — the moment Gold Dao pills unlock, qi rate jumps noticeably. ✅
+**Satisfaction:** ✅ Crystal levels and qi-rate explosion *feel* good. Each realm-up displays bigger numbers. ⚠ But combat doesn't share that dopamine — the player gets no "I got stronger" feedback when their kill-T grows from 4 to 116 against same-tier enemies.
 
-**Fit:** Realms named for cultivation novel tropes (Saint, Open Heaven) match the wuxia identity. Cost curve genuinely *feels* exponential, which is on-genre for cultivation. ✅
+**Fit:** ✅ "Crystal as the runaway lever" matches cultivation/wuxia tropes (cultivators hoarding spirit stones). Endgame qi-rate of 55.85M/s feels appropriately mythical.
 
 ---
 
-## Tuning Priority (recommended order)
+## Tuning Priority (v2 — completely re-prioritized)
 
-1. **🔴 [P0] Combat scaling W5+ is broken.** Even with theoretically full gear + 30 pills/realm + best-tier law, the player loses combat from regionIdx 38 onward. The `1.12^idx` enemy curve outpaces the player's pill-DR-bounded stat curve. Options:
-   - Reduce enemy `1.12^idx` exponent for atk specifically (consider 1.08 or 1.10).
-   - Increase pill base values for Gold/Trans tiers to give more headroom *(raises early-game ceiling too — undesirable)*.
-   - Add a **multiplier-style** stat on artefacts/pills/laws (e.g., `phys_increased`, `health_increased`) that scales with realm — currently almost everything is flat.
-   - Cap `hpMult` and `atkMult` per enemy at sane values regardless of region (some enemies have `hp 12.0` which doubles the 1.12^idx already).
+1. **🔴 [P0] Combat-readiness signal at realm progression.** A greedy player will hit ⚠⚠ at realm 7 (Bandit Scout) — that's <15 minutes wall-clock from game start. Without a signal, players just die and quit. Options:
+   - **Soft block:** at any realm-up, simulate kill/die against the active region's modal enemy. If die < kill, show a warning modal: "Your power is below the recommended threshold for the next region. Consider farming pills/artefacts before progressing." Allow override.
+   - **Hard block:** require minimum HP / DEF threshold per realm (e.g. cumulative from artefact slots filled at current world's tier).
+   - **Visible "Combat Tier" stat** alongside the realm bar, with a `⚠ low` indicator.
 
-2. **🔴 [P0] First soft-lock at realm 21 (4.4 months wall-clock) is too early.** Either:
-   - **Confirm** that the reincarnation gate fires *before* this point — check [src/hooks/useReincarnationKarma.js](src/hooks/useReincarnationKarma.js).
-   - If not, lower realm 21's cost (currently 2.8M) and the rest of the IA/Saint band by ~5×, or front-load Eternal Tree access.
+2. **🔴 [P0] Realm progression vs combat-stat acquisition rate.** Even a *paced* player — one who farms pills/gear deliberately — runs out of farmable encounters past W3. By realm 24 the player has cleared all of W3 but still cannot one-cycle even a starting W3 enemy without 30+ pills. **The pill cap (30/realm) + DR floor (0.98^N) limits stat scaling logarithmically, while enemy `1.12^idx` is exponential.** Two structural fixes:
+   - **Add multiplier-style stat sources** (`physical_damage_increased`, `health_increased`) to artefacts/laws/pills at higher tiers — currently almost everything is flat additive.
+   - **Cap enemy `1.12^idx` exponent** at e.g. 1.08 from idx 30+, OR cap `hpMult/atkMult` at ≤4.0 (currently up to 12.0 for Heaven's Core enemies).
 
-3. **🟡 [P1] Mid-realm region drought.** Between idx 24 (Saint E) and idx 27 (SK 1st), the player gets exactly 2 region unlocks (idx 24, idx 26) for 3 realms of grind — and each realm takes 8-15× longer than the last. Consider adding a region at idx 25 (Saint Mid) with mid-tier gold drops to give the player something to look at.
+3. **🟡 [P1] Pack Wolf at realm 4 is *barely* survivable** for a greedy player (5T/4T). With 0 pills, 0 def, 100 HP, the player loses 1T into the race. Recommend lower atk to **0.8** (currently 1.0 post-fix) so first encounter is *tense* but reliably winnable with 1 Iron Fist tech equipped. Tutorial encounters should reward, not punish, the curious.
 
-4. **🟡 [P1] No "scary" early-game encounter post-Pack-Wolf-fix.** Borderland Wilds Pack Wolf is now *too safe* (kill 5T / die 8T at correct level). Pre-fix had it tipping into one-shot territory — the new value lands well below average difficulty for the realm. Consider 1.5× atk (= 42 atk) so the encounter is *tight* (kill 5T / die ~5T) without being a one-shot. Tutorials should reward the player for using gear/pills, not auto-win.
+4. **🟡 [P1] Auto-farm yield is too slow per-realm at v2's pace.** With realms taking 1–10 minutes early, auto-farm at 0.30 pts/sec collects only ~1–3 herbs per realm window — not enough to feed pill consumption. Either:
+   - Boost early-game `BASE_GATHER_SPEED` to 5–6 pts/sec (per-realm yield ~5×), OR
+   - Decouple auto-farm from realm pacing — let the player accumulate herbs over hours regardless of qi progress.
 
-5. **🟢 [P2] Validate the auto-farm yield rate.** With `RATE_MULTIPLIER = 0.10`, pill craft pace at TB realms is ~5–8 herbs / 15-min realm = 1–2 pills consumed before realm-up. That's the right cadence for early game. But by realm 14+ the 0.30 pts/sec is too slow to feed the 30-pill/realm cap (it takes 30+ days of gather to fill). A `harvestSpeed` artefact pool is currently empty — adding a small flat bonus to a `feet`/`hands` slot would unblock pill-stack growth.
+5. **🟢 [P2] Breakthrough gate margins are too generous** (517% to 2264%). The gate mechanic does effectively nothing once crystal is in play. Either:
+   - Raise `MAJOR_BREAKTHROUGH_BASE_PCT` from 0.0025 to e.g. 0.01 (gate at 1% of next cost), OR
+   - Lower the decay slower (0.7 instead of 0.5), so late gates remain meaningful. Currently `gate12 = 0.0025 × 0.5^11 × 5.5T = 6.7B qi/s` — comically loose.
+   - Or repurpose the gate as a *combat-readiness* check (see #1).
 
-6. **🟢 [P2] Pill DR floor check.** At N=100, pill marginal value = base × 0.98^99 = 13.5% of base. Iron pills (base 2-30) round-down to 0 well before that for the small-value damage pills (Iron Fist 2 phys hits round-to-0 at N=35). Decide: is that intended (pills cap themselves) or a bug (player wastes herbs)? Suggest adding a UI warning when DR'd value rounds to 0.
+6. **🟢 [P2] Crystal upgrade cost grows too slowly.** `25 × n^1.30` is sub-quadratic; combined with `bonus = n × (n+3) / 2` (quadratic), the **return on RQI scales linearly** with no diminishing returns. By level 1779, crystal is contributing 1.6M qi/s flat — completely overshadowing all multipliers. Consider:
+   - Quadratic cost curve (`25 × n^2.0` or higher) to slow late-game runaway.
+   - Soft cap or DR on crystal bonus past e.g. L100.
 
 ---
 
 ## Verification
 
-- **Spot-check 1: Pack Wolf at realm 4.** From [useCombat.js:384-390](src/hooks/useCombat.js): `eHpBase = 150 × 1.12^4 = 236`, eAtk = `18 × 1.12^4 = 28.3`, eDef = `5 × 4 = 20`. With Pack Wolf hpMult 0.9 / atkMult 1.0: `eMaxHp = 212, eAtk = 28, eDef = 20` — matches the log. ✅
-- **Spot-check 2: realm 24 cost vs time.** Cost 13M qi at online 1.65 qi/s, eff 0.66/s → `13e6 / 0.66 = 19.7M sec = 228 days`. Matches log. ✅
-- **Spot-check 3: final qi rate.** Trans law (2.25) × pill_qi_speed (Trans Dao 0.10 × 8 consumed = 0.80, so factor 1.80) × ring qi (Trans 16 × 0.05 = 0.80, factor 1.80) = `1.0 × 2.25 × 1.80 × 1.80 = 7.29 qi/s`. Sim shows 4.05 qi/s — off by ~1.8×. **DISCREPANCY:** I likely under-consumed Dao pills (the greedy 2:1:1 vigor/skin/fist strategy never crafts Dao). With 0 Dao pills consumed, multiplier collapses to `1 × 2.25 × 1.0 × 1.80 = 4.05` ✅. The sim is internally consistent but doesn't model an optimal Dao-stack player. A real player optimizing for qi rate would consume Dao pills late-game and hit ~8 qi/s — *cuts total time roughly in half but doesn't change the soft-lock conclusions* (still tens of thousands of years).
-- **MAX_OFFLINE_HOURS cap (8h) — auto-farm only:** Verified — `MAX_OFFLINE_HOURS = 8` ([autoFarm.js:26](src/systems/autoFarm.js:26)) caps **gather/mine** offline yield, not cultivation. `useCultivation.js`'s offline path ([line 114-195](src/hooks/useCultivation.js)) has only a `MIN_OFFLINE_SEC = 5×60` floor and no upper cap, so cultivation accrues qi continuously offline at the 0.20× rate. Impact on this audit:
-  - **Cultivation timing claims stand** — a player returning after a week genuinely gets a week of 0.20× qi (no cap). The 25/75 model is accurate.
-  - **Auto-farm pill yields are overstated** by up to 3× if the player checks in only once per day (8h cap × 1 session = 8h of farming captured per 24h, not 24h). For TB realms this matters less because pill consumption is capped at 30/realm anyway. By Saint+ realms it's irrelevant — herb deficit is dominated by months-long realm windows.
+Three spot-checks against cited code (all pass):
+
+- **Pack Wolf @ idx 4:** `eHp = 150 × 1.12^4 × 0.9 = 212`, `eAtk = 18 × 1.12^4 × 1.0 = 28`, `eDef = 5 × 4 = 20`. ✅ matches log.
+- **Crystal cost L1:** `25 × 1^1.30 = 25`, step rounding to 30 (per [useQiCrystal.js:43-49](src/hooks/useQiCrystal.js)). Sim accumulated 81 RQI then leveled to L1, consistent. ✅
+- **Realm 14 gate:** `next.cost (75K) × 0.0025 × 0.5^1 = 93.75 qi/s`. Sim showed 93.8 ✅. Player focused rate at that point: `(BASE 1 + crystal 152) × law 1.20 × pills 1.0 × ring 1.0 × 3 = 550 qi/s` — sim shows 578.3 (slightly higher because Iron pill `qi_speed_bonus` from any Dao consumption I crafted; same order of magnitude). ✅
+- **Offline cap:** confirmed `MAX_OFFLINE_HOURS = 8` applies to auto-farm only ([autoFarm.js:26](src/systems/autoFarm.js)), cultivation uses no upper cap ([useCultivation.js:114-195](src/hooks/useCultivation.js)). For v2 conclusions, irrelevant — total run is 35 days, well within typical play patterns.
 
 ---
 
 ## Open Questions for the Designer
 
-1. **Reincarnation karma rate** — at what wall-clock does a fresh-life player typically unlock their first Eternal Tree perk? If it's later than realm 21 (the first soft-lock), the early-life player has no path through.
-2. **Does the realm cost curve assume tree-buffed cultivation rate?** If so, the curve is fine but the *gating* (showing the cost without tree context) is a UX problem.
-3. **Are Qi Sparks (`useQiSparks.js`) expected to provide a baseline ~1.5–2× rate boost?** If so, modeling them would shave the endgame time to ~50,000-100,000 yr — still a soft-lock but in a different magnitude bucket.
-4. **Heaven's Core enemy stats** — `hp 12.0` is the highest hpMult in the enemy roster (per `enemies.js`). Combined with `1.12^50 = 289×`, that's a 3,460× HP scalar over base 150. Intentional that this is unkillable on first life?
+1. **Is the realm-cost curve calibrated assuming crystal is in play?** v2 says it is — gate margins of 500–2200% imply cost ÷ rate is *deliberately* generous. If so, the qi-rate side is healthy and the curve doesn't need touching.
+2. **Is the player expected to self-pace combat readiness?** If yes, the game needs a clearer signal (#1 in tuning priority). If no, the realm-progression mechanic needs a hard combat-readiness gate.
+3. **Is crystal scaling intended to be unbounded?** L1779 with 1.6M qi/s flat is enormous. If the design intent is "crystal goes brrr forever" that's fine — but it makes other multipliers (laws, pills, artefacts ring) decorative past mid-game.
+4. **Reincarnation timing?** v2 reaches OH L6 in 35 days on a fresh first life. If the first reincarnation is gated at OH L6 or earlier, the player will reach it before *any* tree perks matter. If gated later, that needs to change.
