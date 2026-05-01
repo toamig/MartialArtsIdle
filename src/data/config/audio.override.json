@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-01T03:30:18.128Z",
+  "updatedAt": "2026-05-01T03:35:53.955Z",
   "records": {
     "ui_click": {
       "src": [
@@ -65,6 +65,11 @@
     "spark_pattern_clear": {
       "src": [
         "audio/sfx/spark_pattern_clear.mp3"
+      ]
+    },
+    "spark_pattern_tap": {
+      "src": [
+        "audio/sfx/spark_pattern_tap.mp3"
       ]
     }
   }
