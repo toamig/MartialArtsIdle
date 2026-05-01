@@ -701,26 +701,13 @@ function AppInner() {
     };
   }, []);
 
-  // BGM: track per screen.
-  //   cultivation — Home (default vibe while cultivating)
-  //   combat      — active combat arena
-  //   world       — exploration screens (Worlds, Production)
-  //   menu        — meta / management screens (Character, Build, Collection,
-  //                 Stats, Reincarnation)
-  // Falls back to cultivation for anything not in the table.
+  // BGM: one continuous main track for the whole game; combat-arena swaps to
+  // the combat track and we cross-fade back to main on exit. AudioManager's
+  // playBgm() early-returns when the requested track is already playing, so
+  // navigating between non-combat screens leaves the music untouched.
   useEffect(() => {
-    const SCREEN_BGM = {
-      home:           'cultivation',
-      'combat-arena': 'combat',
-      worlds:         'world',
-      production:     'world',
-      character:      'menu',
-      build:          'menu',
-      collection:     'menu',
-      stats:          'menu',
-      reincarnation:  'menu',
-    };
-    AudioManager.playBgm(SCREEN_BGM[currentScreen] ?? 'cultivation');
+    const trackId = currentScreen === 'combat-arena' ? 'combat' : 'cultivation';
+    AudioManager.playBgm(trackId);
   }, [currentScreen]);
 
   // Navigate to a screen, optionally carrying a parameter (e.g. region data).
