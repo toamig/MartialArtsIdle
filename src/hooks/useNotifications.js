@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import WORLDS from '../data/worlds';
 import { RECIPE_MAP } from '../data/pills';
+import AudioManager from '../audio/AudioManager';
 
 const SEEN_WORLDS_KEY = 'mai_seen_worlds';
 
@@ -68,6 +69,7 @@ export default function useNotifications({ cultivation, inventory }) {
         duration: 6000,
       })),
     ]);
+    try { AudioManager.playSfx('ui_notify'); } catch {}
   }, [cultivation.realmIndex]);
 
   // Badge: Worlds tab — any unlocked world the player hasn't visited yet
@@ -105,6 +107,7 @@ export default function useNotifications({ cultivation, inventory }) {
 
   const addToast = useCallback((toast) => {
     setToastQueue(q => [...q, { id: `ext-${++toastCounter}`, ...toast }]);
+    try { AudioManager.playSfx('ui_notify'); } catch {}
   }, []);
 
   return { badges, toastQueue, clearBadge, dismissToast, addToast };
