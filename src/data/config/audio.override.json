@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-30T12:19:03.040Z",
+  "updatedAt": "2026-05-01T02:33:30.384Z",
   "records": {
     "ui_click": {
       "src": [
@@ -25,6 +25,16 @@
     "bgm_world": {
       "src": [
         "/audio/bgm/world.mp3"
+      ]
+    },
+    "crystal_evolve": {
+      "src": [
+        "audio/sfx/crystal_evolve.mp3"
+      ]
+    },
+    "ui_notify": {
+      "src": [
+        "audio/sfx/ui_notify.mp3"
       ]
     }
   }
