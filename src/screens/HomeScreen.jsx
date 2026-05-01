@@ -1552,14 +1552,16 @@ function HomeScreen({
           {/* Character + hold-hint group — grounded at scene bottom */}
           <div className="home-char-group">
             {!maxed && (
-              boosting && sparkConsecutiveLadderRef?.current?.length > 0
-                ? <ConsecutiveFocusMeter
-                    ladder={sparkConsecutiveLadderRef.current}
-                    boostStartTimeRef={boostStartTimeRef}
-                  />
-                : <div className={`home-hold-hint${showHoldHint ? '' : ' home-hold-hint-fade'}`}>
-                    {t('home.holdToCultivate')}
-                  </div>
+              <div className="home-char-hint-slot">
+                {boosting && sparkConsecutiveLadderRef?.current?.length > 0
+                  ? <ConsecutiveFocusMeter
+                      ladder={sparkConsecutiveLadderRef.current}
+                      boostStartTimeRef={boostStartTimeRef}
+                    />
+                  : <div className={`home-hold-hint${showHoldHint ? '' : ' home-hold-hint-fade'}`}>
+                      {t('home.holdToCultivate')}
+                    </div>}
+              </div>
             )}
             <div
               className={`fighter-stage home-fighter-stage${boosting ? ' stage-boosted' : ''}${adBoostActive ? ' stage-ad-boosted' : ''}`}
