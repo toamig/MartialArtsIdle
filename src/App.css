@@ -3941,10 +3941,15 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 /* ── Pattern Clicking mechanic ──────────────────────────────────────────── */
 
-/* Fixed overlay — covers the full viewport; sits below the nav bar (z-100). */
+/* Fixed overlay — constrained to the playable area between TopBar (top) and
+   NavBar (bottom) so the timer + dots never spawn underneath either bar.
+   Z-index sits below the nav bar (z-100) and below the top bar (z-700). */
 .pc-overlay {
   position:       fixed;
-  inset:          0;
+  top:            calc(var(--top-bar-h) + env(safe-area-inset-top));
+  bottom:         calc(var(--nav-h)     + env(safe-area-inset-bottom));
+  left:           0;
+  right:          0;
   z-index:        90;
   pointer-events: auto;
   background:     rgba(0, 0, 0, 0.38);
