@@ -184,6 +184,79 @@ function BreakthroughBanner({ event, onDone }) {
 const HOLD_HINT_SEEN_KEY = 'mai_home_hold_hint_seen';
 const HOLD_HINT_IDLE_MS  = 60 * 1000;
 
+/**
+ * ConsecutiveFocusMeter — replaces the "hold to cultivate faster" hint while
+ * the player is focusing AND has at least one Consecutive Focus rung unlocked.
+ *
+ * Progress bar runs continuously over the full hold window (0ms → last
+ * threshold) with a tick at every rung the player has unlocked, so they can
+ * see exactly how far they are from the next milestone bonus.
+ *
+ * Updates via rAF so the bar tracks every frame without re-renders.
+ */
+function ConsecutiveFocusMeter({ ladder, boostStartTimeRef }) {
+  const barRef   = useRef(null);
+  const labelRef = useRef(null);
+  const rootRef  = useRef(null);
+  const totalMs  = ladder[ladder.length - 1].holdMs;
+
+  useEffect(() => {
+    let raf;
+    let lastRung = -1;
+    const tick = () => {
+      const start = boostStartTimeRef?.current ?? performance.now();
+      const elapsed = performance.now() - start;
+      let rung = 0;
+      for (const step of ladder) {
+        if (elapsed >= step.holdMs) rung++;
+        else break;
+      }
+      const isMax = rung >= ladder.length;
+      const frac  = isMax ? 1 : Math.min(1, elapsed / totalMs);
+
+      if (barRef.current) {
+        barRef.current.style.transform = `scaleX(${frac})`;
+      }
+      if (rootRef.current && rung !== lastRung) {
+        lastRung = rung;
+        rootRef.current.classList.toggle('home-cf-meter-deep', isMax);
+      }
+      if (labelRef.current) {
+        if (isMax) {
+          const total = ladder.reduce((s, r) => s + r.bonus, 0);
+          labelRef.current.textContent = `Deep meditation · +${Math.round(total * 100)}% qi/s`;
+        } else {
+          const next        = ladder[rung];
+          const cumulative  = ladder.slice(0, rung).reduce((s, r) => s + r.bonus, 0);
+          const remainingS  = Math.max(0, (next.holdMs - elapsed) / 1000).toFixed(1);
+          labelRef.current.textContent = rung > 0
+            ? `+${Math.round(cumulative * 100)}% · next +${Math.round(next.bonus * 100)}% in ${remainingS}s`
+            : `next +${Math.round(next.bonus * 100)}% in ${remainingS}s`;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [ladder, totalMs, boostStartTimeRef]);
+
+  return (
+    <div ref={rootRef} className="home-cf-meter">
+      <div ref={labelRef} className="home-cf-meter-label" />
+      <div className="home-cf-meter-track">
+        <div ref={barRef} className="home-cf-meter-bar" />
+        {ladder.map((step, i) => (
+          <span
+            key={i}
+            className="home-cf-meter-tick"
+            style={{ left: `${(step.holdMs / totalMs) * 100}%` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const CRYSTAL_TIER_THRESHOLDS = [1000, 750, 500, 350, 200, 100, 50, 25, 10, 1];
 const CRYSTAL_TIER_VALUES     = [  10,   9,   8,   7,   6,   5,  4,  3,  2, 1];
 
@@ -1107,6 +1180,8 @@ function HomeScreen({
     maxed,
     startBoost,
     stopBoost,
+    boostStartTimeRef,
+    sparkConsecutiveLadderRef,
     activateAdBoost,
     adBoostActive,
     adBoostEndsAt,
@@ -1477,9 +1552,14 @@ function HomeScreen({
           {/* Character + hold-hint group — grounded at scene bottom */}
           <div className="home-char-group">
             {!maxed && (
-              <div className={`home-hold-hint${showHoldHint ? '' : ' home-hold-hint-fade'}`}>
-                {t('home.holdToCultivate')}
-              </div>
+              boosting && sparkConsecutiveLadderRef?.current?.length > 0
+                ? <ConsecutiveFocusMeter
+                    ladder={sparkConsecutiveLadderRef.current}
+                    boostStartTimeRef={boostStartTimeRef}
+                  />
+                : <div className={`home-hold-hint${showHoldHint ? '' : ' home-hold-hint-fade'}`}>
+                    {t('home.holdToCultivate')}
+                  </div>
             )}
             <div
               className={`fighter-stage home-fighter-stage${boosting ? ' stage-boosted' : ''}${adBoostActive ? ' stage-ad-boosted' : ''}`}

@@ -2793,6 +2793,77 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   50%      { opacity: 1;    transform: translateY(2px); }
 }
 
+/* Consecutive Focus meter — replaces the hold-hint while focusing.
+   Continuous timeline (0ms → final rung's threshold) with ticks at every
+   unlocked rung; the bar fills toward the next milestone bonus. */
+.home-cf-meter {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  align-self:     center;
+  gap:            5px;
+  z-index:        2;
+  pointer-events: none;
+  animation:      home-cf-meter-in 0.25s ease-out;
+}
+@keyframes home-cf-meter-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.home-cf-meter-label {
+  font-size:     0.7rem;
+  letter-spacing:0.02em;
+  color:         rgba(255, 255, 255, 0.92);
+  text-shadow:   0 1px 2px rgba(0, 0, 0, 0.7);
+  white-space:   nowrap;
+}
+
+.home-cf-meter-track {
+  position:      relative;
+  width:         180px;
+  height:        6px;
+  background:    rgba(0, 0, 0, 0.55);
+  border:        1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 3px;
+}
+
+.home-cf-meter-bar {
+  position:         absolute;
+  inset:            0;
+  background:       linear-gradient(90deg, #a78bfa, #60a5fa);
+  border-radius:    3px;
+  transform:        scaleX(0);
+  transform-origin: left center;
+  box-shadow:       0 0 6px rgba(167, 139, 250, 0.5);
+}
+
+.home-cf-meter-tick {
+  position:      absolute;
+  top:           -2px;
+  width:         2px;
+  height:        10px;
+  background:    rgba(255, 255, 255, 0.65);
+  transform:     translateX(-50%);
+  border-radius: 1px;
+  pointer-events:none;
+}
+
+/* Deep meditation — all rungs reached. Bar shifts gold + a soft pulse. */
+.home-cf-meter-deep .home-cf-meter-bar {
+  background: linear-gradient(90deg, #fcd34d, #fbbf24);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.7);
+  animation:  home-cf-meter-deep-pulse 1.4s ease-in-out infinite alternate;
+}
+@keyframes home-cf-meter-deep-pulse {
+  from { box-shadow: 0 0 6px  rgba(251, 191, 36, 0.5); }
+  to   { box-shadow: 0 0 14px rgba(251, 191, 36, 0.9); }
+}
+.home-cf-meter-deep .home-cf-meter-label {
+  color:       #fde68a;
+  text-shadow: 0 0 6px rgba(251, 191, 36, 0.5);
+}
+
 /* ── Heavenly Qi chip — purple pill floating in scene, top-right ─────────── */
 /* The HUD top bar now handles safe-area-inset-top, so chips inside the
    cultivation zone only need a small fixed top offset. */
