@@ -11,17 +11,17 @@
 ## Numbers Policy & Caveats
 
 Every constant is sourced from code. Citations:
-- `BASE_RATE = 1` qi/s ([useCultivation.js:26](src/hooks/useCultivation.js))
-- `OFFLINE_QI_MULTIPLIER = 0.20` ([useCultivation.js:181](src/hooks/useCultivation.js))
+- `BASE_RATE = 1` qi/s ([useCultivation.js:25](src/hooks/useCultivation.js))
+- `OFFLINE_QI_MULTIPLIER = 0.20` ([useCultivation.js:180](src/hooks/useCultivation.js))
 - `FOCUS_MULT = 3.0` (qi_focus_mult default 300%, applied during active play per "always with player input")
-- Online qi tick: `(BASE_RATE + crystalQiBonus + sparkQiFlat) × law × pills × artefact × spark × tree × focus × ad` ([useCultivation.js:422](src/hooks/useCultivation.js))
-- Offline rate: `BASE_RATE × law × offlineQiUnique × artefact × spark × (1 + pillQiBonus) × OFFLINE_QI_MULTIPLIER` ([useCultivation.js:181-182](src/hooks/useCultivation.js)) — note: **offline path does NOT include `crystalQiBonus`**, so crystal flat add is online-only
+- Online qi tick: `(BASE_RATE + crystalQiBonus + sparkQiFlat) × law × pills × artefact × spark × tree × focus × ad` ([useCultivation.js:421](src/hooks/useCultivation.js))
+- Offline rate: `BASE_RATE × law × offlineQiUnique × artefact × spark × (1 + pillQiBonus) × OFFLINE_QI_MULTIPLIER` ([useCultivation.js:180-181](src/hooks/useCultivation.js)) — note: **offline path does NOT include `crystalQiBonus`**, so crystal flat add is online-only
 - Crystal bonus formula: `level × (level + 3) / 2` ([useQiCrystal.js:88](src/hooks/useQiCrystal.js))
 - Crystal level cost: `25 × level^1.30` rounded to ~2 sig digs ([useQiCrystal.js:43-49](src/hooks/useQiCrystal.js))
 - Major breakthrough qi/s gate: `next.cost × 0.0025 × 0.5^ordinal` ([realms.js:101-102, 163-170](src/data/realms.js))
 - Enemy HP/ATK scaling: `floor(150/18 × 1.12^regionIdx × statMult)` ([useCombat.js:384-387](src/hooks/useCombat.js))
 - Armour mitigation: `min(0.9, armour / (armour + 10×damage))` ([useCombat.js:40-47](src/hooks/useCombat.js))
-- Pill DR: `round(value × 0.98^N)`, qi_speed exempt ([usePills.js scaledEffectValue](src/hooks/usePills.js))
+- Pill DR: `round(value × 0.98^N)`, qi_speed exempt ([usePills.js:42-55](src/hooks/usePills.js))
 - Auto-farm RQI flow: `2 × (gatherSpeed × RATE_MULTIPLIER / herbCost) × 0.40 × 1.5 × CULT_RQI[tier]` (gather + mine, both feeding cultivation drops; values from [materials.js:92-102](src/data/materials.js))
 - Combat RQI flow: `kills × 3.5 × CULT_RQI[tier]` (modal enemies drop `tier_cultivation_X` at 1.0 chance qty[3,4])
 - Effective wall-clock qi/s: `0.25 × R_focused + 0.75 × R_offline`
@@ -215,7 +215,7 @@ Three spot-checks against cited code (all pass):
 - **Pack Wolf @ idx 4:** `eHp = 150 × 1.12^4 × 0.9 = 212`, `eAtk = 18 × 1.12^4 × 1.0 = 28`, `eDef = 5 × 4 = 20`. ✅ matches log.
 - **Crystal cost L1:** `25 × 1^1.30 = 25`, step rounding to 30 (per [useQiCrystal.js:43-49](src/hooks/useQiCrystal.js)). Sim accumulated 81 RQI then leveled to L1, consistent. ✅
 - **Realm 14 gate:** `next.cost (75K) × 0.0025 × 0.5^1 = 93.75 qi/s`. Sim showed 93.8 ✅. Player focused rate at that point: `(BASE 1 + crystal 152) × law 1.20 × pills 1.0 × ring 1.0 × 3 = 550 qi/s` — sim shows 578.3 (slightly higher because Iron pill `qi_speed_bonus` from any Dao consumption I crafted; same order of magnitude). ✅
-- **Offline cap:** confirmed `MAX_OFFLINE_HOURS = 8` applies to auto-farm only ([autoFarm.js:26](src/systems/autoFarm.js)), cultivation uses no upper cap ([useCultivation.js:114-195](src/hooks/useCultivation.js)). For v2 conclusions, irrelevant — total run is 35 days, well within typical play patterns.
+- **Offline cap:** confirmed `MAX_OFFLINE_HOURS = 8` applies to auto-farm only ([autoFarm.js:26](src/systems/autoFarm.js)), cultivation uses no upper cap ([useCultivation.js:113-194](src/hooks/useCultivation.js)). For v2 conclusions, irrelevant — total run is 35 days, well within typical play patterns.
 
 ---
 
