@@ -97,6 +97,12 @@ function persistFirsts() {
  */
 function isLocalEnvironment() {
   if (typeof window === 'undefined') return true;
+  // Capacitor native (iOS/Android) always serves the bundle from a localhost
+  // virtual server (https://localhost or capacitor://localhost) — those are
+  // real player devices, never "local" for analytics purposes.
+  try {
+    if (Capacitor?.isNativePlatform?.()) return false;
+  } catch {}
   const { protocol, hostname } = window.location;
   if (protocol === 'file:') return true;
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
