@@ -27,6 +27,15 @@ const BOOST_MULTIPLIER = 3; // legacy fallback when focusMult ref isn't wired
 const AD_BOOST_MULT   = 2; // rewarded-ad cultivation boost
 const MIN_OFFLINE_SEC = 5 * 60; // only show offline popup after 5 min away
 
+// Crystal Click tap policy.
+//   COOLDOWN — caps sustained tap rate at ~6.7/sec, defeating autoclickers
+//     without penalising enthusiastic human tapping (~5/sec max sustained).
+//   EMPTY_FLOOR — when the reservoir is dry, a tap still grants this many
+//     seconds of current qi/s. Stops the "tap = nothing" silent zero while
+//     keeping waiting strictly more profitable than spam-tapping.
+const CRYSTAL_TAP_COOLDOWN_MS   = 150;
+const CRYSTAL_EMPTY_TAP_FLOOR_S = 0.25;
+
 const label = (r) => (r.stage ? `${r.name} - ${r.stage}` : r.name);
 
 export default function useCultivation() {
@@ -267,6 +276,9 @@ export default function useCultivation() {
       return Number.isFinite(v) && v > 0 ? v : 0;
     } catch { return 0; }
   })());
+  // Tracks the last successful crystal tap time so the cooldown can throttle
+  // autoclickers without affecting passive accrual.
+  const lastCrystalTapAtRef = useRef(0);
   const prevBoostStateRef            = useRef(false);
   // Consecutive Focus mechanic — every unlocked tier adds a rung to a
   // cumulative ladder of (holdMs, bonus). Each tick sums every met rung
@@ -606,13 +618,33 @@ export default function useCultivation() {
     setOfflineEarnings(0);
   }, [offlineEarnings]);
 
-  /** Tap the crystal — dump everything in the reservoir into qi. */
+  /**
+   * Tap the crystal. When the reservoir has accrued qi, drains it. When the
+   * reservoir is empty, grants a small floor (rate × CRYSTAL_EMPTY_TAP_FLOOR_S)
+   * so the tap never feels like a no-op. Throttled by CRYSTAL_TAP_COOLDOWN_MS.
+   *
+   * @returns {number} qi granted by this tap (0 if throttled).
+   */
   const collectCrystalReservoir = useCallback(() => {
-    const amount = crystalReservoirRef.current;
-    if (amount <= 0) return;
-    qiRef.current += amount;
-    crystalReservoirRef.current = 0;
-    try { localStorage.setItem('mai_crystal_reservoir', '0'); } catch {}
+    const now = performance.now();
+    if (now - lastCrystalTapAtRef.current < CRYSTAL_TAP_COOLDOWN_MS) return 0;
+    if (sparkCrystalClickRateRef.current <= 0) return 0;
+    lastCrystalTapAtRef.current = now;
+
+    const reservoir = crystalReservoirRef.current;
+    let granted;
+    if (reservoir > 0) {
+      granted = reservoir;
+      crystalReservoirRef.current = 0;
+      try { localStorage.setItem('mai_crystal_reservoir', '0'); } catch {}
+    } else {
+      // Floor at 1 qi so the floater never displays "+0" (fmt() floors values
+      // <1000 to integers). At low realms the 1-qi minimum dominates the
+      // rate × 0.25 calc; once rate ≥ 4, the calc takes over.
+      granted = Math.max(1, (rateRef.current ?? 0) * CRYSTAL_EMPTY_TAP_FLOOR_S);
+    }
+    qiRef.current += granted;
+    return granted;
   }, []);
 
   const realm     = REALMS[realmIndex];

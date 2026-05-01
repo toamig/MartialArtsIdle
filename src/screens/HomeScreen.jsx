@@ -409,11 +409,10 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
   const { level, crystalQiBonus } = crystal;
   const tier = getCrystalTier(level);
   const { glowA, glowB } = CRYSTAL_COLORS[tier];
-  const handleCrystalTap = mechanicOn ? () => {
-    const isFull = anchorRef.current?.classList.contains('home-crystal-full');
-    try { AudioManager.playSfx(isFull ? 'crystal_tap_max' : 'crystal_tap'); } catch {}
-    onCollect();
-  } : undefined;
+  // SFX + VFX are fired by the parent's onCollect handler so cooldown-blocked
+  // taps don't produce sound or floaters. Empty taps still grant a small qi
+  // floor — the parent decides what feedback to play based on the granted amount.
+  const handleCrystalTap = mechanicOn ? () => onCollect() : undefined;
   return (
     <div
       ref={anchorRef}
@@ -1177,10 +1176,14 @@ function HomeScreen({
 
   // ── Crystal Click — collect reservoir on tap ─────────────────────────────
   const handleCrystalCollect = useCallback(() => {
-    if (!crystalReservoirRef || !collectCrystalReservoir) return;
-    const amount = crystalReservoirRef.current ?? 0;
-    if (amount <= 0) return;
-    collectCrystalReservoir();
+    if (!collectCrystalReservoir) return;
+    // Hook handles cooldown throttle + empty-reservoir floor and returns the
+    // granted qi (0 if throttled). Skip all feedback when granted is 0 so
+    // tap-spam past the 6.7/sec cap is silent — preserves ad-boost value.
+    const granted = collectCrystalReservoir();
+    if (granted <= 0) return;
+    const wasFull = document.querySelector('.home-crystal-anchor')?.classList.contains('home-crystal-full');
+    try { AudioManager.playSfx(wasFull ? 'crystal_tap_max' : 'crystal_tap'); } catch {}
     // Spawn a "+N Qi" floater at the crystal's screen position, offset into
     // fighter-stage coordinates (where the VFX layer lives).
     try {
@@ -1191,12 +1194,11 @@ function HomeScreen({
         const sr = stageEl.getBoundingClientRect();
         const x  = (cr.left + cr.width  / 2) - sr.left;
         const y  = (cr.top  + cr.height / 2) - sr.top;
-        const fmt = fmtDelta;
-        spawnVFX({ type: 'qi-tick', x, y, content: fmt(amount), duration: 1600,
+        spawnVFX({ type: 'qi-tick', x, y, content: fmtDelta(granted), duration: 1600,
           style: { '--qi-drift-x': '0px' } });
       }
     } catch {}
-  }, [crystalReservoirRef, collectCrystalReservoir, spawnVFX]);
+  }, [collectCrystalReservoir, spawnVFX]);
 
   const cultivationAd = useRewardedAd(onCultivationReward, 30 * 60 * 1000, 'mai_ad_cd_cultivation');
 
