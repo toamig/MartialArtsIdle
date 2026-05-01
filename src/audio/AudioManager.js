@@ -95,7 +95,11 @@ function _createBgmHowl(trackId) {
   const config = BGM_TRACKS[trackId];
   if (!config) return null;
 
-  return new Howl({
+  // Cache lazily-created howls too — without this, every navigation to a
+  // non-preloaded track (menu, world) creates a fresh Howl whose old
+  // instance becomes an orphan (no longer in bgmHowl, can't be paused on
+  // tab hide, plays through until its scheduled stop fires).
+  const howl = new Howl({
     src:    config.src,
     loop:   config.loop ?? true,
     volume: 0,
@@ -104,6 +108,8 @@ function _createBgmHowl(trackId) {
       console.error(`[Audio] BGM "${trackId}" failed to load (tried: ${config.src.join(', ')}):`, err);
     },
   });
+  bgmCache[trackId] = howl;
+  return howl;
 }
 
 function _cancelPendingStop(howl) {
@@ -116,12 +122,17 @@ function _cancelPendingStop(howl) {
 }
 
 function _fadeOutAndStop(howl, duration = BGM_FADE_OUT) {
-  if (!howl || !howl.playing()) return;
+  if (!howl) return;
   // Cancel any prior pending stop on this howl before scheduling a new one,
   // otherwise we'd leak timers (and a stale one could fire mid-fade).
   _cancelPendingStop(howl);
-  howl.fade(howl.volume(), 0, duration);
-  // Stop only — no unload so preloaded/cached instances stay buffered and can replay instantly
+  if (howl.playing()) {
+    howl.fade(howl.volume(), 0, duration);
+  }
+  // Schedule the stop UNCONDITIONALLY — even when !playing(). A howl whose
+  // audio file is still downloading reports playing()=false but has a queued
+  // play() that Howler will fire once load completes. Without this stop, that
+  // queued play becomes an orphan that keeps looping forever.
   const timerId = setTimeout(() => {
     try { howl.stop(); } catch {}
     pendingStops.delete(howl);
@@ -175,13 +186,22 @@ function _getSfxHowls(sfxId) {
 
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
-    if (!bgmHowl) return;
     if (document.hidden) {
-      bgmHowl.pause();
-      bgmPaused = true;
+      // Pause EVERY cached BGM howl, not just bgmHowl. A rapid screen swap
+      // can leave a previous track mid-fadeout — once bgmHowl moves on, that
+      // orphan would keep playing audibly in the hidden tab until its stop
+      // timer eventually fires (and timers are throttled in hidden tabs).
+      for (const howl of Object.values(bgmCache)) {
+        if (howl.playing()) howl.pause();
+      }
+      bgmPaused = !!bgmHowl;
     } else if (bgmPaused && !adPlaying) {
-      bgmHowl.play();
-      bgmHowl.fade(bgmHowl.volume(), effectiveBgmVol(), 400);
+      // Resume only the current bgmHowl. Orphans stay paused — their
+      // pending stop timers will clean them up.
+      if (bgmHowl) {
+        bgmHowl.play();
+        bgmHowl.fade(bgmHowl.volume(), effectiveBgmVol(), 400);
+      }
       bgmPaused = false;
     }
   });
