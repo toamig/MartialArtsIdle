@@ -5,6 +5,7 @@ import { pickTechnique } from '../data/techniqueDrops';
 import { pickRandomArtefact } from '../data/artefactDrops';
 import { ARTEFACTS_BY_ID } from '../data/artefacts';
 import { trackCombatWin, trackCombatLoss, trackFirstTime } from '../analytics';
+import AudioManager from '../audio/AudioManager';
 
 // PoE-style armour mitigation cap. Past this, even infinite armour can't
 // fully negate a hit. Standard PoE convention.
@@ -547,6 +548,8 @@ export default function useCombat() {
             kind: 'damage',
           });
           spawnDamageNumberRef.current?.(dmg, 'enemy', s.eMaxHp, { exploit: exploited });
+          // Hit SFX — exploit (the game's "crit") gets the dedicated critical sound.
+          try { AudioManager.playSfx(exploited ? 'combat_critical' : 'combat_hit_player'); } catch {}
           if (exploited) {
             s.lastExploitAt = performance.now() / 1000;
             dispatchTrigger(s, 'on_exploit_fired', { amount: dmg });
@@ -594,6 +597,11 @@ export default function useCombat() {
 
           // Any technique cast clears the fire double-strike buff.
           if (s.defaultAttackBuff) s.defaultAttackBuff = null;
+
+          // Tech-cast SFX layered on top of the basic-attack hit.
+          try {
+            AudioManager.playSfx(tech.type === 'Heal' ? 'combat_heal' : 'combat_technique');
+          } catch {}
 
           dispatchTrigger(s, 'on_secret_tech_fired', { sourceIdx: i, techType: tech.type });
           break; // one technique per turn
@@ -676,6 +684,8 @@ export default function useCombat() {
               trackCombatWin(s2.worldId, s2.regionIndex, s2.enemyName, dur, s2.castCount);
               trackFirstTime('CombatWin');
             } catch {}
+            try { AudioManager.playSfx('combat_enemy_die'); } catch {}
+            try { AudioManager.playSfx('combat_victory'); } catch {}
             setPhase('won');
           } else {
             setTimeout(() => {
@@ -716,6 +726,7 @@ export default function useCombat() {
         if (nullsThisHit) s.nextEnemyHitNulls = false;
 
         const finishDodge = () => {
+          try { AudioManager.playSfx('combat_dodge'); } catch {}
           s.lastDodgeAtSec = performance.now() / 1000;
           s.transientDodgeBonus = 0;
           // Wood Set 2 4-piece: dodging arms the next attack as a guaranteed exploit.
@@ -813,6 +824,7 @@ export default function useCombat() {
             logs.push({ msg: 'UNDYING RESOLVE — survived at 1 HP!', kind: 'system' });
           }
           s.pHp = Math.max(0, s.pHp - dmg);
+          try { AudioManager.playSfx('combat_hit_enemy'); } catch {}
 
           // Earth law: "50% of mitigated damage is retaliated"
           const retaliatePct = s.stats?.lawFlags?.retaliateMitigatedPct ?? 0;
@@ -880,6 +892,7 @@ export default function useCombat() {
               trackCombatLoss(s2.worldId, s2.regionIndex, s2.enemyName, dur, s2.castCount);
               trackFirstTime('CombatLoss');
             } catch {}
+            try { AudioManager.playSfx('combat_defeat'); } catch {}
             setPhase('lost');
           } else {
             setTimeout(() => {

@@ -16,20 +16,13 @@ const SFX_GROUPS = [
     label: 'UI',
     items: [
       { id: 'ui_click',   label: 'Click',   desc: 'Generic button / tap feedback' },
-      { id: 'ui_open',    label: 'Open',    desc: 'Screen or drawer slides open'  },
-      { id: 'ui_close',   label: 'Close',   desc: 'Screen or drawer closes'       },
-      { id: 'ui_confirm', label: 'Confirm', desc: 'Positive confirm / success'    },
       { id: 'ui_notify',  label: 'Notify',  desc: 'Notification / alert ping'     },
     ],
   },
   {
     label: 'Cultivation',
     items: [
-      { id: 'cult_qi_pulse',      label: 'Qi Pulse',       desc: 'Subtle ambient qi pulse while cultivating'    },
-      { id: 'cult_breakthrough',  label: 'Breakthrough',   desc: 'Major milestone — realm breakthrough'         },
-      { id: 'cult_channel_start', label: 'Channel Start',  desc: 'Heavenly Qi channel begins'                   },
-      { id: 'cult_channel_end',   label: 'Channel End',    desc: 'Heavenly Qi channel ends / expires'           },
-      { id: 'cult_boost_active',  label: 'Boost Active',   desc: 'Heavenly Qi boost becomes active (ad watched)'},
+      { id: 'cult_breakthrough',  label: 'Breakthrough',   desc: 'Major milestone — realm breakthrough' },
     ],
   },
   {
@@ -68,12 +61,11 @@ const SFX_GROUPS = [
   {
     label: 'Items & Crafting',
     items: [
-      { id: 'item_craft',    label: 'Craft',    desc: 'Item crafted successfully'         },
-      { id: 'item_upgrade',  label: 'Upgrade',  desc: 'Quality upgraded'                  },
-      { id: 'item_equip',    label: 'Equip',    desc: 'Item equipped'                     },
-      { id: 'item_unequip',  label: 'Unequip',  desc: 'Item unequipped'                   },
-      { id: 'item_pill_use', label: 'Pill Use', desc: 'Pill consumed'                     },
-      { id: 'item_refine',   label: 'Refine',   desc: 'Artefact / technique refined'      },
+      { id: 'item_craft',    label: 'Craft',    desc: 'Pill brewed (per craftPill call)'                              },
+      { id: 'item_upgrade',  label: 'Upgrade',  desc: 'Artefact upgrade level applied'                                },
+      { id: 'item_equip',    label: 'Equip',    desc: 'Artefact or technique equipped'                                },
+      { id: 'item_unequip',  label: 'Unequip',  desc: 'Artefact or technique unequipped'                              },
+      { id: 'item_pill_use', label: 'Pill Use', desc: 'Pill consumed (PillDrawer Use button)'                         },
     ],
   },
 ];

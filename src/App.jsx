@@ -701,10 +701,26 @@ function AppInner() {
     };
   }, []);
 
-  // BGM: combat screen uses combat track; everything else uses cultivation
+  // BGM: track per screen.
+  //   cultivation — Home (default vibe while cultivating)
+  //   combat      — active combat arena
+  //   world       — exploration screens (Worlds, Production)
+  //   menu        — meta / management screens (Character, Build, Collection,
+  //                 Stats, Reincarnation)
+  // Falls back to cultivation for anything not in the table.
   useEffect(() => {
-    const track = currentScreen === 'combat-arena' ? 'combat' : 'cultivation';
-    AudioManager.playBgm(track);
+    const SCREEN_BGM = {
+      home:           'cultivation',
+      'combat-arena': 'combat',
+      worlds:         'world',
+      production:     'world',
+      character:      'menu',
+      build:          'menu',
+      collection:     'menu',
+      stats:          'menu',
+      reincarnation:  'menu',
+    };
+    AudioManager.playBgm(SCREEN_BGM[currentScreen] ?? 'cultivation');
   }, [currentScreen]);
 
   // Navigate to a screen, optionally carrying a parameter (e.g. region data).

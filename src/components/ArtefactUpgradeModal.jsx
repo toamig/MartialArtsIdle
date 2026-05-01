@@ -8,6 +8,7 @@ import {
   effectiveAffixValue,
   isBonusLevel,
 } from '../data/artefactUpgrades';
+import AudioManager from '../audio/AudioManager';
 
 /**
  * ArtefactUpgradeModal — Genshin-style upgrade screen.
@@ -118,6 +119,7 @@ function ArtefactUpgradeModal({ artefact, artefacts, inventory, onClose }) {
       for (const c of cost) inventory.removeItem(c.itemId, c.qty);
     }
     artefacts.levelUpArtefact(live.uid);
+    try { AudioManager.playSfx('item_upgrade'); } catch {}
     setQueue([]);
     setConfirmingUpgrade(false);
   }

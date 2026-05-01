@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { saveTechniques, loadTechniques, saveOwnedTechniques, loadOwnedTechniques } from '../systems/save';
 import { getTechnique, getTechniqueBaseId } from '../data/techniques';
 import { trackTechniqueDrop } from '../analytics';
+import AudioManager from '../audio/AudioManager';
 
 // One-shot save migration flag. The 2026-04-26 secret-tech overhaul switched
 // the technique system from procedural generation + passive pool to a fixed
@@ -108,13 +109,16 @@ export default function useTechniques({ extraSlots = 0 } = {}) {
     setSlots(prev => {
       const next = [...prev];
       if (techniqueId === null) {
+        if (next[slotIndex] === null) return prev;
         next[slotIndex] = null;
+        try { AudioManager.playSfx('item_unequip'); } catch {}
       } else {
         // Remove the same technique from any other slot first
         for (let i = 0; i < next.length; i++) {
           if (i !== slotIndex && next[i] === techniqueId) next[i] = null;
         }
         next[slotIndex] = techniqueId;
+        try { AudioManager.playSfx('item_equip'); } catch {}
       }
       saveTechniques(next);
       return next;
@@ -123,9 +127,11 @@ export default function useTechniques({ extraSlots = 0 } = {}) {
 
   const unequip = useCallback((slotIndex) => {
     setSlots(prev => {
+      if (prev[slotIndex] === null) return prev;
       const next = [...prev];
       next[slotIndex] = null;
       saveTechniques(next);
+      try { AudioManager.playSfx('item_unequip'); } catch {}
       return next;
     });
   }, []);

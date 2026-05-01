@@ -12,6 +12,7 @@ import {
   MAX_UPGRADE_BY_RARITY, effectiveAffixValue, upgradeCost, rollUpgradeBonus, isBonusLevel,
 } from '../data/artefactUpgrades';
 import { trackArtefactEquipped, trackSetCompleted, trackFirstTime } from '../analytics';
+import AudioManager from '../audio/AudioManager';
 
 const SAVE_KEY = 'mai_artefacts';
 // Bump whenever the artefact schema changes in a way existing saves can't
@@ -189,6 +190,7 @@ export default function useArtefacts() {
       equipped[slotId] = uid;
       const next = { ...prev, equipped };
       save(next);
+      try { AudioManager.playSfx('item_equip'); } catch {}
       try {
         const inst = prev.owned.find(o => o.uid === uid);
         const cat  = inst ? ARTEFACTS_BY_ID[inst.catalogueId] : null;
@@ -215,9 +217,11 @@ export default function useArtefacts() {
   const unequip = useCallback((slotId) => {
     setState(prev => {
       const equipped = { ...prev.equipped };
+      if (!equipped[slotId]) return prev;
       delete equipped[slotId];
       const next = { ...prev, equipped };
       save(next);
+      try { AudioManager.playSfx('item_unequip'); } catch {}
       return next;
     });
   }, []);

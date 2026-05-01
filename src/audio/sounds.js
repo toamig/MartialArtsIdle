@@ -106,6 +106,18 @@ const _BGM_BASE = {
     loop:   true,
     volume: 1.0,
   },
+  /** Ambient exploration — Worlds + Production screens. */
+  world: {
+    src:    [`${BASE}audio/bgm/world.ogg`, `${BASE}audio/bgm/world.mp3`],
+    loop:   true,
+    volume: 1.0,
+  },
+  /** Soft ambient — meta / management screens (Character, Build, Collection, Reincarnation). */
+  menu: {
+    src:    [`${BASE}audio/bgm/menu.ogg`, `${BASE}audio/bgm/menu.mp3`],
+    loop:   true,
+    volume: 0.6,
+  },
 };
 
 export const BGM_TRACKS = Object.fromEntries(
@@ -117,17 +129,10 @@ export const BGM_TRACKS = Object.fromEntries(
 const _SFX_BASE = {
   // ── UI ────────────────────────────────────────────────────────────────────
   ui_click:       { src: sfx('ui_click',       'ogg', 'mp3') },
-  ui_open:        { src: sfx('ui_open',        'ogg', 'mp3') },
-  ui_close:       { src: sfx('ui_close',       'ogg', 'mp3') },
-  ui_confirm:     { src: sfx('ui_confirm',     'ogg', 'mp3') },
   ui_notify:      { src: sfx('ui_notify',      'ogg', 'mp3') },
 
   // ── Cultivation ───────────────────────────────────────────────────────────
-  cult_qi_pulse:       { src: sfx('cult_qi_pulse',       'ogg', 'mp3') },
   cult_breakthrough:   { src: sfx('cult_breakthrough',   'ogg', 'mp3') },
-  cult_channel_start:  { src: sfx('cult_channel_start',  'ogg', 'mp3') },
-  cult_channel_end:    { src: sfx('cult_channel_end',    'ogg', 'mp3') },
-  cult_boost_active:   { src: sfx('cult_boost_active',   'ogg', 'mp3') },
 
   // ── Combat ────────────────────────────────────────────────────────────────
   // Hit / dodge / death sounds use 3-variant pools so consecutive triggers don't
@@ -160,7 +165,6 @@ const _SFX_BASE = {
   item_equip:          { src: sfx('item_equip',          'ogg', 'mp3') },
   item_unequip:        { src: sfx('item_unequip',        'ogg', 'mp3') },
   item_pill_use:       { src: sfx('item_pill_use',       'ogg', 'mp3') },
-  item_refine:         { src: sfx('item_refine',         'ogg', 'mp3') },
 };
 
 export const SFX = Object.fromEntries(

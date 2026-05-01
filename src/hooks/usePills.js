@@ -25,6 +25,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PILLS_BY_ID } from '../data/pills';
 import { trackPillConsumed, trackPillCrafted, trackPillDiscovered, trackFirstTime } from '../analytics';
+import AudioManager from '../audio/AudioManager';
 
 const SAVE_KEY = 'mai_pills';
 const PERM_KEY = 'mai_permanent_pill_stats';
@@ -155,6 +156,7 @@ export default function usePills() {
       return { ...prev, [pillId]: true };
     });
     try { trackPillCrafted(pillId, n); } catch {}
+    try { AudioManager.playSfx('item_craft'); } catch {}
   }, []);
 
   const isDiscovered = useCallback((pillId) => !!discoveredPills[pillId], [discoveredPills]);
@@ -191,6 +193,7 @@ export default function usePills() {
 
     if (!didConsume) return null;
 
+    try { AudioManager.playSfx('item_pill_use'); } catch {}
     try {
       trackPillConsumed(pillId, pill.effects?.length ?? 0);
       trackFirstTime('PillConsumed');
