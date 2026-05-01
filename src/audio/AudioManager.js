@@ -40,6 +40,11 @@ let pendingBgmTrackId = null;
 // BGM preload cache: { [trackId]: Howl } — keyed instances ready to play
 const bgmCache    = {};
 
+// Pending fade-out stop timers, keyed by Howl instance. Tracked so that a
+// rapid back-to-back navigation (e.g. home → menu → home in <500ms) can
+// cancel a stale stop before it kills the newly-restarted playback.
+const pendingStops = new WeakMap();
+
 // SFX cache: { [sfxId]: Howl[] } — one Howl per variation. Single-sample
 // sounds collapse to a one-element array; variation pools (combat hits) hold
 // one Howl per uploaded sample so playSfx can pick at random.
@@ -101,11 +106,27 @@ function _createBgmHowl(trackId) {
   });
 }
 
+function _cancelPendingStop(howl) {
+  if (!howl) return;
+  const id = pendingStops.get(howl);
+  if (id) {
+    clearTimeout(id);
+    pendingStops.delete(howl);
+  }
+}
+
 function _fadeOutAndStop(howl, duration = BGM_FADE_OUT) {
   if (!howl || !howl.playing()) return;
+  // Cancel any prior pending stop on this howl before scheduling a new one,
+  // otherwise we'd leak timers (and a stale one could fire mid-fade).
+  _cancelPendingStop(howl);
   howl.fade(howl.volume(), 0, duration);
   // Stop only — no unload so preloaded/cached instances stay buffered and can replay instantly
-  setTimeout(() => { try { howl.stop(); } catch {} }, duration + 50);
+  const timerId = setTimeout(() => {
+    try { howl.stop(); } catch {}
+    pendingStops.delete(howl);
+  }, duration + 50);
+  pendingStops.set(howl, timerId);
 }
 
 // ── SFX ───────────────────────────────────────────────────────────────────────
@@ -195,6 +216,13 @@ const AudioManager = {
 
     bgmHowl   = howl;
     bgmPaused = false;
+
+    // The cached howl for this track may have lingering internal sounds from
+    // a prior fade-out that's still in progress (rapid screen toggles). Cancel
+    // its scheduled stop and flush any active sounds before play(), otherwise
+    // play() stacks a second concurrent sound and the user hears doubled audio.
+    _cancelPendingStop(howl);
+    try { howl.stop(); } catch {}
 
     const targetVol = effectiveBgmVol();
     howl.play();
