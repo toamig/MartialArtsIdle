@@ -120,9 +120,12 @@ function _getSfxHowls(sfxId) {
   }
 
   // Normalise: variation pool wins over single src; otherwise wrap src.
-  const variations = config.variations?.length
+  // Defensive filter: drop null / malformed slots (Designer pads partially-
+  // uploaded pools with null so the JSON keeps stable indexes).
+  const rawVariations = config.variations?.length
     ? config.variations
     : (config.src ? [{ src: config.src }] : []);
+  const variations = rawVariations.filter(v => v && Array.isArray(v.src) && v.src.length > 0);
 
   if (variations.length === 0) {
     console.warn(`[Audio] SFX "${sfxId}" has no audio sources`);

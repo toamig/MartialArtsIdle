@@ -63,7 +63,11 @@ function _applySfx(id, cfg) {
     ...(patch.volume !== undefined && { volume: patch.volume }),
   };
   if (patch.variations !== undefined) {
-    next.variations = patch.variations.map(v => ({ ...v, src: _prefixSrc(v.src ?? []) }));
+    // Designer pads unfilled slots with null so indexes stay stable in the JSON;
+    // strip those (and any malformed entries) before the manager sees them.
+    next.variations = patch.variations
+      .filter(v => v && Array.isArray(v.src) && v.src.length > 0)
+      .map(v => ({ ...v, src: _prefixSrc(v.src) }));
     delete next.src;
   } else if (patch.src !== undefined) {
     next.src = _prefixSrc(patch.src);
