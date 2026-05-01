@@ -16,6 +16,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2334336722369393"
      crossorigin="anonymous"></script>
+  <script>
+    /* Block iOS double-tap-and-hold magnifier loupe.
+       CSS user-select:none kills the long-press loupe but iOS treats
+       double-tap-then-hold as a separate gesture that ignores it.
+       Fix: preventDefault the second touchstart in a double-tap window
+       (which is when iOS decides to spawn the loupe), then synthesize a
+       click so the game still receives the tap. */
+    (function () {
+      var lastEnd = 0;
+      document.addEventListener('touchend', function (e) {
+        if (e.touches.length === 0) lastEnd = Date.now();
+      }, { passive: true, capture: true });
+
+      document.addEventListener('touchstart', function (e) {
+        if (Date.now() - lastEnd > 300) return;
+        var tg = e.target;
+        if (tg && tg.matches && tg.matches('input, textarea, [contenteditable]')) return;
+        e.preventDefault();
+        var t = e.touches[0];
+        var hit = document.elementFromPoint(t.clientX, t.clientY);
+        if (hit) hit.dispatchEvent(new MouseEvent('click', {
+          bubbles: true, cancelable: true,
+          clientX: t.clientX, clientY: t.clientY, view: window
+        }));
+      }, { passive: false, capture: true });
+    })();
+  </script>
   </head>
   <body>
     <div id="rotate-overlay" role="alert">
