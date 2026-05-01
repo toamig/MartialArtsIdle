@@ -47,12 +47,20 @@ const SFX_GROUPS = [
     ],
   },
   {
-    label: 'Gathering & Mining',
+    label: 'Qi Crystal',
     items: [
-      { id: 'gather_collect', label: 'Gather',       desc: 'Herb / material collected (common)' },
-      { id: 'gather_rare',    label: 'Gather Rare',  desc: 'Rare item found during gathering'   },
-      { id: 'mine_strike',    label: 'Mine Strike',  desc: 'Pickaxe strike during mining'       },
-      { id: 'mine_collect',   label: 'Mine Collect', desc: 'Ore collected'                      },
+      { id: 'crystal_tap',       label: 'Crystal Tap',     desc: 'Tap on the crystal to collect the reservoir (Crystal Click spark)' },
+      { id: 'crystal_tap_max',   label: 'Crystal Tap Max', desc: 'Tap when the reservoir is at full cap — bigger payoff feel'        },
+      { id: 'crystal_evolve',    label: 'Crystal Evolve',  desc: 'Crystal jumps to a new visual tier after a feed'                   },
+      { id: 'divine_qi_collect', label: 'Divine Qi',       desc: 'Tap a Divine Qi orb to collect its burst'                          },
+    ],
+  },
+  {
+    label: 'Qi Sparks',
+    items: [
+      { id: 'spark_pattern_tap',   label: 'Pattern Tap',   desc: 'Tap a numbered dot in Pattern Clicking — pitch rises with each note' },
+      { id: 'spark_pattern_clear', label: 'Pattern Clear', desc: 'Last dot tapped successfully — full clear payoff'                    },
+      { id: 'spark_pattern_miss',  label: 'Pattern Miss',  desc: 'Pattern Clicking failed — wrong dot or window expired'               },
     ],
   },
   {

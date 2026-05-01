@@ -104,11 +104,16 @@ const _SFX_BASE = {
   combat_defeat:       { src: sfx('combat_defeat',       'ogg', 'mp3') },
   combat_enemy_die:    { src: sfx('combat_enemy_die',    'ogg', 'mp3') },
 
-  // ── Gathering / Mining ────────────────────────────────────────────────────
-  gather_collect:      { src: sfx('gather_collect',      'ogg', 'mp3') },
-  gather_rare:         { src: sfx('gather_rare',         'ogg', 'mp3') },
-  mine_strike:         { src: sfx('mine_strike',         'ogg', 'mp3') },
-  mine_collect:        { src: sfx('mine_collect',        'ogg', 'mp3') },
+  // ── Qi Crystal ────────────────────────────────────────────────────────────
+  crystal_tap:         { src: sfx('crystal_tap',         'ogg', 'mp3') },
+  crystal_tap_max:     { src: sfx('crystal_tap_max',     'ogg', 'mp3') },
+  crystal_evolve:      { src: sfx('crystal_evolve',      'ogg', 'mp3') },
+  divine_qi_collect:   { src: sfx('divine_qi_collect',   'ogg', 'mp3') },
+
+  // ── Qi Sparks ─────────────────────────────────────────────────────────────
+  spark_pattern_tap:   { src: sfx('spark_pattern_tap',   'ogg', 'mp3') },
+  spark_pattern_clear: { src: sfx('spark_pattern_clear', 'ogg', 'mp3') },
+  spark_pattern_miss:  { src: sfx('spark_pattern_miss',  'ogg', 'mp3') },
 
   // ── Items / Crafting ──────────────────────────────────────────────────────
   item_craft:          { src: sfx('item_craft',          'ogg', 'mp3') },

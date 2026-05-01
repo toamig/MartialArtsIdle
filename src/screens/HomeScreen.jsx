@@ -14,6 +14,7 @@ import { FEATURE_GATES } from '../data/featureGates';
 import { useEventQueue, useBlockingPresence } from '../contexts/EventQueueContext';
 import { QI_SPARK_BY_ID } from '../data/qiSparks';
 import WORLDS from '../data/worlds';
+import AudioManager from '../audio/AudioManager';
 const BASE = import.meta.env.BASE_URL;
 const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -160,6 +161,7 @@ function BreakthroughBanner({ event, onDone }) {
   onDoneRef.current = onDone;
   useEffect(() => {
     if (!event) return undefined;
+    try { AudioManager.playSfx('cult_breakthrough'); } catch {}
     const id = setTimeout(() => onDoneRef.current(), 2600);
     return () => clearTimeout(id);
   }, [event]); // onDone intentionally excluded — captured via ref so re-renders don't reset the timer
@@ -226,6 +228,7 @@ function CrystalEvolutionOverlay({ event, onDone }) {
   // Play phase → settled (after transition finishes)
   useEffect(() => {
     if (!event || phase !== 'playing') return undefined;
+    try { AudioManager.playSfx('crystal_evolve'); } catch {}
     const id = setTimeout(() => setPhase('settled'), CES_PLAY_MS);
     return () => clearTimeout(id);
   }, [event, phase]);
@@ -406,11 +409,16 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
   const { level, crystalQiBonus } = crystal;
   const tier = getCrystalTier(level);
   const { glowA, glowB } = CRYSTAL_COLORS[tier];
+  const handleCrystalTap = mechanicOn ? () => {
+    const isFull = anchorRef.current?.classList.contains('home-crystal-full');
+    try { AudioManager.playSfx(isFull ? 'crystal_tap_max' : 'crystal_tap'); } catch {}
+    onCollect();
+  } : undefined;
   return (
     <div
       ref={anchorRef}
       className={`home-crystal-anchor${hidden ? ' home-crystal-anchor-lifted' : ''}${mechanicOn ? ' home-crystal-tappable' : ''}`}
-      onClick={mechanicOn ? onCollect : undefined}
+      onClick={handleCrystalTap}
     >
       <div className="home-crystal-float" style={{ '--cg-a': glowA, '--cg-b': glowB }}>
         <span className="home-crystal-tag">Qi Crystal</span>
@@ -524,6 +532,7 @@ function PatternDot({ dot, isCurrent, isTapped, onClick }) {
       style={{ left: `${dot.x}%`, top: `${dot.y}%` }}
       onClick={onClick}
       data-num={dot.num}
+      data-sfx="none"
       aria-label={`Pattern dot ${dot.num}`}
     >
       {dot.num}
@@ -550,6 +559,7 @@ function PatternClickOverlay({ pattern, onComplete, rateRef, spawnVFX }) {
       if (phaseRef.current !== 'active') return;
       phaseRef.current = 'fail';
       setPhase('fail');
+      try { AudioManager.playSfx('spark_pattern_miss'); } catch {}
       setTimeout(() => onComplete(false), 600);
     }, pattern.windowMs);
     return () => clearTimeout(t);
@@ -574,11 +584,16 @@ function PatternClickOverlay({ pattern, onComplete, rateRef, spawnVFX }) {
   const handleDotClick = useCallback((dot) => {
     if (phaseRef.current !== 'active') return;
     if (dot.num !== nextNumRef.current) return; // wrong order — ignore tap
+    // Rising-pitch tap — each note steps up a fixed amount so longer patterns
+    // stay singable. 1.0 → 1.4 across 5 dots feels like an osu-style climb.
+    const tapRate = 1 + (dot.num - 1) * 0.1;
+    try { AudioManager.playSfx('spark_pattern_tap', { rate: tapRate }); } catch {}
     setTapped(prev => { const n = new Set(prev); n.add(dot.num); return n; });
     const isLast = dot.num === pattern.dots.length;
     if (isLast) {
       phaseRef.current = 'success';
       setPhase('success');
+      try { AudioManager.playSfx('spark_pattern_clear'); } catch {}
       // VFX floater at the last dot's screen position
       if (spawnVFX && rateRef) {
         try {
@@ -755,6 +770,7 @@ function DivineQiOrb({ orb, onResolve, spawnVFX, rateRef }) {
     if (phaseRef.current !== 'alive' && phaseRef.current !== 'expiring') return;
     phaseRef.current = 'collected';
     setPhase('collected');
+    try { AudioManager.playSfx('divine_qi_collect'); } catch {}
     // Spawn "+N Qi" floater at the orb's screen position, offset into
     // fighter-stage coordinates (where the VFX layer lives).
     if (spawnVFX && rateRef) {
@@ -779,6 +795,7 @@ function DivineQiOrb({ orb, onResolve, spawnVFX, rateRef }) {
       className={`divine-qi-orb divine-qi-orb-${phase}`}
       style={{ left: `${orb.x}%`, top: `${orb.y}%` }}
       onClick={handleClick}
+      data-sfx="none"
       aria-label="Divine Qi orb"
     />
   );

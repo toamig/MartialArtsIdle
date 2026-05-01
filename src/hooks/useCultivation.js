@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import REALMS, { getMajorBreakthroughRate, getPeakBreakthroughRate, isMajorTransition, isPeakTransition } from '../data/realms';
-import AudioManager from '../audio/AudioManager';
 // DEFAULT_LAW / THREE_HARMONY_MANUAL no longer auto-seed the library.
 // Laws enter via major-breakthrough offers (see useLawOffers).
 import { saveGame, loadGame } from '../systems/save';
@@ -449,7 +448,8 @@ export default function useCultivation() {
           qiRef.current = 0;
           ascendedRef.current = true;
           setAscended(true);
-          try { AudioManager.playSfx('cult_breakthrough'); } catch {}
+          // Sound is played by BreakthroughBanner on mount so it stays in sync
+          // with the reveal animation (avoids firing during the qi update tick).
           try {
             trackRealmAdvance(indexRef.current, REALMS[indexRef.current].name, false, true);
             trackAscension(indexRef.current);
@@ -500,7 +500,7 @@ export default function useCultivation() {
             try { trackQiSink(REALMS[fromIndex].cost, 'Breakthrough', `r${nextIndex}`); } catch {}
             try { trackFirstTime('RealmAdvance', nextIndex); } catch {}
             if (isMajor || isPeak) {
-              try { AudioManager.playSfx('cult_breakthrough'); } catch {}
+              // Sound is played by BreakthroughBanner on mount (HomeScreen.jsx).
               try {
                 trackRealmAdvance(nextIndex, REALMS[nextIndex].name, isPeak, false);
                 if (isMajor) trackFirstTime('RealmMajor', nextIndex);

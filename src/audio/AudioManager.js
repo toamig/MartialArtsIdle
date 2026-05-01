@@ -197,8 +197,10 @@ const AudioManager = {
    * Play a one-shot SFX.
    *
    * @param {string} sfxId - Key from SFX (e.g. 'ui_click', 'combat_hit_player')
+   * @param {{ rate?: number }} [opts] - rate=1 is normal speed; >1 raises pitch.
+   *   Used for things like the Pattern Click osu-style rising-pitch taps.
    */
-  playSfx(sfxId) {
+  playSfx(sfxId, { rate } = {}) {
     if (!unlocked) return;
 
     const vol = effectiveSfxVol();
@@ -207,9 +209,10 @@ const AudioManager = {
     const howl = _getSfxHowl(sfxId);
     if (!howl) return;
 
-    // Set howl-group volume BEFORE play() — setting per-id volume on the id
+    // Set howl-group volume + rate BEFORE play() — setting these on the id
     // returned by play() races when the howl is still loading (id is a placeholder).
     howl.volume(vol);
+    if (rate != null) howl.rate(rate);
     howl.play();
   },
 
