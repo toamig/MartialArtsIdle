@@ -2770,7 +2770,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .home-hold-hint {
   display: block;
   align-self: center;
-  z-index: 2;
+  /* position:relative so z-index actually applies (was a no-op before). */
+  position: relative;
+  z-index: 3;
   padding: 3px 12px;
   border-radius: 14px;
   background: rgba(0, 0, 0, 0.55);
@@ -2802,7 +2804,11 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   align-items:    center;
   align-self:     center;
   gap:            5px;
-  z-index:        2;
+  /* z-index needs a positioned element to apply; isolate also pins our
+     stacking context above .home-fighter-stage::before's escaping z:-1. */
+  position:       relative;
+  z-index:        3;
+  isolation:      isolate;
   pointer-events: none;
   animation:      home-cf-meter-in 0.25s ease-out;
 }
@@ -2816,12 +2822,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-weight:    600;
   letter-spacing: 0.02em;
   color:          #ffffff;
-  /* Pill backing matches .home-hold-hint so the swap feels cohesive and the
-     text reads cleanly over the busy home-scene art. */
+  /* Pill backing — bumped to 0.78 alpha so the cultivator aura's purple/blue
+     tint can't bleed through and muddy the glyphs when boost is active. */
   padding:        3px 10px;
   border-radius:  10px;
-  background:     rgba(0, 0, 0, 0.62);
-  border:         1px solid rgba(255, 255, 255, 0.10);
+  background:     rgba(0, 0, 0, 0.78);
+  border:         1px solid rgba(255, 255, 255, 0.12);
   /* Layered shadow keeps glyph edges defined when particles or boost VFX
      bleed behind the pill. */
   text-shadow:
@@ -2834,8 +2840,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   position:      relative;
   width:         180px;
   height:        6px;
-  background:    rgba(0, 0, 0, 0.55);
-  border:        1px solid rgba(255, 255, 255, 0.10);
+  background:    rgba(0, 0, 0, 0.78);
+  border:        1px solid rgba(255, 255, 255, 0.12);
   border-radius: 3px;
 }
 
