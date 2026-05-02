@@ -6,16 +6,17 @@ import { setLanguage, SUPPORTED_LANGUAGES } from '../i18n';
 import { loadGraphics, applyGraphics, saveGraphics } from '../systems/graphics';
 import useAudio from '../audio/useAudio';
 import { trackSettingChanged } from '../analytics';
+import {
+  RESOLUTIONS,
+  getResolution,
+  saveResolution,
+  applyResolution,
+  isResolutionSelectorAvailable,
+} from '../systems/desktopResolution';
 
 const RENDERING_MODES = [
   { mode: 'auto',      label: 'Smooth',    sub: 'bilinear',  icon: '〜' },
   { mode: 'pixelated', label: 'Crisp',     sub: 'pixelated', icon: '▦' },
-];
-
-const RESOLUTIONS = [
-  { mode: 'mobile',       label: 'Mobile',      sub: '420 × 860' },
-  { mode: 'windowed720p', label: '720p',         sub: '1280 × 720' },
-  { mode: 'fullscreen',   label: 'Fullscreen',   sub: 'native' },
 ];
 
 function SegmentedControl({ options, value, onChange }) {
@@ -92,15 +93,16 @@ function SettingsScreen({ onClose }) {
   const [message,     setMessage]     = useState(null);
   const [confirmWipe, setConfirmWipe] = useState(false);
 
-  const isDesktop = !!window.electronBridge?.setResolution;
-  const [resolution, setResolutionState] = useState(
-    () => localStorage.getItem('resolution') ?? 'mobile'
-  );
+  // Show the resolution selector on any desktop runtime: Steam (Electron),
+  // Google Play Games for PC, or a desktop browser. See platform.js.
+  const isDesktop = isResolutionSelectorAvailable();
+  const [resolution, setResolutionState] = useState(getResolution);
 
-  const applyResolution = (mode) => {
-    localStorage.setItem('resolution', mode);
+  const handleResolutionChange = (mode) => {
+    saveResolution(mode);
     setResolutionState(mode);
-    window.electronBridge.setResolution(mode);
+    applyResolution(mode);
+    try { trackSettingChanged('resolution', mode); } catch {}
   };
 
   const [graphics, setGraphicsState] = useState(loadGraphics);
@@ -226,7 +228,7 @@ function SettingsScreen({ onClose }) {
               <OptionGrid
                 options={RESOLUTIONS}
                 value={resolution}
-                onChange={applyResolution}
+                onChange={handleResolutionChange}
               />
             </div>
           )}

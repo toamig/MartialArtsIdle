@@ -11,6 +11,7 @@ import DailyBonusModal from './components/DailyBonusModal';
 import { useDailyBonus } from './hooks/useDailyBonus';
 import EternalTreeScreen from './components/EternalTreeScreen';
 import { initAds } from './ads/adService';
+import { restoreResolution } from './systems/desktopResolution';
 import {
   initAnalytics,
   trackReincarnation,
@@ -110,12 +111,10 @@ function AppInner() {
   useEffect(() => { preloadImages(PLAYER_SPRITE_SRCS); }, []);
   useEffect(() => { applyGraphics(loadGraphics()); }, []);
 
-  // Apply saved resolution preset on desktop startup
-  useEffect(() => {
-    if (!window.electronBridge?.setResolution) return;
-    const saved = localStorage.getItem('resolution') ?? 'mobile';
-    window.electronBridge.setResolution(saved);
-  }, []);
+  // Apply saved resolution preset on startup. Works for Steam (Electron IPC
+  // resizes the OS window) and for Android-on-PC / browser desktop (CSS
+  // body class letterboxes the inner game viewport). See desktopResolution.js.
+  useEffect(() => { restoreResolution(); }, []);
 
   const cultivation     = useCultivation();
   const inventory       = useInventory();
