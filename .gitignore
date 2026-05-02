@@ -30,3 +30,35 @@ tmp
 
 # Discord bot
 discord/
+
+# ── Release secrets — NEVER commit these ────────────────────────────────────
+# Android signing keystore + passwords
+android/*.jks
+android/*.keystore
+android/keystore.properties
+# Google Play Developer API credentials
+android/play-service-account.json
+play-service-account.json
+*.service-account.json
+
+# ── Build artefacts that shouldn't be in source control ────────────────────
+# Bundletool downloaded by scripts/install_to_emulator.sh on first run.
+tools/
+
+# Third-party installers / binaries dropped into public/store/ during dev.
+# Marketing assets (screenshots, feature graphic) ARE allowed via the
+# explicit unignore lines below.
+public/store/*.exe
+public/store/*.msi
+public/store/*.zip
+public/store/*.dmg
+
+# One-shot dev helper used to prime localStorage during screenshot capture.
+# Not part of the shipped app — keeping it local keeps dist/ clean.
+public/_screenshot_setup.html
+
+# ── Obsidian per-session UI state — noisy and not portable across machines ──
+# Tracked vault settings/plugins/templates stay; only ephemeral state ignored.
+obsidian/.obsidian/graph.json
+obsidian/.obsidian/workspace.json
+obsidian/.obsidian/workspace-mobile.json
