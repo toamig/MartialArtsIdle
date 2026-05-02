@@ -13,9 +13,17 @@ android {
         applicationId "com.martialartsidle.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 6
+        versionName "1.0.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        // Native ABIs included in the AAB. Google Play distributes only the
+        // matching ABI to each device, so total user download stays small.
+        //   arm64-v8a   — modern phones (default)
+        //   armeabi-v7a — older phones (default)
+        //   x86_64      — Google Play Games for PC (avoids ARM-translation tax)
+        ndk {
+            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+        }
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
