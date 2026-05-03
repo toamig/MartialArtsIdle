@@ -23,8 +23,29 @@ function format(value) {
  * exploit: when true, prepends an EXPLOIT! flash above the number and
  * applies a brighter gradient + larger drop-shadow via the
  * `damage-number-exploit` CSS class.
+ *
+ * dodge: when true, renders a yellow "DODGED" label instead of a number.
+ * Used to surface passive dodge rolls + null-on-heal events that were
+ * previously only logged.
  */
-export default function DamageNumber({ value, color = 'gold', fontSize = 14, exploit = false, style }) {
+export default function DamageNumber({ value, color = 'gold', fontSize = 14, exploit = false, dodge = false, style }) {
+  if (dodge) {
+    return (
+      <div
+        className="damage-number damage-number-dodge"
+        style={{
+          ...style,
+          fontSize,
+          fontFamily: "'Press Start 2P', monospace",
+          lineHeight: 1,
+          color: '#facc15',
+        }}
+      >
+        DODGED
+      </div>
+    );
+  }
+
   const isGold = color === 'gold';
   const baseColor = isGold ? '#f5c842' : '#ef4444';
   const cls = `damage-number damage-number-${color}${exploit ? ' damage-number-exploit' : ''}`;

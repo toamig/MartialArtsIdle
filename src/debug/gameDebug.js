@@ -291,6 +291,32 @@ export function initDebug(hooksRef) {
       console.log(`[debug] +${count} random laws (realm ${realmIndex})`);
     },
 
+    /**
+     * Grant + activate a synthetic Trans-tier water law whose Trans slot
+     * carries `l_water_sanctuary`. Used to verify "no damage after heal"
+     * end-to-end: equip a Heal tech, start a fight, fire the heal, watch
+     * the next enemy hit get nullified.
+     */
+    giveSanctuaryLaw() {
+      const cult = g().cultivation;
+      const law = {
+        id: `dbg_sanctuary_${Date.now()}`,
+        name: 'Debug — Sanctuary',
+        element: 'water',
+        types: ['water'],
+        rarity: 'Transcendent',
+        realmRequirement: 0,
+        realmRequirementLabel: 'Tempered Body',
+        flavour: 'Debug-only law for verifying water_sanctuary trigger.',
+        cultivationSpeedMult: 1,
+        uniques: { Transcendent: { id: 'l_water_sanctuary', value: 1 } },
+      };
+      cult.addOwnedLaw(law);
+      cult.setActiveLaw?.(law.id);
+      console.log(`[debug] Granted + activated Sanctuary law (id ${law.id})`);
+      console.log('[debug] Now equip a Heal tech, start a fight, fire heal — next enemy hit should be nullified');
+    },
+
     // ── Qi Crystal ────────────────────────────────────────────────────────
 
     /** Set the crystal to a specific level. */
@@ -636,6 +662,7 @@ export function initDebug(hooksRef) {
       console.log('  gd.giveExpose(quality="Iron")    — grant the first Expose of that quality');
       console.log('  gd.giveArtefacts(n=10, world=1)  — generate n random artefacts');
       console.log('  gd.giveLaws(n=10)                — generate n random laws');
+      console.log('  gd.giveSanctuaryLaw()            — grant a water_sanctuary law for trigger testing');
       console.log('%cBalance audits', 'font-weight: bold');
       console.log('  gd.testDrops()                — audit gather/mine vs combat drop distributions');
       console.log('  gd.simPlay()                  — compare playthrough times across A/B/C rebirth scenarios');

@@ -209,6 +209,7 @@ export default function CombatStage({
       const id = ++dmgId;
       const isEnemy = side === 'enemy';
       const exploit = !!opts.exploit;
+      const dodge   = !!opts.dodge;
       const x = isEnemy
         ? `${62 + Math.random() * 16}%`
         : `${8  + Math.random() * 14}%`;
@@ -224,7 +225,9 @@ export default function CombatStage({
         : Math.round(Math.min(44, 20 + Math.log10(ratio) * 8));
       // Exploit hits get a 50% size boost so they read as a clear payoff.
       if (exploit) fontSize = Math.round(fontSize * 1.5);
-      setDmgNums(prev => [...prev, { id, value, x, y, isEnemy, fontSize, exploit }]);
+      // DODGED overlay is fixed-size and yellow — bypasses the value-based curve.
+      if (dodge) fontSize = 18;
+      setDmgNums(prev => [...prev, { id, value, x, y, isEnemy, fontSize, exploit, dodge }]);
       const t = setTimeout(
         () => setDmgNums(prev => prev.filter(n => n.id !== id)),
         1300,
@@ -400,6 +403,7 @@ export default function CombatStage({
           color={n.isEnemy ? 'gold' : 'red'}
           fontSize={n.fontSize}
           exploit={n.exploit}
+          dodge={n.dodge}
           style={{ left: n.x, top: n.y }}
         />
       ))}

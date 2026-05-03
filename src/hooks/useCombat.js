@@ -557,55 +557,9 @@ export default function useCombat() {
           dispatchTrigger(s, 'on_default_attack_fired', { amount: dmg });
         }
 
-        // ── First ready technique fires alongside the basic attack ──────────
-        for (let i = 0; i < s.cds.length; i++) {
-          if (!isFinite(s.cds[i]) || s.cds[i] > 0) continue;
-          const tech = s.equipped[i];
-          if (!tech) continue;
-          // Heal threshold: 50% by default; sets can override to 70%.
-          const healThreshold = s.stats?.setFlags?.healAt70Pct ? 0.7 : 0.5;
-          if (tech.type === 'Heal' && s.pHp > s.pMaxHp * healThreshold) continue;
-          // Forbid flags from earth ("cannot heal") / metal-set ("cannot use attack secrets") / fire ("cannot exploit" — handled in rollExploit).
-          if (tech.type === 'Heal'   && (s.stats?.lawFlags?.cannotHeal || s.stats?.setFlags?.cannotHeal)) continue;
-          if (tech.type === 'Attack' && (s.stats?.lawFlags?.cannotUseAttackSecrets || s.stats?.setFlags?.cannotUseAttackSecrets)) continue;
-
-          s.castCount += 1;
-          const freeEvery   = s.stats?.freeCastEvery ?? 0;
-          const freeChance  = s.stats?.freeCastChancePct ?? 0;
-          const isFreeTree  = freeEvery > 0 && (s.castCount % freeEvery === 0);
-          const isFreeChance = freeChance > 0 && Math.random() * 100 < freeChance;
-          const isFree = isFreeTree || isFreeChance;
-          s.cds[i]   = isFree ? 0 : s.maxCds[i];
-
-          // Set 4-piece "Secret techniques trigger twice" — fires the same tech
-          // a second time. Restricted to Attack and gated off free casts (a
-          // free Attack cast would otherwise yield two free hits).
-          const doubleAttack = !!s.stats?.setFlags?.doubleSecretTechs
-            && tech.type === 'Attack'
-            && !isFree;
-          const fires = doubleAttack ? 2 : 1;
-
-          // Killing-stride: only Attack-type casts can consume + apply it, so
-          // a Heal/Defend/Dodge/Expose firing first doesn't waste the stride.
-          const consumesStride = tech.type === 'Attack';
-          const stride = consumesStride ? strideRef.current : false;
-          if (consumesStride) strideRef.current = false;
-
-          for (let cast = 0; cast < fires; cast++) {
-            executeTechnique(s, tech, i, logs, { stride: cast === 0 ? stride : false });
-          }
-
-          // Any technique cast clears the fire double-strike buff.
-          if (s.defaultAttackBuff) s.defaultAttackBuff = null;
-
-          // Tech-cast SFX layered on top of the basic-attack hit.
-          try {
-            AudioManager.playSfx(tech.type === 'Heal' ? 'combat_heal' : 'combat_technique');
-          } catch {}
-
-          dispatchTrigger(s, 'on_secret_tech_fired', { sourceIdx: i, techType: tech.type });
-          break; // one technique per turn
-        }
+        // 2026-05-03: secret techniques are no longer auto-triggered. The
+        // player taps a tech slot to fire (see triggerTech below). The basic
+        // attack stays automatic; the player turn is now just that.
 
         s._triggerLog = null;
 
@@ -697,192 +651,187 @@ export default function useCombat() {
       }
 
       // ── Enemy's turn ─────────────────────────────────────────────────────
+      // 2026-05-03: damage application is DEFERRED to the animation-end
+      // callback. The enemy_turn entry only kicks the animation; the actual
+      // dodge roll + hit resolve happens in enemyAnimDoneRef. This gives the
+      // player a real window to tap a Heal (or other reactive tech) and have
+      // its `on_heal` trigger fire BEFORE the deferred dodge check reads
+      // `nextEnemyHitNulls`. This is what makes water_sanctuary actually
+      // null the in-flight hit.
       if (s.turnPhase === 'enemy_turn') {
         s.turnPhase = 'waiting_enemy';
-        const logs = [];
-        s._triggerLog = logs;
 
-        const dodgeActive = s.dodgeBuff.attacksLeft > 0;
-        const defActive   = s.defBuff.attacksLeft   > 0;
-
-        // Dodge chance: passive dodge_chance stat + transient bonus (wood
-        // "+5% per hit taken") − dodge-stack reduction (wood "Each dodge
-        // increases defenses by 30%, decreases dodge chance by 5%") + any
-        // active Defend-buff dodge bonus (transcendent_defend_2).
-        const reductionPerStack = s.stats?.lawFlags?.dodgeReductionPerDodgeStack ?? 0;
-        const defBuffDodgeBonus = (defActive && s.defBuff.dodgeChance)
-          ? s.defBuff.dodgeChance * 100
-          : 0;
-        const passiveDodgePct = Math.max(0,
-          (s.stats?.dodgeChancePct ?? 0)
-          + (s.transientDodgeBonus ?? 0)
-          - (s.dodgeStacks ?? 0) * reductionPerStack
-          + defBuffDodgeBonus
-        );
-        const passiveDodgeRoll = passiveDodgePct > 0 && Math.random() * 100 < passiveDodgePct;
-
-        // ── Pre-hit consumed flags ─────────────────────────────────────────
-        const nullsThisHit = s.nextEnemyHitNulls === true;
-        if (nullsThisHit) s.nextEnemyHitNulls = false;
-
-        const finishDodge = () => {
-          try { AudioManager.playSfx('combat_dodge'); } catch {}
-          s.lastDodgeAtSec = performance.now() / 1000;
-          s.transientDodgeBonus = 0;
-          // Wood Set 2 4-piece: dodging arms the next attack as a guaranteed exploit.
-          if (s.stats?.setFlags?.nextHitExploitOnDodge) s.nextHitExploit = true;
-          // Wood Set 3 4-piece: take % of hit damage even on dodge.
-          const partialPct = s.stats?.setFlags?.dodgeTakesPctDamage ?? 0;
-          if (partialPct > 0) {
-            const partial = Math.max(1, Math.floor(s.eAtk * partialPct));
-            s.pHp = Math.max(0, s.pHp - partial);
-            logs.push({ msg: `Partial hit on dodge → −${partial} HP`, kind: 'damage-taken' });
-          }
-          // ── Dodge-buff special effects (snapshot at cast, only fire while active) ──
-          if (dodgeActive) {
-            const db = s.dodgeBuff;
-            if (db.onSuccessHealPct && s.pHp < s.pMaxHp) {
-              const heal = Math.max(1, Math.floor(s.pMaxHp * db.onSuccessHealPct));
-              s.pHp = Math.min(s.pMaxHp, s.pHp + heal);
-              logs.push({ msg: `Dodge → +${heal.toLocaleString()} HP`, kind: 'heal' });
-            }
-            if (db.onSuccessDamageBuffPct) {
-              s.nextAttackDamageBuffPct = db.onSuccessDamageBuffPct;
-            }
-            if (db.reflectDamage) {
-              // Reflect the would-have-been raw enemy attack (post incoming-
-              // dmg-reduction, pre-armour) — flavourful "perfect counter".
-              const reduction = resolveIncomingDmgReduction(s);
-              const reflected = Math.max(1, Math.floor(s.eAtk * (1 - reduction)));
-              s.eHp = Math.max(0, s.eHp - reflected);
-              logs.push({ msg: `Dodge reflect → ${reflected.toLocaleString()} dmg`, kind: 'damage' });
-            }
-            if (db.onSuccessCdReductionPct) {
-              for (let j = 0; j < s.cds.length; j++) {
-                if (isFinite(s.cds[j])) {
-                  s.cds[j] = Math.max(0, s.cds[j] * (1 - db.onSuccessCdReductionPct));
-                }
-              }
-            }
-          }
-          // Heal-armed next-dodge heal (gold_heal_1 Mending Ward).
-          if (s.nextDodgeHealsPct > 0 && s.pHp < s.pMaxHp) {
-            const heal = Math.max(1, Math.floor(s.pMaxHp * s.nextDodgeHealsPct));
-            s.pHp = Math.min(s.pMaxHp, s.pHp + heal);
-            logs.push({ msg: `Mending Ward → +${heal.toLocaleString()} HP`, kind: 'heal' });
-            s.nextDodgeHealsPct = 0;
-          }
-          dispatchTrigger(s, 'on_dodge_success', {});
-        };
-
-        if (nullsThisHit) {
-          logs.push({ msg: 'Enemy attack — nullified by healing!', kind: 'dodge' });
-          finishDodge();
-        } else if (dodgeActive && Math.random() < s.dodgeBuff.chance) {
-          logs.push({ msg: 'Enemy attack — dodged!', kind: 'dodge' });
-          finishDodge();
-        } else if (passiveDodgeRoll) {
-          logs.push({ msg: 'Enemy attack — dodged!', kind: 'dodge' });
-          finishDodge();
-        } else if (debugRef.current.godMode) {
-          logs.push({ msg: 'Enemy attack — negated (god mode)', kind: 'dodge' });
-        } else {
-          // ── Enemy hit lands ─────────────────────────────────────────────
-          const defMult = defActive ? s.defBuff.mult : 1;
-          const playerDef     = s.stats?.defense ?? 0;
-          const playerElemDef = s.stats?.elementalDefense ?? 0;
-          const exposeMaxDef  = !!(s.exposeBuff?.enemyAttacksLeft > 0
-                                   && s.exposeBuff.useMaxDefense);
-          let rawDef;
-          if (exposeMaxDef) {
-            // transcendent_expose_2: ignore the enemy's damage type and use
-            // whichever player defense is larger.
-            rawDef = Math.max(playerDef, playerElemDef);
-          } else if (s.eDmgType === 'elemental') {
-            rawDef = playerElemDef;
-          } else {
-            rawDef = playerDef;
-          }
-          // Dodge-buff defense multiplier (iron_dodge_2 Coiled Sway).
-          const dodgeBuffDefMult = (dodgeActive && s.dodgeBuff.defMult) ? s.dodgeBuff.defMult : 1;
-          // Wood law: defense is added per dodge stack (each stack = +30% defense).
-          const stackDefMult = 1 + (s.dodgeStacks ?? 0) * (s.stats?.lawFlags?.defensePerDodgeStack ?? 0);
-          // Wood Set 3 2-piece: defense scales with dodge chance (defense × (1 + dodgePct)).
-          const dodgeScale = s.stats?.setFlags?.defenseScalesWithDodgeChance
-            ? 1 + ((s.stats?.dodgeChancePct ?? 0) / 100)
-            : 1;
-          const armour = Math.max(1, rawDef * defMult * dodgeBuffDefMult * stackDefMult * dodgeScale);
-          const reduction = resolveIncomingDmgReduction(s);
-          const preDef = Math.max(1, Math.floor(s.eAtk * (1 - reduction)));
-          const postArmour = applyArmourMitigation(preDef, armour);
-          const mitigated = Math.max(0, preDef - postArmour);
-
-          let dmg = postArmour;
-          if (s.stats?.undyingResolve && !s.undyingUsed && postArmour >= s.pHp) {
-            dmg = Math.max(0, s.pHp - 1);
-            s.undyingUsed = true;
-            logs.push({ msg: 'UNDYING RESOLVE — survived at 1 HP!', kind: 'system' });
-          }
-          s.pHp = Math.max(0, s.pHp - dmg);
-          try { AudioManager.playSfx('combat_hit_enemy'); } catch {}
-
-          // Earth law: "50% of mitigated damage is retaliated"
-          const retaliatePct = s.stats?.lawFlags?.retaliateMitigatedPct ?? 0;
-          if (retaliatePct > 0 && mitigated > 0) {
-            const reflected = Math.max(1, Math.floor(mitigated * retaliatePct));
-            s.eHp = Math.max(0, s.eHp - reflected);
-            logs.push({ msg: `Retaliated ${reflected} dmg`, kind: 'damage' });
-          }
-          // Earth Set 3 4-piece: heal a fraction of mitigated damage.
-          const bleedPct = s.stats?.setFlags?.defenseModsBleedToHealthPct ?? 0;
-          if (bleedPct > 0 && mitigated > 0 && s.pHp < s.pMaxHp) {
-            const heal = Math.max(1, Math.floor(mitigated * bleedPct));
-            s.pHp = Math.min(s.pMaxHp, s.pHp + heal);
-            logs.push({ msg: `Stoneblood → +${heal} HP from mitigation`, kind: 'heal' });
-          }
-          // Defend-buff mitigated heal (gold_defend_1 Stoneblood Mantle).
-          if (defActive && s.defBuff.mitigatedHealPct && mitigated > 0 && s.pHp < s.pMaxHp) {
-            const heal = Math.max(1, Math.floor(mitigated * s.defBuff.mitigatedHealPct));
-            s.pHp = Math.min(s.pMaxHp, s.pHp + heal);
-            logs.push({ msg: `Defend buff → +${heal.toLocaleString()} HP from mitigation`, kind: 'heal' });
-          }
-          // Expose-buff mitigated reflect (gold_expose_2 Rebound Shroud).
-          if (s.exposeBuff?.enemyAttacksLeft > 0
-              && s.exposeBuff.mitigatedReflectPct
-              && mitigated > 0) {
-            const reflected = Math.max(1, Math.floor(mitigated * s.exposeBuff.mitigatedReflectPct));
-            s.eHp = Math.max(0, s.eHp - reflected);
-            logs.push({ msg: `Rebound → ${reflected.toLocaleString()} dmg`, kind: 'damage' });
-          }
-          // Reflect (carried over from existing lifesteal/reflect plumbing).
-          const reflectPct = s.stats?.reflectPct ?? 0;
-          if (reflectPct > 0 && dmg > 0) {
-            const reflected = Math.max(1, Math.floor(dmg * reflectPct / 100));
-            s.eHp = Math.max(0, s.eHp - reflected);
-            logs.push({ msg: `Reflected ${reflected} dmg`, kind: 'damage' });
-          }
-          logs.push({ msg: `Enemy hits → −${dmg.toLocaleString()} HP`, kind: 'damage-taken' });
-          spawnDamageNumberRef.current?.(dmg, 'player', s.pMaxHp);
-
-          // Wood law: dodge stack reset on hit; transient bonus may also reset.
-          if (s.stats?.lawFlags?.dodgeStackResetOnHit) s.dodgeStacks = 0;
-
-          dispatchTrigger(s, 'on_hit_taken', { amount: dmg });
-        }
-
-        if (dodgeActive) s.dodgeBuff.attacksLeft -= 1;
-        if (defActive)   s.defBuff.attacksLeft   -= 1;
-        tickExposeBuff(s, 'enemy');
-
-        s._triggerLog = null;
-        if (logs.length) setLog(prev => [...logs, ...prev].slice(0, MAX_LOG));
-
+        // Kick the animation immediately (no log line until resolve — keeps
+        // the combat log honest about cause/effect timing).
         enemyAttackRef.current?.();
-        patchBars(s);
 
         enemyAnimDoneRef.current = () => {
           const s2 = stateRef.current;
           if (s2.phase !== 'fighting') return;
+
+          const logs = [];
+          s2._triggerLog = logs;
+
+          const dodgeActive = s2.dodgeBuff.attacksLeft > 0;
+          const defActive   = s2.defBuff.attacksLeft   > 0;
+
+          const reductionPerStack = s2.stats?.lawFlags?.dodgeReductionPerDodgeStack ?? 0;
+          const defBuffDodgeBonus = (defActive && s2.defBuff.dodgeChance)
+            ? s2.defBuff.dodgeChance * 100
+            : 0;
+          const passiveDodgePct = Math.max(0,
+            (s2.stats?.dodgeChancePct ?? 0)
+            + (s2.transientDodgeBonus ?? 0)
+            - (s2.dodgeStacks ?? 0) * reductionPerStack
+            + defBuffDodgeBonus
+          );
+          const passiveDodgeRoll = passiveDodgePct > 0 && Math.random() * 100 < passiveDodgePct;
+
+          // ── Pre-hit consumed flags ─ now read AFTER any mid-anim techs ──
+          const nullsThisHit = s2.nextEnemyHitNulls === true;
+          if (nullsThisHit) s2.nextEnemyHitNulls = false;
+
+          const finishDodge = () => {
+            try { AudioManager.playSfx('combat_dodge'); } catch {}
+            s2.lastDodgeAtSec = performance.now() / 1000;
+            s2.transientDodgeBonus = 0;
+            // Visual feedback: a yellow "DODGED" floating overlay on the
+            // player side so passive dodge isn't silent.
+            spawnDamageNumberRef.current?.(0, 'player', s2.pMaxHp, { dodge: true });
+            if (s2.stats?.setFlags?.nextHitExploitOnDodge) s2.nextHitExploit = true;
+            const partialPct = s2.stats?.setFlags?.dodgeTakesPctDamage ?? 0;
+            if (partialPct > 0) {
+              const partial = Math.max(1, Math.floor(s2.eAtk * partialPct));
+              s2.pHp = Math.max(0, s2.pHp - partial);
+              logs.push({ msg: `Partial hit on dodge → −${partial} HP`, kind: 'damage-taken' });
+            }
+            if (dodgeActive) {
+              const db = s2.dodgeBuff;
+              if (db.onSuccessHealPct && s2.pHp < s2.pMaxHp) {
+                const heal = Math.max(1, Math.floor(s2.pMaxHp * db.onSuccessHealPct));
+                s2.pHp = Math.min(s2.pMaxHp, s2.pHp + heal);
+                logs.push({ msg: `Dodge → +${heal.toLocaleString()} HP`, kind: 'heal' });
+              }
+              if (db.onSuccessDamageBuffPct) {
+                s2.nextAttackDamageBuffPct = db.onSuccessDamageBuffPct;
+              }
+              if (db.reflectDamage) {
+                const reduction = resolveIncomingDmgReduction(s2);
+                const reflected = Math.max(1, Math.floor(s2.eAtk * (1 - reduction)));
+                s2.eHp = Math.max(0, s2.eHp - reflected);
+                logs.push({ msg: `Dodge reflect → ${reflected.toLocaleString()} dmg`, kind: 'damage' });
+              }
+              if (db.onSuccessCdReductionPct) {
+                for (let j = 0; j < s2.cds.length; j++) {
+                  if (isFinite(s2.cds[j])) {
+                    s2.cds[j] = Math.max(0, s2.cds[j] * (1 - db.onSuccessCdReductionPct));
+                  }
+                }
+              }
+            }
+            if (s2.nextDodgeHealsPct > 0 && s2.pHp < s2.pMaxHp) {
+              const heal = Math.max(1, Math.floor(s2.pMaxHp * s2.nextDodgeHealsPct));
+              s2.pHp = Math.min(s2.pMaxHp, s2.pHp + heal);
+              logs.push({ msg: `Mending Ward → +${heal.toLocaleString()} HP`, kind: 'heal' });
+              s2.nextDodgeHealsPct = 0;
+            }
+            dispatchTrigger(s2, 'on_dodge_success', {});
+          };
+
+          if (nullsThisHit) {
+            logs.push({ msg: 'Enemy attack — nullified by healing!', kind: 'dodge' });
+            finishDodge();
+          } else if (dodgeActive && Math.random() < s2.dodgeBuff.chance) {
+            logs.push({ msg: 'Enemy attack — dodged!', kind: 'dodge' });
+            finishDodge();
+          } else if (passiveDodgeRoll) {
+            logs.push({ msg: 'Enemy attack — dodged!', kind: 'dodge' });
+            finishDodge();
+          } else if (debugRef.current.godMode) {
+            logs.push({ msg: 'Enemy attack — negated (god mode)', kind: 'dodge' });
+            spawnDamageNumberRef.current?.(0, 'player', s2.pMaxHp, { dodge: true });
+          } else {
+            // ── Enemy hit lands ─────────────────────────────────────────
+            const defMult = defActive ? s2.defBuff.mult : 1;
+            const playerDef     = s2.stats?.defense ?? 0;
+            const playerElemDef = s2.stats?.elementalDefense ?? 0;
+            const exposeMaxDef  = !!(s2.exposeBuff?.enemyAttacksLeft > 0
+                                     && s2.exposeBuff.useMaxDefense);
+            let rawDef;
+            if (exposeMaxDef) {
+              rawDef = Math.max(playerDef, playerElemDef);
+            } else if (s2.eDmgType === 'elemental') {
+              rawDef = playerElemDef;
+            } else {
+              rawDef = playerDef;
+            }
+            const dodgeBuffDefMult = (dodgeActive && s2.dodgeBuff.defMult) ? s2.dodgeBuff.defMult : 1;
+            const stackDefMult = 1 + (s2.dodgeStacks ?? 0) * (s2.stats?.lawFlags?.defensePerDodgeStack ?? 0);
+            const dodgeScale = s2.stats?.setFlags?.defenseScalesWithDodgeChance
+              ? 1 + ((s2.stats?.dodgeChancePct ?? 0) / 100)
+              : 1;
+            const armour = Math.max(1, rawDef * defMult * dodgeBuffDefMult * stackDefMult * dodgeScale);
+            const reduction = resolveIncomingDmgReduction(s2);
+            const preDef = Math.max(1, Math.floor(s2.eAtk * (1 - reduction)));
+            const postArmour = applyArmourMitigation(preDef, armour);
+            const mitigated = Math.max(0, preDef - postArmour);
+
+            let dmg = postArmour;
+            if (s2.stats?.undyingResolve && !s2.undyingUsed && postArmour >= s2.pHp) {
+              dmg = Math.max(0, s2.pHp - 1);
+              s2.undyingUsed = true;
+              logs.push({ msg: 'UNDYING RESOLVE — survived at 1 HP!', kind: 'system' });
+            }
+            s2.pHp = Math.max(0, s2.pHp - dmg);
+            try { AudioManager.playSfx('combat_hit_enemy'); } catch {}
+
+            const retaliatePct = s2.stats?.lawFlags?.retaliateMitigatedPct ?? 0;
+            if (retaliatePct > 0 && mitigated > 0) {
+              const reflected = Math.max(1, Math.floor(mitigated * retaliatePct));
+              s2.eHp = Math.max(0, s2.eHp - reflected);
+              logs.push({ msg: `Retaliated ${reflected} dmg`, kind: 'damage' });
+            }
+            const bleedPct = s2.stats?.setFlags?.defenseModsBleedToHealthPct ?? 0;
+            if (bleedPct > 0 && mitigated > 0 && s2.pHp < s2.pMaxHp) {
+              const heal = Math.max(1, Math.floor(mitigated * bleedPct));
+              s2.pHp = Math.min(s2.pMaxHp, s2.pHp + heal);
+              logs.push({ msg: `Stoneblood → +${heal} HP from mitigation`, kind: 'heal' });
+            }
+            if (defActive && s2.defBuff.mitigatedHealPct && mitigated > 0 && s2.pHp < s2.pMaxHp) {
+              const heal = Math.max(1, Math.floor(mitigated * s2.defBuff.mitigatedHealPct));
+              s2.pHp = Math.min(s2.pMaxHp, s2.pHp + heal);
+              logs.push({ msg: `Defend buff → +${heal.toLocaleString()} HP from mitigation`, kind: 'heal' });
+            }
+            if (s2.exposeBuff?.enemyAttacksLeft > 0
+                && s2.exposeBuff.mitigatedReflectPct
+                && mitigated > 0) {
+              const reflected = Math.max(1, Math.floor(mitigated * s2.exposeBuff.mitigatedReflectPct));
+              s2.eHp = Math.max(0, s2.eHp - reflected);
+              logs.push({ msg: `Rebound → ${reflected.toLocaleString()} dmg`, kind: 'damage' });
+            }
+            const reflectPct = s2.stats?.reflectPct ?? 0;
+            if (reflectPct > 0 && dmg > 0) {
+              const reflected = Math.max(1, Math.floor(dmg * reflectPct / 100));
+              s2.eHp = Math.max(0, s2.eHp - reflected);
+              logs.push({ msg: `Reflected ${reflected} dmg`, kind: 'damage' });
+            }
+            logs.push({ msg: `Enemy hits → −${dmg.toLocaleString()} HP`, kind: 'damage-taken' });
+            spawnDamageNumberRef.current?.(dmg, 'player', s2.pMaxHp);
+
+            if (s2.stats?.lawFlags?.dodgeStackResetOnHit) s2.dodgeStacks = 0;
+
+            dispatchTrigger(s2, 'on_hit_taken', { amount: dmg });
+          }
+
+          if (dodgeActive) s2.dodgeBuff.attacksLeft -= 1;
+          if (defActive)   s2.defBuff.attacksLeft   -= 1;
+          tickExposeBuff(s2, 'enemy');
+
+          s2._triggerLog = null;
+          if (logs.length) setLog(prev => [...logs, ...prev].slice(0, MAX_LOG));
+
+          patchBars(s2);
+
           if (s2.pHp <= 0) {
             s2.phase = 'lost';
             setLog(prev => [{ msg: 'You were defeated…', kind: 'system' }, ...prev].slice(0, MAX_LOG));
@@ -917,6 +866,84 @@ export default function useCombat() {
     setLog([]);
   }, []);
 
+  /**
+   * Player taps a tech slot — fires the technique IMMEDIATELY (no waiting
+   * for "your turn"). Works in any phase while a fight is running. The cast
+   * applies all effects, sets the cooldown, dispatches triggers, plays the
+   * animation, and patches the HP/CD bars. Returns true if it fired,
+   * false otherwise (slot empty, on cooldown, blocked by a law/set flag,
+   * or no fight active).
+   */
+  const triggerTech = useCallback((slotIdx) => {
+    const s = stateRef.current;
+    if (s.phase !== 'fighting') return false;
+    if (slotIdx < 0 || slotIdx >= s.cds.length) return false;
+    if (!isFinite(s.cds[slotIdx]) || s.cds[slotIdx] > 0) return false;
+    const tech = s.equipped[slotIdx];
+    if (!tech) return false;
+    // HP-threshold gate REMOVED 2026-05-03 — player decides when to heal.
+    // Forbid flags from earth ("cannot heal") / metal-set ("cannot use attack
+    // secrets") / fire ("cannot exploit" — handled in rollExploit).
+    if (tech.type === 'Heal'   && (s.stats?.lawFlags?.cannotHeal || s.stats?.setFlags?.cannotHeal)) return false;
+    if (tech.type === 'Attack' && (s.stats?.lawFlags?.cannotUseAttackSecrets || s.stats?.setFlags?.cannotUseAttackSecrets)) return false;
+
+    const logs = [];
+    s._triggerLog = logs;
+
+    s.castCount += 1;
+    const freeEvery   = s.stats?.freeCastEvery ?? 0;
+    const freeChance  = s.stats?.freeCastChancePct ?? 0;
+    const isFreeTree  = freeEvery > 0 && (s.castCount % freeEvery === 0);
+    const isFreeChance = freeChance > 0 && Math.random() * 100 < freeChance;
+    const isFree = isFreeTree || isFreeChance;
+    s.cds[slotIdx] = isFree ? 0 : s.maxCds[slotIdx];
+
+    // Set 4-piece "Secret techniques trigger twice" — Attack only, gated off free.
+    const doubleAttack = !!s.stats?.setFlags?.doubleSecretTechs
+      && tech.type === 'Attack'
+      && !isFree;
+    const fires = doubleAttack ? 2 : 1;
+
+    const consumesStride = tech.type === 'Attack';
+    const stride = consumesStride ? strideRef.current : false;
+    if (consumesStride) strideRef.current = false;
+
+    for (let cast = 0; cast < fires; cast++) {
+      executeTechnique(s, tech, slotIdx, logs, { stride: cast === 0 ? stride : false });
+    }
+
+    // Any technique cast clears the fire double-strike buff.
+    if (s.defaultAttackBuff) s.defaultAttackBuff = null;
+
+    try {
+      AudioManager.playSfx(tech.type === 'Heal' ? 'combat_heal' : 'combat_technique');
+    } catch {}
+
+    dispatchTrigger(s, 'on_secret_tech_fired', { sourceIdx: slotIdx, techType: tech.type });
+
+    s._triggerLog = null;
+    if (logs.length) setLog(prev => [...logs, ...prev].slice(0, MAX_LOG));
+
+    // Visual: the player attack-pose animation flashes for tech casts too.
+    playerAttackRef.current?.();
+    patchBars(s);
+
+    // If the technique kills the enemy, transition to victory immediately
+    // (deferred-resolve enemy turns won't have a chance to fire).
+    if (s.eHp <= 0 && s.phase === 'fighting') {
+      // Defer to the existing playerAnimDoneRef victory path by re-invoking
+      // it. We construct a minimal callback identical to the player_turn
+      // win flow. For brevity, just set phase = 'won' here; the tick loop
+      // will handle the rest via the existing 'won' phase exit.
+      s.phase = 'won';
+      if (s.stats?.killingStride) strideRef.current = true;
+      dispatchTrigger(s, 'on_enemy_killed', {});
+      setLog(prev => [{ msg: 'Enemy defeated! Victory!', kind: 'system' }, ...prev].slice(0, MAX_LOG));
+      setPhase('won');
+    }
+    return true;
+  }, []);
+
   return {
     phase,
     enemy,
@@ -925,6 +952,7 @@ export default function useCombat() {
     stopFight,
     debugRef,
     startFight,
+    triggerTech,
     pHpBarRef,
     eHpBarRef,
     cdBarRefs,

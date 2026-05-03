@@ -104,25 +104,15 @@ function CombatScreen({ cultivation, techniques, combat, inventory, artefacts = 
     // zone 6 enemies always have high HP regardless of who is fighting them.
     const regionIndex = region?.minRealmIndex ?? 0;
 
-    // Pull the full stat bundle if the caller provided one (so artefact /
-    // pill / law modifiers contribute to exploit_chance + exploit_attack_mult).
-    // Falls back to the simple law-derived stats if getFullStats is missing.
+    // Pull the full stat bundle and pass the WHOLE THING through. Pre-2026-05-03
+    // this filtered to a hand-picked subset (health / damageStats / exploit / law)
+    // and silently dropped lawTriggers, lawFlags, setFlags, dodgeChancePct,
+    // pillEffectMult, freeCastEvery, killingStride and roughly 30 other fields.
+    // useCombat reads any of those via `s.stats?.foo`, so missing fields meant
+    // dodges never rolled, water_sanctuary never nulled hits, etc.
     const full = getFullStats?.();
     const playerStats = full
-      ? {
-          health:        full.health,
-          essence:       0, soul: 0, body: 0,
-          lawElement:    full.lawElement,
-          // Full law + category damage stats are required for calcDamage's
-          // per-technique damage-category split. Basic attack ignores the
-          // law now (realm-scaled placeholder formula).
-          law:           full.law,
-          damageStats:   full.damageStats,
-          exploitChance: full.exploitChance,
-          exploitMult:   full.exploitMult,
-          buffDurationMult: full.buffDurationMult,
-          buffEffectMult:   full.buffEffectMult,
-        }
+      ? { ...full, essence: 0, soul: 0, body: 0 }
       : {
           health:     100,
           essence:    0, soul: 0, body: 0,
@@ -217,16 +207,29 @@ function CombatScreen({ cultivation, techniques, combat, inventory, artefacts = 
         {/* Combat log */}
         <CombatLog log={log} />
 
-        {/* Technique icons */}
+        {/* Technique icons — TAP-TO-CAST. 2026-05-03: techniques no longer
+            auto-trigger; the player taps the slot to fire instantly. The
+            cooldown clock visualises the wait; on cooldown, taps no-op. */}
         <div className="tech-icon-grid">
           {equippedTechniques.filter(Boolean).map((tech, i) => {
             const color = TYPE_COLOR[tech.type];
             const techName = tGame(`techniques.${tech.id}.name`, { defaultValue: tech.name });
+            const onTap = () => {
+              if (!isFighting) return;
+              const fired = combat.triggerTech?.(i);
+              // No feedback toast on miss — the cooldown clock is the
+              // affordance signal. Could add a flash later if needed.
+              return fired;
+            };
             return (
-              <div
+              <button
+                type="button"
                 key={i}
-                className="tech-icon-slot"
+                className="tech-icon-slot tech-icon-slot-btn"
                 style={{ '--tech-color': color, '--type-bg': `${color}22` }}
+                onClick={onTap}
+                disabled={!isFighting}
+                aria-label={`Cast ${techName}`}
               >
                 <div className="tech-icon-top">
                   <img
@@ -245,7 +248,7 @@ function CombatScreen({ cultivation, techniques, combat, inventory, artefacts = 
                 <span className="tech-icon-name">
                   {techName}
                 </span>
-              </div>
+              </button>
             );
           })}
         </div>
