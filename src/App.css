@@ -4048,6 +4048,100 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   transform: translate(-50%, -50%) scale(0.88);
 }
 
+/* ── Pattern Click — opt-in prompt ──────────────────────────────────────────
+   Small clickable spark that appears in the scene before the dot minigame.
+   Visually distinct from the divine-qi orb (violet/rare palette + tri-dot
+   glyph) so players read it as "incoming pattern" rather than free qi. */
+.pc-prompt {
+  position:      absolute;
+  width:         52px;
+  height:        52px;
+  border-radius: 50%;
+  transform:     translate(-50%, -50%);
+  border:        none;
+  padding:       0;
+  cursor:        pointer;
+  background: radial-gradient(
+    ellipse at 40% 35%,
+    #ede9fe 0%,
+    #c4b5fd 26%,
+    #7c3aed 62%,
+    rgba(76, 29, 149, 0) 100%
+  );
+  box-shadow:
+    0 0 16px 5px rgba(167, 139, 250, 0.7),
+    0 0 36px 11px rgba(124, 58, 237, 0.4);
+  animation: pc-prompt-spawn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+             pc-prompt-pulse 2.0s ease-in-out 0.35s infinite;
+  z-index:       60;
+  touch-action:  manipulation;
+  display:       flex;
+  align-items:   center;
+  justify-content: center;
+}
+
+.pc-prompt-glyph {
+  position:        relative;
+  width:           24px;
+  height:          24px;
+  display:         block;
+}
+.pc-prompt-dot {
+  position:        absolute;
+  width:           6px;
+  height:          6px;
+  border-radius:   50%;
+  background:      #fff;
+  box-shadow:      0 0 4px rgba(255, 255, 255, 0.85);
+}
+.pc-prompt-dot-1 { left: 50%;  top: 0;    transform: translateX(-50%); }
+.pc-prompt-dot-2 { left: 0;    bottom: 0; }
+.pc-prompt-dot-3 { right: 0;   bottom: 0; }
+
+@keyframes pc-prompt-spawn {
+  from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+@keyframes pc-prompt-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1);    box-shadow: 0 0 16px 5px rgba(167, 139, 250, 0.7), 0 0 36px 11px rgba(124, 58, 237, 0.4); }
+  50%       { transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 24px 8px rgba(196, 181, 253, 0.85), 0 0 50px 16px rgba(139, 92, 246, 0.55); }
+}
+
+/* Final 2s — urgent flash so the player notices the closing window. */
+.pc-prompt-expiring {
+  animation: pc-prompt-spawn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+             pc-prompt-urgent 0.45s ease-in-out 0.35s infinite;
+}
+@keyframes pc-prompt-urgent {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.88); opacity: 0.65; }
+  50%       { transform: translate(-50%, -50%) scale(1.06); opacity: 1.00; }
+}
+
+/* Accepted — small burst, then handoff to the minigame overlay. */
+.pc-prompt-collected {
+  pointer-events: none;
+  animation: pc-prompt-collect 0.28s ease-out forwards !important;
+}
+@keyframes pc-prompt-collect {
+  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+  60%  { transform: translate(-50%, -50%) scale(1.4); opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+}
+
+/* Ignored — fade out without ceremony. */
+.pc-prompt-expired {
+  pointer-events: none;
+  animation: pc-prompt-expire 0.28s ease-in forwards !important;
+}
+@keyframes pc-prompt-expire {
+  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+}
+
+.pc-prompt:active {
+  transform: translate(-50%, -50%) scale(0.88);
+}
+
 /* ── Pattern Clicking mechanic ──────────────────────────────────────────── */
 
 /* Fixed overlay — constrained to the playable area between TopBar (top) and

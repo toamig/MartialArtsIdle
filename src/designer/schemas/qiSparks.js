@@ -11,7 +11,7 @@
  * (1–5 ladder per mechanic). The five mechanic families ship at:
  *   crystal_click       — rate, capMinutes
  *   divine_qi           — spawnIntervalMs, windowMs, burstSeconds, doubleOrb, rateMult, rateBuffMs
- *   pattern_click       — dotCount, spawnIntervalMs, windowMs, burstSeconds, doubleOnFullClear, rateMult, rateBuffMs
+ *   pattern_click       — dotCount, spawnIntervalMs, promptWindowMs, windowMs, burstSeconds, doubleOnFullClear, rateMult, rateBuffMs
  *   consecutive_focus   — holdMs, bonus, deepMeditation
  */
 
@@ -108,6 +108,7 @@ export default [
 
   // divine_qi / pattern_click
   { key: 'spawnIntervalMs', type: 'number', label: 'Spawn interval (ms)', min: 1000, step: 1000 },
+  { key: 'promptWindowMs',  type: 'number', label: 'Prompt window (ms, pattern_click opt-in)', min: 1000, step: 500 },
   { key: 'windowMs',        type: 'number', label: 'Tap window (ms)',     min: 1000, step: 500 },
   { key: 'burstSeconds',    type: 'number', label: 'Burst (seconds of qi)', min: 1, step: 1 },
   { key: 'dotCount',        type: 'number', label: 'Dot count (pattern_click)', min: 1, step: 1 },

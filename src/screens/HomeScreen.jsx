@@ -728,13 +728,88 @@ function PatternClickOverlay({ pattern, onComplete, rateRef, spawnVFX }) {
 }
 
 /**
+ * Opt-in prompt for the Pattern Click minigame. Mirrors the lifecycle of a
+ * divine-qi orb (alive → expiring → collected/expired) but routes the click
+ * through `onAccept` instead of granting qi directly. The minigame opens only
+ * if the player taps the prompt before its window closes.
+ */
+function PatternClickPrompt({ prompt, onAccept, onDismiss }) {
+  const [phase, setPhase] = useState('alive');
+  const phaseRef = useRef('alive');
+
+  // Switch to 'expiring' for the final 2s — visual urgency cue.
+  useEffect(() => {
+    const totalMs    = prompt.promptWindowMs;
+    const expiringIn = totalMs - 2000;
+    if (expiringIn <= 0) { phaseRef.current = 'expiring'; setPhase('expiring'); return; }
+    const t = setTimeout(() => { phaseRef.current = 'expiring'; setPhase('expiring'); }, expiringIn);
+    return () => clearTimeout(t);
+  }, [prompt.promptWindowMs]);
+
+  // Auto-expire when the full window closes.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (phaseRef.current === 'collected') return;
+      phaseRef.current = 'expired';
+      setPhase('expired');
+    }, prompt.promptWindowMs);
+    return () => clearTimeout(t);
+  }, [prompt.promptWindowMs]);
+
+  // Notify parent after exit animation so the unmount feels non-jarring.
+  useEffect(() => {
+    if (phase !== 'expired' && phase !== 'collected') return;
+    const t = setTimeout(() => {
+      if (phase === 'collected') onAccept();
+      else                       onDismiss();
+    }, 280);
+    return () => clearTimeout(t);
+  }, [phase, onAccept, onDismiss]);
+
+  const handleClick = () => {
+    if (phaseRef.current !== 'alive' && phaseRef.current !== 'expiring') return;
+    phaseRef.current = 'collected';
+    setPhase('collected');
+    try { AudioManager.playSfx('spark_pattern_tap'); } catch {}
+  };
+
+  return (
+    <button
+      className={`pc-prompt pc-prompt-${phase}`}
+      style={{ left: `${prompt.x}%`, top: `${prompt.y}%` }}
+      onClick={handleClick}
+      data-sfx="none"
+      aria-label="Pattern spark — tap to begin"
+    >
+      <span className="pc-prompt-glyph" aria-hidden="true">
+        <span className="pc-prompt-dot pc-prompt-dot-1" />
+        <span className="pc-prompt-dot pc-prompt-dot-2" />
+        <span className="pc-prompt-dot pc-prompt-dot-3" />
+      </span>
+    </button>
+  );
+}
+
+/**
  * Manages the Pattern Click minigame lifecycle.
  * Reads the active pattern_click spark; self-schedules spawns with ±30% jitter.
- * Returns { activePattern, completePattern }.
+ *
+ * Two-phase opt-in flow:
+ *   1. Spawn fires → an `activePrompt` appears (small clickable spark in the
+ *      scene). Player taps to opt in, OR ignores it for `promptWindowMs` to
+ *      let it pass — no penalty.
+ *   2. On opt-in, the prompt resolves into `activePattern` and the existing
+ *      dot-tap minigame begins with `windowMs` to clear.
+ *
+ * The shared spark-attention coordinator is held from prompt-spawn through
+ * minigame-resolve, so divine_qi cannot spawn on top of an active pattern.
+ *
+ * Returns { activePrompt, openPrompt, dismissPrompt, activePattern, completePattern }.
  */
 function usePatternClick({ activeSparks, rateRef, qiRef }) {
+  const [activePrompt,  setActivePrompt]  = useState(null);
   const [activePattern, setActivePattern] = useState(null);
-  const activeRef = useRef(false);
+  const activeRef = useRef(false); // true between prompt-spawn and resolve
 
   const config = useMemo(() => {
     const inst = activeSparks?.find(s => {
@@ -746,19 +821,27 @@ function usePatternClick({ activeSparks, rateRef, qiRef }) {
   const configRef = useRef(config);
   useEffect(() => { configRef.current = config; }, [config]);
 
-  const spawnPattern = useCallback(() => {
-    if (activeRef.current) return; // don't overlap with an active pattern
+  // Releases the shared coordinator iff we still own it (idempotent).
+  const releaseAttention = useCallback(() => {
+    if (activeRef.current) {
+      activeRef.current = false;
+      releaseSparkAttention('pattern');
+    }
+  }, []);
+
+  const spawnPrompt = useCallback(() => {
+    if (activeRef.current) return; // already showing a prompt or playing
     const cfg = configRef.current;
     if (!cfg) return;
+    if (!tryClaimSparkAttention('pattern')) return; // divine_qi has the floor
     activeRef.current = true;
-    setActivePattern({
-      id:                Date.now(),
-      dots:              generateDotPositions(cfg.dotCount),
-      windowMs:          cfg.windowMs,
-      burstSeconds:      cfg.burstSeconds,
-      doubleOnFullClear: cfg.doubleOnFullClear ?? false,
-      rateMult:          cfg.rateMult  ?? 2.0,
-      rateBuffMs:        cfg.rateBuffMs ?? 15_000,
+    // Place the prompt anywhere within the safe scene zone — same bounds as
+    // a single divine_qi orb so the eye-line is consistent.
+    setActivePrompt({
+      id:             Date.now(),
+      x:              12 + Math.random() * 76,
+      y:              22 + Math.random() * 45,
+      promptWindowMs: cfg.promptWindowMs ?? 6_000,
     });
   }, []);
 
@@ -770,15 +853,41 @@ function usePatternClick({ activeSparks, rateRef, qiRef }) {
       const cfg = configRef.current;
       if (!cfg) return;
       const delay = cfg.spawnIntervalMs * (0.7 + Math.random() * 0.6);
-      timer = setTimeout(() => { spawnPattern(); arm(); }, delay);
+      timer = setTimeout(() => { spawnPrompt(); arm(); }, delay);
     };
     // First spawn after a brief "discovery" delay capped at 15s
     timer = setTimeout(
-      () => { spawnPattern(); arm(); },
+      () => { spawnPrompt(); arm(); },
       Math.min(config.spawnIntervalMs * 0.5, 15_000),
     );
-    return () => clearTimeout(timer);
-  }, [config?.id, spawnPattern]); // re-arm if tier changes
+    return () => {
+      clearTimeout(timer);
+      releaseAttention(); // unmount mid-prompt → don't lock divine_qi out
+    };
+  }, [config?.id, spawnPrompt, releaseAttention]); // re-arm if tier changes
+
+  /** Player accepted the prompt — open the dot minigame. */
+  const openPrompt = useCallback(() => {
+    const cfg = configRef.current;
+    if (!cfg) { setActivePrompt(null); releaseAttention(); return; }
+    setActivePrompt(null);
+    setActivePattern({
+      id:                Date.now(),
+      dots:              generateDotPositions(cfg.dotCount),
+      windowMs:          cfg.windowMs,
+      burstSeconds:      cfg.burstSeconds,
+      doubleOnFullClear: cfg.doubleOnFullClear ?? false,
+      rateMult:          cfg.rateMult  ?? 2.0,
+      rateBuffMs:        cfg.rateBuffMs ?? 15_000,
+    });
+    // Coordinator stays claimed until completePattern fires.
+  }, [releaseAttention]);
+
+  /** Prompt window expired (or player dismissed) — release without penalty. */
+  const dismissPrompt = useCallback(() => {
+    setActivePrompt(null);
+    releaseAttention();
+  }, [releaseAttention]);
 
   const completePattern = useCallback((wasFullClear) => {
     const cfg = configRef.current;
@@ -795,11 +904,26 @@ function usePatternClick({ activeSparks, rateRef, qiRef }) {
         } catch {}
       }
     }
-    activeRef.current = false;
     setActivePattern(null);
-  }, [rateRef, qiRef]);
+    releaseAttention();
+  }, [rateRef, qiRef, releaseAttention]);
 
-  return { activePattern, completePattern };
+  return { activePrompt, openPrompt, dismissPrompt, activePattern, completePattern };
+}
+
+// ── Spark coordinator ───────────────────────────────────────────────────────
+// Divine Qi and Pattern Click both demand the player's attention. Letting them
+// fire on top of each other forces context-switching and feels chaotic, so this
+// shared module-level latch ensures only one is active at a time. The losing
+// mechanic simply skips its spawn slot and re-arms on the next interval.
+const sparkAttentionRef = { current: null }; // 'divine' | 'pattern' | null
+function tryClaimSparkAttention(id) {
+  if (sparkAttentionRef.current !== null) return false;
+  sparkAttentionRef.current = id;
+  return true;
+}
+function releaseSparkAttention(id) {
+  if (sparkAttentionRef.current === id) sparkAttentionRef.current = null;
 }
 
 // ── Divine Qi — golden orb mechanic ─────────────────────────────────────────
@@ -899,10 +1023,18 @@ function useDivineQi({ activeSparks, rateRef, qiRef, spawnVFX }) {
   // so T5 can fire the rate buff when BOTH are collected.
   const pendingWaveRef = useRef({ waveId: -1, total: 0, collected: 0 });
 
-  // Spawn function — creates 1 or 2 orbs (T5 doubleOrb)
+  // True iff this hook is currently holding the shared spark-attention latch.
+  // We only release it once every orb in the wave has resolved — see collectOrb.
+  const claimedRef = useRef(false);
+
+  // Spawn function — creates 1 or 2 orbs (T5 doubleOrb).
+  // Returns false (and skips) when the coordinator says another spark already
+  // owns the player's attention; the caller re-arms normally either way.
   const spawnWave = useCallback(() => {
     const cfg = configRef.current;
-    if (!cfg) return;
+    if (!cfg) return false;
+    if (!tryClaimSparkAttention('divine')) return false;
+    claimedRef.current = true;
     const count = cfg.doubleOrb ? 2 : 1;
     const waveId = ++nextIdRef.current;
     pendingWaveRef.current = { waveId, total: count, collected: 0 };
@@ -917,6 +1049,7 @@ function useDivineQi({ activeSparks, rateRef, qiRef, spawnVFX }) {
       expiresAt: now + cfg.windowMs,
     }));
     setOrbs(prev => [...prev, ...newOrbs]);
+    return true;
   }, []);
 
   // Self-scheduling spawn timer — re-arms after each spawn
@@ -932,12 +1065,29 @@ function useDivineQi({ activeSparks, rateRef, qiRef, spawnVFX }) {
     };
     // First spawn after a brief "discovery" delay so the player notices the new mechanic
     timer = setTimeout(() => { spawnWave(); arm(); }, Math.min(config.spawnIntervalMs * 0.5, 15_000));
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      // Release the coordinator if we own it, so a screen-unmount mid-wave
+      // doesn't permanently lock pattern_click out.
+      if (claimedRef.current) {
+        claimedRef.current = false;
+        releaseSparkAttention('divine');
+      }
+    };
   }, [config?.id, spawnWave]); // re-arm if tier changes (config.id changes)
 
   // Called when an orb is collected or expires (after its exit animation)
   const collectOrb = useCallback((orbId, wasCollected) => {
-    setOrbs(prev => prev.filter(o => o.id !== orbId));
+    setOrbs(prev => {
+      const next = prev.filter(o => o.id !== orbId);
+      // Release the attention latch when the wave is fully resolved (no orbs
+      // remain), so pattern_click can spawn on its next interval.
+      if (next.length === 0 && claimedRef.current) {
+        claimedRef.current = false;
+        releaseSparkAttention('divine');
+      }
+      return next;
+    });
     if (!wasCollected) return;
     const cfg = configRef.current;
     if (!cfg) return;
@@ -1285,8 +1435,14 @@ function HomeScreen({
     spawnVFX,
   });
 
-  // ── Pattern Click — numbered dot minigame ────────────────────────────────
-  const { activePattern, completePattern } = usePatternClick({
+  // ── Pattern Click — opt-in prompt + numbered dot minigame ────────────────
+  const {
+    activePrompt:    patternPrompt,
+    openPrompt:      openPatternPrompt,
+    dismissPrompt:   dismissPatternPrompt,
+    activePattern,
+    completePattern,
+  } = usePatternClick({
     activeSparks,
     rateRef: cultivation.rateRef,
     qiRef:   cultivation.qiRef,
@@ -1524,7 +1680,18 @@ function HomeScreen({
             <DivineQiOrb key={orb.id} orb={orb} onResolve={collectOrb} spawnVFX={spawnVFX} rateRef={cultivation.rateRef} />
           ))}
 
-          {/* Pattern Clicking overlay — appears when mechanic is active */}
+          {/* Pattern Clicking opt-in prompt — small spark the player can tap to
+              begin the minigame, or ignore to let it pass without penalty. */}
+          {patternPrompt && (
+            <PatternClickPrompt
+              key={patternPrompt.id}
+              prompt={patternPrompt}
+              onAccept={openPatternPrompt}
+              onDismiss={dismissPatternPrompt}
+            />
+          )}
+
+          {/* Pattern Clicking overlay — opens once the prompt is accepted. */}
           {activePattern && (
             <PatternClickOverlay
               key={activePattern.id}
