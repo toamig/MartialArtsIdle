@@ -17,6 +17,7 @@ import { generateLaw } from '../data/affixPools';
 import { pickRandomArtefact } from '../data/artefactDrops';
 import { QI_SPARKS, QI_SPARK_BY_ID } from '../data/qiSparks';
 import { runDropDistributionTest } from './dropDistributionTest';
+import { runPlaythroughSim } from './playthroughSim';
 
 const ITEMS_BY_ID = { ...ALL_MATERIALS, ...PILLS_BY_ID };
 
@@ -588,6 +589,17 @@ export function initDebug(hooksRef) {
       return runDropDistributionTest();
     },
 
+    /**
+     * Simulated playthrough comparison: A (no rebirth, no tree), B (no
+     * rebirth, all tree unlocked), C (rebirth once at idx 24). Logs per-
+     * realm cumulative times for each scenario and a summary of the
+     * rebirth value. Result also at window.__lastPlaythroughSim. See
+     * src/debug/playthroughSim.js for the methodology and limitations.
+     */
+    simPlay() {
+      return runPlaythroughSim();
+    },
+
     /** Print all available commands. */
     help() {
       console.group('%c[debug] Available Commands', 'color: #c084fc; font-weight: bold');
@@ -616,6 +628,7 @@ export function initDebug(hooksRef) {
       console.log('  gd.giveLaws(n=10)                — generate n random laws');
       console.log('%cBalance audits', 'font-weight: bold');
       console.log('  gd.testDrops()                — audit gather/mine vs combat drop distributions');
+      console.log('  gd.simPlay()                  — compare playthrough times across A/B/C rebirth scenarios');
       console.log('%cQi Crystal', 'font-weight: bold');
       console.log('  gd.setCrystalLevel(n)     — set crystal to level n');
       console.log('  gd.setCrystalTier(t)      — jump to visual tier t (1–10)');
