@@ -121,6 +121,14 @@ const RANGES = {
   FLAT_PRIMARY: { Iron:[3,8],       Bronze:[8,18],      Silver:[18,35],     Gold:[35,60],     Transcendent:[60,100]    },
   FLAT_PCT:     { Iron:[0.0025,0.0075], Bronze:[0.005,0.0125], Silver:[0.01,0.02], Gold:[0.015,0.03], Transcendent:[0.025,0.05] },
   FLAT_QI:      { Iron:[0.05,0.15], Bronze:[0.15,0.30], Silver:[0.30,0.55], Gold:[0.55,0.90], Transcendent:[0.90,1.50] },
+  // Activity speeds (harvest_speed / mining_speed) feed an additive layer on
+  // a base of 1 — `harvestSpeed = floor(computeStat(1, mods))`, then
+  // `gatherRate = (BASE_GATHER_SPEED + harvestSpeed) * RATE_MULT` with
+  // BASE_GATHER_SPEED = 3. Sharing FLAT_PRIMARY (max 35 at Silver) meant a
+  // single max-rolled Silver could produce a ~11× pickup-rate boost — see
+  // 2026-05-03 rebalance. Decimal-flag this family so small Iron rolls
+  // survive the integer-floor at the projection stage.
+  FLAT_ACTIVITY:{ Iron:[0.05,0.15], Bronze:[0.15,0.30], Silver:[0.30,0.55], Gold:[0.55,0.85], Transcendent:[0.85,1.30] },
 };
 
 // Aggregate stats (damage_all, all_primary_stats) roll at this fraction of
@@ -151,10 +159,10 @@ const STAT_META = {
   qi_speed:                { incr: 'INCR_BASIC', flat: 'FLAT_QI',  decimalFlat: true },
   qi_focus_mult:           { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
   heavenly_qi_mult:        { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
-  // Activity
-  harvest_speed:           { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
+  // Activity — speeds use a dedicated FLAT_ACTIVITY family (see RANGES note)
+  harvest_speed:           { incr: 'INCR_BASIC', flat: 'FLAT_ACTIVITY', decimalFlat: true },
   harvest_luck:            { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
-  mining_speed:            { incr: 'INCR_BASIC', flat: 'FLAT_PRIMARY' },
+  mining_speed:            { incr: 'INCR_BASIC', flat: 'FLAT_ACTIVITY', decimalFlat: true },
   mining_luck:             { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },
   // Combat utility
   exploit_chance:          { incr: 'INCR_BASIC', flat: 'FLAT_PCT', decimalFlat: true },

@@ -138,8 +138,11 @@ Each `(stat, mod_type)` chooses a value family — unchanged from pre-overhaul:
 | `FLAT_HP` | 20–50 | 50–120 | 120–280 | 280–600 | 600–1200 |
 | `FLAT_PCT_POINT` | 1–3 | 2–5 | 4–8 | 6–12 | 10–20 |
 | `FLAT_QI` | 0.05–0.15 | 0.15–0.30 | 0.30–0.55 | 0.55–0.90 | 0.90–1.50 |
+| `FLAT_ACTIVITY` | 0.05–0.15 | 0.15–0.30 | 0.30–0.55 | 0.55–0.85 | 0.85–1.30 |
 
 `FLAT_PRIMARY` is removed (no primary stats).
+
+`FLAT_ACTIVITY` (added 2026-05-03) is the dedicated FLAT family for `harvest_speed` and `mining_speed`. These stats feed an additive layer on a base of 1, then `gatherRate = (BASE_GATHER_SPEED + speed) × RATE_MULT` with `BASE_GATHER_SPEED = 3`. Sharing `FLAT_PRIMARY` (Silver max 35) made a single max-rolled Silver give a ~11× pickup-rate boost — far past the intended single-item ceiling of ~1.5–2×.
 
 **Aggregate scaling.** `damage_all` uses the same family as a single-stat roll but the value is multiplied by `AGGREGATE_SCALE = 0.5` at roll time.
 
