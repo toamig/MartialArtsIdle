@@ -5,6 +5,7 @@ import REALMS, { getMajorBreakthroughRate, getPeakBreakthroughRate, isMajorTrans
 import { saveGame, loadGame } from '../systems/save';
 import { evaluateLawUniques, buildContext } from '../systems/lawEngine';
 import { computeStat, MOD } from '../data/stats';
+import { MAX_OFFLINE_HOURS } from '../systems/autoFarm';
 import { trackRealmAdvance, trackQiSink, trackAscension, trackActiveLawSwitch, trackFirstTime, trackOfflineQiCollected } from '../analytics';
 
 const OWNED_LAWS_KEY   = 'mai_owned_laws';
@@ -123,8 +124,11 @@ export default function useCultivation() {
     // Calculate qi earned while the app was closed
     if (!saved?.lastSeen || saved?.realmIndex === undefined) return 0;
     const now = Date.now();
-    const awaySeconds = (now - saved.lastSeen) / 1000;
-    if (awaySeconds < MIN_OFFLINE_SEC) return 0;
+    const rawAwaySeconds = (now - saved.lastSeen) / 1000;
+    if (rawAwaySeconds < MIN_OFFLINE_SEC) return 0;
+    // Cap at MAX_OFFLINE_HOURS so a week-long absence doesn't trivialise
+    // progression. Same constant as gather/mine offline cap.
+    const awaySeconds = Math.min(rawAwaySeconds, MAX_OFFLINE_HOURS * 3600);
     const realm = REALMS[saved.realmIndex];
     if (!realm || !REALMS[saved.realmIndex + 1]) return 0; // maxed
 

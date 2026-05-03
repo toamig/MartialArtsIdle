@@ -23,7 +23,10 @@ const BASE_MINE_SPEED       = 3;   // mine points/sec — must match ActivityToo
 // scales together. Tuned to 0.10 on 2026-05-01 to slow mid-game gathering /
 // mining loops by 10×. Mirror in ActivityTooltip.RATE_MULTIPLIER.
 export const RATE_MULTIPLIER = 0.10;
-const MAX_OFFLINE_HOURS     = 8;   // cap offline simulation to prevent startup lag
+// Cap offline simulation to prevent startup lag and to avoid week-long
+// away sessions trivialising progression. Shared across gather, mine,
+// and qi (imported by useCultivation.js).
+export const MAX_OFFLINE_HOURS = 8;
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
