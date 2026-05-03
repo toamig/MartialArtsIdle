@@ -47,6 +47,9 @@ export default function useReincarnationKarma() {
    * newly-reached realm (first-time-only) so the player can invest in the
    * tree as they progress — no need to wait for a rebirth.
    */
+  const lastAwardedRef = useRef({ amount: 0, atIndex: 0, version: 0 });
+  const [lastAwardedVersion, setLastAwardedVersion] = useState(0);
+
   const noteRealmReached = useCallback((index) => {
     setState(prev => {
       if (index <= prev.maxAwarded && index <= prev.highestReached) return prev;
@@ -54,7 +57,16 @@ export default function useReincarnationKarma() {
       for (let i = prev.maxAwarded + 1; i <= index; i++) {
         awarded += karmaForReachingIndex(i);
       }
-      try { if (awarded > 0) trackKarmaSource(awarded, `r${index}`); } catch {}
+      if (awarded > 0) {
+        try { trackKarmaSource(awarded, `r${index}`); } catch {}
+        // Surface to consumers (App.jsx fires a toast on this).
+        lastAwardedRef.current = {
+          amount: awarded,
+          atIndex: index,
+          version: lastAwardedRef.current.version + 1,
+        };
+        setLastAwardedVersion(lastAwardedRef.current.version);
+      }
       return {
         ...prev,
         karma:          prev.karma + awarded,
@@ -88,6 +100,13 @@ export default function useReincarnationKarma() {
     lives:           state.lives,
     unlocked:        state.highestReached >= SAINT_UNLOCK_INDEX,
     peakKarmaTotal:  totalKarmaForPeak(PEAK_INDEX),
+    // Cumulative karma earned across the player's history. Equal to
+    // `totalKarmaForPeak(maxAwarded)` since every realm awards once.
+    earnedTotal:     totalKarmaForPeak(state.maxAwarded),
+    // Surfaces the most recent karma award so App.jsx can fire a toast.
+    // `version` increments on each award; consumers watch it via useEffect.
+    lastAwarded:     lastAwardedRef.current,
+    lastAwardedVersion,
     noteRealmReached,
     reincarnate,
     spendKarma,

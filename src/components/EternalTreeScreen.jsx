@@ -125,11 +125,14 @@ const BRANCH_DESC = {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function EternalTreeScreen({
-  karma, tree, lives,
+  karma, earnedTotal = 0, tree, lives,
   highestReached, peakKarmaTotal,
   realmIndex,
   onReincarnate, onClose,
 }) {
+  const karmaSpent  = tree?.modifiers?.karmaSpent ?? 0;
+  const treeQiMult  = tree?.modifiers?.treeQiMult ?? 1;
+  const perKarmaPct = (tree?.modifiers?.perKarmaQiPct ?? 0) * 100; // ≈2.797
   const canvasRef     = useRef(null);
   const dragRef       = useRef({ active: false, startX: 0, startY: 0, panX: 0, panY: 0 });
   const scaleRef      = useRef(1);
@@ -392,6 +395,29 @@ export default function EternalTreeScreen({
             <span className="et-card-karma"><span className="et-hud-karma-gem">◈</span>{karma}</span>
             <span className="et-card-lives">{lives} {lives === 1 ? 'life' : 'lives'}</span>
           </div>
+
+          {/* Tree status: earned/spent/available + live qi mult ──────────── */}
+          <div className="et-tree-status">
+            <div className="et-tree-status-row">
+              <span className="et-tree-status-label"><span className="et-hud-karma-gem">◈</span> Available</span>
+              <span className="et-tree-status-val">{karma}</span>
+            </div>
+            <div className="et-tree-status-row">
+              <span className="et-tree-status-label"><span className="et-karma-spent-gem">◇</span> Spent</span>
+              <span className="et-tree-status-val">{karmaSpent}</span>
+            </div>
+            <div className="et-tree-status-row">
+              <span className="et-tree-status-label"><span className="et-karma-earned-gem">⬡</span> Earned</span>
+              <span className="et-tree-status-val">{earnedTotal}</span>
+            </div>
+            <div className="et-tree-status-divider" />
+            <div className="et-tree-status-row et-tree-status-mult">
+              <span className="et-tree-status-label">Tree Qi Multiplier</span>
+              <span className="et-tree-qi-mult">×{treeQiMult.toFixed(2)}</span>
+            </div>
+            <div className="et-tree-status-foot">+{perKarmaPct.toFixed(2)}% qi/s per karma spent</div>
+          </div>
+
           <div className="et-card-actions">
             <button
               className="et-info-btn"
@@ -671,6 +697,11 @@ export default function EternalTreeScreen({
               {isPurchased && (
                 <div className="et-node-tooltip-cost" style={{ color: 'rgba(100,220,140,0.85)' }}>✓ Unlocked</div>
               )}
+              {/* Universal tree-qi contribution (every node) */}
+              <div className="et-node-tooltip-qi">
+                {isPurchased ? '✓ Contributing ' : 'Contributes '}
+                +{(activeNode.cost * perKarmaPct).toFixed(2)}% qi/s
+              </div>
             </div>
           );
         })()}

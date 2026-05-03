@@ -17,7 +17,7 @@ import { generateLaw } from '../data/affixPools';
 import { pickRandomArtefact } from '../data/artefactDrops';
 import { QI_SPARKS, QI_SPARK_BY_ID } from '../data/qiSparks';
 import { runDropDistributionTest } from './dropDistributionTest';
-import { runPlaythroughSim } from './playthroughSim';
+import { runPlaythroughSim, runCombinedProposalSim } from './playthroughSim';
 
 const ITEMS_BY_ID = { ...ALL_MATERIALS, ...PILLS_BY_ID };
 
@@ -598,6 +598,16 @@ export function initDebug(hooksRef) {
      */
     simPlay() {
       return runPlaythroughSim();
+    },
+
+    /**
+     * Sim with the combined proposals: inflate late-game qi cost
+     * (default 5.15× from idx 24+) and scale the tree to a max qi
+     * multiplier (default 5.0× = 500%). Both arguments tunable.
+     * Result at window.__lastCombinedSim.
+     */
+    simCombined(opts) {
+      return runCombinedProposalSim(opts);
     },
 
     /** Print all available commands. */

@@ -11852,6 +11852,66 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   font-size: 0.72rem;
   color: rgba(180, 155, 220, 0.5);
 }
+
+/* ── Tree Status card (earned/spent/available + qi mult) ─────────────────── */
+.et-tree-status {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(var(--ui-purple-strong-rgb), 0.18);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.et-tree-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+}
+.et-tree-status-label {
+  color: rgba(180, 155, 220, 0.75);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.et-tree-status-val {
+  color: rgba(var(--ui-hover-rgb), 1);
+  font-weight: 600;
+}
+.et-karma-spent-gem  { color: rgba(180, 155, 220, 0.55); font-size: 0.82rem; }
+.et-karma-earned-gem { color: rgba(180, 155, 220, 0.65); font-size: 0.82rem; }
+.et-tree-status-divider {
+  height: 1px;
+  background: rgba(var(--ui-purple-strong-rgb), 0.15);
+  margin: 4px 0;
+}
+.et-tree-status-mult .et-tree-status-label {
+  color: rgba(210, 180, 255, 1);
+  font-weight: 600;
+}
+.et-tree-qi-mult {
+  color: #c084fc;
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-shadow: 0 0 8px rgba(168, 85, 247, 0.45);
+}
+.et-tree-status-foot {
+  font-size: 0.68rem;
+  color: rgba(180, 155, 220, 0.5);
+  text-align: right;
+  margin-top: 2px;
+}
+
+/* ── Per-node qi-contribution line in node tooltip ───────────────────────── */
+.et-node-tooltip-qi {
+  font-size: 0.74rem;
+  color: rgba(192, 132, 252, 0.85);
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(var(--ui-purple-strong-rgb), 0.15);
+}
 .et-card-actions {
   display: flex;
   align-items: center;

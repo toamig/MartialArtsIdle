@@ -22,21 +22,22 @@ export const SAINT_UNLOCK_INDEX = 24;
 export const PEAK_INDEX         = 50;
 
 // Karma awarded for the breakthrough INTO realm index i (first time only).
+//
+// Front-loaded 2026-05-03: previously the player earned only 31 karma by the
+// rebirth threshold (idx 24), translating to a weak first-rebirth payoff.
+// Curve rebalanced so a first rebirth has 53 karma in hand — meaningful
+// tree investment available immediately. Total per peak still equals 143.
 export function karmaForReachingIndex(i) {
   if (i <= 0) return 0;
-  if (i <= 9)  return 1;
-  if (i <= 13) return 1;
-  if (i <= 17) return 1;
-  if (i <= 20) return 2;
-  if (i <= 23) return 2;
-  if (i <= 26) return 2;
-  if (i <= 29) return 3;
-  if (i <= 32) return 3;
-  if (i <= 35) return 4;
-  if (i <= 38) return 4;
-  if (i <= 41) return 5;
-  if (i <= 44) return 5;
-  return 6;
+  if (i <= 17) return 2;     // idx 1–17: was 1 each (sum 17 → now 34)
+  if (i <= 23) return 3;     // idx 18–23: was 2 each (sum 12 → now 18)
+  if (i <= 26) return 1;     // idx 24–26: was 2 each (sum 6 → now 3)
+  if (i <= 32) return 2;     // idx 27–32: was 3 each (sum 18 → now 12)
+  if (i <= 38) return 3;     // idx 33–38: was 4 each (sum 24 → now 18)
+  if (i <= 44) return 4;     // idx 39–44: was 5 each (sum 30 → now 24)
+  if (i <= 46) return 5;     // idx 45–46: was 6 each (sum 12 → now 10)
+  return 6;                  // idx 47–50: unchanged at 6 each (sum 24)
+  // Total: 34 + 18 + 3 + 12 + 18 + 24 + 10 + 24 = 143 ✓
 }
 
 export function totalKarmaForPeak(maxIndex) {
@@ -61,7 +62,7 @@ const NODES_RAW = [
   {
     id: 'al_1', branch: 'legacy', step: 0,
     label: 'Inherited Meridians', icon: '🏛',
-    desc: '+25% qi/s permanently.',
+    desc: 'Foundation of Ancestor\'s Legacy. Like every node, contributes its karma cost toward your tree-wide cultivation multiplier.',
     cost: 3, prereqs: [], prereqMode: 'or',
   },
   {

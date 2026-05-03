@@ -670,6 +670,17 @@ function AppInner() {
   });
   featureFlagsRef.current = featureFlags;
 
+  // Toast on karma award. The karma hook bumps `lastAwardedVersion` each
+  // time a realm grants karma; we watch that and surface the amount.
+  useEffect(() => {
+    if (!karma.lastAwarded?.amount) return;
+    notifications.addToast({
+      message: `+${karma.lastAwarded.amount} Karma earned ◈`,
+      targetScreen: 'reincarnation',
+      duration: 4000,
+    });
+  }, [karma.lastAwardedVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Keep a live ref to all hooks so debug commands always see fresh state.
   const hooksRef = useRef({});
   hooksRef.current = { cultivation, inventory, techniques, combat, artefacts, pills, autoFarm, crystal, qiSparks };
@@ -804,6 +815,7 @@ function AppInner() {
     settings:   null,
     reincarnation: <EternalTreeScreen
                      karma={karma.karma}
+                     earnedTotal={karma.earnedTotal}
                      tree={tree}
                      lives={karma.lives}
                      highestReached={karma.highestReached}

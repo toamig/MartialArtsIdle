@@ -100,16 +100,34 @@ const REALM_NAMES = [
 ];
 
 // ─── Tree perk → qi-rate multiplier map ──────────────────────────────────────
-// Each value is the multiplicative factor on qi rate when the node is owned.
-// Notes in the file header explain the derivation.
+// Universal tree qi multiplier (2026-05-03 rebalance): every karma spent on
+// any node contributes proportionally. Linear from ×1 (0 spent) to ×5
+// (143 spent). Per-karma rate ≈ +2.797% qi/s.
+//
+// Side bonuses still apply (hw_4 boosts pill stat → small extra contribution
+// to qi rate via pill qi_speed; yy_k boosts artefact affix values → small
+// extra via artefact qi_speed). Kept for fidelity but small versus the
+// dominant universal mult.
+const TOTAL_TREE_KARMA = 143;
+const TREE_MAX_QI_MULT = 5.0;
 const QI_RATE_MULT_BY_NODE = {
-  al_1: 1.25,  // +25% qi rate, direct
   hw_4: 1.05,  // +25% pill stat -> pill qi_speed boost ~5% on overall rate
   yy_k: 1.03,  // +10% artefact affix values -> artefact qi_speed boost ~3%
 };
 // yy_2 doesn't multiply rate; it skips 20% of each realm's qi cost. Same
 // effect on time as a 1.25× rate boost, applied AFTER other multipliers.
 const YY_2_TIME_FACTOR = 0.80;
+
+// Karma cost per node (matches reincarnationTree.js NODES — used to compute
+// karmaSpent for an "owned nodes" set).
+const NODE_KARMA_COST = {
+  al_1: 3, al_2: 4, al_3: 5, al_4: 6, al_k: 7,
+  md_1: 3, md_2: 4, md_3: 5, md_4: 6, md_k: 7,
+  fp_1: 3, fp_2: 4, fp_3: 5, fp_4: 6, fp_k: 7,
+  hw_1: 3, hw_2: 4, hw_3: 5, hw_4: 6, hw_k: 7,
+  yy_1: 4, yy_2: 5, yy_3: 5, yy_4: 6, yy_k: 8,
+  cb_is: 4, cb_ts: 5, cb_pt: 6,
+};
 
 // All 23 nodes in the tree (used for Scenario B "all unlocked").
 const ALL_NODES = [
@@ -148,7 +166,12 @@ function totalKarmaAt(idx) {
  * shrinks by the inverse product. yy_2 is a separate flat 0.80 time factor.
  */
 function applyTreeMultipliers(deltas, ownedNodes) {
-  let rateMult = 1;
+  // Universal mult from karma spent (linear 1 → TREE_MAX_QI_MULT)
+  let karmaSpent = 0;
+  for (const n of ownedNodes) karmaSpent += (NODE_KARMA_COST[n] ?? 0);
+  const universalMult = 1 + (TREE_MAX_QI_MULT - 1) * (karmaSpent / TOTAL_TREE_KARMA);
+  // Plus side-effect multipliers (hw_4 pill bonus, yy_k artefact affix)
+  let rateMult = universalMult;
   for (const n of ownedNodes) {
     if (QI_RATE_MULT_BY_NODE[n]) rateMult *= QI_RATE_MULT_BY_NODE[n];
   }
@@ -205,14 +228,14 @@ function scenarioC() {
   const life1Total  = life1Deltas.reduce((s, d) => s + d, 0);
 
   // Karma earned reaching idx 24
-  const karmaAtRebirth = totalKarmaAt(24); // 31
+  const karmaAtRebirth = totalKarmaAt(24); // 53 with the new front-loaded curve
 
-  // Optimal karma spend for SECOND life (qi-rate priority):
-  //   al_1 (3) + al_2 (4) + al_3 (5) + hw_1 (3) + hw_2 (4) + hw_3 (5) + hw_4 (6) = 30
-  // Result: al_1 (rate ×1.25) + hw_4 (rate ×1.05). Other nodes purchased
-  // along the chain don't directly affect qi rate.
-  const purchased = ['al_1', 'al_2', 'al_3', 'hw_1', 'hw_2', 'hw_3', 'hw_4'];
-  const karmaSpent = 3 + 4 + 5 + 3 + 4 + 5 + 6;
+  // Optimal karma spend for SECOND life under the universal-mult model:
+  // every karma point matters equally for qi rate, so just spend as much as
+  // possible. Pack al chain (25) + hw chain (25) + md_1 (3) = 53.
+  // Result: ×(1 + 4×53/143) ≈ 2.48 universal mult, plus hw_4 pill +5%.
+  const purchased = ['al_1','al_2','al_3','al_4','al_k', 'hw_1','hw_2','hw_3','hw_4','hw_k', 'md_1'];
+  const karmaSpent = purchased.reduce((s, n) => s + (NODE_KARMA_COST[n] ?? 0), 0);
 
   // ── Second life: idx 0 → 50 with purchased nodes active ──
   const life2Deltas = applyTreeMultipliers(baseDeltas, purchased);
@@ -311,4 +334,111 @@ export function runPlaythroughSim() {
   }
 
   return { scenarios, rows };
+}
+
+// ─── Combined-proposal simulator ────────────────────────────────────────────
+// Models the user's two combined proposals:
+//   1. Inflate Saint+ qi costs (idx 24 onwards) so first life ≥ 6 months.
+//   2. Tree investment scales linearly to a configurable max qi multiplier
+//      (default 5.0× = 500%) at full karma investment (143/143).
+//
+// Both apply on top of the same audit-validated per-realm baseline.
+// (TOTAL_TREE_KARMA reused from the universal-mult constants at top.)
+
+function inflateLateGameDeltas(deltas, lateInflation) {
+  // Multiply per-realm deltas for realm idx >= 24 by `lateInflation`.
+  // deltas[i] corresponds to realm idx (i+1).
+  return deltas.map((d, i) => (i + 1 >= 24 ? d * lateInflation : d));
+}
+
+function treeRateMult(karmaSpent, treeMaxMult) {
+  // Linear: 0 karma → 1.0×, 143 karma → treeMaxMult.
+  const frac = Math.min(1, karmaSpent / TOTAL_TREE_KARMA);
+  return 1 + (treeMaxMult - 1) * frac;
+}
+
+function scenarioCombinedA(lateInflation) {
+  const baseDeltas = deltasFromCumulative(SCENARIO_A_T_SEC);
+  const inflated = inflateLateGameDeltas(baseDeltas, lateInflation);
+  return { label: 'A. No rebirth, no tree (inflated late-game)', perRealmSec: inflated, lives: 1 };
+}
+
+function scenarioCombinedB(lateInflation, treeMaxMult) {
+  const baseDeltas = deltasFromCumulative(SCENARIO_A_T_SEC);
+  const inflated = inflateLateGameDeltas(baseDeltas, lateInflation);
+  const rateMult = treeRateMult(TOTAL_TREE_KARMA, treeMaxMult);
+  // yy_2 is part of the full tree, so apply 20% time skip too
+  const adjusted = inflated.map(d => d / rateMult * YY_2_TIME_FACTOR);
+  return {
+    label: `B. No rebirth, FULL tree (×${treeMaxMult.toFixed(1)} qi mult)`,
+    perRealmSec: adjusted, lives: 1, rateMult,
+  };
+}
+
+function scenarioCombinedC(lateInflation, treeMaxMult) {
+  const baseDeltas = deltasFromCumulative(SCENARIO_A_T_SEC);
+  const inflated = inflateLateGameDeltas(baseDeltas, lateInflation);
+  const life1Deltas = inflated.slice(0, 24);
+  const life1Total = life1Deltas.reduce((s, d) => s + d, 0);
+  const karmaAtRebirth = totalKarmaAt(24); // 31
+  const rateMult = treeRateMult(karmaAtRebirth, treeMaxMult);
+  const life2Deltas = inflated.map(d => d / rateMult);
+  const life2Cumulative = cumulativeFromDeltas(life2Deltas);
+  const firstReachSec = [0];
+  for (let n = 1; n <= 50; n++) {
+    if (n <= 24) firstReachSec.push(life1Deltas.slice(0, n).reduce((s, d) => s + d, 0));
+    else         firstReachSec.push(life1Total + life2Cumulative[n]);
+  }
+  return {
+    label: `C. Rebirth ONCE at idx 24 (${karmaAtRebirth}/143 karma → ×${rateMult.toFixed(2)} rate)`,
+    perRealmSec: [...life1Deltas, ...life2Deltas],
+    cumulativeSec: firstReachSec,
+    lives: 2, rebirthAt: 24, karmaAtRebirth, rateMult,
+    life1TotalSec: life1Total, life2TotalSec: life2Cumulative[50],
+  };
+}
+
+/**
+ * Run the combined-proposal sim. Default: 5.15× cost from idx 24+ (puts A
+ * at ~180d), tree maxes at ×5 qi rate (500%).
+ *
+ * Returns the same shape as runPlaythroughSim.
+ */
+export function runCombinedProposalSim({ lateInflation = 5.15, treeMaxMult = 5.0 } = {}) {
+  const scenarios = [
+    scenarioCombinedA(lateInflation),
+    scenarioCombinedB(lateInflation, treeMaxMult),
+    scenarioCombinedC(lateInflation, treeMaxMult),
+  ];
+  for (const s of scenarios) {
+    if (!s.cumulativeSec) s.cumulativeSec = cumulativeFromDeltas(s.perRealmSec);
+    s.totalSec = s.cumulativeSec[s.cumulativeSec.length - 1];
+  }
+
+  const milestones = [10, 14, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 50];
+  const rows = milestones.map(i => {
+    const aSec = scenarios[0].cumulativeSec[i];
+    const bSec = scenarios[1].cumulativeSec[i];
+    const cSec = scenarios[2].cumulativeSec[i];
+    return {
+      idx: i, realm: REALM_NAMES[i],
+      A: fmtTime(aSec), B: fmtTime(bSec), C: fmtTime(cSec),
+      'B vs A': `${((1 - bSec / aSec) * 100).toFixed(0)}%`,
+      'C vs A': i <= 24 ? '—' : `${((1 - cSec / aSec) * 100).toFixed(0)}%`,
+    };
+  });
+
+  console.group(`%c[combinedProposal] lateInflation=${lateInflation}× / treeMaxMult=${treeMaxMult}×`, 'color: #fbbf24; font-weight: bold');
+  console.table(rows);
+  console.log(`A (no rebirth, no tree):    ${fmtTime(scenarios[0].totalSec)}`);
+  console.log(`B (full tree, no rebirth):  ${fmtTime(scenarios[1].totalSec)}  (${((1 - scenarios[1].totalSec / scenarios[0].totalSec) * 100).toFixed(0)}% faster than A)`);
+  console.log(`C (rebirth once at idx 24): ${fmtTime(scenarios[2].totalSec)}  (${((1 - scenarios[2].totalSec / scenarios[0].totalSec) * 100).toFixed(0)}% faster than A)`);
+  console.log(`  C breakdown: life 1 ${fmtTime(scenarios[2].life1TotalSec)} + life 2 ${fmtTime(scenarios[2].life2TotalSec)}`);
+  console.log(`  C tree rate mult: ×${scenarios[2].rateMult.toFixed(2)} (from ${scenarios[2].karmaAtRebirth}/143 karma)`);
+  console.groupEnd();
+
+  if (typeof window !== 'undefined') {
+    window.__lastCombinedSim = { scenarios, rows, lateInflation, treeMaxMult };
+  }
+  return { scenarios, rows, lateInflation, treeMaxMult };
 }

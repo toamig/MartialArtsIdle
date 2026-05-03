@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { NODES, NODES_BY_ID, MAIN_KEYSTONES, RETIRED_NODE_IDS } from '../data/reincarnationTree';
+import { NODES, NODES_BY_ID, MAIN_KEYSTONES, RETIRED_NODE_IDS, TREE_TOTAL_COST } from '../data/reincarnationTree';
 import { trackTreeNodePurchased } from '../analytics';
 
 const SAVE_KEY = 'mai_reincarnation_tree';
@@ -90,9 +90,29 @@ export default function useReincarnationTree({ karma, spendKarma, lives = 0 } = 
     const wolStacks = Math.min(10, Math.max(0, lives));
     const wolMult   = purchased.has('yy_1') ? (1 + 0.05 * wolStacks) : 1;
 
+    // Universal tree qi multiplier (2026-05-03): every karma point spent
+    // contributes proportionally to a multiplier that scales linearly from
+    // ×1 (no nodes) to ×5 (all 143 karma spent). Replaces al_1's hardcoded
+    // +25% — al_1 now contributes only via its karma cost like every other
+    // node.
+    let karmaSpent = 0;
+    for (const id of purchased) {
+      const n = NODES_BY_ID[id];
+      if (n) karmaSpent += n.cost;
+    }
+    const treeQiMult = 1 + 4 * (karmaSpent / TREE_TOTAL_COST);
+
     return {
+      // ── Tree-wide qi multiplier ───────────────────────────────────
+      // Surfaces both as `cultivSpeedMult` (consumed by useCultivation via
+      // treeQiMultRef — keeps the existing wiring) and as the explicit
+      // `treeQiMult` field for UI to display.
+      karmaSpent,
+      treeQiMult,
+      perKarmaQiPct:      4 / TREE_TOTAL_COST,                // ≈ 0.02797 per karma
+
       // ── Ancestor's Legacy ─────────────────────────────────────────
-      cultivSpeedMult:    purchased.has('al_1') ? 1.25 : 1,   // al_1 +25% qi/s
+      cultivSpeedMult:    treeQiMult,                         // universal mult (was al_1 1.25)
       keepRecipes:        purchased.has('al_2'),              // al_2 carry recipes
       offlineCapHours:    purchased.has('al_3') ? 16 : 8,     // al_3 8→16h
       bloodLotusOnRebirth: purchased.has('al_4') ? 50 : 0,    // al_4 +50 Blood Lotus
