@@ -16,6 +16,7 @@ import { TECHNIQUES } from '../data/techniques';
 import { generateLaw } from '../data/affixPools';
 import { pickRandomArtefact } from '../data/artefactDrops';
 import { QI_SPARKS, QI_SPARK_BY_ID } from '../data/qiSparks';
+import { runDropDistributionTest } from './dropDistributionTest';
 
 const ITEMS_BY_ID = { ...ALL_MATERIALS, ...PILLS_BY_ID };
 
@@ -577,6 +578,16 @@ export function initDebug(hooksRef) {
       console.groupEnd();
     },
 
+    /**
+     * Audit the gather/mine/combat drop distributions across all 27 regions.
+     * Logs a per-region table and a pass/fail summary. Returns true on full
+     * pass; result also stored at window.__lastDropTest. See
+     * src/debug/dropDistributionTest.js for the assertions.
+     */
+    testDrops() {
+      return runDropDistributionTest();
+    },
+
     /** Print all available commands. */
     help() {
       console.group('%c[debug] Available Commands', 'color: #c084fc; font-weight: bold');
@@ -603,6 +614,8 @@ export function initDebug(hooksRef) {
       console.log('  gd.giveExpose(quality="Iron")    — grant the first Expose of that quality');
       console.log('  gd.giveArtefacts(n=10, world=1)  — generate n random artefacts');
       console.log('  gd.giveLaws(n=10)                — generate n random laws');
+      console.log('%cBalance audits', 'font-weight: bold');
+      console.log('  gd.testDrops()                — audit gather/mine vs combat drop distributions');
       console.log('%cQi Crystal', 'font-weight: bold');
       console.log('  gd.setCrystalLevel(n)     — set crystal to level n');
       console.log('  gd.setCrystalTier(t)      — jump to visual tier t (1–10)');
