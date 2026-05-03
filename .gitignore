@@ -45,13 +45,10 @@ play-service-account.json
 # Bundletool downloaded by scripts/install_to_emulator.sh on first run.
 tools/
 
-# Third-party installers / binaries dropped into public/store/ during dev.
-# Marketing assets (screenshots, feature graphic) ARE allowed via the
-# explicit unignore lines below.
-public/store/*.exe
-public/store/*.msi
-public/store/*.zip
-public/store/*.dmg
+# Play Store assets, marketing screenshots, third-party installers — staged
+# locally during release prep but never published to the web build or tracked
+# in git. Upload them straight to Play Console; nothing in the app loads them.
+public/store/
 
 # One-shot dev helper used to prime localStorage during screenshot capture.
 # Not part of the shipped app — keeping it local keeps dist/ clean.

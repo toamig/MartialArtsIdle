@@ -186,6 +186,11 @@ export default defineConfig(({ command, mode }) => {
           navigateFallback: 'index.html',
           // Precache SFX (small) but not BGM (4-5 MB each — too large for precache).
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}', 'audio/sfx/*.{ogg,mp3,wav}'],
+          // Play Store assets (screenshots, feature graphic, dev tooling .exe) live
+          // in public/store/ so they get mirrored into the Android Capacitor build,
+          // but they have no business in the PWA precache — some exceed the 3 MiB
+          // cap and they're never loaded at runtime. Skip them entirely.
+          globIgnores: ['**/store/**'],
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MiB for SFX
           skipWaiting: true,
           clientsClaim: true,
