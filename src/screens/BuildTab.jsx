@@ -1,5 +1,6 @@
 // @refresh reset
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import TechniqueSlotModal from '../components/TechniqueSlotModal';
 import ArtefactTooltip, { useTooltipPos } from '../components/ArtefactTooltip';
@@ -462,8 +463,11 @@ function BuildContent({ cultivation, techniques, artefacts }) {
             />
           )}
 
-          {/* Inline artefact picker — bottom sheet on mobile */}
-          {selectedSlot && (
+          {/* Inline artefact picker — bottom sheet on mobile.
+              Portaled to <body> so it escapes the .character-screen stacking
+              context (which has `isolation: isolate`) and can layer above the
+              fixed nav bar. */}
+          {selectedSlot && createPortal(
             <>
               <div className="art-picker-backdrop" onClick={() => setSelectedSlot(null)} />
               <InlineArtefactPicker
@@ -471,7 +475,8 @@ function BuildContent({ cultivation, techniques, artefacts }) {
                 artefacts={artefacts}
                 onClose={() => setSelectedSlot(null)}
               />
-            </>
+            </>,
+            document.body,
           )}
         </section>
 
