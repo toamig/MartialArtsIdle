@@ -4,6 +4,7 @@ import {
   PILLS, ITEM_RARITY,
   PILL_CATEGORIES, PILL_CATEGORY_LABEL,
 } from '../data/pills';
+import { scaledEffectValue } from '../hooks/usePills';
 
 const CAT_T_KEY = {
   combat:      'pillDrawer.catCombat',
@@ -12,7 +13,7 @@ const CAT_T_KEY = {
   mining:      'pillDrawer.catMining',
 };
 
-function DrawerPillCard({ pill, qty, onUse }) {
+function DrawerPillCard({ pill, qty, priorCount, onUse }) {
   const { t }        = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
 
@@ -23,10 +24,11 @@ function DrawerPillCard({ pill, qty, onUse }) {
 
   function formatPillEffect(eff) {
     const label = t(`statNamesShort.${eff.stat}`, { defaultValue: eff.stat });
+    const scaled = scaledEffectValue(eff.stat, eff.value, priorCount);
     if (eff.stat === 'qi_speed' || eff.type === 'increased') {
-      return t('pillDrawer.effectPct', { pct: Math.round(eff.value * 100), stat: label });
+      return t('pillDrawer.effectPct', { pct: Math.round(scaled * 100), stat: label });
     }
-    return t('pillDrawer.effectFlat', { val: eff.value, stat: label });
+    return t('pillDrawer.effectFlat', { val: scaled, stat: label });
   }
 
   const handleUse = useCallback(() => {
@@ -145,6 +147,7 @@ function PillDrawer({ open, onClose, defaultTab = 'combat', pills }) {
                   key={pill.id}
                   pill={pill}
                   qty={owned}
+                  priorCount={pills?.consumedPills?.[pill.id] ?? 0}
                   onUse={() => pills.usePill(pill.id)}
                 />
               ))}

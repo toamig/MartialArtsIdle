@@ -40,7 +40,7 @@ const INCREASED_STATS = new Set(['harvest_speed', 'mining_speed']);
 // Diminishing-returns base. Effective value = base * DR_BASE^N where N is
 // the count of this pill already consumed. qi_speed is exempt — see
 // scaledEffectValue below.
-const DR_BASE = 0.98;
+const DR_BASE = 0.96;
 
 /** Stats that bypass diminishing-returns rounding (kept at raw float value). */
 const DR_EXEMPT_STATS = new Set(['qi_speed']);
@@ -50,7 +50,7 @@ const DR_EXEMPT_STATS = new Set(['qi_speed']);
  * consumption of a pill. Integer stats are rounded; qi_speed bypasses DR so its
  * 0.05 / 0.10 base values do not round to 0.
  */
-function scaledEffectValue(stat, baseValue, priorCount) {
+export function scaledEffectValue(stat, baseValue, priorCount) {
   if (DR_EXEMPT_STATS.has(stat)) return baseValue;
   return Math.round(baseValue * Math.pow(DR_BASE, priorCount));
 }
@@ -304,5 +304,6 @@ export default function usePills() {
     togglePin,
     getStatModifiers,
     getQiMult,
+    scaledEffectValue,
   };
 }

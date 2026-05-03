@@ -57,11 +57,18 @@ Within each band the 92 valid combinations are distributed round-robin across th
 
 ## Diminishing Returns
 
-Each pill stacks with diminishing returns: the N-th consumption of a given pill id contributes `round(baseValue * 0.98^N)` to its stat. Counting is **per pill id** (so all recipes that brew the same pill share the counter) and **per incarnation** (the counter wipes alongside `permanentStats` on reincarnation).
+Each pill stacks with diminishing returns. The (N+1)-th consumption of a given pill id contributes `round(baseValue * 0.96^N)` to its stat, where N is the number of pills of that id already consumed this incarnation. The first pill of an id is full-strength (`0.96^0 = 1.00`); the second is 0.96×, the third 0.9216×, the tenth ≈0.69×. Counting is **per pill id** (so all recipes that brew the same pill share the counter) and **per incarnation** (the counter wipes alongside `permanentStats` on reincarnation). Tuned 2026-05-03 from `0.98` → `0.96` to make stacking decay perceptible.
 
 `qi_speed` (Gold + Transcendent Dao pills) is exempt from DR — its sub-1 base values would round to 0 immediately. Dao pills always grant their full 0.05 / 0.10 each consumption.
 
-State key: `mai_pills_consumed` → `{ [pillId]: count }`. See `scaledEffectValue()` in `src/hooks/usePills.js`.
+State key: `mai_pills_consumed` → `{ [pillId]: count }`. See `scaledEffectValue()` in `src/hooks/usePills.js` (exported for UI display).
+
+### Where DR is shown to the player
+Both pill-effect display surfaces show the **next-consumption** scaled value, not the raw base, so a player can see DR eroding their pills in real time:
+- **Pill drawer cards** ([src/components/PillDrawer.jsx](../src/components/PillDrawer.jsx)) — each card's effect rows are pre-scaled by that pill's current consumed count.
+- **Alchemy forge recipe preview** ([src/screens/ProductionScreen.jsx](../src/screens/ProductionScreen.jsx)) — the forge card shows what the next pill of that recipe will actually grant.
+
+The brief floating "+N" animation that pops on consumption uses the same scaled value (it reads the deltas returned by `usePill()`).
 
 ---
 

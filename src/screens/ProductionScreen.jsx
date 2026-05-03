@@ -3,6 +3,7 @@ import { useState, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HERB_ITEMS, ALL_MATERIALS, RARITY } from '../data/materials';
 import { findPill, PILLS, PILLS_BY_ID, RECIPES_BY_PILL } from '../data/pills';
+import { scaledEffectValue } from '../hooks/usePills';
 
 const ITEMS_BY_ID = { ...ALL_MATERIALS, ...PILLS_BY_ID };
 
@@ -23,12 +24,13 @@ const STAT_DISPLAY = {
   exploit_attack_mult:  'Exploit Multiplier',
 };
 
-function formatEffect(eff) {
+function formatEffect(eff, priorCount = 0) {
   const label = STAT_DISPLAY[eff.stat] ?? eff.stat;
+  const scaled = scaledEffectValue(eff.stat, eff.value, priorCount);
   if (eff.type === 'increased') {
-    return `+${Math.round(eff.value * 100)}% ${label}`;
+    return `+${Math.round(scaled * 100)}% ${label}`;
   }
-  return `+${eff.value} ${label}`;
+  return `+${scaled} ${label}`;
 }
 
 /** Build { itemId: qty } map of herb requirements from a recipe key. */
@@ -64,6 +66,7 @@ function ForgeCard({
   resultPill, rarityColor, allFilled,
   craftQty, setCraftQty, effectiveQty, canCraft,
   floatMsgs, onBrew, isDiscoveredFn,
+  resultPriorCount = 0,
   t, tGame,
 }) {
   const showPill   = allFilled && resultPill && isDiscoveredFn(resultPill.id);
@@ -86,7 +89,7 @@ function ForgeCard({
             </div>
             <ul className="alc-forge-effects">
               {resultPill.effects.map((eff, i) => (
-                <li key={i} className="alc-forge-effect">{formatEffect(eff)}</li>
+                <li key={i} className="alc-forge-effect">{formatEffect(eff, resultPriorCount)}</li>
               ))}
             </ul>
           </>
@@ -461,6 +464,7 @@ function AlchemyPanel({ inventory, pills, tree }) {
         floatMsgs={floatMsgs}
         onBrew={handleCraft}
         isDiscoveredFn={pills.isDiscovered}
+        resultPriorCount={resultPill ? (pills.consumedPills?.[resultPill.id] ?? 0) : 0}
         t={t}
         tGame={tGame}
       />
