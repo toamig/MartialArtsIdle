@@ -2602,15 +2602,17 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
     rgba(0,0,0,0)    100%);
 }
 
-/* Realm / stage name — left side of overlay row above the QI bar */
+/* Realm / stage name — left side of overlay row above the QI bar.
+   Uses the global system font stack for visual consistency with the rest
+   of the app; weight 700 gives nameplate presence without a custom face. */
 .home-realm-name {
-  font-family: 'Press Start 2P', 'Courier New', monospace;
-  font-size: 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: var(--ui-purple-light);
   text-shadow:
     0 0 8px rgba(0,0,0,0.9),
     0 2px 6px rgba(0,0,0,0.8);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   pointer-events: none;
   white-space: nowrap;
   overflow: hidden;
@@ -5059,29 +5061,29 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   align-items: baseline;
 }
 
-/* Stage title above the QI bar — pixel-font nameplate (Press Start 2P)
-   so the current cultivation stage reads as the primary piece of info on
-   the home screen while matching the game's pixel-art aesthetic. */
+/* Stage title above the QI bar — bold sans-serif nameplate.
+   Uses the global system font stack so it matches the rest of the app;
+   weight 700 + soft purple glow keep it as the dominant piece of info on
+   the home screen without a custom face. */
 .realm-stage-title {
   text-align: center;
-  font-family: 'Press Start 2P', 'Courier New', monospace;
-  font-size: 0.78rem;
-  font-weight: 400; /* Press Start 2P only ships one weight */
+  font-size: 0.95rem;
+  font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1.25;
   color: var(--ui-purple-light);
   padding: 4px 12px 6px;
   margin: 0 auto 2px;
   text-shadow:
-    2px 2px 0   rgba(0, 0, 0, 0.95),
-    0 0 12px   rgba(var(--ui-purple-strong-rgb), 0.35);
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 12px rgba(var(--ui-purple-strong-rgb), 0.35);
   /* Subtle underline keeps it anchored above the bar */
   border-bottom: 1px solid rgba(var(--ui-purple-strong-rgb), 0.22);
   width: fit-content;
 }
 @media (min-width: 768px) {
   .realm-stage-title {
-    font-size: 0.92rem;
+    font-size: 1.1rem;
   }
 }
 
@@ -7391,34 +7393,11 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   gap: 3px;
 }
 
-.hp-bar-track {
-  height: 8px;
-  background: var(--bg-secondary);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.hp-bar-fill {
-  height: 100%;
-  border-radius: 4px;
-  /* NO transition — patched every rAF frame */
-}
-
-.player-hp-fill {
-  background: linear-gradient(to right, #16a34a, #4ade80);
-  width: 100%;
-}
-
-.enemy-hp-fill {
-  background: linear-gradient(to right, #b91c1c, var(--accent));
-  width: 100%;
-}
-
-.hp-bar-text {
-  font-size: 0.72rem;
-  color: rgba(var(--ui-muted-rgb), 0.55);
-  font-variant-numeric: tabular-nums;
-}
+/* Note: an earlier .hp-bar-track / .hp-bar-fill / .player-hp-fill /
+   .enemy-hp-fill / .hp-bar-text block lived here. None of those selectors
+   were ever rendered — combat HP bars use .stage-hud-* (further down). The
+   orphan rules were removed so future readers don't mistake them for the
+   live styles. */
 
 .combat-vs {
   font-size: 0.75rem;
@@ -7436,20 +7415,35 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   justify-content: center;
 }
 
+/* Mobile / default: the pixel-art card_frame overlay (rendered as
+   <img class="tech-icon-frame">) provides ALL of the slot's visuals. The
+   padding matches the frame's bezel so icon + name sit cleanly inside the
+   jade trough. The desktop horizontal-row layout in @media (min-width:768px)
+   hides the frame and restores the canonical .inv-slot CSS surface — the
+   pixel frame's vertical aspect ratio doesn't fit a horizontal bar.
+   The tech-color glow is added so each slot still telegraphs its element. */
 .tech-icon-slot {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 90px;
   position: relative;
-  padding: 8px 8px 6px;
-  background: rgba(var(--ui-bg-panel-rgb), 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 10px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 2px 10px rgba(0, 0, 0, 0.5),
-    0 0 14px color-mix(in srgb, var(--tech-color, transparent) 20%, transparent);
+  padding: 20px 15px 17px;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--tech-color, transparent) 22%, transparent);
+}
+
+/* The pixel-art frame overlays the entire slot. position:absolute + z-index
+   keeps it above the icon + name; pointer-events:none lets clicks pass
+   through to whatever the slot wires up later. */
+.tech-icon-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 10;
 }
 
 /* Tap-to-cast button (2026-05-03) — overrides browser button defaults so the
@@ -7507,7 +7501,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   line-height: 1;
   z-index: 0;
   user-select: none;
-  color: var(--tech-color, var(--text-muted));
+  color: var(--tech-color, rgba(var(--ui-muted-rgb), 0.65));
 }
 
 /* Countdown number — patched by rAF loop, NO CSS transition */
@@ -7530,9 +7524,13 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   transition: opacity 0.1s;
 }
 
+/* Label sits below the icon. Sized in line with other small card labels in
+   the app (.inv-name = 0.72rem, .build-tech-name = 0.7rem) — the previous
+   0.58rem was below the readable threshold on phones. Weight 500 keeps it
+   in the "label" tier rather than a heavier emphasis. */
 .tech-icon-name {
-  font-size: 0.58rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 500;
   text-align: center;
   line-height: 1.2;
   padding: 3px 4px;
@@ -7544,7 +7542,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   position: relative;
   z-index: 11;
   text-shadow: 0 1px 3px rgba(0,0,0,0.9);
-  color: var(--tech-color, var(--text-muted));
+  color: var(--tech-color, rgba(var(--ui-muted-rgb), 0.85));
 }
 
 /* ─────────────────────────────────────────────
@@ -7601,11 +7599,16 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .combat-result-won span  { color: #4ade80; }
 .combat-result-lost span { color: var(--accent); }
 
-/* ── Combat log ── */
+/* ── Combat log ──────────────────────────────────────────────────────────
+   Surface tokens match the canonical .inv-slot card (0.88 panel opacity,
+   0.10 border, standard shadow) so the log reads as the same panel system
+   as every other card in the game. Only deviation: no border-radius
+   transform on tap, since this is a scroll surface, not a button. */
 .combat-log {
-  background: rgba(var(--ui-bg-panel-rgb), 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(var(--ui-bg-panel-rgb), 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   padding: 10px 12px;
   height: 160px;
   overflow-y: auto;
@@ -7622,12 +7625,14 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .combat-log-empty {
   color: rgba(var(--ui-muted-rgb), 0.55);
-  font-style: italic;
 }
 
+/* Section break between fights. Token-driven colour and no !important —
+   this rule isn't fighting any cascade now that the per-entry colour is
+   set inline only for non-divider entries. */
 .combat-log-divider {
-  color: rgba(255, 255, 255, 0.15) !important;
-  font-size: 0.6rem !important;
+  color: rgba(255, 255, 255, 0.18);
+  font-size: 0.62rem;
   text-align: center;
   letter-spacing: 0.05em;
   margin: 3px 0;
@@ -7646,12 +7651,19 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .stage-hud-player { left: 8px; }
 .stage-hud-enemy  { right: 8px; text-align: right; }
 
+/* Typography here uses the global system font stack so combat reads as
+   cleanly as every other screen. Weight 700 + a tight black outline keep
+   the nameplate legible against the parallax background. Sizes are rem-based
+   so they scale with user font preferences. */
 .stage-hud-name {
   display: block;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   color: #fff;
-  text-shadow: 1.5px 1px 1px rgba(0,0,0,1), -1.3px -0.9px 8px rgba(0,0,0,1);
+  text-shadow:
+    0 0 4px rgba(0, 0, 0, 0.95),
+    0 1px 2px rgba(0, 0, 0, 1);
   margin-bottom: 3px;
   white-space: nowrap;
 }
@@ -7702,24 +7714,75 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   /* width patched by rAF — no transition */
 }
 
+/* Player HP — canonical green (#4ade80, the same green used by the VICTORY
+   overlay and every success state in the app). Convention: green = "you're
+   alive", with amber + red threshold shifts below for "you're dying".
+   Threshold shifts driven from useCombat.patchBars via [data-hp-state]. */
 .stage-hud-fill-player {
-  background: linear-gradient(to right, #16a34a, #4ade80);
+  background: linear-gradient(
+    to right,
+    rgba(34, 197, 94, 0.85),
+    rgb(74, 222, 128)
+  );
+  /* Smooth blend when the threshold class flips between healthy / low / crit */
+  transition: background 0.35s ease-out;
 }
 
+/* Below ~30% HP — blend toward warm amber so the bar reads as "you're
+   taking serious damage" without abandoning the purple identity entirely. */
+.stage-hud-fill-player[data-hp-state="low"] {
+  background: linear-gradient(
+    to right,
+    rgba(245, 158, 11, 0.85),
+    rgba(245, 200, 66, 1)
+  );
+}
 
+/* Below ~10% HP — full red. Matches the enemy's accent-red so "you're
+   about to die" reads at a glance. */
+.stage-hud-fill-player[data-hp-state="critical"] {
+  background: linear-gradient(
+    to right,
+    rgba(var(--accent-rgb), 0.85),
+    rgba(var(--accent-rgb), 1)
+  );
+  /* Faint pulse to draw the eye when HP is critical. */
+  animation: stage-hud-crit-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes stage-hud-crit-pulse {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.25); }
+}
+
+/* Enemy HP — accent-red gradient. Left stop deepened so the drained portion
+   of the bar reads as "you ate that HP" rather than fading transparent. */
 .stage-hud-fill-enemy {
-  background: linear-gradient(to left, #b91c1c, var(--accent));
+  background: linear-gradient(
+    to left,
+    rgba(var(--accent-rgb), 0.75),
+    var(--accent)
+  );
 }
 
+/* HP text — white on both bars. White reads cleanly against the player
+   green (and the amber/red threshold shifts) and against the enemy red,
+   so we don't need per-bar or per-state colour overrides any more.
+   font-size kept small enough to clear the bar's inner channel — the
+   .hud-bar-inner trough is ~74% of the frame height, so the text needs
+   to fit inside that with margin to spare. */
 .stage-hud-text {
   position: absolute;
   top: 55%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-family: 'Press Start 2P', monospace;
-  font-size: 7px;
-  color: var(--ui-purple-light);
-  text-shadow: 1px 0.7px 0.5px rgba(0,0,0,1), -1px -0.7px 8px rgba(0,0,0,1);
+  font-size: 0.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: #fff;
+  /* Tight single shadow — no blur halo that visually leaks past the bar */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);
   line-height: 1;
   white-space: nowrap;
   z-index: 3;
@@ -7751,9 +7814,12 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .stage-result-text {
-  font-family: 'Press Start 2P', monospace;
-  font-size: clamp(1rem, 4vw, 1.6rem);
-  letter-spacing: 0.05em;
+  font-size: clamp(1.5rem, 5vw, 2.2rem);
+  font-weight: 800;
+  /* Wider tracking + uppercase weight 800 keep VICTORY/DEFEAT ceremonial
+     even without a custom display face. */
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   animation: stage-result-text-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
@@ -7865,12 +7931,43 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
-  border: 1px solid var(--border);
+  /* Border drawn as an inset box-shadow rather than a real border so the
+     top scrim ::before paints above it. With a real border, the 1px ring
+     would sit outside the scrim's positioning context and read as a thin
+     "bezel" on top of the fade — especially visible at the rounded corners
+     where the border curves and the scrim is at its darkest. */
+  box-shadow: inset 0 0 0 1px var(--border);
   margin-bottom: 12px;
   background-color: #080818;
   background-size: cover;
   background-position: center bottom;
   background-repeat: no-repeat;
+}
+
+/* Top scrim — fades dark→transparent from the top of the stage so the
+   nameplates and HP bars always read against a controlled background,
+   regardless of what the world art looks like (sky, mountains, etc.).
+   Sits above the bg-image (z-index 1) but below the fighters (z-index 2)
+   and the HP HUD (z-index 10), so it darkens scenery only. */
+.combat-stage::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.65) 0%,
+    rgba(0, 0, 0, 0.40) 45%,
+    rgba(0, 0, 0, 0)    100%
+  );
+  pointer-events: none;
+  z-index: 1;
+  /* Match the parent's top corner radius so the scrim doesn't bleed
+     past the rounded corners of the stage frame. */
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
 
 @media (min-width: 431px) {
@@ -7880,12 +7977,14 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 
-/* Fighter wrappers */
+/* Fighter wrappers — z-index 2 keeps the sprites above the top scrim
+   pseudo (z-index 1) so character heads/silhouettes aren't dimmed. */
 .stage-side {
   position: relative;
   display: flex;
   align-items: flex-end;
   flex-shrink: 0;
+  z-index: 2;
 }
 
 /* KO: tilt and fade */
@@ -8315,10 +8414,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
   /* Combat screen fills the container — no artificial width cap */
 
-  .hp-bar-track {
-    height: 10px;
-  }
-
   .tech-icon-slot {
     width: 110px;
   }
@@ -8368,10 +8463,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 
   /* Combat screen: no width cap — fills screen-container */
-
-  .hp-bar-track {
-    height: 11px;
-  }
 
   .tech-icon-slot {
     width: 119px;
@@ -8529,20 +8620,20 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
     padding: 12px 10px;
   }
 
-  .hp-bar-track {
-    height: 12px;
-  }
-
   .tech-icon-slot {
     width: 94px;
   }
 
+  /* Mobile: HP text shrunk further so the digits stay inside the bar's
+     inner channel — at narrow viewports the frame itself is smaller, so
+     the trough is correspondingly tighter. Nameplate stays larger since
+     it sits above the bar with no vertical clipping risk. */
   .stage-hud-name {
-    font-size: 6px;
+    font-size: 0.68rem;
   }
 
   .stage-hud-text {
-    font-size: 5px;
+    font-size: 0.52rem;
   }
 
   .tech-icon-name {
@@ -9117,6 +9208,37 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .back-btn:hover {
   color: var(--text-primary);
   border-color: var(--text-muted);
+}
+
+/* Icon-only variant — used in the combat-page header so the back affordance
+   sits inline with the title row instead of taking a whole row to itself.
+   Styled as a sibling of the top-bar HUD chips (settings ⚙ / trophy 🏆):
+   same 34×34 footprint, same 9px corner, same subtle white-tint fill,
+   same hover brighten — so a player's eye reads it as the same kind of
+   tappable chrome chip rather than a decorative outline floating in space.
+   The base .back-btn rule above applies its own background/border/color;
+   we override those here because a transparent-outline button gets lost
+   against the dark page background. */
+.back-btn-icon {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  line-height: 1;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.75);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.back-btn-icon:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 /* ── Gathering / Mining screens ────────────────────────────────────────────── */
@@ -12426,12 +12548,41 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   overflow: hidden;
 }
 
-/* Zero default margins — only the flex gap provides spacing here */
-.combat-screen > .back-btn,
+/* Zero default margins — only the flex gap provides spacing here.
+   The header gets an explicit margin-bottom so the title/subtitle doesn't
+   crash into the stage; everything else uses the tight 4px flex gap so
+   the stage and tech grid stay packed. */
 .combat-screen > h1,
 .combat-screen > .subtitle {
   flex-shrink: 0;
   margin-bottom: 0;
+}
+
+.combat-screen > .coll-page-header {
+  flex-shrink: 0;
+  margin-bottom: 8px;
+}
+
+/* Combat header — back chevron + title stack on a single row. The text
+   stack (h1 + subtitle) keeps its column layout via .combat-page-header-text
+   so the subtitle still sits beneath the title; the row itself just lays
+   the icon and the stack side-by-side, vertically centred so the chevron
+   aligns with the h1 baseline area rather than the smaller subtitle. */
+.combat-page-header {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.combat-page-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0; /* lets the subtitle ellipsis if the region name is long */
+}
+
+.combat-page-header-text h1 {
+  margin: 0;
 }
 
 /* Stage + bottom share the same width constraint so the bottom section
@@ -12511,13 +12662,26 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
     align-items: stretch;
   }
 
-  /* Each slot: compact horizontal bar — [icon] [name] */
+  /* On desktop the slot becomes a horizontal row [icon] [name]. The vertical
+     pixel-art card_frame.png doesn't fit this aspect ratio, so we hide it
+     here and restore the canonical .inv-slot CSS surface so the slot still
+     reads as a real card. */
+  .combat-bottom .tech-icon-frame {
+    display: none;
+  }
+
   .combat-bottom .tech-icon-slot {
     flex-direction: row;
     width: 100%;
     align-items: center;
     gap: 10px;
-    padding: 4px 10px;      /* tighter vertical padding vs default 8/6px */
+    padding: 4px 10px;      /* tighter vertical padding vs default 20/15/17 */
+    background: rgba(var(--ui-bg-panel-rgb), 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 10px;
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.35),
+      0 0 14px color-mix(in srgb, var(--tech-color, transparent) 22%, transparent);
   }
 
   /* Icon: fixed 40×40 square; override the aspect-ratio default */

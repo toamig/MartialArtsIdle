@@ -348,8 +348,19 @@ export default function useCombat() {
   const spawnDropsRef         = useRef(null);
 
   const patchBars = (s) => {
-    if (pHpBarRef.current)
-      pHpBarRef.current.style.width = `${(s.pHp / s.pMaxHp) * 100}%`;
+    if (pHpBarRef.current) {
+      const pRatio = s.pHp / s.pMaxHp;
+      pHpBarRef.current.style.width = `${pRatio * 100}%`;
+      // Drive the threshold colour shift via a data attribute that CSS keys off.
+      // Healthy = no attribute (default purple gradient).
+      // Low (<=30%) = amber; Critical (<=10%) = accent-red + pulse.
+      const nextState = pRatio <= 0.10 ? 'critical' : pRatio <= 0.30 ? 'low' : '';
+      const curState = pHpBarRef.current.dataset.hpState || '';
+      if (curState !== nextState) {
+        if (nextState) pHpBarRef.current.dataset.hpState = nextState;
+        else delete pHpBarRef.current.dataset.hpState;
+      }
+    }
     if (eHpBarRef.current)
       eHpBarRef.current.style.width = `${(s.eHp / s.eMaxHp) * 100}%`;
     if (pHpTextRef.current)

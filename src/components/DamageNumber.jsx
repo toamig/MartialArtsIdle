@@ -17,8 +17,10 @@ function format(value) {
 }
 
 /**
- * DamageNumber — renders a damage value using Press Start 2P pixel font.
- * fontSize is computed by the caller based on damage % of enemy max HP.
+ * DamageNumber — renders a damage value using the global system font stack
+ * (inherited from :root) so combat reads as cleanly as the rest of the app.
+ * fontSize is computed by the caller based on damage % of enemy max HP;
+ * fontWeight 800 keeps the number visually impactful without a display face.
  *
  * exploit: when true, prepends an EXPLOIT! flash above the number and
  * applies a brighter gradient + larger drop-shadow via the
@@ -36,7 +38,7 @@ export default function DamageNumber({ value, color = 'gold', fontSize = 14, exp
         style={{
           ...style,
           fontSize,
-          fontFamily: "'Press Start 2P', monospace",
+          fontWeight: 800,
           lineHeight: 1,
           color: '#facc15',
         }}
@@ -56,7 +58,7 @@ export default function DamageNumber({ value, color = 'gold', fontSize = 14, exp
       style={{
         ...style,
         fontSize,
-        fontFamily: "'Press Start 2P', monospace",
+        fontWeight: 800,
         lineHeight: 1,
         color: exploit ? '#fff5c2' : baseColor,
       }}

@@ -17,13 +17,16 @@ import CombatStage from '../components/CombatStage';
 
 const AUTO_RESTART_MS = 2000;
 
+// All entries use the dark-purple chrome family or the semantic accent so the
+// log reads as part of the same UI as every other panel. Damage lines share
+// the accent — direction is conveyed by the message text, not the colour.
 const LOG_COLOR = {
   damage:         'var(--accent)',
-  'damage-taken': '#f97316',
-  heal:           '#4ade80',
-  buff:           '#60a5fa',
-  dodge:          '#facc15',
-  technique:      '#c084fc',
+  'damage-taken': 'rgba(var(--accent-rgb), 0.72)',
+  heal:           'var(--ui-purple-light)',
+  buff:           'var(--ui-purple-soft)',
+  dodge:          'rgba(var(--ui-label-rgb), 0.72)',
+  technique:      'var(--ui-purple-strong)',
   system:         'var(--text-muted)',
 };
 
@@ -173,12 +176,21 @@ function CombatScreen({ cultivation, techniques, combat, inventory, artefacts = 
 
   return (
     <div className="screen combat-screen">
-      {onBack && (
-        <button className="back-btn" onClick={onBack}>{t('common.back')}</button>
-      )}
-      <header className="coll-page-header">
-        <h1>{t('combat.title')}</h1>
-        <span className="coll-page-subtitle">{subtitle}</span>
+      <header className="coll-page-header combat-page-header">
+        {onBack && (
+          <button
+            className="back-btn back-btn-icon"
+            onClick={onBack}
+            aria-label={t('common.back')}
+            title={t('common.back')}
+          >
+            ←
+          </button>
+        )}
+        <div className="combat-page-header-text">
+          <h1>{t('combat.title')}</h1>
+          <span className="coll-page-subtitle">{subtitle}</span>
+        </div>
       </header>
 
       {/* ── Fighter stage ───────────────────────────────────────────────── */}
