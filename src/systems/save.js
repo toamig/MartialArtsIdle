@@ -3,6 +3,23 @@ const TECH_KEY       = 'mai_techniques';
 const OWNED_TECH_KEY = 'mai_owned_techniques';
 
 /**
+ * Save schema version. Bump when the on-disk shape changes in a way that
+ * requires migration. Each version below documents what changed; do NOT
+ * reuse old numbers.
+ *
+ *   1 — pre-versioning (implicit).
+ *   2 — v1 Cookie-Clicker pivot. NO migration required:
+ *         • Adds `mai_producers`, `mai_upgrades`, `mai_producers_rate_snapshot`.
+ *         • Combat-tied keys (`mai_inventory`, `mai_owned_laws`, `mai_pills`,
+ *           `mai_blood_lotus`, `mai_artefacts`, `mai_techniques`, etc.) are
+ *           PRESERVED on disk. Their UI is gated behind FEATURES.combat in
+ *           src/data/featureFlags.js — when combat ships in v2, flipping
+ *           that flag rehydrates everything without a data migration.
+ */
+export const SAVE_VERSION = 2;
+export const SAVE_VERSION_KEY = 'mai_save_version';
+
+/**
  * Cookie Clicker-style save system.
  * - Auto-saves to localStorage
  * - Export: base64 encoded string the user can copy
@@ -57,6 +74,13 @@ export function wipeSave() {
   localStorage.removeItem('mai_qi_crystal');
   localStorage.removeItem('mai_crystal_reservoir');
   localStorage.removeItem('mai_crystal_click_snapshot');
+  // Cookie-Clicker pivot (v1) — producers + upgrades. Producer counts may be
+  // partially restored AFTER wipeReincarnation by App.jsx's handleReincarnate
+  // when the Eternal Tree keepProducerLevelsFrac modifier is non-zero. The
+  // one-time upgrade set always wipes (no carryover by design).
+  localStorage.removeItem('mai_producers');
+  localStorage.removeItem('mai_producers_rate_snapshot');
+  localStorage.removeItem('mai_upgrades');
   localStorage.removeItem('mai_achievements');
   localStorage.removeItem('mai_permanent_pill_stats');
   // Per-pill consumption counter that drives diminishing returns. Lives

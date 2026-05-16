@@ -12,9 +12,17 @@
 
 /**
  * Format a large integer (qi total, damage, costs, etc.)
- * Examples: 1 500 → "1.5K"  |  2 300 000 → "2.3M"  |  4 100 000 000 → "4.1B"
+ * Examples: 1 500 → "1.5K"  |  2 300 000 → "2.3M"  |  4.1e9 → "4.1B"  |  9.9e15 → "9.9Qa"
+ *
+ * Short-scale ladder extended to Qa/Qi/Sx/Sp to cover endgame qi totals
+ * (producer-driven late game routinely reaches 10^15+).
  */
 export function fmt(n) {
+  if (!Number.isFinite(n)) return '0';
+  if (n >= 1e24) return (n / 1e24).toFixed(1) + 'Sp';
+  if (n >= 1e21) return (n / 1e21).toFixed(1) + 'Sx';
+  if (n >= 1e18) return (n / 1e18).toFixed(1) + 'Qi';
+  if (n >= 1e15) return (n / 1e15).toFixed(1) + 'Qa';
   if (n >= 1e12) return (n / 1e12).toFixed(1) + 'T';
   if (n >= 1e9)  return (n / 1e9).toFixed(1)  + 'B';
   if (n >= 1e6)  return (n / 1e6).toFixed(1)  + 'M';
@@ -24,10 +32,15 @@ export function fmt(n) {
 
 /**
  * Format a rate value (qi/s, damage/s, etc.) with a finer low-end display.
- * The M/B/T tiers use 2 decimal places so "1.00M/s" is unambiguous.
- * Examples: 3.7 → "3.7"  |  12 → "12"  |  2 500 → "2.5K"  |  1 800 000 → "1.80M"
+ * The M/B/T+ tiers use 2 decimal places so "1.00M/s" is unambiguous.
+ * Examples: 3.7 → "3.7"  |  12 → "12"  |  2 500 → "2.5K"  |  1.8e6 → "1.80M"  |  4.2e15 → "4.20Qa"
  */
 export function fmtRate(n) {
+  if (!Number.isFinite(n)) return '0';
+  if (n >= 1e24) return (n / 1e24).toFixed(2) + 'Sp';
+  if (n >= 1e21) return (n / 1e21).toFixed(2) + 'Sx';
+  if (n >= 1e18) return (n / 1e18).toFixed(2) + 'Qi';
+  if (n >= 1e15) return (n / 1e15).toFixed(2) + 'Qa';
   if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
   if (n >= 1e9)  return (n / 1e9).toFixed(2)  + 'B';
   if (n >= 1e6)  return (n / 1e6).toFixed(2)  + 'M';

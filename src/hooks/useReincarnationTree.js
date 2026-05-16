@@ -160,6 +160,39 @@ export default function useReincarnationTree({ karma, spendKarma, lives = 0 } = 
       // cb_is now contributes via default_attack_damage (see getStatModifiers).
       regionKillBonus:    purchased.has('cb_ts'),             // cb_ts 10-kill +1 rarity gather/mine
       phaseTechniqueOwned:purchased.has('cb_pt'),             // cb_pt grants the Phase Technique law
+
+      // ── Cookie-Clicker pivot (v1 — Phase E) ──────────────────────────
+      // New modifier surface for the producer/upgrade shop. Defaults are
+      // pass-throughs (no effect). Wired to a small set of high-impact
+      // existing nodes for v1; full per-node redesign happens when combat
+      // ships in v2 and the dead-code combat-stat modifiers above can be
+      // properly retired.
+      //
+      // producerOutputMult — multiplier on producer flat qi/s (×1 = no bonus).
+      //   yy_k Primordial Balance: piggybacks its existing +10% to also bump
+      //   producer output by +10% in v1 (artefact effect is dead under
+      //   !FEATURES.combat). Stacks with yy_1's wolMult (lives-driven).
+      producerOutputMult:
+        (purchased.has('yy_k') ? 1.10 : 1)
+        * (purchased.has('yy_1') ? wolMult : 1),
+      // producerCostMult — discount on producer purchases (×1 = full price).
+      //   md_1 Steady Hands repurposes: in v1 also cuts producer cost by 10%
+      //   (combat-CD effect is dead under !FEATURES.combat).
+      producerCostMult:   purchased.has('md_1') ? 0.90 : 1,
+      // upgradeCostMult — discount on one-time upgrade purchases.
+      //   md_k Killing Stride repurposes for v1 as a 25% upgrade discount.
+      upgradeCostMult:    purchased.has('md_k') ? 0.75 : 1,
+      // crystalTapMult — multiplier on crystal-tap empty-floor.
+      //   yy_3 HP Regen repurposes for v1 as a 2× crystal-tap multiplier.
+      crystalTapMult:     purchased.has('yy_3') ? 2 : 1,
+      // keepProducerLevelsFrac — fraction of producer counts retained through
+      // reincarnation. al_2 Echo of Mastery, which carries recipes (dead in
+      // v1), additionally retains 10% of each producer's level. al_4 bumps
+      // it to 25% (was the +50 Blood Lotus on rebirth — still applies).
+      keepProducerLevelsFrac:
+        (purchased.has('al_4') ? 0.25
+        : purchased.has('al_2') ? 0.10
+        : 0),
     };
   }, [purchased, lives]);
 

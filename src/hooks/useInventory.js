@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import STARTER_INVENTORY from '../data/starterInventory';
+import { FEATURES } from '../data/featureFlags';
 
 const SAVE_KEY = 'mai_inventory';
 
@@ -19,7 +20,12 @@ function saveInventory(inv) {
 
 export default function useInventory() {
   const [inventory, setInventory] = useState(() => {
-    return loadInventory() || { ...STARTER_INVENTORY };
+    const loaded = loadInventory();
+    if (loaded) return loaded;
+    // Combat hidden in v1 → don't seed combat-adjacent items. When combat
+    // ships in v2 and FEATURES.combat flips true, fresh saves get the
+    // starter set; existing saves keep whatever was on disk untouched.
+    return FEATURES.combat ? { ...STARTER_INVENTORY } : {};
   });
 
   useEffect(() => {

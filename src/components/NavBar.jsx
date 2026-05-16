@@ -4,20 +4,27 @@ import LockTooltip from './LockTooltip';
 const BASE = import.meta.env.BASE_URL;
 
 const SCREENS = [
-  { id: 'home',       tKey: 'nav.home'                              },
-  { id: 'worlds',     tKey: 'nav.worlds'                            },
-  { id: 'character',  tKey: 'nav.character'                         },
-  { id: 'collection', tKey: 'nav.collection', sprite: 'inventory'  },
-  { id: 'production', tKey: 'nav.craft'                             },
+  { id: 'home',         tKey: 'nav.home'                              },
+  // The qi-investment shop (Cookie-Clicker-style producers + upgrades).
+  // Reuses training.png as a placeholder sprite until a dedicated icon ships.
+  { id: 'cultivation',  tKey: 'nav.cultivation', sprite: 'training'  },
+  { id: 'worlds',       tKey: 'nav.worlds'                            },
+  { id: 'character',    tKey: 'nav.character'                         },
+  { id: 'collection',   tKey: 'nav.collection', sprite: 'inventory'  },
+  { id: 'production',   tKey: 'nav.craft'                             },
   // Settings and Reincarnation moved to the HomeScreen HUD bar.
 ];
 
-function NavBar({ currentScreen, onNavigate, badges = {}, isUnlocked = () => true, getHint = () => null, getDesc = () => null }) {
+function NavBar({ currentScreen, onNavigate, badges = {}, isUnlocked = () => true, isHidden = () => false, getHint = () => null, getDesc = () => null }) {
   const { t } = useTranslation('ui');
+
+  // Drop flag-hidden tabs entirely (combat etc.) so players don't see locks
+  // they can never unlock in this build.
+  const visibleScreens = SCREENS.filter((screen) => !isHidden(screen.id));
 
   return (
     <nav className="navbar">
-      {SCREENS.map((screen) => {
+      {visibleScreens.map((screen) => {
         const label    = t(screen.tKey);
         const unlocked = isUnlocked(screen.id);
         const hint     = !unlocked ? getHint(screen.id) : null;

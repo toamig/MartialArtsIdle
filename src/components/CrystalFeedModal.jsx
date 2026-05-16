@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { CULTIVATION_ITEMS, RARITY, getRefinedQi } from '../data/materials';
 import { getRequiredRefinedQi } from '../hooks/useQiCrystal';
+import { FEATURES } from '../data/featureFlags';
+import { fmt as fmtQi } from '../utils/format';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -91,7 +93,13 @@ function ReserveChip({ rarity, qty, rqi, dim }) {
   );
 }
 
-function CrystalFeedModal({ crystal, inventory, onClose, onEvolve }) {
+function CrystalFeedModal({ crystal, inventory, cultivation, onClose, onEvolve }) {
+  // Cookie-Clicker pivot (v1) — under !FEATURES.combat the crystal levels via
+  // qi spend instead of stone feeding. Branch to a dedicated component so the
+  // existing stone-flow code stays untouched for v2.
+  if (!FEATURES.combat) {
+    return <CrystalQiFeedModal crystal={crystal} cultivation={cultivation} onClose={onClose} onEvolve={onEvolve} />;
+  }
   const { level, refinedQi, requiredForNext, crystalQiBonus, feedMultiple } = crystal;
 
   // ── Available stones (recomputed every render; cheap) ──────────────────────
@@ -349,6 +357,200 @@ function CrystalFeedModal({ crystal, inventory, onClose, onEvolve }) {
               : plan.length === 0
                 ? '⚡ Refine'
                 : `⚡ Refine +${fmtRqi(actualRqi)} RQI`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Qi-fed variant (v1 — Cookie-Clicker pivot)
+ *
+ * Same level curve as the stone-fed modal (1 qi → 1 RQI). The slider sets
+ * how much qi to spend; quick presets compute the cost to reach +N levels.
+ * On refine, `crystal.feedQi(amount, cultivation.spendQi)` atomically spends
+ * qi and runs the level-up loop. If the spend fails (player can't afford
+ * it), nothing changes.
+ * ─────────────────────────────────────────────────────────────────────── */
+function CrystalQiFeedModal({ crystal, cultivation, onClose, onEvolve }) {
+  const { level, refinedQi, requiredForNext, crystalQiBonus, feedQi } = crystal;
+
+  // Live qi balance — same poll cadence as CultivationScreen's sticky header.
+  const [qi, setQi] = useState(() => cultivation?.qiRef?.current ?? 0);
+  useEffect(() => {
+    if (!cultivation?.qiRef) return;
+    const id = setInterval(() => setQi(cultivation.qiRef.current), 100);
+    return () => clearInterval(id);
+  }, [cultivation?.qiRef]);
+
+  // Spend-amount state. Default: just enough for next level, capped at balance.
+  const [spendAmount, setSpendAmount] = useState(() => {
+    const need = Math.max(0, requiredForNext - refinedQi);
+    return Math.min(need, Math.floor(qi));
+  });
+
+  // Cap if balance shrinks (e.g. player buys producers in another tab).
+  useEffect(() => {
+    if (spendAmount > qi) setSpendAmount(Math.floor(qi));
+  }, [spendAmount, qi]);
+
+  const clamped = Math.max(0, Math.min(spendAmount, Math.floor(qi)));
+  const preview = simulateLevelUp(level, refinedQi + clamped);
+  const levelsGained = preview.level - level;
+  const willLevelUp  = levelsGained > 0;
+
+  // Quick presets — same semantics as the stone-fed modal.
+  const applyTarget = (extraLevels) => {
+    const need = rqiNeededToReachLevel(level + extraLevels, level, refinedQi);
+    setSpendAmount(Math.min(need, Math.floor(qi)));
+  };
+  const applyMax  = () => setSpendAmount(Math.floor(qi));
+  const applyZero = () => setSpendAmount(0);
+
+  const maxPreview      = simulateLevelUp(level, refinedQi + Math.floor(qi));
+  const maxLevelsGained = maxPreview.level - level;
+
+  const handleRefine = () => {
+    if (clamped <= 0) return;
+    const result = feedQi?.(clamped, cultivation?.spendQi);
+    if (!result) return;
+    setSpendAmount(0);
+    setQi(cultivation?.qiRef?.current ?? 0);
+    if (result.tierChanged && onEvolve) {
+      onEvolve({ previousTier: result.previousTier, newTier: result.newTier, newLevel: result.newLevel });
+      onClose?.();
+    }
+  };
+
+  // Progress bar — same math as the stone variant.
+  const pct = requiredForNext > 0 ? Math.min(100, (refinedQi / requiredForNext) * 100) : 100;
+  const previewFillPct = willLevelUp
+    ? 100
+    : Math.min(100, ((refinedQi + clamped) / requiredForNext) * 100);
+
+  const tier       = getCrystalTier(level) ?? 1;
+  const crystalSrc = `${BASE}crystals/crystal_${tier}.png`;
+
+  const balanceFloor = Math.floor(qi);
+  const canAfford    = clamped > 0 && balanceFloor >= clamped;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="cfm-modal" onClick={e => e.stopPropagation()}>
+
+        {/* Header — same layout as the stone variant for visual continuity. */}
+        <div className="cfm-header">
+          <img src={crystalSrc} className="cfm-crystal-img" alt="" draggable="false" />
+          <div className="cfm-header-text">
+            <div className="cfm-title">Qi Crystal</div>
+            <div className="cfm-subtitle">Level {level}</div>
+          </div>
+          <div className="cfm-bonus-block">
+            <div className={`cfm-bonus-current${level === 0 ? ' cfm-bonus-current-zero' : ''}`}>
+              <span className="cfm-bonus-gem">◆</span> +{crystalQiBonus} Qi/s
+            </div>
+            <div className={`cfm-bonus-next${willLevelUp ? '' : ' cfm-bonus-next-hidden'}`}>
+              <span className="cfm-bonus-arrow">▲</span>
+              <span>
+                Lv.{preview.level} → +{(preview.level * (preview.level + 3)) / 2} Qi/s
+              </span>
+            </div>
+          </div>
+          <button className="journey-close" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+
+        <div className="cfm-modal-body">
+
+          {/* Refinement progress. */}
+          <div className="cfm-progress-wrap">
+            <div className="cfm-progress-track">
+              <div className="cfm-progress-fill" style={{ width: `${pct}%` }} />
+              {clamped > 0 && (
+                <div className="cfm-progress-preview" style={{ width: `${previewFillPct}%` }} />
+              )}
+            </div>
+            <div className="cfm-progress-labels">
+              <span>{fmtRqi(refinedQi)} / {fmtRqi(requiredForNext)} RQI</span>
+              <span className="cfm-progress-next">Level {level + 1}</span>
+            </div>
+          </div>
+
+          {/* Balance — replaces "Stone Reserves" in the stone variant. */}
+          <div className="cfm-section-label">
+            Qi Balance
+            <span className="cfm-section-meta">
+              Available: <strong>{fmtQi(balanceFloor)} Qi</strong>
+            </span>
+          </div>
+
+          {/* Amount control. */}
+          <div className="cfm-section-label">
+            Refinement Amount
+            <span className={`cfm-section-meta cfm-level-preview${willLevelUp ? '' : ' cfm-level-preview-idle'}`}>
+              Level {level} <span className="cfm-level-arrow">→</span> <strong>{preview.level}</strong>
+              <span className={`cfm-level-delta${willLevelUp ? '' : ' cfm-level-delta-hidden'}`}>
+                +{levelsGained}
+              </span>
+            </span>
+          </div>
+
+          <div className="cfm-amount-ctl">
+            <input
+              type="range"
+              min={0}
+              max={Math.max(1, balanceFloor)}
+              step={Math.max(1, Math.round(balanceFloor / 200))}
+              value={clamped}
+              onChange={e => setSpendAmount(Number(e.target.value))}
+              className="cfm-slider"
+              disabled={balanceFloor <= 0}
+              style={{
+                '--slider-pct': balanceFloor > 0
+                  ? `${(clamped / balanceFloor) * 100}%`
+                  : '0%',
+              }}
+            />
+            <div className="cfm-amount-row">
+              <button
+                className="cfm-qty-btn"
+                onClick={() => setSpendAmount(a => Math.max(0, a - Math.max(1, Math.round(balanceFloor / 20))))}
+                disabled={clamped === 0}
+              >−</button>
+              <span className="cfm-amount-val">
+                <strong>{fmtQi(clamped)}</strong>
+                <span className="cfm-amount-unit">Qi</span>
+              </span>
+              <button
+                className="cfm-qty-btn"
+                onClick={() => setSpendAmount(a => Math.min(balanceFloor, a + Math.max(1, Math.round(balanceFloor / 20))))}
+                disabled={clamped >= balanceFloor}
+              >+</button>
+            </div>
+
+            <div className="cfm-quick-row">
+              <button className="cfm-quick-btn" onClick={applyZero} disabled={balanceFloor <= 0}>Clear</button>
+              <button className="cfm-quick-btn" onClick={() => applyTarget(1)}  disabled={balanceFloor <= 0}>+1 Lv</button>
+              <button className="cfm-quick-btn" onClick={() => applyTarget(5)}  disabled={balanceFloor <= 0}>+5 Lv</button>
+              <button className="cfm-quick-btn" onClick={() => applyTarget(10)} disabled={balanceFloor <= 0}>+10 Lv</button>
+              <button className="cfm-quick-btn cfm-quick-max" onClick={applyMax} disabled={balanceFloor <= 0}>
+                Max{maxLevelsGained > 0 ? ` (+${maxLevelsGained})` : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button
+          className={`cfm-refine-btn${willLevelUp ? ' cfm-refine-levelup' : ''}`}
+          onClick={handleRefine}
+          disabled={!canAfford}
+        >
+          {balanceFloor <= 0
+            ? '🪨 Not enough Qi'
+            : willLevelUp
+              ? `⚡ Refine → Level ${preview.level}`
+              : clamped <= 0
+                ? '⚡ Refine'
+                : `⚡ Refine (-${fmtQi(clamped)} Qi)`}
         </button>
       </div>
     </div>

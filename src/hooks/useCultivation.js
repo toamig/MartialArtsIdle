@@ -185,13 +185,23 @@ export default function useCultivation() {
       if (raw) sparkOfflineMult = JSON.parse(raw).offlineQiMult ?? 1;
     } catch {}
 
+    // Producer flat — written by App.jsx as `mai_producers_rate_snapshot`
+    // every time producers or upgrades change. Folds in the per-producer
+    // doubling upgrades so the offline rate matches the online rate.
+    // Producers are the central idle loop of v1 — they MUST accrue offline.
+    let producerOfflineRate = 0;
+    try {
+      const raw = localStorage.getItem('mai_producers_rate_snapshot');
+      if (raw) producerOfflineRate = JSON.parse(raw).rate ?? 0;
+    } catch {}
+
     // Offline qi accrues at OFFLINE_QI_MULTIPLIER × the equivalent online
     // rate. Tuned to 0.20 on 2026-05-01 — players should feel rewarded for
     // sitting at the screen, while still earning meaningful catch-up qi
     // when away. Law / artefact / spark / pill modifiers still compound on
     // top so investment in those continues to matter offline.
     const OFFLINE_QI_MULTIPLIER = 0.20;
-    const baseRate = BASE_RATE * lawMult * offlineQiMult * artefactOfflineMult * sparkOfflineMult * (1 + pillQiSpeedBonus) * OFFLINE_QI_MULTIPLIER;
+    const baseRate = (BASE_RATE + producerOfflineRate) * lawMult * offlineQiMult * artefactOfflineMult * sparkOfflineMult * (1 + pillQiSpeedBonus) * OFFLINE_QI_MULTIPLIER;
     const total = baseRate * awaySeconds;
 
     // Crystal Click offline reservoir fill — silently updates localStorage so
@@ -224,6 +234,27 @@ export default function useCultivation() {
   const treeHeavenlyMultRef = useRef(1);
   // Crystal flat qi/sec bonus — written by App.jsx from useQiCrystal.crystalQiBonus
   const crystalQiBonusRef  = useRef(0);
+  // Producer flat qi/sec — written by App.jsx from useProducers.getRate(). Folded
+  // into the base-rate sum alongside crystal/spark flats; subject to the same
+  // law/boost/tree multipliers as the base rate. Phase B (cookie-clicker pivot).
+  const producerRateRef    = useRef(0);
+  // Multiplier on the producer flat — written by App.jsx from useUpgrades
+  // (producer doubling upgrades). 1 = no upgrades owned.
+  const upgradeProducerMultRef = useRef(1);
+  // Eternal Tree producer-output multiplier — written by App.jsx from
+  // useReincarnationTree.modifiers.producerOutputMult. 1 = no tree bonus.
+  const treeProducerOutputMultRef = useRef(1);
+  // Upgrade-driven crystal-tap floor multiplier — written by App.jsx from
+  // useUpgrades.getCrystalTapMult(). Each owned crystal_tap upgrade ×2.
+  // Applied inside collectCrystalReservoir() against the empty-reservoir floor.
+  const upgradeCrystalTapMultRef = useRef(1);
+  // Upgrade-driven major-realm gate multiplier — written by App.jsx from
+  // useUpgrades.getGateReductionMult(). Each owned gate_reduction upgrade ×0.7.
+  // Composes with sparkGateReductionRef (which is a 0..1 fraction subtracted).
+  const upgradeGateMultRef = useRef(1);
+  // Upgrade-driven focus-mult adder (percentage points, 0..N). Added to the
+  // stat-driven focus mult inside App.jsx's focusMult-write interval. Phase D.
+  const upgradeFocusMultAddRef = useRef(0);
   // Artefact-derived qi_speed multiplier — written by App.jsx from the
   // merged artefact bundle (FLAT/BASE_FLAT/INCREASED/MORE collapsed through
   // the five-layer formula with base=1). 1 = inactive.
@@ -312,6 +343,15 @@ export default function useCultivation() {
 
   // Mutable refs — updated every tick, no React re-render needed
   const qiRef      = useRef(saved?.qi ?? 0);
+  // Cookie-Clicker pivot (v1 — Polish P2). The "realm progress" meter that
+  // fills as the player earns qi. Producers + crystal taps + manual gains add
+  // to BOTH `qiRef` (spendable balance) and this ref (cumulative-this-realm).
+  // Spending via `spendQi(amount)` reduces ONLY `qiRef`, so buying producers
+  // / upgrades never rolls back the realm bar. Breakthroughs fire when this
+  // ref crosses costRef.current; on success it resets to 0 and qiRef is
+  // left untouched (no more "drain qi on breakthrough" — Painless Ascension
+  // spark retires alongside, see qiSparks.js).
+  const qiEarnedThisRealmRef = useRef(saved?.qiEarnedThisRealm ?? 0);
   const costRef    = useRef(REALMS[savedIndex].cost);
   const maxedRef   = useRef(!REALMS[savedIndex + 1]);
   const indexRef   = useRef(savedIndex);
@@ -434,7 +474,11 @@ export default function useCultivation() {
       // and the artefact heavenly_qi_mult stat.
       const heavenlyTree = adBoostRef.current > 1 ? treeHeavenlyMultRef.current : 1;
       const heavenlyArt  = adBoostRef.current > 1 ? (1 + heavenlyQiMultRef.current) : 1;
-      const rate = (BASE_RATE + crystalQiBonusRef.current + sparkQiFlatRef.current) * lawMult * qiUniqueMult *
+      // Producer flat scales by upgrade-doubling and Eternal-Tree producer-output
+      // multipliers BEFORE folding into the base sum so it composes correctly
+      // with the law/boost/tree-cult-speed multipliers downstream.
+      const producerFlat = producerRateRef.current * upgradeProducerMultRef.current * treeProducerOutputMultRef.current;
+      const rate = (BASE_RATE + crystalQiBonusRef.current + sparkQiFlatRef.current + producerFlat) * lawMult * qiUniqueMult *
         artefactQiMultRef.current *
         boostMult * consecutiveMult *
         adBoostRef.current * heavenlyTree * heavenlyArt *
@@ -444,7 +488,11 @@ export default function useCultivation() {
         patternClickMultRef.current *
         debugQiMultRef.current;
       rateRef.current = rate;
-      qiRef.current += rate * dt;
+      const dQi = rate * dt;
+      qiRef.current += dQi;
+      // Realm meter (Cookie-Clicker pivot) — fills with cumulative income
+      // for this realm; never decreases via spending.
+      qiEarnedThisRealmRef.current += dQi;
 
       // Crystal Click reservoir accrual — fill at (rate × clickRate) per second
       // up to (capMinutes × 60 × rate). Paused when mechanic is not unlocked.
@@ -460,8 +508,9 @@ export default function useCultivation() {
         // Post-ascension free mode: qi grows without bound — nothing to check.
       } else if (maxedRef.current) {
         // Final realm: fill to cost, then fire the last ever breakthrough.
-        if (qiRef.current >= costRef.current) {
-          qiRef.current = 0;
+        // Cookie-Clicker pivot: realm meter resets, qi balance is preserved.
+        if (qiEarnedThisRealmRef.current >= costRef.current) {
+          qiEarnedThisRealmRef.current = 0;
           ascendedRef.current = true;
           setAscended(true);
           // Sound is played by BreakthroughBanner on mount so it stays in sync
@@ -478,25 +527,33 @@ export default function useCultivation() {
           });
         }
       } else {
-        // Normal realm progression.
-        if (qiRef.current >= costRef.current) {
+        // Normal realm progression. Cookie-Clicker pivot: the realm meter
+        // (qiEarnedThisRealmRef) drives the check, NOT the qi balance.
+        // Spending on producers/upgrades never holds back progress.
+        if (qiEarnedThisRealmRef.current >= costRef.current) {
           const majorRate    = getMajorBreakthroughRate(indexRef.current);
           const baseRequired = majorRate > 0 ? majorRate : getPeakBreakthroughRate(indexRef.current);
-          // Patience of Stone (Qi Spark) shrinks the gate requirement.
-          const requiredRate = baseRequired * (1 - sparkGateReductionRef.current);
+          // Patience of Stone (Qi Spark) shrinks the gate requirement by a 0..1
+          // fraction (subtracted). Patient Heart upgrades multiply it (×0.7 each,
+          // stacking ×0.49). Composes by multiplying the two reduction sources.
+          const requiredRate = baseRequired
+            * (1 - sparkGateReductionRef.current)
+            * (upgradeGateMultRef.current || 1);
           if (requiredRate > 0 && rate < requiredRate) {
-            // Major-realm gate: hold qi at cost until sustained qi/s is enough.
-            qiRef.current = costRef.current;
+            // Major-realm gate: hold the realm meter at 100% until sustained
+            // qi/s is enough. qi balance is untouched.
+            qiEarnedThisRealmRef.current = costRef.current;
             gateRef.current = { required: requiredRate, current: rate };
           } else {
-            // Painless Ascension spark — when active, skip the qi drain and
-            // notify useQiSparks to consume the spark.
+            // Cookie-Clicker pivot: breakthrough no longer drains qi balance.
+            // The realm meter resets to 0 instead. Painless Ascension spark
+            // becomes a no-op; still notify so useQiSparks can consume the
+            // spark instance (graceful for any active spark in old saves).
             if (sparkPainlessRef.current) {
               sparkPainlessRef.current = false;
               try { window.dispatchEvent(new CustomEvent('mai:painless-consumed')); } catch {}
-            } else {
-              qiRef.current -= costRef.current;
             }
+            qiEarnedThisRealmRef.current = 0;
             const fromIndex = indexRef.current;
             const nextIndex = fromIndex + 1;
             const isMajor = isMajorTransition(fromIndex);
@@ -506,11 +563,13 @@ export default function useCultivation() {
             maxedRef.current  = !REALMS[nextIndex + 1];
             gateRef.current = null;
             // yy_2 Yin Reservoir — every realm starts with a fraction of its
-            // breakthrough qi cost already accumulated. Reservoir adds on top
-            // of any leftover qi from the previous realm.
+            // breakthrough qi cost pre-funded. Credit BOTH the qi balance AND
+            // the realm meter so the bar visibly starts non-empty.
             const reservoir = qiOnRealmFracRef.current;
             if (reservoir > 0) {
-              qiRef.current += costRef.current * reservoir;
+              const bonus = costRef.current * reservoir;
+              qiRef.current               += bonus;
+              qiEarnedThisRealmRef.current += bonus;
             }
             setRealmIndex(nextIndex);
             try { trackQiSink(REALMS[fromIndex].cost, 'Breakthrough', `r${nextIndex}`); } catch {}
@@ -582,10 +641,14 @@ export default function useCultivation() {
   useEffect(() => {
     const interval = setInterval(() => {
       saveGame({
-        realmIndex:    indexRef.current,
-        qi:            Math.floor(qiRef.current),
-        adBoostEndsAt: adBoostEndsAtRef.current,
-        ascended:      ascendedRef.current,
+        realmIndex:         indexRef.current,
+        qi:                 Math.floor(qiRef.current),
+        // Realm-progress meter — Cookie-Clicker pivot. Missing on legacy
+        // saves; defaults to 0 on next load (realm bar starts empty, no
+        // breakthrough blocked).
+        qiEarnedThisRealm:  Math.floor(qiEarnedThisRealmRef.current),
+        adBoostEndsAt:      adBoostEndsAtRef.current,
+        ascended:           ascendedRef.current,
       });
       // Crystal reservoir persisted separately — not part of the main save blob.
       try {
@@ -615,6 +678,9 @@ export default function useCultivation() {
     if (offlineEarnings <= 0) return;
     const total = offlineEarnings * multiplier;
     qiRef.current += total;
+    // Cookie-Clicker pivot — offline grant also fills the realm meter so the
+    // player can break through on the next tick if they crossed the cost line.
+    qiEarnedThisRealmRef.current += total;
     try {
       const lastSeen = saved?.lastSeen ?? Date.now();
       trackOfflineQiCollected(Math.floor(total), Date.now() - lastSeen, multiplier);
@@ -629,6 +695,21 @@ export default function useCultivation() {
    *
    * @returns {number} qi granted by this tap (0 if throttled).
    */
+  /**
+   * Spend qi atomically. Used by the Cultivation shop (producers + upgrades)
+   * to deduct qi before granting a purchase. Returns true on success, false
+   * if the player can't afford it. qiRef is the single source of truth — no
+   * React state to keep in sync; the existing display-update intervals (rAF
+   * in HomeScreen, setInterval in CultivationScreen) pick up the change next
+   * tick.
+   */
+  const spendQi = useCallback((amount) => {
+    if (!Number.isFinite(amount) || amount <= 0) return false;
+    if (qiRef.current < amount) return false;
+    qiRef.current -= amount;
+    return true;
+  }, []);
+
   const collectCrystalReservoir = useCallback(() => {
     const now = performance.now();
     if (now - lastCrystalTapAtRef.current < CRYSTAL_TAP_COOLDOWN_MS) return 0;
@@ -645,9 +726,13 @@ export default function useCultivation() {
       // Floor at 1 qi so the floater never displays "+0" (fmt() floors values
       // <1000 to integers). At low realms the 1-qi minimum dominates the
       // rate × 0.25 calc; once rate ≥ 4, the calc takes over.
-      granted = Math.max(1, (rateRef.current ?? 0) * CRYSTAL_EMPTY_TAP_FLOOR_S);
+      // upgradeCrystalTapMultRef multiplies the floor (Refined Tap I–V upgrades).
+      const tapMult = upgradeCrystalTapMultRef.current || 1;
+      granted = Math.max(1, (rateRef.current ?? 0) * CRYSTAL_EMPTY_TAP_FLOOR_S * tapMult);
     }
     qiRef.current += granted;
+    // Cookie-Clicker pivot — tap qi counts toward realm progress too.
+    qiEarnedThisRealmRef.current += granted;
     return granted;
   }, []);
 
@@ -667,6 +752,9 @@ export default function useCultivation() {
     totalRealms:   REALMS.length,
     // Refs for direct DOM updates — avoids React render lag on the progress bar
     qiRef,
+    // Cookie-Clicker pivot: cumulative qi earned in the current realm. The
+    // realm progress bar reads this; spending qi does NOT decrement it.
+    qiEarnedThisRealmRef,
     costRef,
     indexRef,
     rateRef,
@@ -709,12 +797,22 @@ export default function useCultivation() {
     sparkCrystalClickCapMinRef,
     crystalReservoirRef,
     collectCrystalReservoir,
+    // Atomic qi spend — used by useProducers / useUpgrades purchase paths.
+    spendQi,
     // Exposed for debug bridges — production code should treat both as
     // private to the cultivation tick.
     boostStartTimeRef,
     debugConsecutiveBypassRef,
     // QI Crystal flat bonus ref — updated by App.jsx from useQiCrystal
     crystalQiBonusRef,
+    // Producer flat qi/s + its multipliers — updated by App.jsx (Phase B/D)
+    producerRateRef,
+    upgradeProducerMultRef,
+    treeProducerOutputMultRef,
+    // Upgrade-driven crystal-tap floor mult + gate-reduction mult — updated by App.jsx
+    upgradeCrystalTapMultRef,
+    upgradeGateMultRef,
+    upgradeFocusMultAddRef,
     // Artefact qi_speed aggregate ref — updated by App.jsx each second
     artefactQiMultRef,
     // Artefact heavenly_qi_mult ref — updated by App.jsx from getFullStats

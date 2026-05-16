@@ -24,10 +24,11 @@ import WorldsScreen from './screens/WorldsScreen';
 import CharacterScreen from './screens/CharacterScreen';
 import CollectionScreen from './screens/CollectionScreen';
 import ProductionScreen from './screens/ProductionScreen';
+import CultivationScreen from './screens/CultivationScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import useReincarnationKarma from './hooks/useReincarnationKarma';
 import useReincarnationTree  from './hooks/useReincarnationTree';
-import { wipeReincarnation }  from './systems/save';
+import { wipeReincarnation, SAVE_VERSION, SAVE_VERSION_KEY } from './systems/save';
 import useCultivation from './hooks/useCultivation';
 import useInventory   from './hooks/useInventory';
 import useTechniques  from './hooks/useTechniques';
@@ -35,6 +36,8 @@ import useCombat      from './hooks/useCombat';
 import useArtefacts   from './hooks/useArtefacts';
 import usePills       from './hooks/usePills';
 import useQiCrystal  from './hooks/useQiCrystal';
+import useProducers  from './hooks/useProducers';
+import useUpgrades   from './hooks/useUpgrades';
 import useAutoFarm    from './hooks/useAutoFarm';
 import WORLDS         from './data/worlds';
 import { PHASE_TECHNIQUE_LAW, PHASE_TECHNIQUE_ID } from './data/laws';
@@ -51,6 +54,24 @@ import useQiSparks  from './hooks/useQiSparks';
 import useClearedRegions from './hooks/useClearedRegions';
 import useFeatureFlags from './hooks/useFeatureFlags';
 import useAchievements from './hooks/useAchievements';
+import { FEATURES } from './data/featureFlags';
+import { sparksToGrantOnEvolution } from './data/crystalMechanicGrants';
+import { QI_SPARK_BY_ID } from './data/qiSparks';
+
+// Which screens are hidden by which build-time feature flag. Routes to a
+// blocked screen are silently rewritten to `home` by navigate() below, so
+// stale saves or stray notification deeplinks can't land on a null entry.
+const SCREEN_FLAGS = {
+  worlds:         'combat',
+  'combat-arena': 'combat',
+  character:      'combat',
+  collection:     'combat',
+  production:     'combat',
+};
+const isScreenAllowed = (screenId) => {
+  const flag = SCREEN_FLAGS[screenId];
+  return !flag || FEATURES[flag];
+};
 import ToastStack from './components/ToastStack';
 import SelectionModal from './components/SelectionModal';
 import QiSparkChoiceModal from './components/QiSparkChoiceModal';
@@ -111,6 +132,18 @@ function AppInner() {
   useEffect(() => { preloadImages(PLAYER_SPRITE_SRCS); }, []);
   useEffect(() => { applyGraphics(loadGraphics()); }, []);
 
+  // Save schema version stamp. Set on first launch (and after any future
+  // migrations). On v1 (Cookie-Clicker pivot) no data migration is needed —
+  // combat-tied keys are preserved on disk and hidden by FEATURES flags.
+  useEffect(() => {
+    try {
+      const prev = localStorage.getItem(SAVE_VERSION_KEY);
+      if (prev !== String(SAVE_VERSION)) {
+        localStorage.setItem(SAVE_VERSION_KEY, String(SAVE_VERSION));
+      }
+    } catch {}
+  }, []);
+
   // Apply saved resolution preset on startup. Works for Steam (Electron IPC
   // resizes the OS window) and for Android-on-PC / browser desktop (CSS
   // body class letterboxes the inner game viewport). See desktopResolution.js.
@@ -127,6 +160,8 @@ function AppInner() {
   const pills           = usePills();
   const totalOwnedPills = Object.values(pills.ownedPills).reduce((s, n) => s + n, 0);
   const crystal         = useQiCrystal({ getQuantity: inventory.getQuantity, removeItem: inventory.removeItem });
+  const producers       = useProducers();
+  const upgrades        = useUpgrades();
   const { clearedRegions, clearRegion } = useClearedRegions();
   const selections      = useLawOffers({ cultivation });
   // featureFlags is declared further down — useQiSparks reads its unlock
@@ -156,7 +191,11 @@ function AppInner() {
     if (cultivation.qiOnRealmFracRef) {
       cultivation.qiOnRealmFracRef.current  = tree.modifiers.qiOnEveryRealmFrac ?? 0;
     }
-  }, [tree.modifiers, cultivation.treeQiMultRef, cultivation.treeHeavenlyMultRef, cultivation.qiOnRealmFracRef]);
+    // Cookie-Clicker pivot — Phase E. The producer/upgrade modifier surface.
+    if (cultivation.treeProducerOutputMultRef) {
+      cultivation.treeProducerOutputMultRef.current = tree.modifiers.producerOutputMult ?? 1;
+    }
+  }, [tree.modifiers, cultivation.treeQiMultRef, cultivation.treeHeavenlyMultRef, cultivation.qiOnRealmFracRef, cultivation.treeProducerOutputMultRef]);
 
   // cb_pt Phase Technique — when the connector is purchased, grant the law
   // (idempotent — addOwnedLaw is a no-op if the id is already in the
@@ -211,6 +250,10 @@ function AppInner() {
     const prev = prevPendingRef.current;
     prevPendingRef.current = selections.pendingCount;
     if (prev === null) return; // first render — treat as load, don't enqueue
+    // Laws are hidden until combat ships. The hook keeps writing pending
+    // offers to localStorage so when FEATURES.laws flips on in v2 the
+    // player picks up where they left off; we just don't surface them now.
+    if (!FEATURES.laws) return;
     if (selections.pendingCount > prev && currentScreen === 'home') {
       if (!majorBreakthroughRef.current) {
         enqueue('selection-cards', null, { dedupe: true });
@@ -230,6 +273,7 @@ function AppInner() {
   // the existing render path stays simple. Player-tap on the rewards chip
   // also flips this flag directly, bypassing the queue.
   useEffect(() => {
+    if (!FEATURES.laws) return;
     if (currentEvent?.kind === 'selection-cards') setSelectionModalOpen(true);
   }, [currentEvent]);
 
@@ -248,6 +292,45 @@ function AppInner() {
     if (!cultivation.crystalQiBonusRef) return;
     cultivation.crystalQiBonusRef.current = crystal.crystalQiBonus;
   }, [crystal.crystalQiBonus, cultivation.crystalQiBonusRef]);
+
+  // Mirror the producer-driven qi/sec into the cultivation tick — folding in
+  // per-producer "doubling" upgrades at the source. Producer × upgrade-mult is
+  // the effective contribution; the global `upgradeProducerMultRef` stays at 1
+  // until Eternal-Tree capstones land in Phase E.
+  //
+  // Also writes the offline-rate snapshot (`mai_producers_rate_snapshot`) so
+  // useCultivation's pre-mount offline-earnings calc sees the effective rate
+  // (mirrors `mai_crystal_click_snapshot` pattern). Fires on producer OR
+  // upgrade change.
+  useEffect(() => {
+    if (!cultivation.producerRateRef) return;
+    const perProducer = (pid) => upgrades.getProducerMult(pid);
+    const effective = producers.getRate(perProducer);
+    cultivation.producerRateRef.current = effective;
+    try {
+      localStorage.setItem('mai_producers_rate_snapshot', JSON.stringify({ rate: effective }));
+    } catch {}
+  }, [producers.owned, upgrades.owned, cultivation.producerRateRef]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Mirror remaining upgrade effects into cultivation refs. crystal-tap mult
+  // is applied inside collectCrystalReservoir; gate-reduction mult into the
+  // major-realm gate; focus-mult adder folds into the per-second focusMult
+  // interval (see below). Sparks reroll discount is read directly by useQiSparks
+  // via the upgrades hook in a separate effect (Phase D TODO).
+  useEffect(() => {
+    // Crystal-tap mult composes upgrade-driven (Refined Tap I–V) × tree-driven
+    // (yy_3 Heart of Stone repurposed) so both contribute multiplicatively.
+    if (cultivation.upgradeCrystalTapMultRef) {
+      cultivation.upgradeCrystalTapMultRef.current =
+        upgrades.getCrystalTapMult() * (tree.modifiers.crystalTapMult ?? 1);
+    }
+    if (cultivation.upgradeGateMultRef) {
+      cultivation.upgradeGateMultRef.current = upgrades.getGateReductionMult();
+    }
+    if (cultivation.upgradeFocusMultAddRef) {
+      cultivation.upgradeFocusMultAddRef.current = upgrades.getFocusMultAdd();
+    }
+  }, [upgrades.owned, tree.modifiers, cultivation.upgradeCrystalTapMultRef, cultivation.upgradeGateMultRef, cultivation.upgradeFocusMultAddRef]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Mirror Qi Sparks multipliers + flags into cultivation refs each render.
   // Cheap; runs only when activeSparks identity changes (the hook returns
@@ -575,7 +658,11 @@ function AppInner() {
     if (!cultivation.focusMultRef) return;
     const id = setInterval(() => {
       const full = getFullStats();
-      cultivation.focusMultRef.current = full.focusMult;
+      // Deeper Breath upgrades add flat percentage points (50/50/50/100) to
+      // the focus mult coming from stats/artefacts/laws. Sourced via a ref so
+      // this interval doesn't need to be re-created on every upgrade change.
+      const upgradeAdd = cultivation.upgradeFocusMultAddRef?.current ?? 0;
+      cultivation.focusMultRef.current = full.focusMult + upgradeAdd;
       if (cultivation.heavenlyQiMultRef) {
         cultivation.heavenlyQiMultRef.current = full.heavenlyQiMult ?? 0;
       }
@@ -615,6 +702,93 @@ function AppInner() {
   }, [autoFarm.autoFarmConfig]);
 
   const notifications = useNotifications({ cultivation, inventory });
+
+  // Round 3 — Crystal Discovery. Subscribes to HomeScreen's tier-crossed
+  // window event and grants any mechanic-tier sparks attached to crossed
+  // tiers. `qiSparks.grant` is idempotent for mechanics so re-firing is safe.
+  // A toast lands per successful grant so the player sees the unlock.
+  useEffect(() => {
+    const handler = (e) => {
+      const { previousTier = 0, newTier = 0 } = e.detail ?? {};
+      const ids = sparksToGrantOnEvolution(previousTier, newTier);
+      for (const sparkId of ids) {
+        const ok = qiSparks?.grant?.(sparkId);
+        if (ok) {
+          const card = QI_SPARK_BY_ID[sparkId];
+          notifications.addToast({
+            message: `New mechanic unlocked: ${card?.name ?? sparkId}`,
+            duration: 6000,
+          });
+        }
+      }
+    };
+    window.addEventListener('mai:crystal-tier-crossed', handler);
+    return () => window.removeEventListener('mai:crystal-tier-crossed', handler);
+  }, [qiSparks, notifications]);
+
+  // Round 3 — one-shot backfill for combat-alpha saves whose crystal is
+  // already past a mechanic-grant threshold but who never rolled the rare
+  // spark (now retired). Walks 0→currentTier through CRYSTAL_TIER_GRANTS;
+  // `grant` is idempotent so anything already owned is skipped. Gated by a
+  // localStorage flag so it runs exactly once per device.
+  const backfillRanRef = useRef(false);
+  useEffect(() => {
+    if (backfillRanRef.current) return;
+    if (!qiSparks?.grant) return;
+    let seen = null;
+    try { seen = localStorage.getItem('mai_v1_3_mechanic_backfill_seen'); } catch {}
+    if (seen) { backfillRanRef.current = true; return; }
+    // crystal.level is React state; on first render after load it's the
+    // saved value. Walk tiers 1..currentTier (CRYSTAL_TIER_GRANTS starts at 2).
+    const level = crystal?.level ?? 0;
+    if (level > 0) {
+      // Map level → visual tier using the same thresholds as useQiCrystal.
+      // Inline rather than importing to keep the effect self-contained.
+      const TIERS = [
+        [1000, 10], [750, 9], [500, 8], [350, 7], [200, 6],
+        [100,  5], [ 50, 4], [ 25, 3], [ 10, 2], [  1, 1],
+      ];
+      let currentTier = 0;
+      for (const [thresh, t] of TIERS) {
+        if (level >= thresh) { currentTier = t; break; }
+      }
+      const ids = sparksToGrantOnEvolution(0, currentTier);
+      for (const sparkId of ids) qiSparks.grant(sparkId);
+    }
+    try { localStorage.setItem('mai_v1_3_mechanic_backfill_seen', '1'); } catch {}
+    backfillRanRef.current = true;
+  }, [qiSparks, crystal?.level]);
+
+  // One-time "Combat returns later" toast. Fires on first launch under
+  // FEATURES.combat=false IF the player has combat-era data on disk that
+  // would otherwise vanish without explanation. Fresh players don't see
+  // it — they have nothing to reassure. Gated via mai_v1_combat_hidden_seen
+  // so it only ever fires once per device.
+  const combatHiddenToastRanRef = useRef(false);
+  useEffect(() => {
+    if (combatHiddenToastRanRef.current) return;
+    if (FEATURES.combat) return;
+    let seen = null;
+    try { seen = localStorage.getItem('mai_v1_combat_hidden_seen'); } catch {}
+    if (seen) { combatHiddenToastRanRef.current = true; return; }
+    let hadCombatData = false;
+    try {
+      hadCombatData = !!(
+        localStorage.getItem('mai_inventory') ||
+        localStorage.getItem('mai_owned_laws') ||
+        localStorage.getItem('mai_artefacts') ||
+        localStorage.getItem('mai_pills')
+      );
+    } catch {}
+    if (hadCombatData) {
+      notifications.addToast({
+        message: 'Combat returns in a future update — your inventory and laws are preserved.',
+        duration: 8000,
+      });
+    }
+    try { localStorage.setItem('mai_v1_combat_hidden_seen', '1'); } catch {}
+    combatHiddenToastRanRef.current = true;
+  }, [notifications]);
 
   const achievements = useAchievements({
     onUnlock: (a) => {
@@ -721,12 +895,16 @@ function AppInner() {
   }, [currentScreen]);
 
   // Navigate to a screen, optionally carrying a parameter (e.g. region data).
+  // Routes targeting flag-blocked screens silently fall back to home so a
+  // stale notification or external nav call can't strand the player on a
+  // hidden surface.
   const navigate = (screen, param = null) => {
-    setCurrentScreen(screen);
+    const target = isScreenAllowed(screen) ? screen : 'home';
+    setCurrentScreen(target);
     setScreenParam(param);
     setSelectionModalOpen(false);
-    notifications.clearBadge(screen);
-    try { trackScreenView(screen); } catch {}
+    notifications.clearBadge(target);
+    try { trackScreenView(target); } catch {}
   };
 
   const handleReincarnate = useCallback(() => {
@@ -751,6 +929,26 @@ function AppInner() {
       } catch {}
     }
 
+    // Producer-level carryover (Cookie-Clicker pivot — Phase E). Snapshot
+    // current owned counts × keepProducerLevelsFrac BEFORE the wipe so the
+    // restored counts pick up after wipeReincarnation clears `mai_producers`.
+    let producersSnapshot = null;
+    const keepFrac = treeMods.keepProducerLevelsFrac ?? 0;
+    if (keepFrac > 0) {
+      try {
+        const rawOwned = localStorage.getItem('mai_producers');
+        if (rawOwned) {
+          const ownedNow = JSON.parse(rawOwned) ?? {};
+          const kept = {};
+          for (const [id, count] of Object.entries(ownedNow)) {
+            const k = Math.floor((count ?? 0) * keepFrac);
+            if (k > 0) kept[id] = k;
+          }
+          if (Object.keys(kept).length > 0) producersSnapshot = kept;
+        }
+      } catch {}
+    }
+
     // Give React a tick to flush the karma state to localStorage before we
     // wipe the rest of the save + hard-reload.
     setTimeout(() => {
@@ -759,6 +957,13 @@ function AppInner() {
       // Restore al_2 Echo of Mastery snapshot.
       if (recipeSnapshot != null) {
         try { localStorage.setItem('mai_discovered_pills', recipeSnapshot); } catch {}
+      }
+
+      // Restore the producer-level carryover. wipeReincarnation must clear
+      // the upgrade set entirely (one-time purchases reset by design) — only
+      // the owned-count map of producers carries.
+      if (producersSnapshot) {
+        try { localStorage.setItem('mai_producers', JSON.stringify(producersSnapshot)); } catch {}
       }
 
       // al_4 Bloodline Vigor — +50 Blood Lotus + 1 banked Selection re-roll.
@@ -795,23 +1000,40 @@ function AppInner() {
   const reincarnationUnlocked = karma.unlocked;
 
   const screens = {
-    home:   <HomeScreen cultivation={cultivation} inventory={inventory} onOpenPills={() => openModal('pills')} totalOwnedPills={totalOwnedPills} selections={selections} onOpenSelections={() => setSelectionModalOpen(true)} onNavigate={navigate} crystal={crystal} isCrystalUnlocked={featureFlags.isUnlocked('qi_crystal')} dailyBonus={dailyBonus} onOpenDailyBonus={() => setActiveModal('daily')} lastIdleAssignment={autoFarm.lastIdleAssignment} openCrystal={screenParam?.openCrystal ?? false} activeSparks={qiSparks.activeSparks} crystalReservoirRef={cultivation.crystalReservoirRef} crystalClickCapMinRef={cultivation.sparkCrystalClickCapMinRef} collectCrystalReservoir={cultivation.collectCrystalReservoir} />,
-    worlds: <WorldsScreen cultivation={cultivation} onNavigate={navigate} expandWorldId={screenParam?.expandWorldId ?? null} activeTab={screenParam?.activeTab ?? null} clearedRegions={clearedRegions} idleAssignment={idleAssignment} lastIdleAssignment={autoFarm.lastIdleAssignment} onSetIdle={(act, w, r) => autoFarm.setIdleActivity(act, w, r, !!tree.modifiers.dualAutoFarm)} pendingGains={autoFarm.pendingGains} hasPendingGains={autoFarm.hasPendingGains} onCollectGains={(applyFn) => autoFarm.collectGains(applyFn)} inventory={inventory} techniques={techniques} getFullStats={getFullStats} />,
+    // Under !FEATURES.laws the SelectionModal is suppressed, so we also drop
+    // the Rewards chip on HomeScreen (HomeScreen already null-checks selections).
+    home:   <HomeScreen cultivation={cultivation} inventory={inventory} onOpenPills={() => openModal('pills')} totalOwnedPills={totalOwnedPills} selections={FEATURES.laws ? selections : null} onOpenSelections={() => setSelectionModalOpen(true)} onNavigate={navigate} crystal={crystal} isCrystalUnlocked={featureFlags.isUnlocked('qi_crystal')} dailyBonus={dailyBonus} onOpenDailyBonus={() => setActiveModal('daily')} lastIdleAssignment={autoFarm.lastIdleAssignment} openCrystal={screenParam?.openCrystal ?? false} activeSparks={qiSparks.activeSparks} crystalReservoirRef={cultivation.crystalReservoirRef} crystalClickCapMinRef={cultivation.sparkCrystalClickCapMinRef} collectCrystalReservoir={cultivation.collectCrystalReservoir} />,
+    // Combat-adjacent screens are mounted only when FEATURES.combat is true.
+    // Otherwise they're null and `navigate` rewrites any attempt to land on
+    // them to `home` (see the SCREEN_FLAGS guard above).
+    worlds: isScreenAllowed('worlds')
+      ? <WorldsScreen cultivation={cultivation} onNavigate={navigate} expandWorldId={screenParam?.expandWorldId ?? null} activeTab={screenParam?.activeTab ?? null} clearedRegions={clearedRegions} idleAssignment={idleAssignment} lastIdleAssignment={autoFarm.lastIdleAssignment} onSetIdle={(act, w, r) => autoFarm.setIdleActivity(act, w, r, !!tree.modifiers.dualAutoFarm)} pendingGains={autoFarm.pendingGains} hasPendingGains={autoFarm.hasPendingGains} onCollectGains={(applyFn) => autoFarm.collectGains(applyFn)} inventory={inventory} techniques={techniques} getFullStats={getFullStats} />
+      : null,
     // Sub-screens launched from the Worlds hub
-    'combat-arena': <CombatScreen
-                      cultivation={cultivation}
-                      techniques={techniques}
-                      combat={combat}
-                      inventory={inventory}
-                      artefacts={artefacts}
-                      region={screenParam?.region ?? null}
-                      onBack={goBack}
-                      getFullStats={getFullStats}
-                      onRegionCleared={clearRegion}
-                    />,
-    character:  <CharacterScreen cultivation={cultivation} techniques={techniques} artefacts={artefacts} pills={pills} tree={tree} />,
-    collection: <CollectionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} />,
-    production: <ProductionScreen inventory={inventory} pills={pills} tree={tree} />,
+    'combat-arena': isScreenAllowed('combat-arena')
+      ? <CombatScreen
+          cultivation={cultivation}
+          techniques={techniques}
+          combat={combat}
+          inventory={inventory}
+          artefacts={artefacts}
+          region={screenParam?.region ?? null}
+          onBack={goBack}
+          getFullStats={getFullStats}
+          onRegionCleared={clearRegion}
+        />
+      : null,
+    character:  isScreenAllowed('character')
+      ? <CharacterScreen cultivation={cultivation} techniques={techniques} artefacts={artefacts} pills={pills} tree={tree} />
+      : null,
+    collection: isScreenAllowed('collection')
+      ? <CollectionScreen inventory={inventory} artefacts={artefacts} techniques={techniques} cultivation={cultivation} />
+      : null,
+    production: isScreenAllowed('production')
+      ? <ProductionScreen inventory={inventory} pills={pills} tree={tree} />
+      : null,
+    // The qi-investment shop — main loop of v1, always visible.
+    cultivation: <CultivationScreen cultivation={cultivation} producers={producers} upgrades={upgrades} crystal={crystal} qiSparks={qiSparks} />,
     settings:   null,
     reincarnation: <EternalTreeScreen
                      karma={karma.karma}
@@ -857,20 +1079,23 @@ function AppInner() {
       <NavBar
         currentScreen={currentScreen}
         onNavigate={(screen) => navigate(screen)}
-        badges={{ ...notifications.badges, home: selections.pendingCount > 0, worlds: notifications.badges.worlds || autoFarm.hasPendingGains }}
+        badges={{ ...notifications.badges, home: FEATURES.laws && selections.pendingCount > 0, worlds: notifications.badges.worlds || autoFarm.hasPendingGains }}
         isUnlocked={featureFlags.isUnlocked}
+        isHidden={featureFlags.isHidden}
         getHint={featureFlags.getHint}
         getDesc={featureFlags.getDesc}
       />
       <main className={`screen-container${(currentScreen === 'home' || currentScreen === 'reincarnation') ? ' sc-fullbleed' : ''}`}>
-        {screens[currentScreen]}
+        {/* Safety net: if currentScreen happens to land on a flag-null entry
+            (e.g. mid-render after a flag flip) render the home fallback. */}
+        {screens[currentScreen] ?? screens.home}
       </main>
       <ToastStack
         toasts={notifications.toastQueue}
         onDismiss={notifications.dismissToast}
         onNavigate={navigate}
       />
-      {selectionModalOpen && selections.pending[0] && currentScreen === 'home' &&
+      {FEATURES.laws && selectionModalOpen && selections.pending[0] && currentScreen === 'home' &&
        !(cultivation.majorBreakthrough && selections.pending[0]?.kind === 'law') && (
         <SelectionModal
           selection={selections.pending[0]}

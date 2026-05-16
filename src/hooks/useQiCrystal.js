@@ -180,6 +180,46 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     return result;
   }, [state.level, state.refinedQi, getQuantity, removeItem, applyState]);
 
+  /**
+   * Feed REFINED QI directly, paid by an arbitrary spend function (typically
+   * `cultivation.spendQi`). Used under FEATURES.combat=false where the stone
+   * economy is hidden and the crystal levels via qi spend instead.
+   *
+   * Conversion is 1:1 (1 qi → 1 RQI) — same level curve as stone-feeding so
+   * a player who switches between v1 and v2 feels no curve discontinuity.
+   *
+   * Returns the same {tierChanged, previousTier, newTier, newLevel} shape as
+   * feedMultiple so callers can re-use the evolution-overlay handler.
+   *
+   * @param {number} amount  — qi to spend (validated > 0)
+   * @param {(n:number)=>boolean} spendFn — must atomically deduct `amount` and
+   *                                        return true on success.
+   */
+  const feedQi = useCallback((amount, spendFn) => {
+    const empty = { tierChanged: false, previousTier: 0, newTier: 0, newLevel: state.level };
+    if (!Number.isFinite(amount) || amount <= 0) return empty;
+    if (typeof spendFn !== 'function') return empty;
+    const ok = spendFn(amount);
+    if (!ok) return empty;
+
+    let level     = state.level;
+    let refinedQi = state.refinedQi + amount;
+    const startTier = Math.max(getCrystalTier(level), 1);
+    while (true) {
+      const needed = getRequiredRefinedQi(level + 1);
+      if (refinedQi < needed) break;
+      refinedQi -= needed;
+      level += 1;
+    }
+    const endTier = getCrystalTier(level);
+    const result  = endTier !== startTier
+      ? { tierChanged: true, previousTier: startTier, newTier: endTier, newLevel: level }
+      : { tierChanged: false, previousTier: startTier, newTier: endTier, newLevel: level };
+    applyState({ level, refinedQi });
+    try { trackCrystalFed(level, result.tierChanged, endTier); } catch {}
+    return result;
+  }, [state.level, state.refinedQi, applyState]);
+
   const requiredForNext = getRequiredRefinedQi(state.level + 1);
 
   return {
@@ -190,6 +230,8 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     crystalQiBonusRef,
     feed,
     feedMultiple,
+    // Cookie-Clicker pivot (v1) — qi-fed crystal leveling. See CrystalFeedModal.
+    feedQi,
     _setLevel:        (n) => applyState({ level: n, refinedQi: 0 }),
   };
 }

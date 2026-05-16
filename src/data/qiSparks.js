@@ -96,14 +96,19 @@ const QI_SPARKS_RAW = [
     duration:    60_000,
     effect:      { type: 'focus_mult_bonus', value: 0.3 },
   },
-  {
-    id:          'painless_ascension',
-    rarity:      'common',
-    name:        'Painless Ascension',
-    description: 'Your next breakthrough costs no qi — the full amount carries into the next realm.',
-    kind:        'next_breakthrough_flag',
-    flag:        'painless_breakthrough',
-  },
+  // RETIRED — Cookie-Clicker pivot (v1 Polish P2b). Breakthroughs no longer
+  // drain qi balance, so this spark would be a no-op. Removing from the
+  // offer pool prevents new instances; existing pending/active sparks of
+  // this id continue to consume gracefully via the `mai:painless-consumed`
+  // event listener in useCultivation.
+  // {
+  //   id:          'painless_ascension',
+  //   rarity:      'common',
+  //   name:        'Painless Ascension',
+  //   description: 'Your next breakthrough costs no qi — the full amount carries into the next realm.',
+  //   kind:        'next_breakthrough_flag',
+  //   flag:        'painless_breakthrough',
+  // },
   {
     id:          'lingering_focus',
     rarity:      'common',
@@ -186,9 +191,15 @@ const QI_SPARKS_RAW = [
   //   T3  70% · 20 min cap
   //   T4  85% · 40 min cap
   //   T5 100% · 60 min cap   (full rate — crystal mirrors your cultivation)
+  // RETIRED from spark draw pool (Round 3 — Crystal Discovery).
+  // Granted via crystal-tier evolution + upgrade-shop purchases instead.
+  // `retired: true` flag is read by eligiblePool() to filter from offers
+  // but does NOT delete the data — `qiSparks.grant(id)` and `useQiSparks`
+  // mechanic accounting still resolve these card definitions normally.
   {
     id:          'crystal_click_t1',
     rarity:      'rare',
+    retired:     true,
     name:        'Crystal Reservoir',
     description: 'The crystal stockpiles 30% of your qi/s (up to 5 min). Tap to collect.',
     kind:        'mechanic',
@@ -201,6 +212,7 @@ const QI_SPARKS_RAW = [
   {
     id:          'crystal_click_t2',
     rarity:      'rare',
+    retired:     true,
     name:        'Crystal Reservoir',
     description: 'Upgrades to 50% of your qi/s (up to 10 min). Tap to collect.',
     kind:        'mechanic',
@@ -212,6 +224,7 @@ const QI_SPARKS_RAW = [
   {
     id:          'crystal_click_t3',
     rarity:      'rare',
+    retired:     true,
     name:        'Crystal Reservoir',
     description: 'Upgrades to 70% of your qi/s (up to 20 min). Tap to collect.',
     kind:        'mechanic',
@@ -223,6 +236,7 @@ const QI_SPARKS_RAW = [
   {
     id:          'crystal_click_t4',
     rarity:      'rare',
+    retired:     true,
     name:        'Crystal Reservoir',
     description: 'Upgrades to 85% of your qi/s (up to 40 min). Tap to collect.',
     kind:        'mechanic',
@@ -234,6 +248,7 @@ const QI_SPARKS_RAW = [
   {
     id:          'crystal_click_t5',
     rarity:      'rare',
+    retired:     true,
     name:        'Crystal Reservoir',
     description: 'Full rate: 100% of your qi/s (up to 60 min). Tap the crystal to collect.',
     kind:        'mechanic',
@@ -251,6 +266,7 @@ const QI_SPARKS_RAW = [
   {
     id:              'divine_qi_t1',
     rarity:          'rare',
+    retired:         true,
     name:            'Divine Qi',
     description:     'A golden orb appears every ~3 min. Tap it within 8s for 30s of qi.',
     kind:            'mechanic',
@@ -263,6 +279,7 @@ const QI_SPARKS_RAW = [
   {
     id:              'divine_qi_t2',
     rarity:          'rare',
+    retired:         true,
     name:            'Divine Qi',
     description:     'Orb every ~2.5 min, 10s window. Tap for 40s of qi.',
     kind:            'mechanic',
@@ -275,6 +292,7 @@ const QI_SPARKS_RAW = [
   {
     id:              'divine_qi_t3',
     rarity:          'rare',
+    retired:         true,
     name:            'Divine Qi',
     description:     'Orb every ~2 min, 12s window. Tap for 50s of qi.',
     kind:            'mechanic',
@@ -287,6 +305,7 @@ const QI_SPARKS_RAW = [
   {
     id:              'divine_qi_t4',
     rarity:          'rare',
+    retired:         true,
     name:            'Divine Qi',
     description:     'Orb every ~90s, 15s window. Tap for 60s of qi.',
     kind:            'mechanic',
@@ -299,6 +318,7 @@ const QI_SPARKS_RAW = [
   {
     id:              'divine_qi_t5',
     rarity:          'rare',
+    retired:         true,
     name:            'Divine Qi',
     description:     'Two orbs every ~60s. Collect both for 60s qi + ×1.5 qi/s for 30s.',
     kind:            'mechanic',
@@ -322,6 +342,7 @@ const QI_SPARKS_RAW = [
   {
     id:              'pattern_click_t1',
     rarity:          'rare',
+    retired:         true,
     name:            'Pattern Clicking',
     description:     'A pattern spark appears every ~2 min. Tap to begin: 3 dots, 10s to clear for 30s of qi.',
     kind:            'mechanic',
@@ -336,6 +357,7 @@ const QI_SPARKS_RAW = [
   {
     id:              'pattern_click_t2',
     rarity:          'rare',
+    retired:         true,
     name:            'Pattern Clicking',
     description:     'Spark every ~100s. 4 dots, 12s window. Full clear: 40s of qi.',
     kind:            'mechanic',
@@ -350,6 +372,7 @@ const QI_SPARKS_RAW = [
   {
     id:              'pattern_click_t3',
     rarity:          'rare',
+    retired:         true,
     name:            'Pattern Clicking',
     description:     'Spark every ~80s. 5 dots, 14s window. Full clear: 50s of qi.',
     kind:            'mechanic',
@@ -364,6 +387,7 @@ const QI_SPARKS_RAW = [
   {
     id:              'pattern_click_t4',
     rarity:          'rare',
+    retired:         true,
     name:            'Pattern Clicking',
     description:     'Spark every ~60s. 6 dots, 16s window. Full clear: 60s of qi.',
     kind:            'mechanic',
@@ -378,6 +402,7 @@ const QI_SPARKS_RAW = [
   {
     id:              'pattern_click_t5',
     rarity:          'rare',
+    retired:         true,
     name:            'Pattern Clicking',
     description:     'Spark every ~45s. 7 dots, 18s window. Full clear: 120s of qi + ×2 qi/s for 15s.',
     kind:            'mechanic',
@@ -407,6 +432,7 @@ const QI_SPARKS_RAW = [
   {
     id:          'consecutive_focus_t1',
     rarity:      'rare',
+    retired:     true,
     name:        'Consecutive Focus',
     description: 'Hold Focus 2s → +5% qi/s.',
     kind:        'mechanic',
@@ -418,6 +444,7 @@ const QI_SPARKS_RAW = [
   {
     id:          'consecutive_focus_t2',
     rarity:      'rare',
+    retired:     true,
     name:        'Consecutive Focus',
     description: 'Adds: hold Focus 4s → +7% more qi/s (total +12%).',
     kind:        'mechanic',
@@ -429,6 +456,7 @@ const QI_SPARKS_RAW = [
   {
     id:          'consecutive_focus_t3',
     rarity:      'rare',
+    retired:     true,
     name:        'Consecutive Focus',
     description: 'Adds: hold Focus 6s → +13% more qi/s (total +25%).',
     kind:        'mechanic',
@@ -440,6 +468,7 @@ const QI_SPARKS_RAW = [
   {
     id:          'consecutive_focus_t4',
     rarity:      'rare',
+    retired:     true,
     name:        'Consecutive Focus',
     description: 'Adds: hold Focus 8s → +15% more qi/s (total +40%).',
     kind:        'mechanic',
@@ -451,6 +480,7 @@ const QI_SPARKS_RAW = [
   {
     id:          'consecutive_focus_t5',
     rarity:      'rare',
+    retired:     true,
     name:        'Consecutive Focus',
     description: 'Adds: hold Focus 10s → +20% more qi/s (total +60%) and enter deep meditation.',
     kind:        'mechanic',
@@ -474,12 +504,16 @@ export const SPARK_RARITY = {
   rare:     { label: 'Rare',     color: '#a78bfa' },
 };
 
-// Per-card weights summed over the eligible pool. Rare tier (Phase 3) is
-// empty until mechanic cards ship — its weight then contributes zero.
+// Per-card weights summed over the eligible pool. Rare tier was the
+// mechanic-unlock pool (Crystal Reservoir, Divine Qi, Pattern Click,
+// Consecutive Focus). Round 3 moved mechanic discovery to crystal evolution
+// and tier upgrades to the qi shop — see `crystalMechanicGrants.js` and the
+// `mechanic_tier` category in `data/upgrades.js`. Weight is 0 so future rare
+// additions still slot in if you re-introduce a rare card.
 export const SPARK_RARITY_WEIGHTS = {
-  common:   55,
-  uncommon: 30,
-  rare:     15,
+  common:   65,
+  uncommon: 35,
+  rare:     0,
 };
 
 // ── Drawing ─────────────────────────────────────────────────────────────────
@@ -509,6 +543,10 @@ function eligiblePool({ activeSparks = [], isFeatureUnlocked } = {}) {
   }
 
   return QI_SPARKS.filter((card) => {
+    // Round 3 — retired cards (mechanic-tier sparks) never appear in the
+    // random offer pool. They're still resolvable via QI_SPARK_BY_ID for
+    // crystal-evolution grants and shop upgrades.
+    if (card.retired) return false;
     if (card.kind !== 'mechanic') return true;
     const currentTier = tierByMechanic.get(card.mechanicId) ?? 0;
     if (currentTier >= 5) return false;          // capped

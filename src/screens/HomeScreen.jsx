@@ -78,7 +78,7 @@ function QiRateReadout({ rateRef, focusMultRef, sparkFocusMultBonusRef, sparkCon
 
 /** Current / target qi — single chip updated via rAF.
  *  During a major-realm gate, switches to showing Qi/s current / required. */
-function QiProgressChip({ qiRef, costRef, gateRef, rateRef, maxed, ascended }) {
+function QiProgressChip({ qiRef, progressRef, costRef, gateRef, rateRef, maxed, ascended }) {
   const textRef = useRef(null);
   const divRef  = useRef(null);
   useEffect(() => {
@@ -90,20 +90,26 @@ function QiProgressChip({ qiRef, costRef, gateRef, rateRef, maxed, ascended }) {
       if (divRef.current)  divRef.current.classList.toggle('qi-rate-gated', !!gate);
       if (textRef.current) {
         if (ascended) {
+          // Ascended: total spendable qi (balance) is the only number left.
           const r = rateRef ? rateRef.current : 0;
           textRef.current.textContent = `${fmt(qiRef.current)} Qi  ·  ${fmtRate(r)}/s`;
         } else if (gate) {
           const r = rateRef ? rateRef.current : gate.current;
           textRef.current.textContent = `${fmtRate(r)} / ${fmtRate(gate.required)}  Qi/s`;
         } else {
-          textRef.current.textContent = `${fmt(qiRef.current)} / ${fmt(costRef.current)}`;
+          // Cookie-Clicker pivot: realm-progress numerator is cumulative
+          // qi earned this realm, NOT the spendable balance. Spending on
+          // producers/upgrades never rolls this back. Falls back to qiRef
+          // for callers that haven't passed progressRef yet.
+          const progress = (progressRef?.current ?? qiRef.current);
+          textRef.current.textContent = `${fmt(progress)} / ${fmt(costRef.current)}`;
         }
       }
       raf = requestAnimationFrame(update);
     };
     raf = requestAnimationFrame(update);
     return () => cancelAnimationFrame(raf);
-  }, [qiRef, costRef, gateRef, rateRef, maxed, ascended]);
+  }, [qiRef, progressRef, costRef, gateRef, rateRef, maxed, ascended]);
   return (
     <div ref={divRef} className="qi-rate">
       <span ref={textRef}>—</span>
@@ -527,7 +533,7 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
 
 /** Compact qi text updated via rAF — avoids a React re-render every frame.
  *  During a major-realm gate, switches to showing Qi/s current / required. */
-function PCQiProgressText({ qiRef, costRef, gateRef, rateRef, maxed, ascended }) {
+function PCQiProgressText({ qiRef, progressRef, costRef, gateRef, rateRef, maxed, ascended }) {
   const textRef = useRef(null);
   const divRef  = useRef(null);
   useEffect(() => {
@@ -539,33 +545,36 @@ function PCQiProgressText({ qiRef, costRef, gateRef, rateRef, maxed, ascended })
       if (divRef.current)  divRef.current.classList.toggle('qi-rate-gated', !!gate);
       if (textRef.current) {
         if (ascended) {
+          // Ascended: spendable balance only.
           const r = rateRef ? rateRef.current : 0;
           textRef.current.textContent = `${fmt(qiRef.current)} Qi  ·  ${fmtRate(r)}/s`;
         } else if (gate) {
           const r = rateRef ? rateRef.current : gate.current;
           textRef.current.textContent = `${fmtRate(r)} / ${fmtRate(gate.required)}  Qi/s`;
         } else {
-          textRef.current.textContent = `${fmt(qiRef.current)} / ${fmt(costRef.current)} Qi`;
+          // Cookie-Clicker pivot: numerator is realm-progress meter.
+          const progress = (progressRef?.current ?? qiRef.current);
+          textRef.current.textContent = `${fmt(progress)} / ${fmt(costRef.current)} Qi`;
         }
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [qiRef, costRef, gateRef, rateRef, maxed, ascended]);
+  }, [qiRef, progressRef, costRef, gateRef, rateRef, maxed, ascended]);
   return <div ref={divRef} className="qi-rate"><span ref={textRef}>—</span></div>;
 }
 
 /** Left panel — visible only at wide (≥ 900 px) breakpoints.
  *  Shows cultivation stats so the player doesn't have to look at the bar. */
-function HomePCLeftPanel({ realmName, realmStage, qiRef, costRef, rateRef, gateRef, focusMultRef, sparkFocusMultBonusRef, sparkConsecutiveCurrentBonusRef, boosting, adBoostActive, maxed, ascended }) {
+function HomePCLeftPanel({ realmName, realmStage, qiRef, progressRef, costRef, rateRef, gateRef, focusMultRef, sparkFocusMultBonusRef, sparkConsecutiveCurrentBonusRef, boosting, adBoostActive, maxed, ascended }) {
   const { t } = useTranslation('ui');
   return (
     <div className="home-pc-left">
       <div className="home-pc-section-label">Cultivation</div>
       <div className="home-pc-realm-name">{realmName.split(' - ')[0]}</div>
       {realmStage && !ascended && <div className="home-pc-realm-stage">{realmStage}</div>}
-      <PCQiProgressText qiRef={qiRef} costRef={costRef} gateRef={gateRef} rateRef={rateRef} maxed={maxed} ascended={ascended} />
+      <PCQiProgressText qiRef={qiRef} progressRef={progressRef} costRef={costRef} gateRef={gateRef} rateRef={rateRef} maxed={maxed} ascended={ascended} />
       <QiRateReadout rateRef={rateRef} focusMultRef={focusMultRef} sparkFocusMultBonusRef={sparkFocusMultBonusRef} sparkConsecutiveCurrentBonusRef={sparkConsecutiveCurrentBonusRef} boosting={boosting} adBoostActive={adBoostActive} maxed={maxed} />
     </div>
   );
@@ -1320,6 +1329,10 @@ function HomeScreen({
     realmStage,
     nextRealmName,
     qiRef,
+    // Cookie-Clicker pivot — realm progress meter (cumulative qi earned this
+    // realm). Drives the progress-bar fill and the "X / cost" numerator.
+    // qiRef stays as the spendable balance display.
+    qiEarnedThisRealmRef,
     costRef,
     rateRef,
     gateRef,
@@ -1501,6 +1514,20 @@ function HomeScreen({
       }
     }
     enqueue('crystal-evolution', { ...info, origin }, { priority: 'high' });
+
+    // Round 3 — Crystal Discovery. Re-broadcast the tier delta as a window
+    // event so the App.jsx orchestrator can grant any mechanic-tier sparks
+    // attached to the crossed tiers (see data/crystalMechanicGrants.js).
+    // Avoids prop-drilling qiSparks all the way down to HomeScreen.
+    try {
+      window.dispatchEvent(new CustomEvent('mai:crystal-tier-crossed', {
+        detail: {
+          previousTier: info?.previousTier ?? 0,
+          newTier:      info?.newTier ?? 0,
+          newLevel:     info?.newLevel ?? 0,
+        },
+      }));
+    } catch { /* CustomEvent unsupported — non-fatal */ }
   }, [enqueue]);
 
   // Debug bridge — gd.crystalEvolve(newTier, previousTier?) fires this event.
@@ -1587,6 +1614,7 @@ function HomeScreen({
           realmName={realmName}
           realmStage={realmStage}
           qiRef={qiRef}
+          progressRef={qiEarnedThisRealmRef}
           focusMultRef={focusMultRef}
           sparkFocusMultBonusRef={sparkFocusMultBonusRef}
           sparkConsecutiveCurrentBonusRef={sparkConsecutiveCurrentBonusRef}
@@ -1760,7 +1788,7 @@ function HomeScreen({
           {/* Overlay row — hidden on PC (info lives in left panel instead) */}
           <div className="home-scene-overlay-row">
             <div className="home-overlay-half">
-              <QiProgressChip qiRef={qiRef} costRef={costRef} gateRef={gateRef} rateRef={rateRef} maxed={maxed} ascended={ascended} />
+              <QiProgressChip qiRef={qiRef} progressRef={qiEarnedThisRealmRef} costRef={costRef} gateRef={gateRef} rateRef={rateRef} maxed={maxed} ascended={ascended} />
             </div>
             <div className="home-overlay-half">
               <QiRateReadout
@@ -1778,6 +1806,7 @@ function HomeScreen({
           <div className="home-bar-wrap">
             <RealmProgressBar
               qiRef={qiRef}
+              progressRef={qiEarnedThisRealmRef}
               costRef={costRef}
               gateRef={gateRef}
               boosting={boosting}
@@ -1802,6 +1831,7 @@ function HomeScreen({
         <CrystalFeedModal
           crystal={crystal}
           inventory={inventory}
+          cultivation={cultivation}
           onClose={() => setCrystalModalOpen(false)}
           onEvolve={handleCrystalEvolve}
         />

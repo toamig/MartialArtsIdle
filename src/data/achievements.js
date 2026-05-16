@@ -9,6 +9,23 @@ export const CATEGORY_LABELS = {
 
 export const CATEGORIES = Object.keys(CATEGORY_LABELS);
 
+/**
+ * Map each category to the build-time feature flag it requires. Categories
+ * with `null` are always shown. v1 (Cookie-Clicker pivot) hides combat,
+ * techniques, artefacts, laws, and alchemy entries — they reappear when
+ * combat ships in v2.
+ *
+ * Used by `useAchievements` to filter the displayed + checked list.
+ */
+export const CATEGORY_REQUIRES = {
+  cultivation: null,
+  combat:      'combat',
+  laws:        'laws',
+  techniques:  'combat',
+  artefacts:   'combat',
+  alchemy:     'inventory',
+};
+
 export const ACHIEVEMENTS = [
   // ── Cultivation ─────────────────────────────────────────────────────────────
   {

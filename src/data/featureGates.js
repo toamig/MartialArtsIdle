@@ -8,6 +8,7 @@
  *   region_clear_any  — player has cleared (won combat in) at least one region
  *   item_any          — inventory contains at least one item of any kind
  *   item_category     — inventory contains at least one item in `category`
+ *   flag              — build-time `FEATURES[gate.flag]` is truthy
  *   all               — every sub-gate in `gates` must pass
  *   any               — at least one sub-gate in `gates` must pass
  *
@@ -19,6 +20,15 @@ import WORLDS from './worlds';
 import { HERB_ITEMS, ORE_ITEMS, BLOOD_CORE_ITEMS, CULTIVATION_ITEMS } from './materials';
 import { PILLS } from './pills';
 import { mergeRecords } from './config/loader';
+import { FEATURES } from './featureFlags';
+
+// Wrap a baseline gate behind a build-time feature flag. When the flag is
+// false, the gate evaluates false regardless of in-game state — used to
+// hide every combat-adjacent surface until combat ships in a future update.
+const flagged = (baseGate, flag) => ({
+  type: 'all',
+  gates: [baseGate, { type: 'flag', flag }],
+});
 
 const ITEM_CATEGORIES = {
   herbs:       HERB_ITEMS,
@@ -37,32 +47,41 @@ const BASELINE = {
     hint: null,
     unlockMsg: null,
   },
-  worlds: {
-    gate: { type: 'realm', minRealmIndex: 2 },
-    desc: 'Explore regions across multiple worlds, fight enemies in combat, and dispatch idle workers to gather herbs or mine ores.',
-    hint: 'Reach Tempered Body Layer 3',
-    unlockMsg: 'Worlds unlocked.',
-  },
-  character: {
+  // The qi-investment shop (Cookie-Clicker-style producers + upgrades). The
+  // main loop of v1 — always available, no realm gate, no flag.
+  cultivation: {
     gate: { type: 'always' },
     desc: null,
     hint: null,
     unlockMsg: null,
   },
+  worlds: {
+    // Wrapped behind FEATURES.combat — hidden in v1.
+    gate: flagged({ type: 'realm', minRealmIndex: 2 }, 'combat'),
+    desc: 'Explore regions across multiple worlds, fight enemies in combat, and dispatch idle workers to gather herbs or mine ores.',
+    hint: 'Reach Tempered Body Layer 3',
+    unlockMsg: 'Worlds unlocked.',
+  },
+  character: {
+    gate: flagged({ type: 'always' }, 'combat'),
+    desc: null,
+    hint: null,
+    unlockMsg: null,
+  },
   gathering: {
-    gate: { type: 'realm', minRealmIndex: 7 },
+    gate: flagged({ type: 'realm', minRealmIndex: 7 }, 'combat'),
     desc: 'Dispatch an idle worker to harvest herbs from cleared regions. Materials fuel alchemy and crafting.',
     hint: 'Reach Tempered Body Layer 8',
     unlockMsg: 'Gathering unlocked.',
   },
   mining: {
-    gate: { type: 'realm', minRealmIndex: 7 },
+    gate: flagged({ type: 'realm', minRealmIndex: 7 }, 'combat'),
     desc: 'Dispatch an idle worker to extract ores from cleared regions.',
     hint: 'Reach Tempered Body Layer 8',
     unlockMsg: 'Mining unlocked.',
   },
   collection: {
-    gate: { type: 'always' },
+    gate: flagged({ type: 'always' }, 'combat'),
     desc: null,
     hint: null,
     unlockMsg: null,
@@ -70,7 +89,7 @@ const BASELINE = {
   // Production screen unlocks the first time the player gathers a herb —
   // alchemy is the only activity here.
   production: {
-    gate: { type: 'item_category', category: 'herbs' },
+    gate: flagged({ type: 'item_category', category: 'herbs' }, 'combat'),
     desc: 'Brew cultivation pills that grant passive bonuses to combat strength and training speed.',
     hint: 'Gather a herb to unlock',
     unlockMsg: 'Production unlocked.',
@@ -78,7 +97,7 @@ const BASELINE = {
   // alchemy mirrors production for the unlock-toast routing — kept as a
   // separate id so older saves / toast calls still resolve.
   alchemy: {
-    gate: { type: 'item_category', category: 'herbs' },
+    gate: flagged({ type: 'item_category', category: 'herbs' }, 'combat'),
     desc: 'Brew cultivation pills in the furnace that grant passive bonuses to combat strength and training speed.',
     hint: 'Gather a herb to unlock',
     unlockMsg: 'Alchemy unlocked.',
@@ -118,6 +137,8 @@ export function evaluateGate(gate, ctx) {
       return Object.values(ITEM_CATEGORIES).some(cat => cat.some(item => getQuantity(item.id) > 0));
     case 'item_category':
       return (ITEM_CATEGORIES[gate.category] ?? []).some(item => getQuantity(item.id) > 0);
+    case 'flag':
+      return !!FEATURES[gate.flag];
     case 'all':
       return gate.gates.every(g => evaluateGate(g, ctx));
     case 'any':

@@ -14,13 +14,14 @@
   },
 
   "nav": {
-    "home":   "Início",
-    "worlds": "Mundos",
-    "equip":  "Equipar",
-    "items":  "Itens",
-    "craft":  "Criar",
-    "stats":  "Atributos",
-    "config": "Config"
+    "home":        "Início",
+    "cultivation": "Cultivo",
+    "worlds":      "Mundos",
+    "equip":       "Equipar",
+    "items":       "Itens",
+    "craft":       "Criar",
+    "stats":       "Atributos",
+    "config":      "Config"
   },
 
   "home": {

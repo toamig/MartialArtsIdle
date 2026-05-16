@@ -12,7 +12,11 @@ import { useEffect, useRef } from 'react';
 
 const BASE = import.meta.env.BASE_URL;
 
-function RealmProgressBar({ qiRef, costRef, gateRef, boosting, maxed, realmIndex, breakthrough, peakStage }) {
+function RealmProgressBar({ qiRef, progressRef, costRef, gateRef, boosting, maxed, realmIndex, breakthrough, peakStage }) {
+  // Cookie-Clicker pivot — bar fill is driven by `progressRef` (cumulative
+  // qi earned this realm), NOT `qiRef` (spendable balance). qiRef is kept
+  // in the prop list as a fallback for callers that haven't migrated yet.
+  const sourceRef = progressRef ?? qiRef;
   const fillRef      = useRef(null);
   const fillInnerRef = useRef(null);
   const trackRef     = useRef(null);
@@ -42,7 +46,7 @@ function RealmProgressBar({ qiRef, costRef, gateRef, boosting, maxed, realmIndex
       // dismisses so the bar visibly *completes* the realm.
       const pct = (maxed || breakthroughRef.current)
         ? 100
-        : Math.min((qiRef.current / costRef.current) * 100, 100);
+        : Math.min((sourceRef.current / costRef.current) * 100, 100);
       if (fillRef.current) fillRef.current.style.width = `${pct}%`;
       // Inner gradient is inverse-scaled so it always spans the full channel,
       // regardless of fill width — anchors the bright core to a fixed
@@ -81,7 +85,7 @@ function RealmProgressBar({ qiRef, costRef, gateRef, boosting, maxed, realmIndex
     };
     raf = requestAnimationFrame(update);
     return () => cancelAnimationFrame(raf);
-  }, [qiRef, costRef, gateRef, maxed]); // colour refs read live — no dep needed
+  }, [qiRef, progressRef, costRef, gateRef, maxed]); // colour refs read live — no dep needed
 
   const frameSrc = `${BASE}ui/QI-Progress-Bar.png`;
 
@@ -93,7 +97,7 @@ function RealmProgressBar({ qiRef, costRef, gateRef, boosting, maxed, realmIndex
           <div
             ref={fillRef}
             className="realm-fill"
-            style={{ width: maxed ? '100%' : `${Math.min((qiRef.current / costRef.current) * 100, 100)}%` }}
+            style={{ width: maxed ? '100%' : `${Math.min((sourceRef.current / costRef.current) * 100, 100)}%` }}
           >
             <div ref={fillInnerRef} className="realm-fill-inner" />
           </div>

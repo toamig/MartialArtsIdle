@@ -13474,4 +13474,307 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   color: var(--chip-accent, var(--ui-purple-light));
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   CultivationScreen — qi-investment shop (producers + upgrades).
+   Mobile-first vertical layout. Sticky header polls cultivation refs ~10×/s
+   for a live qi + qi/s readout.
+───────────────────────────────────────────────────────────────────────── */
 
+.cultivation-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: #e8e8f0;
+  background: linear-gradient(180deg, rgba(8, 14, 18, 0.55), rgba(4, 10, 14, 0.85));
+}
+
+.cs-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 16px 8px;
+  background: rgba(6, 10, 14, 0.92);
+  border-bottom: 1px solid rgba(110, 220, 200, 0.18);
+  backdrop-filter: blur(6px);
+}
+
+.cs-qi-display {
+  font-size: 22px;
+  font-weight: 700;
+  color: #c2e6ff;
+  letter-spacing: 0.5px;
+}
+
+.cs-rate-display {
+  font-size: 14px;
+  color: #a7f3c4;
+}
+
+.cs-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px 4px;
+}
+
+.cs-tab {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+  color: rgba(230, 235, 240, 0.75);
+  cursor: pointer;
+}
+
+.cs-tab-active {
+  background: rgba(110, 200, 180, 0.16);
+  border-color: rgba(110, 200, 180, 0.55);
+  color: #a7f3e8;
+}
+
+.cs-buy-mode-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 12px;
+}
+
+.cs-buy-mode-label {
+  font-size: 12px;
+  color: rgba(230, 235, 240, 0.6);
+  margin-right: 4px;
+}
+
+.cs-buy-mode-chip {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  color: rgba(230, 235, 240, 0.75);
+  cursor: pointer;
+}
+
+.cs-buy-mode-chip-active {
+  background: rgba(196, 158, 100, 0.18);
+  border-color: rgba(196, 158, 100, 0.55);
+  color: #ffe8a0;
+}
+
+.cs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px 80px;
+  overflow-y: auto;
+}
+
+.cs-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(20, 28, 36, 0.7);
+  border: 1px solid rgba(110, 200, 180, 0.18);
+  border-radius: 10px;
+}
+
+.cs-row-locked {
+  background: rgba(15, 20, 26, 0.55);
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+.cs-row-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-row-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #c2e6ff;
+  line-height: 1.2;
+}
+
+.cs-row-name-locked {
+  color: rgba(200, 210, 220, 0.5);
+  font-style: italic;
+}
+
+.cs-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 12px;
+  color: rgba(230, 235, 240, 0.7);
+  margin-top: 2px;
+}
+
+.cs-row-owned {
+  color: #a7f3e8;
+  font-weight: 600;
+}
+
+.cs-row-unit {
+  color: #a7f3c4;
+}
+
+.cs-row-total {
+  color: rgba(167, 243, 196, 0.85);
+  font-weight: 600;
+}
+
+.cs-row-sep {
+  opacity: 0.5;
+}
+
+.cs-row-desc {
+  font-size: 11px;
+  color: rgba(200, 210, 220, 0.55);
+  margin-top: 3px;
+  line-height: 1.3;
+}
+
+.cs-row-right {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.cs-buy-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 84px;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, rgba(196, 158, 100, 0.22), rgba(180, 140, 80, 0.15));
+  border: 1px solid rgba(196, 158, 100, 0.65);
+  border-radius: 8px;
+  color: #ffe8a0;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cs-buy-btn:hover {
+  background: linear-gradient(180deg, rgba(220, 180, 120, 0.32), rgba(196, 158, 100, 0.22));
+}
+
+.cs-buy-btn-disabled,
+.cs-buy-btn:disabled {
+  background: rgba(40, 50, 60, 0.4);
+  border-color: rgba(255, 255, 255, 0.10);
+  color: rgba(220, 220, 220, 0.35);
+  cursor: not-allowed;
+}
+
+.cs-buy-count {
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.cs-buy-cost {
+  font-size: 11px;
+  margin-top: 2px;
+  opacity: 0.92;
+}
+
+.cs-upgrades-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: rgba(200, 210, 220, 0.7);
+}
+
+.cs-upgrades-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #c2e6ff;
+}
+
+.cs-upgrades-empty-sub {
+  font-size: 12px;
+  color: rgba(200, 210, 220, 0.5);
+}
+
+.cs-up-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 8px 12px 80px;
+  overflow-y: auto;
+}
+
+.cs-up-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  background: rgba(20, 28, 36, 0.7);
+  border: 1px solid rgba(110, 200, 180, 0.18);
+  border-radius: 10px;
+}
+
+.cs-up-card-locked {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.cs-up-card-owned {
+  background: rgba(110, 200, 180, 0.10);
+  border-color: rgba(110, 200, 180, 0.55);
+}
+
+.cs-up-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #c2e6ff;
+  line-height: 1.2;
+}
+
+.cs-up-desc {
+  flex: 1;
+  font-size: 11px;
+  color: rgba(200, 210, 220, 0.7);
+  line-height: 1.3;
+}
+
+.cs-up-status {
+  font-size: 11px;
+  color: #a7f3e8;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.cs-up-buy {
+  margin-top: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: linear-gradient(180deg, rgba(196, 158, 100, 0.22), rgba(180, 140, 80, 0.15));
+  border: 1px solid rgba(196, 158, 100, 0.65);
+  border-radius: 6px;
+  color: #ffe8a0;
+  cursor: pointer;
+}
+
+.cs-up-buy:hover {
+  background: linear-gradient(180deg, rgba(220, 180, 120, 0.32), rgba(196, 158, 100, 0.22));
+}
+
+.cs-up-buy-disabled,
+.cs-up-buy:disabled {
+  background: rgba(40, 50, 60, 0.4);
+  border-color: rgba(255, 255, 255, 0.10);
+  color: rgba(220, 220, 220, 0.35);
+  cursor: not-allowed;
+}

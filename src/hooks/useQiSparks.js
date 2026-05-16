@@ -570,6 +570,39 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
     nextRerollCost,
     skip,
     clearAll,
+    // Round 3 — bypass the offer flow entirely. `grant` is used by:
+    //   - crystal evolution (HomeScreen.handleCrystalEvolve) to unlock
+    //     mechanic T1s when the crystal crosses a visual tier
+    //   - upgrade-shop purchases (mechanic_tier upgrades grant a T2-T5 spark)
+    // Idempotent for mechanics: only fires if the existing active tier is
+    // strictly lower than the granted card's tier. No-op otherwise.
+    grant: (sparkId) => {
+      const card = QI_SPARK_BY_ID[sparkId];
+      if (!card) return false;
+      if (card.kind === 'mechanic') {
+        // Read the current set via the latest activeSparks state — safe because
+        // grant runs from event/effect handlers, not inside a setState updater.
+        const current = activeSparks.reduce((acc, s) => {
+          const c = QI_SPARK_BY_ID[s.sparkId];
+          if (c?.kind !== 'mechanic' || c.mechanicId !== card.mechanicId) return acc;
+          return Math.max(acc, c.tier ?? 0);
+        }, 0);
+        if (current >= (card.tier ?? 0)) return false;
+      }
+      applySparkChoice(sparkId);
+      return true;
+    },
+    /** Highest active tier for a mechanic id, or 0 if none owned. */
+    getMechanicTier: (mechanicId) => {
+      let max = 0;
+      for (const s of activeSparks) {
+        const c = QI_SPARK_BY_ID[s.sparkId];
+        if (c?.kind === 'mechanic' && c.mechanicId === mechanicId) {
+          if ((c.tier ?? 0) > max) max = c.tier ?? 0;
+        }
+      }
+      return max;
+    },
     // Direct-apply for debug bridges — bypasses the offer modal flow.
     applySpark: applySparkChoice,
   };
