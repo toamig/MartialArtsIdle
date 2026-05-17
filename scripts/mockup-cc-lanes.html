@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Producer Lanes — Cookie Clicker Style</title>
+<style>
+  :root {
+    --text:    #d8e6f5;
+    --muted:   rgba(216, 230, 245, 0.55);
+    --soft:    rgba(216, 230, 245, 0.35);
+    --jade:    #a7f3e8;
+    --gold:    #ffd070;
+    --warm:    #d99752;
+    --violet:  #a78bfa;
+    --cyan:    #7ed4ff;
+    --bronze:  #cd7f32;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: linear-gradient(180deg, #050912, #0a1320);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 24px; max-width: 900px; line-height: 1.5; }
+
+  .panel {
+    background: rgba(15, 22, 28, 0.85);
+    border: 1px solid rgba(110, 200, 180, 0.18);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .panel-head {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .panel-head .name {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: var(--jade);
+    text-transform: uppercase;
+  }
+  .panel-head .meta { font-size: 11px; color: var(--muted); }
+
+  /* ────────── LANE ────────── */
+  .lane {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 200ms ease;
+  }
+  .lane:last-child { border-bottom: none; }
+  .lane:hover { background: rgba(110, 200, 180, 0.04); }
+
+  /* Leader sprite — bigger, sits on the left */
+  .lane-leader {
+    width: 56px; height: 56px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(60, 50, 40, 0.5), rgba(30, 25, 20, 0.6));
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    transition: all 220ms ease;
+  }
+
+  /* Tier styling — same row at different ownership tiers escalates leader glow + sprite variant */
+  .lane.tier-bronze   .lane-leader { box-shadow: inset 0 0 14px rgba(205, 127, 50, 0.35),  0 0 12px rgba(205, 127, 50, 0.15); }
+  .lane.tier-silver   .lane-leader { box-shadow: inset 0 0 18px rgba(192, 192, 192, 0.4),  0 0 16px rgba(192, 192, 192, 0.20); }
+  .lane.tier-gold     .lane-leader { box-shadow: inset 0 0 22px rgba(255, 215, 0, 0.45),   0 0 22px rgba(255, 215, 0, 0.30); }
+  .lane.tier-mythic   .lane-leader {
+    box-shadow: inset 0 0 32px rgba(167, 139, 250, 0.65), 0 0 36px rgba(167, 139, 250, 0.45);
+    animation: lane-mythic 3s ease-in-out infinite;
+  }
+  @keyframes lane-mythic {
+    0%, 100% { filter: brightness(1); }
+    50%      { filter: brightness(1.2); }
+  }
+
+  /* Locked lanes */
+  .lane.locked { opacity: 0.4; }
+  .lane.locked .lane-leader {
+    background: rgba(30, 30, 30, 0.4);
+    filter: grayscale(1);
+  }
+
+  /* Name + meta */
+  .lane-info {
+    flex-shrink: 0;
+    width: 200px;
+  }
+  .lane-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .lane-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .lane-owned { color: var(--jade); font-weight: 600; }
+  .lane.tier-gold     .lane-owned { color: var(--gold); }
+  .lane.tier-mythic   .lane-owned { color: var(--violet); }
+  .lane-rate  { color: rgba(167, 243, 196, 0.85); }
+  .lane-tier-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    margin-left: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.85);
+  }
+  .lane.tier-bronze .lane-tier-badge { background: linear-gradient(135deg, #d99752, #8b5a2b); }
+  .lane.tier-silver .lane-tier-badge { background: linear-gradient(135deg, #e0e0e0, #909090); }
+  .lane.tier-gold   .lane-tier-badge { background: linear-gradient(135deg, #ffe770, #b8860b); }
+  .lane.tier-mythic .lane-tier-badge {
+    background: conic-gradient(from 0deg, var(--violet), #f0abfc, var(--gold), var(--violet));
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  /* ────────── THE STACK — the heart of the visualization ────────── */
+  .lane-stack {
+    flex: 1;
+    height: 48px;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    overflow: hidden;
+    position: relative;
+    padding-right: 36px; /* space for overflow indicator */
+  }
+  .lane-stack .unit {
+    flex-shrink: 0;
+    font-size: 22px;
+    line-height: 1;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+    /* idle animation — subtle breathing */
+    animation: unit-breathe 4s ease-in-out infinite;
+  }
+  .lane-stack .unit:nth-child(2n)  { animation-delay: 0.6s; }
+  .lane-stack .unit:nth-child(3n)  { animation-delay: 1.2s; }
+  .lane-stack .unit:nth-child(5n)  { animation-delay: 1.8s; }
+  @keyframes unit-breathe {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-1px) scale(1.04); }
+  }
+
+  /* Tier-specific filters on the unit sprites — same emoji, different "tier" via CSS */
+  .lane.tier-bronze .lane-stack .unit { filter: saturate(0.7) brightness(0.85) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+  .lane.tier-silver .lane-stack .unit { filter: saturate(0.9) brightness(0.95) drop-shadow(0 0 3px rgba(192, 192, 192, 0.3)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+  .lane.tier-gold   .lane-stack .unit { filter: saturate(1.05) brightness(1.05) drop-shadow(0 0 5px rgba(255, 215, 0, 0.4)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+  .lane.tier-mythic .lane-stack .unit {
+    filter: saturate(1.2) brightness(1.15) drop-shadow(0 0 8px rgba(167, 139, 250, 0.65)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  }
+
+  /* Overflow indicator — shown when there are more units than visible */
+  .lane-overflow {
+    position: absolute;
+    right: 0; top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 2px 6px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .lane.tier-mythic .lane-overflow {
+    color: var(--violet);
+    border-color: rgba(167, 139, 250, 0.5);
+  }
+
+  /* ────────── TIER PROGRESSION DEMO ────────── */
+  .tier-demo .lane { padding: 8px 14px; }
+  .tier-demo .lane-info { width: 160px; }
+  .tier-demo .lane-stack { height: 36px; }
+  .tier-demo .lane-stack .unit { font-size: 18px; }
+  .tier-demo-arrow {
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    padding: 4px 0;
+    background: rgba(0, 0, 0, 0.3);
+    letter-spacing: 1px;
+  }
+
+  /* ────────── NOTES ────────── */
+  .notes {
+    background: rgba(15, 22, 28, 0.85);
+    border: 1px solid rgba(110, 200, 180, 0.18);
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 16px;
+  }
+  .notes h2 {
+    font-size: 13px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--jade);
+    margin: 0 0 10px;
+  }
+  .notes p, .notes li {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .notes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px) { .notes-grid { grid-template-columns: 1fr; } }
+  .notes-grid h3 { font-size: 12px; color: var(--gold); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .sprite-chart {
+    margin: 8px 0;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .sprite-chart td { padding: 4px 12px 4px 0; }
+  .sprite-chart .tier-cell { font-weight: 600; }
+  .sprite-chart .bronze { color: var(--bronze); }
+  .sprite-chart .silver { color: #c0c0c0; }
+  .sprite-chart .gold   { color: var(--gold); }
+  .sprite-chart .mythic { color: var(--violet); }
+</style>
+</head>
+<body>
+
+  <h1>Producer Lanes — Cookie Clicker Style</h1>
+  <div class="subtitle">
+    Each producer is one row. Buying more fills the row with sprite copies (capped visually at ~20).
+    At ownership thresholds the sprite SWAPS to an upgraded variant — same emoji here as placeholder,
+    different glow/saturation/scale via CSS. Mirror of CC's building-column display, no backdrop painting required.
+  </div>
+
+  <!-- ────────── PRODUCER LANES — LATE GAME SNAPSHOT ────────── -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="name">Cultivator's Forces — Late game snapshot</div>
+      <div class="meta">10 producers · all unlocked · mixed tiers</div>
+    </div>
+
+    <!-- Body Tempering Disciple — Mythic (200+) -->
+    <div class="lane tier-mythic">
+      <div class="lane-leader">🧎</div>
+      <div class="lane-info">
+        <div class="lane-name">Body Tempering Disciple</div>
+        <div class="lane-meta">
+          <span class="lane-owned">×218</span> <span class="lane-rate">· 87 Qi/s</span>
+          <span class="lane-tier-badge">Mythic</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span>
+        <span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span>
+        <span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span>
+        <span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span>
+        <div class="lane-overflow">+198</div>
+      </div>
+    </div>
+
+    <!-- Spirit Herb Garden — Mythic (195) -->
+    <div class="lane tier-mythic">
+      <div class="lane-leader">🌳</div>
+      <div class="lane-info">
+        <div class="lane-name">Spirit Herb Garden</div>
+        <div class="lane-meta">
+          <span class="lane-owned">×195</span> <span class="lane-rate">· 780 Qi/s</span>
+          <span class="lane-tier-badge">Mythic</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span>
+        <span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span>
+        <span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span>
+        <span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span>
+        <div class="lane-overflow">+175</div>
+      </div>
+    </div>
+
+    <!-- Spirit Forge — Gold (162) -->
+    <div class="lane tier-gold">
+      <div class="lane-leader">🏭</div>
+      <div class="lane-info">
+        <div class="lane-name">Spirit Forge</div>
+        <div class="lane-meta">
+          <span class="lane-owned">×162</span> <span class="lane-rate">· 5.2K Qi/s</span>
+          <span class="lane-tier-badge">Gold</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🏭</span><span class="unit">🏭</span><span class="unit">🏭</span><span class="unit">🏭</span><span class="unit">🏭</span>
+        <span class="unit">🏭</span><span class="unit">🏭</span><span class="unit">🏭</span><span class="unit">🏭</span><span class="unit">🏭</span>
+        <span class="unit">🏭</span><span class="unit">🏭</span><span class="unit">🏭</span><span class="unit">🏭</span><span class="unit">🏭</span>
+        <span class="unit">🏭</span><span class="unit">🏭</span><span class="unit">🏭</span><span class="unit">🏭</span><span class="unit">🏭</span>
+        <div class="lane-overflow">+142</div>
+      </div>
+    </div>
+
+    <!-- Outer Sect Hall — Gold (135) -->
+    <div class="lane tier-gold">
+      <div class="lane-leader">🏛️</div>
+      <div class="lane-info">
+        <div class="lane-name">Outer Sect Hall</div>
+        <div class="lane-meta">
+          <span class="lane-owned">×135</span> <span class="lane-rate">· 32.4K Qi/s</span>
+          <span class="lane-tier-badge">Gold</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🏛️</span><span class="unit">🏛️</span><span class="unit">🏛️</span><span class="unit">🏛️</span><span class="unit">🏛️</span>
+        <span class="unit">🏛️</span><span class="unit">🏛️</span><span class="unit">🏛️</span><span class="unit">🏛️</span><span class="unit">🏛️</span>
+        <span class="unit">🏛️</span><span class="unit">🏛️</span><span class="unit">🏛️</span><span class="unit">🏛️</span><span class="unit">🏛️</span>
+        <span class="unit">🏛️</span><span class="unit">🏛️</span><span class="unit">🏛️</span><span class="unit">🏛️</span><span class="unit">🏛️</span>
+        <div class="lane-overflow">+115</div>
+      </div>
+    </div>
+
+    <!-- Beast Sanctuary — Gold (118) -->
+    <div class="lane tier-gold">
+      <div class="lane-leader">🐉</div>
+      <div class="lane-info">
+        <div class="lane-name">Beast Sanctuary</div>
+        <div class="lane-meta">
+          <span class="lane-owned">×118</span> <span class="lane-rate">· 153K Qi/s</span>
+          <span class="lane-tier-badge">Gold</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🐉</span><span class="unit">🐉</span><span class="unit">🐉</span><span class="unit">🐉</span><span class="unit">🐉</span>
+        <span class="unit">🐉</span><span class="unit">🐉</span><span class="unit">🐉</span><span class="unit">🐉</span><span class="unit">🐉</span>
+        <span class="unit">🐉</span><span class="unit">🐉</span><span class="unit">🐉</span><span class="unit">🐉</span><span class="unit">🐉</span>
+        <span class="unit">🐉</span><span class="unit">🐉</span><span class="unit">🐉</span><span class="unit">🐉</span><span class="unit">🐉</span>
+        <div class="lane-overflow">+98</div>
+      </div>
+    </div>
+
+    <!-- Ancestral Pagoda — Silver (95) -->
+    <div class="lane tier-silver">
+      <div class="lane-leader">⛩️</div>
+      <div class="lane-info">
+        <div class="lane-name">Ancestral Pagoda</div>
+        <div class="lane-meta">
+          <span class="lane-owned">×95</span> <span class="lane-rate">· 825K Qi/s</span>
+          <span class="lane-tier-badge">Silver</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">⛩️</span><span class="unit">⛩️</span><span class="unit">⛩️</span><span class="unit">⛩️</span><span class="unit">⛩️</span>
+        <span class="unit">⛩️</span><span class="unit">⛩️</span><span class="unit">⛩️</span><span class="unit">⛩️</span><span class="unit">⛩️</span>
+        <span class="unit">⛩️</span><span class="unit">⛩️</span><span class="unit">⛩️</span><span class="unit">⛩️</span><span class="unit">⛩️</span>
+        <span class="unit">⛩️</span><span class="unit">⛩️</span><span class="unit">⛩️</span><span class="unit">⛩️</span><span class="unit">⛩️</span>
+        <div class="lane-overflow">+75</div>
+      </div>
+    </div>
+
+    <!-- Moonshrine — Silver (72) -->
+    <div class="lane tier-silver">
+      <div class="lane-leader">🏯</div>
+      <div class="lane-info">
+        <div class="lane-name">Moonshrine</div>
+        <div class="lane-meta">
+          <span class="lane-owned">×72</span> <span class="lane-rate">· 4.7M Qi/s</span>
+          <span class="lane-tier-badge">Silver</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🏯</span><span class="unit">🏯</span><span class="unit">🏯</span><span class="unit">🏯</span><span class="unit">🏯</span>
+        <span class="unit">🏯</span><span class="unit">🏯</span><span class="unit">🏯</span><span class="unit">🏯</span><span class="unit">🏯</span>
+        <span class="unit">🏯</span><span class="unit">🏯</span><span class="unit">🏯</span><span class="unit">🏯</span><span class="unit">🏯</span>
+        <span class="unit">🏯</span><span class="unit">🏯</span><span class="unit">🏯</span><span class="unit">🏯</span><span class="unit">🏯</span>
+        <div class="lane-overflow">+52</div>
+      </div>
+    </div>
+
+    <!-- Sky-Piercing Stele — Silver (48) -->
+    <div class="lane tier-silver">
+      <div class="lane-leader">🗿</div>
+      <div class="lane-info">
+        <div class="lane-name">Sky-Piercing Stele</div>
+        <div class="lane-meta">
+          <span class="lane-owned">×48</span> <span class="lane-rate">· 22M Qi/s</span>
+          <span class="lane-tier-badge">Silver</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🗿</span><span class="unit">🗿</span><span class="unit">🗿</span><span class="unit">🗿</span><span class="unit">🗿</span>
+        <span class="unit">🗿</span><span class="unit">🗿</span><span class="unit">🗿</span><span class="unit">🗿</span><span class="unit">🗿</span>
+        <span class="unit">🗿</span><span class="unit">🗿</span><span class="unit">🗿</span><span class="unit">🗿</span><span class="unit">🗿</span>
+        <span class="unit">🗿</span><span class="unit">🗿</span><span class="unit">🗿</span><span class="unit">🗿</span><span class="unit">🗿</span>
+        <div class="lane-overflow">+28</div>
+      </div>
+    </div>
+
+    <!-- Void Gate — Bronze (28) -->
+    <div class="lane tier-bronze">
+      <div class="lane-leader">🌌</div>
+      <div class="lane-info">
+        <div class="lane-name">Void Gate</div>
+        <div class="lane-meta">
+          <span class="lane-owned">×28</span> <span class="lane-rate">· 130M Qi/s</span>
+          <span class="lane-tier-badge">Bronze</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🌌</span><span class="unit">🌌</span><span class="unit">🌌</span><span class="unit">🌌</span><span class="unit">🌌</span>
+        <span class="unit">🌌</span><span class="unit">🌌</span><span class="unit">🌌</span><span class="unit">🌌</span><span class="unit">🌌</span>
+        <span class="unit">🌌</span><span class="unit">🌌</span><span class="unit">🌌</span><span class="unit">🌌</span><span class="unit">🌌</span>
+        <span class="unit">🌌</span><span class="unit">🌌</span><span class="unit">🌌</span><span class="unit">🌌</span><span class="unit">🌌</span>
+        <div class="lane-overflow">+8</div>
+      </div>
+    </div>
+
+    <!-- World Tree — Bronze (15) -->
+    <div class="lane tier-bronze">
+      <div class="lane-leader">🌳</div>
+      <div class="lane-info">
+        <div class="lane-name">World Tree</div>
+        <div class="lane-meta">
+          <span class="lane-owned">×15</span> <span class="lane-rate">· 800M Qi/s</span>
+          <span class="lane-tier-badge">Bronze</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span>
+        <span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span>
+        <span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span><span class="unit">🌳</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────── TIER PROGRESSION DEMO ────────── -->
+  <div class="panel tier-demo">
+    <div class="panel-head">
+      <div class="name">Tier Progression — same producer at 4 ownership stages</div>
+      <div class="meta">Body Tempering Disciple · 1-9 / 10-24 / 25-99 / 100+</div>
+    </div>
+
+    <!-- Tier 1: Bronze -->
+    <div class="lane tier-bronze">
+      <div class="lane-leader">🧎</div>
+      <div class="lane-info">
+        <div class="lane-name">×7 owned</div>
+        <div class="lane-meta">
+          <span class="lane-tier-badge">Bronze · Initiate</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span>
+        <span class="unit">🧎</span><span class="unit">🧎</span>
+      </div>
+    </div>
+    <div class="tier-demo-arrow">↓ cross 10 owned ↓</div>
+
+    <!-- Tier 2: Silver -->
+    <div class="lane tier-silver">
+      <div class="lane-leader">🧎</div>
+      <div class="lane-info">
+        <div class="lane-name">×18 owned</div>
+        <div class="lane-meta">
+          <span class="lane-tier-badge">Silver · Trained</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span>
+        <span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span>
+        <span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span>
+        <span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span>
+      </div>
+    </div>
+    <div class="tier-demo-arrow">↓ cross 25 owned ↓</div>
+
+    <!-- Tier 3: Gold (final art would swap to a "Master Disciple" sprite — visually distinct) -->
+    <div class="lane tier-gold">
+      <div class="lane-leader">⚔️</div>
+      <div class="lane-info">
+        <div class="lane-name">×42 owned</div>
+        <div class="lane-meta">
+          <span class="lane-tier-badge">Gold · Master <small>(sprite swaps)</small></span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">⚔️</span><span class="unit">⚔️</span><span class="unit">⚔️</span><span class="unit">⚔️</span><span class="unit">⚔️</span>
+        <span class="unit">⚔️</span><span class="unit">⚔️</span><span class="unit">⚔️</span><span class="unit">⚔️</span><span class="unit">⚔️</span>
+        <span class="unit">⚔️</span><span class="unit">⚔️</span><span class="unit">⚔️</span><span class="unit">⚔️</span><span class="unit">⚔️</span>
+        <span class="unit">⚔️</span><span class="unit">⚔️</span><span class="unit">⚔️</span><span class="unit">⚔️</span><span class="unit">⚔️</span>
+        <div class="lane-overflow">+22</div>
+      </div>
+    </div>
+    <div class="tier-demo-arrow">↓ cross 100 owned ↓</div>
+
+    <!-- Tier 4: Mythic (sprite swap again) -->
+    <div class="lane tier-mythic">
+      <div class="lane-leader">✨</div>
+      <div class="lane-info">
+        <div class="lane-name">×218 owned</div>
+        <div class="lane-meta">
+          <span class="lane-tier-badge">Mythic · Immortal <small>(sprite swaps again)</small></span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">✨</span><span class="unit">✨</span><span class="unit">✨</span><span class="unit">✨</span><span class="unit">✨</span>
+        <span class="unit">✨</span><span class="unit">✨</span><span class="unit">✨</span><span class="unit">✨</span><span class="unit">✨</span>
+        <span class="unit">✨</span><span class="unit">✨</span><span class="unit">✨</span><span class="unit">✨</span><span class="unit">✨</span>
+        <span class="unit">✨</span><span class="unit">✨</span><span class="unit">✨</span><span class="unit">✨</span><span class="unit">✨</span>
+        <div class="lane-overflow">+198</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────── EARLY GAME LANES ────────── -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="name">Early Game — first 15 minutes</div>
+      <div class="meta">2 producers unlocked, low counts, most locked</div>
+    </div>
+
+    <div class="lane tier-bronze">
+      <div class="lane-leader">🧎</div>
+      <div class="lane-info">
+        <div class="lane-name">Body Tempering Disciple</div>
+        <div class="lane-meta">
+          <span class="lane-owned">×3</span> <span class="lane-rate">· 0.3 Qi/s</span>
+          <span class="lane-tier-badge">Bronze</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🧎</span><span class="unit">🧎</span><span class="unit">🧎</span>
+      </div>
+    </div>
+
+    <div class="lane tier-bronze">
+      <div class="lane-leader">🌱</div>
+      <div class="lane-info">
+        <div class="lane-name">Spirit Herb Garden</div>
+        <div class="lane-meta">
+          <span class="lane-owned">×1</span> <span class="lane-rate">· 1 Qi/s</span>
+          <span class="lane-tier-badge">Bronze</span>
+        </div>
+      </div>
+      <div class="lane-stack">
+        <span class="unit">🌱</span>
+      </div>
+    </div>
+
+    <div class="lane locked">
+      <div class="lane-leader">🔒</div>
+      <div class="lane-info">
+        <div class="lane-name">Spirit Forge</div>
+        <div class="lane-meta">Unlocks at realm 9</div>
+      </div>
+      <div class="lane-stack"></div>
+    </div>
+
+    <div class="lane locked">
+      <div class="lane-leader">🔒</div>
+      <div class="lane-info">
+        <div class="lane-name">Outer Sect Hall</div>
+        <div class="lane-meta">Unlocks at realm 13</div>
+      </div>
+      <div class="lane-stack"></div>
+    </div>
+  </div>
+
+  <!-- ────────── NOTES ────────── -->
+  <div class="notes">
+    <h2>How it scales without painting</h2>
+    <div class="notes-grid">
+      <div>
+        <h3>4 sprites per producer (40 total)</h3>
+        <p style="margin: 0;">
+          Initiate (1-9) / Trained (10-24) / Master (25-99) / Immortal (100+). When the player crosses a
+          threshold, ALL their sprites for that producer swap to the new variant simultaneously. Same as
+          Cookie Clicker's farm columns visually upgrading at high tiers. CSS handles the threshold trigger.
+        </p>
+      </div>
+      <div>
+        <h3>Lane caps at ~20 visible units</h3>
+        <p style="margin: 0;">
+          Beyond 20 owned, the lane shows a <strong>+N</strong> overflow indicator on the right edge.
+          The visual stays scannable; the count carries the "I own a lot" feeling. Mythic-tier lanes
+          override the overflow with a colored badge so the player sees their "completion" status.
+        </p>
+      </div>
+      <div>
+        <h3>No backdrop. No composition.</h3>
+        <p style="margin: 0;">
+          Each lane is a horizontal strip. Layout is pure flexbox. The unit sprites are independent
+          on transparent BGs — drop them in fixed positions. Zero painted scenery to worry about.
+        </p>
+      </div>
+      <div>
+        <h3>Tier escalation also via CSS</h3>
+        <p style="margin: 0;">
+          The leader sprite gets an inset glow + outer shadow per tier (Bronze warm / Silver pale /
+          Gold radiant / Mythic violet shimmer). Same emoji here as placeholder; final art uses the
+          tier-variant sprites. Tier badge ribbon in the meta row tells the player exactly where they are.
+        </p>
+      </div>
+    </div>
+
+    <h2 style="margin-top: 14px;">Where this lives in the game</h2>
+    <p style="margin: 0;">
+      Two natural homes:
+    </p>
+    <ul>
+      <li><strong>CultivationScreen — top section</strong>: split the screen. Top half shows these lanes (your "forces"); bottom half stays the buy list. Player sees what they've built WHILE shopping for more.</li>
+      <li><strong>New "Domain" tab</strong>: separate navigation entry. Player taps it to admire their accumulated forces. Cleaner but requires extra nav tap to see.</li>
+    </ul>
+    <p style="margin: 8px 0 0;">
+      I'd recommend <strong>CultivationScreen top section</strong> — colocated with buying = stronger feedback loop.
+    </p>
+
+    <h2 style="margin-top: 14px;">Art shopping list — what to generate first</h2>
+    <table class="sprite-chart">
+      <tr><td><strong class="tier-cell bronze">Initiate</strong></td><td>10 sprites — basic, single-color silhouette per producer</td></tr>
+      <tr><td><strong class="tier-cell silver">Trained</strong></td><td>10 sprites — slightly more detail, mild armor/glow</td></tr>
+      <tr><td><strong class="tier-cell gold">Master</strong></td><td>10 sprites — distinct visual upgrade (different posture/gear/structure)</td></tr>
+      <tr><td><strong class="tier-cell mythic">Immortal</strong></td><td>10 sprites — full glow, ornate, distinct color signature</td></tr>
+    </table>
+    <p style="margin: 0;">
+      40 sprites total. Each is 32×32 or 48×48, transparent BG. Easy PixelLab prompts: <em>"meditating disciple
+      pixel art, transparent, 32x32"</em>. You can generate one tier-set at a time (10 sprites per session) and
+      iterate quickly. Worst case you ship with 1 sprite per producer and let the CSS filter do all the tier
+      escalation — that's 10 sprites and the game still feels like CC.
+    </p>
+
+    <h2 style="margin-top: 14px;">What's a placeholder vs final</h2>
+    <p style="margin: 0;">
+      <strong>Placeholders:</strong> every emoji. The Master tier "swap" to ⚔️ and the Mythic tier swap to ✨
+      are illustrating the concept — final art keeps the disciple identity but with different gear/glow
+      across tiers. <strong>Real (would survive):</strong> the lane layout, sprite stacking logic, count cap +
+      overflow indicator, tier badges, CSS glow escalation, breathing animation, hover state.
+    </p>
+  </div>
+
+</body>
+</html>

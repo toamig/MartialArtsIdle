@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cultivator's Domain — Cookie-Clicker Style Mockup</title>
+<style>
+  :root {
+    --text:    #d8e6f5;
+    --muted:   rgba(216, 230, 245, 0.55);
+    --jade:    #a7f3e8;
+    --gold:    #ffd070;
+    --warm:    #d99752;
+    --violet:  #a78bfa;
+    --cyan:    #7ed4ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: linear-gradient(180deg, #060912, #0a1320);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 24px; max-width: 900px; line-height: 1.5; }
+
+  .scenes-col {
+    display: flex; flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .scene-card {
+    background: rgba(15, 22, 28, 0.85);
+    border: 1px solid rgba(110, 200, 180, 0.18);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .scene-meta {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .scene-meta-name {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: var(--jade);
+    text-transform: uppercase;
+  }
+  .scene-meta-stage { font-size: 11px; color: var(--muted); }
+
+  /* ───────────────────────────────────────────────────────────────────────
+     The WIDE DOMAIN — CC-style zoomed-out view with the temple anchored
+     in the center and producer zones layered around it.
+  ─────────────────────────────────────────────────────────────────────── */
+  .domain {
+    position: relative;
+    height: 520px;
+    overflow: hidden;
+    /* Layered sky + ground gradient — placeholder for a real wide BG PNG */
+    background:
+      /* Stars */
+      radial-gradient(2px 2px at 5% 8%,  rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(1px 1px at 12% 15%, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(2px 2px at 22% 5%,  rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 70% 8%,  rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(2px 2px at 85% 12%, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 92% 6%,  rgba(255, 255, 255, 0.7), transparent),
+      /* Distant mountain silhouettes (mid-back) */
+      radial-gradient(ellipse 600px 200px at 30% 70%, rgba(40, 30, 50, 0.6), transparent 60%),
+      radial-gradient(ellipse 700px 220px at 75% 72%, rgba(45, 35, 55, 0.7), transparent 60%),
+      /* Sky→ground gradient */
+      linear-gradient(180deg,
+        #0a0e1c 0%,
+        #14172a 25%,
+        #1d2438 50%,
+        #2a2840 60%,
+        #3a2818 80%,
+        #1f1408 100%);
+  }
+
+  /* Ground line + foreground earth */
+  .ground {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 22%;
+    background: linear-gradient(180deg, transparent, rgba(40, 25, 15, 0.6) 30%, rgba(20, 12, 6, 0.95));
+    z-index: 5;
+  }
+  .ground::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(167, 243, 232, 0.3) 20%, rgba(167, 243, 232, 0.3) 80%, transparent);
+    filter: blur(0.5px);
+  }
+
+  /* Hillside slopes left and right of the temple */
+  .hill-left, .hill-right {
+    position: absolute;
+    bottom: 22%;
+    height: 18%;
+    z-index: 4;
+    opacity: 0.7;
+  }
+  .hill-left  { left: 0;   width: 38%; background: linear-gradient(135deg, rgba(50, 38, 25, 0.8), transparent 70%); clip-path: polygon(0 100%, 0 30%, 80% 90%, 100% 100%); }
+  .hill-right { right: 0;  width: 38%; background: linear-gradient(225deg, rgba(50, 38, 25, 0.8), transparent 70%); clip-path: polygon(100% 100%, 100% 30%, 20% 90%, 0 100%); }
+
+  /* ───────────────────────────────────────────────────────────────────────
+     TEMPLE — your existing PNG anchored at center-bottom. Here a CSS
+     placeholder rectangle approximates it.
+  ─────────────────────────────────────────────────────────────────────── */
+  .temple-frame {
+    position: absolute;
+    left: 50%; bottom: 8%;
+    transform: translateX(-50%);
+    width: 260px; height: 220px;
+    background:
+      /* Light inside the temple (from skylight + braziers) */
+      radial-gradient(ellipse 120px 60px at 50% 70%, rgba(255, 215, 130, 0.45), transparent 70%),
+      /* Roof */
+      linear-gradient(180deg, rgba(80, 50, 30, 0.95) 0%, rgba(60, 35, 20, 0.95) 18%, transparent 22%),
+      /* Walls */
+      linear-gradient(180deg, transparent 20%, #3a2818 22%, #2e1f10 100%);
+    border-radius: 4px;
+    z-index: 8;
+    box-shadow:
+      0 0 28px rgba(255, 200, 130, 0.35),
+      0 8px 24px rgba(0, 0, 0, 0.6);
+  }
+  .temple-frame::before {
+    content: '';
+    /* Roof eaves */
+    position: absolute;
+    left: -20px; right: -20px; top: -8px;
+    height: 28px;
+    background: linear-gradient(180deg, rgba(100, 60, 35, 0.95), rgba(70, 40, 25, 0.95));
+    clip-path: polygon(0 100%, 8% 0, 92% 0, 100% 100%);
+  }
+  .temple-frame::after {
+    /* Arched entrance */
+    content: '';
+    position: absolute;
+    left: 50%; bottom: 0;
+    transform: translateX(-50%);
+    width: 80px; height: 100px;
+    background: radial-gradient(ellipse at 50% 100%, rgba(255, 200, 130, 0.85) 0%, rgba(120, 70, 30, 0.6) 60%, transparent 80%);
+    border-radius: 50% 50% 0 0;
+  }
+
+  /* Cultivator + crystal — visible through the temple's arched entrance */
+  .temple-occupant {
+    position: absolute;
+    left: 50%; bottom: 10%;
+    transform: translateX(-50%);
+    z-index: 9;
+    display: flex; flex-direction: column; align-items: center;
+    pointer-events: none;
+  }
+  .temple-occupant .crystal {
+    font-size: 18px;
+    filter: drop-shadow(0 0 8px rgba(126, 212, 255, 0.8));
+    margin-bottom: -4px;
+    animation: crystal-hover 3s ease-in-out infinite;
+  }
+  @keyframes crystal-hover {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+  }
+  .temple-occupant .cultivator {
+    font-size: 36px;
+    filter: drop-shadow(0 0 8px rgba(255, 200, 130, 0.6));
+  }
+
+  /* Temple label — invisible in production, here for clarity */
+  .temple-label {
+    position: absolute;
+    left: 50%; bottom: 2%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: rgba(255, 215, 130, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* ───────────────────────────────────────────────────────────────────────
+     PRODUCER ZONES — each producer has a fixed coordinate region
+  ─────────────────────────────────────────────────────────────────────── */
+
+  /* ── COSMIC LAYER (top of scene, far back) ───────────────────────────── */
+
+  /* 10. WORLD TREE / DAO TREE — colossal silhouette in the sky */
+  .world-tree {
+    position: absolute;
+    left: 50%; top: 0;
+    transform: translateX(-50%);
+    width: 70%; height: 55%;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 500ms ease;
+    background:
+      /* Foliage clusters */
+      radial-gradient(circle at 50% 30%, rgba(167, 243, 232, 0.25) 0%, transparent 22%),
+      radial-gradient(circle at 35% 35%, rgba(167, 139, 250, 0.18) 0%, transparent 20%),
+      radial-gradient(circle at 65% 35%, rgba(167, 139, 250, 0.18) 0%, transparent 20%),
+      radial-gradient(circle at 50% 50%, rgba(255, 220, 130, 0.15) 0%, transparent 30%);
+    filter: blur(1px);
+  }
+  .world-tree::before {
+    content: '';
+    position: absolute;
+    left: 50%; top: 30%; bottom: 0;
+    transform: translateX(-50%);
+    width: 16px;
+    background: linear-gradient(180deg, rgba(110, 80, 60, 0.4), rgba(70, 50, 35, 0.6));
+    border-radius: 4px;
+  }
+  .domain.tier-late .world-tree { opacity: 1; }
+
+  /* 9. VOID GATE — swirling rift, upper-left */
+  .void-gate {
+    position: absolute;
+    left: 8%; top: 12%;
+    width: 70px; height: 90px;
+    z-index: 3;
+    background: radial-gradient(ellipse at center, rgba(167, 139, 250, 0.85), rgba(80, 40, 160, 0.4) 40%, transparent 70%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 400ms ease;
+    animation: void-warp 4s ease-in-out infinite;
+  }
+  @keyframes void-warp {
+    0%, 100% { transform: scale(1) rotate(0); }
+    50%      { transform: scale(1.15) rotate(8deg); }
+  }
+  .domain.tier-late .void-gate { opacity: 1; }
+
+  /* 8. SKY-PIERCING STELE — vertical stone column from peak to sky */
+  .sky-stele {
+    position: absolute;
+    right: 15%; top: 5%;
+    width: 18px; height: 55%;
+    z-index: 3;
+    background: linear-gradient(180deg, rgba(180, 160, 130, 0.85), rgba(120, 100, 70, 0.7));
+    border-radius: 3px;
+    box-shadow: -2px 0 12px rgba(255, 220, 140, 0.45);
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+  .sky-stele::before {
+    /* Light beam emanating UP from the stele */
+    content: '';
+    position: absolute;
+    left: 50%; top: -60%;
+    transform: translateX(-50%);
+    width: 60px; height: 100%;
+    background: linear-gradient(180deg, rgba(255, 240, 180, 0.5), rgba(255, 215, 100, 0.25) 60%, transparent);
+    filter: blur(3px);
+    animation: pillar-glow 4s ease-in-out infinite;
+  }
+  @keyframes pillar-glow {
+    0%, 100% { opacity: 0.7; }
+    50%      { opacity: 1; }
+  }
+  .domain.tier-mid .sky-stele { opacity: 0.5; }
+  .domain.tier-late .sky-stele { opacity: 1; }
+
+  /* 7. MOONSHRINE — pavilion silhouette on a distant peak (upper-right) */
+  .moonshrine {
+    position: absolute;
+    right: 5%; top: 25%;
+    font-size: 38px;
+    z-index: 4;
+    filter: drop-shadow(0 0 10px rgba(126, 212, 255, 0.6)) brightness(0.85);
+    opacity: 0;
+    transition: opacity 400ms ease, filter 400ms ease;
+  }
+  .moonshrine::before {
+    /* Mini peak the shrine sits on */
+    content: '';
+    position: absolute;
+    left: -10px; right: -10px; top: 30px;
+    height: 40px;
+    background: linear-gradient(135deg, rgba(60, 50, 45, 0.85), rgba(30, 25, 20, 0.9));
+    clip-path: polygon(20% 100%, 50% 0, 80% 100%);
+    z-index: -1;
+  }
+  .domain.tier-mid .moonshrine { opacity: 0.7; }
+  .domain.tier-late .moonshrine {
+    opacity: 1;
+    filter: drop-shadow(0 0 14px rgba(126, 212, 255, 0.9)) brightness(1.1);
+  }
+
+  /* The MOON itself — atmospheric, always present */
+  .moon {
+    position: absolute;
+    right: 10%; top: 10%;
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #f8f4d8, #d4cca8);
+    box-shadow: 0 0 24px rgba(255, 240, 180, 0.45);
+    z-index: 2;
+  }
+
+  /* ── MID LAYER (mid-distance, hillsides) ─────────────────────────────── */
+
+  /* 4. OUTER SECT HALL + pilgrim path — left mid */
+  .outer-sect {
+    position: absolute;
+    left: 8%; bottom: 28%;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+  .outer-sect .hall {
+    font-size: 36px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5)) brightness(0.85);
+  }
+  .outer-sect .path {
+    position: absolute;
+    left: 60px; top: 30px;
+    display: flex; gap: 4px;
+  }
+  .outer-sect .path span {
+    font-size: 14px;
+    opacity: 0.6;
+    filter: brightness(0.6);
+  }
+  .domain.tier-mid .outer-sect { opacity: 0.85; }
+  .domain.tier-late .outer-sect { opacity: 1; }
+
+  /* 3. SPIRIT FORGE — right mid, smoking building */
+  .spirit-forge {
+    position: absolute;
+    right: 10%; bottom: 26%;
+    z-index: 5;
+    display: flex; flex-direction: column; align-items: center;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+  .spirit-forge .building {
+    font-size: 30px;
+  }
+  .spirit-forge .smoke {
+    position: absolute;
+    left: 50%; top: -14px;
+    transform: translateX(-50%);
+    font-size: 16px;
+    opacity: 0.7;
+    animation: smoke-rise 3s ease-in-out infinite;
+  }
+  @keyframes smoke-rise {
+    0%   { transform: translate(-50%, 0); opacity: 0.7; }
+    100% { transform: translate(-50%, -20px); opacity: 0; }
+  }
+  .domain.tier-mid .spirit-forge { opacity: 0.85; }
+  .domain.tier-late .spirit-forge {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(255, 120, 60, 0.5)) brightness(1.1);
+  }
+
+  /* ── GROUND LAYER (foreground, training/garden zones) ────────────────── */
+
+  /* 1. TRAINING GROUND (Body Tempering Disciples) — center-front, in front of temple */
+  .training-ground {
+    position: absolute;
+    left: 50%; bottom: 5%;
+    transform: translateX(-50%);
+    width: 320px;
+    z-index: 9;
+    display: flex; justify-content: center; gap: 4px;
+  }
+  .training-ground .disciple {
+    font-size: 18px;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+  }
+
+  /* 2. SPIRIT HERB TERRACES — left of temple */
+  .herb-terraces {
+    position: absolute;
+    left: 18%; bottom: 6%;
+    z-index: 6;
+    display: grid;
+    grid-template-columns: repeat(3, 22px);
+    grid-template-rows: repeat(2, 18px);
+    gap: 2px;
+    transform: skewX(-15deg);
+  }
+  .herb-terraces .plot {
+    font-size: 14px;
+    background: rgba(60, 40, 25, 0.6);
+    border-radius: 3px;
+    display: grid; place-items: center;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  }
+
+  /* 5. BEAST SANCTUARY — right of temple */
+  .beast-sanctuary {
+    position: absolute;
+    right: 18%; bottom: 6%;
+    z-index: 6;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .beast-sanctuary .pen {
+    width: 40px; height: 40px;
+    border: 2px solid rgba(140, 100, 60, 0.7);
+    background: rgba(40, 25, 15, 0.4);
+    border-radius: 4px;
+    display: grid; place-items: center;
+    font-size: 22px;
+  }
+
+  /* 6. ANCESTRAL PAGODA — left-front, between herb terrace and temple */
+  .ancestral-pagoda {
+    position: absolute;
+    left: 32%; bottom: 11%;
+    z-index: 7;
+    font-size: 28px;
+    filter: drop-shadow(0 0 10px rgba(255, 215, 100, 0.5)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+  .domain.tier-mid .ancestral-pagoda { opacity: 0.9; }
+  .domain.tier-late .ancestral-pagoda {
+    opacity: 1;
+    filter: drop-shadow(0 0 18px rgba(255, 200, 80, 0.9)) brightness(1.15);
+  }
+
+  /* Ambient atmosphere — qi sparks rising from the whole scene */
+  .qi-particles {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 11;
+  }
+  .qi-particles span {
+    position: absolute;
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 215, 130, 1), transparent 70%);
+    animation: qi-drift 7s ease-in-out infinite;
+  }
+  @keyframes qi-drift {
+    0%   { transform: translateY(0) scale(1); opacity: 0; }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { transform: translateY(-120px) scale(0.3); opacity: 0; }
+  }
+  .qi-particles span:nth-child(1) { left: 28%; bottom: 25%; animation-delay: 0s; }
+  .qi-particles span:nth-child(2) { left: 72%; bottom: 30%; animation-delay: 1s; }
+  .qi-particles span:nth-child(3) { left: 50%; bottom: 22%; animation-delay: 2s; }
+  .qi-particles span:nth-child(4) { left: 38%; bottom: 35%; animation-delay: 3s; }
+  .qi-particles span:nth-child(5) { left: 62%; bottom: 40%; animation-delay: 1.5s; }
+  .qi-particles span:nth-child(6) { left: 22%; bottom: 32%; animation-delay: 2.5s; }
+  .qi-particles span:nth-child(7) { left: 78%; bottom: 25%; animation-delay: 3.5s; }
+  .qi-particles span:nth-child(8) { left: 45%; bottom: 28%; animation-delay: 0.5s; }
+  .domain.tier-early .qi-particles span:nth-child(n+4) { display: none; }
+  .domain.tier-late .qi-particles span {
+    background: radial-gradient(circle, rgba(167, 243, 232, 1), transparent 70%);
+  }
+
+  /* ─── Status panel ─────────────────────────────────────────────────── */
+  .scene-status {
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+  }
+  .producer-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .producer-emoji { font-size: 14px; width: 22px; text-align: center; }
+  .producer-name  { flex: 1; }
+  .producer-count { color: var(--jade); font-weight: 600; }
+  .producer-line.high  .producer-count { color: var(--gold); }
+  .producer-line.mythic .producer-count { color: var(--violet); }
+  .producer-line.locked .producer-name { opacity: 0.4; font-style: italic; }
+  .producer-line.locked .producer-count { opacity: 0.4; }
+
+  /* ─── Notes ────────────────────────────────────────────────────────── */
+  .notes {
+    background: rgba(15, 22, 28, 0.85);
+    border: 1px solid rgba(110, 200, 180, 0.18);
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 16px;
+  }
+  .notes h2 {
+    font-size: 13px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--jade);
+    margin: 0 0 10px;
+  }
+  .notes p, .notes li {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .notes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px) { .notes-grid { grid-template-columns: 1fr; } }
+  .notes-grid h3 { font-size: 12px; color: var(--gold); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .zone-list { font-size: 11px; line-height: 1.7; }
+  .zone-list .zone { color: var(--jade); }
+</style>
+</head>
+<body>
+
+  <h1>Cultivator's Domain — Cookie-Clicker Style</h1>
+  <div class="subtitle">
+    Temple stays the center of attention, but the camera pulls back so you can see the broader sect grounds:
+    training ground in front, herb terraces and ancestral pagoda to the left, beast sanctuary to the right,
+    a sect hall and forge on the hillsides, a moonshrine on a distant peak, and cosmic phenomena overhead.
+    Each producer claims a fixed zone — your temple PNG drops in unchanged at center.
+  </div>
+
+  <div class="scenes-col">
+
+    <!-- ────────────────── EARLY DOMAIN ────────────────── -->
+    <div class="scene-card">
+      <div class="scene-meta">
+        <div class="scene-meta-name">Early — Tempered Body</div>
+        <div class="scene-meta-stage">~15 min played</div>
+      </div>
+      <div class="domain tier-early">
+        <div class="moon"></div>
+        <div class="qi-particles"><span></span><span></span><span></span></div>
+
+        <div class="hill-left"></div>
+        <div class="hill-right"></div>
+        <div class="ground"></div>
+
+        <!-- Temple anchor (placeholder for your AI temple PNG) -->
+        <div class="temple-frame"></div>
+        <div class="temple-occupant">
+          <div class="crystal">◇</div>
+          <div class="cultivator">🧘</div>
+        </div>
+        <div class="temple-label">— your temple PNG —</div>
+
+        <!-- Only 1-2 zones populated this early -->
+        <div class="training-ground">
+          <span class="disciple">🧎</span>
+          <span class="disciple">🧎</span>
+        </div>
+        <div class="herb-terraces">
+          <div class="plot">🌱</div>
+          <div class="plot"></div>
+          <div class="plot"></div>
+          <div class="plot"></div>
+          <div class="plot"></div>
+          <div class="plot"></div>
+        </div>
+      </div>
+      <div class="scene-status">
+        <div class="producer-line"><span class="producer-emoji">🧎</span><span class="producer-name">Body Tempering Disciples</span><span class="producer-count">×2</span></div>
+        <div class="producer-line"><span class="producer-emoji">🌱</span><span class="producer-name">Spirit Herb Garden</span><span class="producer-count">×1</span></div>
+        <div class="producer-line locked"><span class="producer-emoji">🔥</span><span class="producer-name">Spirit Forge</span><span class="producer-count">locked</span></div>
+        <div class="producer-line locked"><span class="producer-emoji">🏛️</span><span class="producer-name">Outer Sect Hall</span><span class="producer-count">locked</span></div>
+        <div class="producer-line locked" style="grid-column: 1 / span 2;"><span class="producer-emoji">…</span><span class="producer-name">6 producers still locked</span><span class="producer-count"></span></div>
+      </div>
+    </div>
+
+    <!-- ────────────────── MID DOMAIN ────────────────── -->
+    <div class="scene-card">
+      <div class="scene-meta">
+        <div class="scene-meta-name">Filling — Saint Family</div>
+        <div class="scene-meta-stage">~3 days played</div>
+      </div>
+      <div class="domain tier-mid">
+        <div class="moon"></div>
+        <div class="qi-particles"><span></span><span></span><span></span><span></span><span></span></div>
+
+        <div class="sky-stele"></div>
+        <div class="moonshrine">🏯</div>
+
+        <div class="hill-left"></div>
+        <div class="hill-right"></div>
+        <div class="ground"></div>
+
+        <!-- Mid-layer producers -->
+        <div class="outer-sect">
+          <span class="hall">🏛️</span>
+          <div class="path">
+            <span>👤</span><span>👤</span><span>👤</span><span>👤</span>
+          </div>
+        </div>
+        <div class="spirit-forge">
+          <span class="smoke">💨</span>
+          <span class="building">🏭</span>
+        </div>
+
+        <!-- Temple anchor -->
+        <div class="temple-frame"></div>
+        <div class="temple-occupant">
+          <div class="crystal">◆</div>
+          <div class="cultivator">🧘</div>
+        </div>
+
+        <!-- Foreground zones populating -->
+        <div class="ancestral-pagoda">⛩️</div>
+
+        <div class="herb-terraces">
+          <div class="plot">🌿</div>
+          <div class="plot">🌿</div>
+          <div class="plot">🌿</div>
+          <div class="plot">🌱</div>
+          <div class="plot">🌿</div>
+          <div class="plot"></div>
+        </div>
+
+        <div class="training-ground">
+          <span class="disciple">🧎</span>
+          <span class="disciple">🧎</span>
+          <span class="disciple">🧎</span>
+          <span class="disciple">🧎</span>
+          <span class="disciple">🧎</span>
+        </div>
+
+        <div class="beast-sanctuary">
+          <div class="pen">🐅</div>
+        </div>
+      </div>
+      <div class="scene-status">
+        <div class="producer-line high"><span class="producer-emoji">🧎</span><span class="producer-name">Body Tempering Disciples</span><span class="producer-count">×42</span></div>
+        <div class="producer-line high"><span class="producer-emoji">🌿</span><span class="producer-name">Spirit Herb Garden</span><span class="producer-count">×38</span></div>
+        <div class="producer-line high"><span class="producer-emoji">🏭</span><span class="producer-name">Spirit Forge</span><span class="producer-count">×31</span></div>
+        <div class="producer-line"><span class="producer-emoji">🏛️</span><span class="producer-name">Outer Sect Hall</span><span class="producer-count">×26</span></div>
+        <div class="producer-line"><span class="producer-emoji">🐅</span><span class="producer-name">Beast Sanctuary</span><span class="producer-count">×11</span></div>
+        <div class="producer-line"><span class="producer-emoji">⛩️</span><span class="producer-name">Ancestral Pagoda</span><span class="producer-count">×6</span></div>
+        <div class="producer-line"><span class="producer-emoji">🏯</span><span class="producer-name">Moonshrine</span><span class="producer-count">×3</span></div>
+        <div class="producer-line locked"><span class="producer-emoji">…</span><span class="producer-name">Sky-Stele / Void Gate / Tree</span><span class="producer-count">locked</span></div>
+      </div>
+    </div>
+
+    <!-- ────────────────── LATE DOMAIN ────────────────── -->
+    <div class="scene-card">
+      <div class="scene-meta">
+        <div class="scene-meta-name">Full — Open Heaven</div>
+        <div class="scene-meta-stage">~3 weeks played</div>
+      </div>
+      <div class="domain tier-late">
+        <div class="moon"></div>
+        <div class="qi-particles"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+        <!-- Cosmic layer FULL -->
+        <div class="world-tree"></div>
+        <div class="void-gate"></div>
+        <div class="sky-stele"></div>
+        <div class="moonshrine">🏯</div>
+
+        <div class="hill-left"></div>
+        <div class="hill-right"></div>
+        <div class="ground"></div>
+
+        <!-- Mid-layer dense -->
+        <div class="outer-sect">
+          <span class="hall" style="font-size: 44px; filter: drop-shadow(0 0 12px rgba(255, 215, 100, 0.6)) brightness(1.1);">🏛️</span>
+          <div class="path">
+            <span>👤</span><span>👤</span><span>👤</span><span>👤</span><span>👤</span><span>👤</span><span>👤</span>
+          </div>
+        </div>
+        <div class="spirit-forge">
+          <span class="smoke">💨</span>
+          <span class="building" style="font-size: 40px; filter: drop-shadow(0 0 14px rgba(255, 120, 60, 0.7));">🏭</span>
+        </div>
+
+        <!-- Temple anchor (unchanged) -->
+        <div class="temple-frame"></div>
+        <div class="temple-occupant">
+          <div class="crystal">✦</div>
+          <div class="cultivator">🧘</div>
+        </div>
+
+        <!-- Foreground full -->
+        <div class="ancestral-pagoda" style="font-size: 38px;">⛩️</div>
+
+        <div class="herb-terraces">
+          <div class="plot">🌳</div>
+          <div class="plot">🌳</div>
+          <div class="plot">🌳</div>
+          <div class="plot">🌿</div>
+          <div class="plot">🌳</div>
+          <div class="plot">🌿</div>
+        </div>
+
+        <div class="training-ground">
+          <span class="disciple">🧎</span>
+          <span class="disciple">🧎</span>
+          <span class="disciple">🧎</span>
+          <span class="disciple">🧎</span>
+          <span class="disciple">🧎</span>
+          <span class="disciple">🧎</span>
+          <span class="disciple">🧎</span>
+          <span class="disciple">🧎</span>
+        </div>
+
+        <div class="beast-sanctuary">
+          <div class="pen" style="border-color: rgba(255, 130, 60, 0.8); box-shadow: 0 0 18px rgba(255, 80, 60, 0.4);">🐉</div>
+        </div>
+      </div>
+      <div class="scene-status">
+        <div class="producer-line mythic"><span class="producer-emoji">🧎</span><span class="producer-name">Body Tempering Disciples</span><span class="producer-count">×218</span></div>
+        <div class="producer-line mythic"><span class="producer-emoji">🌳</span><span class="producer-name">Spirit Herb Garden</span><span class="producer-count">×195</span></div>
+        <div class="producer-line mythic"><span class="producer-emoji">🏭</span><span class="producer-name">Spirit Forge</span><span class="producer-count">×162</span></div>
+        <div class="producer-line mythic"><span class="producer-emoji">🏛️</span><span class="producer-name">Outer Sect Hall</span><span class="producer-count">×135</span></div>
+        <div class="producer-line high"><span class="producer-emoji">🐉</span><span class="producer-name">Beast Sanctuary</span><span class="producer-count">×118</span></div>
+        <div class="producer-line high"><span class="producer-emoji">⛩️</span><span class="producer-name">Ancestral Pagoda</span><span class="producer-count">×95</span></div>
+        <div class="producer-line high"><span class="producer-emoji">🏯</span><span class="producer-name">Moonshrine</span><span class="producer-count">×72</span></div>
+        <div class="producer-line"><span class="producer-emoji">🗿</span><span class="producer-name">Sky-Piercing Stele</span><span class="producer-count">×48</span></div>
+        <div class="producer-line"><span class="producer-emoji">🌌</span><span class="producer-name">Void Gate</span><span class="producer-count">×28</span></div>
+        <div class="producer-line"><span class="producer-emoji">🌳</span><span class="producer-name">World Tree</span><span class="producer-count">×15</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="notes">
+    <h2>Layout — fixed zones, temple at center</h2>
+    <div class="zone-list">
+      <div><span class="zone">Cosmic backdrop:</span> World Tree (sky), Void Gate (upper-left rift), Sky-Piercing Stele (right peak, light beam), Moonshrine (right peak silhouette)</div>
+      <div><span class="zone">Mid-distance hillsides:</span> Outer Sect Hall + pilgrim path (left), Spirit Forge with smoke (right)</div>
+      <div><span class="zone">Temple anchor (center):</span> your existing temple PNG drops in unchanged; cultivator & crystal visible through the arch</div>
+      <div><span class="zone">Foreground grounds:</span> Spirit Herb Terraces (left of temple), Ancestral Pagoda (left-front), Training Ground with disciples (in front of temple), Beast Sanctuary pen (right of temple)</div>
+    </div>
+
+    <h2 style="margin-top: 14px;">Why this is more ambitious-friendly than the temple-interior approach</h2>
+    <ul>
+      <li>Each producer has its own <strong>visual lane</strong> — a Spirit Forge can be a real building with smoke, not a brazier shoved in a corner.</li>
+      <li>The temple is the <strong>centerpiece, not the frame</strong>. Its existing PNG drops in unchanged. The wider domain extends AROUND it.</li>
+      <li><strong>Adding new producers later</strong> (expansions, prestige-unlock tiers) means claiming a new zone in the domain — deeper sky, further mountain, new corner of grounds — without re-doing the temple.</li>
+      <li>Each producer's <strong>identity becomes architectural or natural</strong>: a hall, a forge, a pagoda, a sanctuary, a shrine, a stele, a tree. Easier to render. Easier to recognize. Easier to upgrade visually as count tiers escalate.</li>
+    </ul>
+
+    <h2 style="margin-top: 14px;">Art-cost ladder</h2>
+    <div class="notes-grid">
+      <div>
+        <h3>Minimum (14 sprites + 1 wide BG)</h3>
+        <p style="margin: 0;">
+          One sprite per producer (10) + 4 "Mythic" variants where a sprite swap dramatically reads (tiger→dragon, sprout→tree, urn→crystal, pavilion-dim→lit). Plus <strong>one wide background PNG</strong> — a panoramic mountain-sky composition with a clear central area for the temple to sit on. ~2-3h of PixelLab work.
+        </p>
+      </div>
+      <div>
+        <h3>Polished (22 sprites + 1 BG)</h3>
+        <p style="margin: 0;">
+          Each producer gets a base + 1 visual tier escalation (Spirit Forge gets a "second smokestack", Beast Sanctuary gets a "bigger pen", etc.). Plus the cosmic-layer pieces (Dao Tree, Void Gate, Stele) need bespoke art. Half-day.
+        </p>
+      </div>
+      <div>
+        <h3>Wide-canvas tradeoff</h3>
+        <p style="margin: 0;">
+          You DO need a wider background painting for this. The temple PNG alone is too narrow for the new composition — you'd need a panoramic landscape with a temple-sized "hole" in the middle where the temple PNG drops in. <strong>OR</strong>: build the background out of CSS-generated layers (as this mockup does) and let it be procedural/atmospheric rather than painted. Loses some fidelity, gains independence from art.
+        </p>
+      </div>
+      <div>
+        <h3>Recommended path</h3>
+        <p style="margin: 0;">
+          Start with <strong>procedural CSS background</strong> (like this mockup) + 10 producer sprites. Ship. See if the procedural background feels right. If it does — great, no painting needed. If it doesn't — generate one panoramic BG PNG and swap it in. Decoupled from the producer art entirely.
+        </p>
+      </div>
+    </div>
+
+    <h2 style="margin-top: 14px;">Mobile / responsive note</h2>
+    <p style="margin: 0;">
+      The wider composition is naturally desktop-favoring. For mobile portrait, the layout would either compress (zones shrink, less ambient empty space) or pivot to a <strong>vertical scroll</strong> where the cosmic layer is at top, the temple is middle, and the grounds are bottom — player scrolls vertically to see their full domain. Both work; vertical scroll is more idle-game-conventional for mobile.
+    </p>
+  </div>
+
+</body>
+</html>

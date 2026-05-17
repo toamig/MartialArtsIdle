@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cultivation Shop — Visual Feedback Mockup</title>
+<style>
+  /* Colors mirror src/App.css palette so the preview reads like the real screen. */
+  :root {
+    --bg-page: rgba(4, 10, 14, 0.95);
+    --bg-card: rgba(20, 28, 36, 0.7);
+    --bg-card-deep: rgba(15, 22, 28, 0.85);
+    --border-cyan: rgba(110, 200, 180, 0.18);
+    --text-primary: #c2e6ff;
+    --text-muted: rgba(230, 235, 240, 0.7);
+    --text-soft: rgba(200, 210, 220, 0.55);
+    --text-owned: #a7f3e8;
+    --text-rate: #a7f3c4;
+    --bronze-a: #d99752;
+    --bronze-b: #8b5a2b;
+    --silver-a: #e0e0e0;
+    --silver-b: #909090;
+    --gold-a:   #ffe770;
+    --gold-b:   #b8860b;
+    --plat-a:   #f8f8f8;
+    --plat-b:   #b0b0b0;
+    --mythic-1: #a78bfa;
+    --mythic-2: #f0abfc;
+    --mythic-3: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background:
+      radial-gradient(1200px 700px at 30% -10%, rgba(80, 40, 120, 0.15), transparent 60%),
+      radial-gradient(900px 600px at 90% 110%, rgba(200, 150, 60, 0.08), transparent 60%),
+      linear-gradient(180deg, rgba(8, 14, 18, 0.95), rgba(4, 10, 14, 0.95));
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    min-height: 100vh;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: 0.3px; }
+  .subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+  .panel {
+    padding: 16px 18px;
+    background: var(--bg-card-deep);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+  .panel-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-owned);
+    margin-bottom: 4px;
+  }
+  .panel-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  /* ─── Producer row ─────────────────────────────────────────────────────── */
+  .cs-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-cyan);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    transition: box-shadow 220ms ease, transform 220ms ease, border-color 220ms ease;
+    position: relative;
+  }
+  .cs-row-locked {
+    background: rgba(15, 20, 26, 0.55);
+    border-style: dashed;
+    opacity: 0.55;
+  }
+
+  /* Rank tier styling — escalates with owned count */
+  .cs-row.rank-bronze   { border-color: rgba(217, 151, 82, 0.55);  box-shadow: 0 0 12px rgba(205, 127, 50, 0.15); }
+  .cs-row.rank-silver   { border-color: rgba(192, 192, 192, 0.55); box-shadow: 0 0 16px rgba(192, 192, 192, 0.20); }
+  .cs-row.rank-gold     { border-color: rgba(255, 215, 0, 0.55);   box-shadow: 0 0 22px rgba(255, 215, 0, 0.25); }
+  .cs-row.rank-platinum { border-color: rgba(229, 228, 226, 0.6);  box-shadow: 0 0 28px rgba(229, 228, 226, 0.30); }
+  .cs-row.rank-mythic {
+    border-color: rgba(167, 139, 250, 0.65);
+    box-shadow: 0 0 36px rgba(167, 139, 250, 0.42);
+    animation: mythic-shimmer 3s ease-in-out infinite;
+  }
+  @keyframes mythic-shimmer {
+    0%, 100% { box-shadow: 0 0 36px rgba(167, 139, 250, 0.42); }
+    50%      { box-shadow: 0 0 52px rgba(167, 139, 250, 0.65); }
+  }
+
+  /* Icon — 56×56 placeholder using emoji + tint */
+  .cs-row-icon {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(60, 50, 40, 0.5), rgba(30, 25, 20, 0.6));
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    filter: saturate(0.4) brightness(0.55);
+    transition: filter 220ms ease;
+  }
+  .cs-row-locked .cs-row-icon { opacity: 0.4; filter: grayscale(1); }
+  .cs-row.rank-bronze   .cs-row-icon { filter: saturate(0.7) brightness(0.85); box-shadow: inset 0 0 14px rgba(205, 127, 50, 0.30); }
+  .cs-row.rank-silver   .cs-row-icon { filter: saturate(0.85);                 box-shadow: inset 0 0 18px rgba(192, 192, 192, 0.35); }
+  .cs-row.rank-gold     .cs-row-icon { filter: saturate(1) brightness(1.05);   box-shadow: inset 0 0 22px rgba(255, 215, 0, 0.40); }
+  .cs-row.rank-platinum .cs-row-icon { filter: saturate(1) brightness(1.15);   box-shadow: inset 0 0 26px rgba(229, 228, 226, 0.50); }
+  .cs-row.rank-mythic   .cs-row-icon {
+    filter: saturate(1.1) brightness(1.25);
+    box-shadow: inset 0 0 34px rgba(167, 139, 250, 0.60);
+  }
+
+  /* Rank badge — corner medallion */
+  .cs-rank-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: 800;
+    color: rgba(0, 0, 0, 0.85);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  .cs-rank-badge.bronze   { background: linear-gradient(135deg, var(--bronze-a), var(--bronze-b)); }
+  .cs-rank-badge.silver   { background: linear-gradient(135deg, var(--silver-a), var(--silver-b)); }
+  .cs-rank-badge.gold     { background: linear-gradient(135deg, var(--gold-a),   var(--gold-b)); }
+  .cs-rank-badge.platinum { background: linear-gradient(135deg, var(--plat-a),   var(--plat-b)); }
+  .cs-rank-badge.mythic {
+    background: conic-gradient(from 0deg, var(--mythic-1), var(--mythic-2), var(--mythic-3), var(--mythic-1));
+    animation: mythic-spin 5s linear infinite;
+    color: rgba(255, 255, 255, 0.95);
+  }
+  @keyframes mythic-spin { to { transform: rotate(360deg); } }
+
+  /* Row body */
+  .cs-row-left {
+    flex: 1;
+    min-width: 0;
+  }
+  .cs-row-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .cs-row-name.locked { color: rgba(200, 210, 220, 0.5); font-style: italic; }
+  .cs-row-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .cs-row-owned { color: var(--text-owned); font-weight: 600; }
+  .cs-row-unit  { color: var(--text-rate); }
+  .cs-row-total { color: rgba(167, 243, 196, 0.85); font-weight: 600; }
+  .cs-row-sep   { opacity: 0.5; }
+  .cs-row-desc {
+    font-size: 11px;
+    color: var(--text-soft);
+    margin-top: 3px;
+    line-height: 1.3;
+  }
+  .cs-buy-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 84px;
+    padding: 8px 12px;
+    background: linear-gradient(180deg, rgba(196, 158, 100, 0.22), rgba(180, 140, 80, 0.15));
+    border: 1px solid rgba(196, 158, 100, 0.65);
+    border-radius: 8px;
+    color: #ffe8a0;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: inherit;
+  }
+  .cs-buy-count { font-size: 13px; letter-spacing: 0.5px; }
+  .cs-buy-cost  { font-size: 11px; margin-top: 2px; opacity: 0.92; }
+
+  /* ─── Buy pulse animation (auto-runs on .pulsing) ─────────────────────── */
+  .cs-row.pulsing {
+    animation: row-pulse 700ms ease-out;
+  }
+  @keyframes row-pulse {
+    0%   { transform: scale(1.00); }
+    25%  { transform: scale(1.025); box-shadow: 0 0 30px rgba(167, 243, 232, 0.45); }
+    100% { transform: scale(1.00); }
+  }
+  .cs-row.pulsing .cs-row-icon {
+    animation: icon-pulse 700ms ease-out;
+  }
+  @keyframes icon-pulse {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+  .floater {
+    position: absolute;
+    right: 28px;
+    top: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #a7f3c4;
+    pointer-events: none;
+    opacity: 0;
+    animation: float-up 1100ms ease-out forwards;
+    text-shadow: 0 0 8px rgba(167, 243, 196, 0.6);
+  }
+  @keyframes float-up {
+    0%   { opacity: 0; transform: translateY(8px); }
+    15%  { opacity: 1; }
+    85%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-32px); }
+  }
+
+  /* Rank-up celebration ribbon */
+  .rank-up-banner {
+    position: absolute;
+    left: 50%;
+    top: -8px;
+    transform: translate(-50%, -50%);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.85);
+    background: linear-gradient(135deg, var(--silver-a), var(--silver-b));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    animation: rank-banner 2000ms ease-out forwards;
+  }
+  .rank-up-banner.gold { background: linear-gradient(135deg, var(--gold-a), var(--gold-b)); }
+  @keyframes rank-banner {
+    0%   { opacity: 0; transform: translate(-50%, 0) scale(0.7); }
+    25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    35%  { transform: translate(-50%, -50%) scale(1.0); }
+    75%  { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
+    100% { opacity: 0; transform: translate(-50%, -70%) scale(0.95); }
+  }
+
+  /* Rank-up spark burst — 8 dots radiating */
+  .burst {
+    position: absolute;
+    left: 28px;
+    top: 50%;
+    width: 56px; height: 56px;
+    transform: translate(0, -50%);
+    pointer-events: none;
+  }
+  .burst .dot {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 6px; height: 6px;
+    margin: -3px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff7d8 0%, #fbbf24 40%, transparent 70%);
+    opacity: 0;
+    animation: burst-dot 900ms ease-out forwards;
+  }
+  @keyframes burst-dot {
+    0%   { opacity: 0; transform: translate(0, 0) scale(0.5); }
+    15%  { opacity: 1; }
+    100% { opacity: 0; transform: var(--dst) scale(0.4); }
+  }
+  .burst .dot:nth-child(1) { --dst: translate( 38px,   0px); animation-delay:  0ms; }
+  .burst .dot:nth-child(2) { --dst: translate( 27px, -27px); animation-delay: 40ms; }
+  .burst .dot:nth-child(3) { --dst: translate(  0px, -38px); animation-delay: 80ms; }
+  .burst .dot:nth-child(4) { --dst: translate(-27px, -27px); animation-delay:120ms; }
+  .burst .dot:nth-child(5) { --dst: translate(-38px,   0px); animation-delay:160ms; }
+  .burst .dot:nth-child(6) { --dst: translate(-27px,  27px); animation-delay:200ms; }
+  .burst .dot:nth-child(7) { --dst: translate(  0px,  38px); animation-delay:240ms; }
+  .burst .dot:nth-child(8) { --dst: translate( 27px,  27px); animation-delay:280ms; }
+
+  /* ─── Sect Power Panel ────────────────────────────────────────────────── */
+  .sect-power {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, rgba(110, 200, 180, 0.10), rgba(196, 158, 100, 0.06));
+    border: 1px solid rgba(110, 200, 180, 0.30);
+    border-radius: 10px;
+  }
+  .sect-power-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .sect-power-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .sect-power-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .sect-power-badges {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .sect-mini-badge {
+    width: 14px; height: 14px; border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+  .sect-mini-badge.bronze   { background: linear-gradient(135deg, var(--bronze-a), var(--bronze-b)); }
+  .sect-mini-badge.silver   { background: linear-gradient(135deg, var(--silver-a), var(--silver-b)); }
+  .sect-mini-badge.gold     { background: linear-gradient(135deg, var(--gold-a),   var(--gold-b)); }
+  .sect-mini-badge.platinum { background: linear-gradient(135deg, var(--plat-a),   var(--plat-b)); }
+  .sect-mini-badge.mythic   {
+    background: conic-gradient(from 0deg, var(--mythic-1), var(--mythic-2), var(--mythic-3), var(--mythic-1));
+  }
+
+  /* ─── Upgrade card + Purchased pill row ──────────────────────────────── */
+  .cs-up-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cs-up-card {
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-cyan);
+    border-radius: 10px;
+  }
+  .cs-up-icon {
+    width: 32px; height: 32px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(196, 158, 100, 0.30), rgba(180, 140, 80, 0.18));
+    border-radius: 6px;
+    display: grid; place-items: center;
+    font-size: 18px;
+    border: 1px solid rgba(196, 158, 100, 0.45);
+  }
+  .cs-up-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .cs-up-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .cs-up-desc { font-size: 11px; color: var(--text-muted); line-height: 1.3; flex: 1; }
+  .cs-up-buy {
+    margin-top: 4px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    background: linear-gradient(180deg, rgba(196, 158, 100, 0.22), rgba(180, 140, 80, 0.15));
+    border: 1px solid rgba(196, 158, 100, 0.65);
+    border-radius: 6px;
+    color: #ffe8a0;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* Purchased pill row */
+  .cs-up-owned-grid {
+    display: flex; flex-wrap: wrap; gap: 4px;
+  }
+  .cs-up-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px 3px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(167, 243, 232, 0.92);
+    background: rgba(110, 200, 180, 0.10);
+    border: 1px solid rgba(110, 200, 180, 0.40);
+    border-radius: 999px;
+    line-height: 1.4;
+  }
+  .cs-up-chip-icon {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(196, 158, 100, 0.45), rgba(180, 140, 80, 0.28));
+    display: grid; place-items: center;
+    font-size: 10px;
+    border: 1px solid rgba(196, 158, 100, 0.6);
+  }
+
+  .legend {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .legend strong { color: var(--text-primary); }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+</style>
+</head>
+<body>
+
+  <h1>Cultivation Shop — Visual Feedback Mockup</h1>
+  <div class="subtitle">
+    Standalone preview of the proposed producer-row visualization, buy feedback, and rank escalation.
+    Drop into your browser to feel-test before committing to the real implementation.
+  </div>
+
+  <!-- ─── Section 1: Rank escalation showcase ─────────────────────────── -->
+  <div class="panel">
+    <div class="panel-title">1 · Rank Escalation (same producer at 5 owned counts)</div>
+    <div class="panel-desc">
+      A single producer (<em>Body Tempering Disciple</em>) shown at owned 0 / 7 / 18 / 35 / 75 / 220.
+      The row's border, icon glow, and corner badge escalate with the rank threshold —
+      the same row looks dramatically different at high counts without painting per-count sprites.
+    </div>
+
+    <!-- LOCKED -->
+    <div class="cs-row cs-row-locked">
+      <div class="cs-row-icon">🔒</div>
+      <div class="cs-row-left">
+        <div class="cs-row-name locked">??? Locked ???</div>
+        <div class="cs-row-meta">Unlocks at realm 4</div>
+      </div>
+    </div>
+
+    <!-- BRONZE: 7 owned -->
+    <div class="cs-row rank-bronze">
+      <div class="cs-row-icon">
+        🧘
+        <div class="cs-rank-badge bronze">I</div>
+      </div>
+      <div class="cs-row-left">
+        <div class="cs-row-name">Body Tempering Disciple</div>
+        <div class="cs-row-meta">
+          <span class="cs-row-owned">×7</span>
+          <span class="cs-row-sep">·</span>
+          <span class="cs-row-unit">+0.1 Qi/s each</span>
+          <span class="cs-row-sep">·</span>
+          <span class="cs-row-total">0.7 Qi/s total</span>
+        </div>
+        <div class="cs-row-desc">A novice apprentice tempering their body to channel ambient qi.</div>
+      </div>
+      <button class="cs-buy-btn"><span class="cs-buy-count">×1</span><span class="cs-buy-cost">42 Qi</span></button>
+    </div>
+
+    <!-- SILVER: 18 owned -->
+    <div class="cs-row rank-silver">
+      <div class="cs-row-icon">
+        🧘
+        <div class="cs-rank-badge silver">II</div>
+      </div>
+      <div class="cs-row-left">
+        <div class="cs-row-name">Body Tempering Disciple</div>
+        <div class="cs-row-meta">
+          <span class="cs-row-owned">×18</span>
+          <span class="cs-row-sep">·</span>
+          <span class="cs-row-unit">+0.1 Qi/s each</span>
+          <span class="cs-row-sep">·</span>
+          <span class="cs-row-total">3.6 Qi/s total</span>
+        </div>
+        <div class="cs-row-desc">A novice apprentice tempering their body to channel ambient qi.</div>
+      </div>
+      <button class="cs-buy-btn"><span class="cs-buy-count">×1</span><span class="cs-buy-cost">175 Qi</span></button>
+    </div>
+
+    <!-- GOLD: 35 owned -->
+    <div class="cs-row rank-gold">
+      <div class="cs-row-icon">
+        🧘
+        <div class="cs-rank-badge gold">III</div>
+      </div>
+      <div class="cs-row-left">
+        <div class="cs-row-name">Body Tempering Disciple</div>
+        <div class="cs-row-meta">
+          <span class="cs-row-owned">×35</span>
+          <span class="cs-row-sep">·</span>
+          <span class="cs-row-unit">+0.1 Qi/s each</span>
+          <span class="cs-row-sep">·</span>
+          <span class="cs-row-total">14 Qi/s total</span>
+        </div>
+        <div class="cs-row-desc">A novice apprentice tempering their body to channel ambient qi.</div>
+      </div>
+      <button class="cs-buy-btn"><span class="cs-buy-count">×10</span><span class="cs-buy-cost">12K Qi</span></button>
+    </div>
+
+    <!-- PLATINUM: 75 owned -->
+    <div class="cs-row rank-platinum">
+      <div class="cs-row-icon">
+        🧘
+        <div class="cs-rank-badge platinum">IV</div>
+      </div>
+      <div class="cs-row-left">
+        <div class="cs-row-name">Body Tempering Disciple</div>
+        <div class="cs-row-meta">
+          <span class="cs-row-owned">×75</span>
+          <span class="cs-row-sep">·</span>
+          <span class="cs-row-unit">+0.4 Qi/s each (T1+T2)</span>
+          <span class="cs-row-sep">·</span>
+          <span class="cs-row-total">30 Qi/s total</span>
+        </div>
+        <div class="cs-row-desc">A novice apprentice tempering their body to channel ambient qi.</div>
+      </div>
+      <button class="cs-buy-btn"><span class="cs-buy-count">×10</span><span class="cs-buy-cost">285K Qi</span></button>
+    </div>
+
+    <!-- MYTHIC: 220 owned (animated shimmer) -->
+    <div class="cs-row rank-mythic">
+      <div class="cs-row-icon">
+        🧘
+        <div class="cs-rank-badge mythic">V</div>
+      </div>
+      <div class="cs-row-left">
+        <div class="cs-row-name">Body Tempering Disciple</div>
+        <div class="cs-row-meta">
+          <span class="cs-row-owned">×220</span>
+          <span class="cs-row-sep">·</span>
+          <span class="cs-row-unit">+0.4 Qi/s each</span>
+          <span class="cs-row-sep">·</span>
+          <span class="cs-row-total">88 Qi/s total</span>
+        </div>
+        <div class="cs-row-desc">A novice apprentice tempering their body to channel ambient qi.</div>
+      </div>
+      <button class="cs-buy-btn"><span class="cs-buy-count">×Max</span><span class="cs-buy-cost">14M Qi</span></button>
+    </div>
+
+    <div class="legend">
+      <span class="swatch" style="background: linear-gradient(135deg, var(--bronze-a), var(--bronze-b));"></span>
+      <strong>Bronze (1+)</strong> &nbsp;&middot;&nbsp;
+      <span class="swatch" style="background: linear-gradient(135deg, var(--silver-a), var(--silver-b));"></span>
+      <strong>Silver (10+)</strong> &nbsp;&middot;&nbsp;
+      <span class="swatch" style="background: linear-gradient(135deg, var(--gold-a), var(--gold-b));"></span>
+      <strong>Gold (25+)</strong> &nbsp;&middot;&nbsp;
+      <span class="swatch" style="background: linear-gradient(135deg, var(--plat-a), var(--plat-b));"></span>
+      <strong>Platinum (50+)</strong> &nbsp;&middot;&nbsp;
+      <span class="swatch" style="background: conic-gradient(from 0deg, var(--mythic-1), var(--mythic-2), var(--mythic-3), var(--mythic-1));"></span>
+      <strong>Mythic (100+)</strong>
+      <br>
+      Same producer · same icon · 5 visual states via CSS only (rank badge + glow tier).
+      Final art swaps the 🧘 emoji for a real 64×64 producer sprite + the I/II/III/IV/V badges for medallion sprites.
+    </div>
+  </div>
+
+  <div class="grid-2">
+
+    <!-- ─── Section 2: Buy pulse animation (clickable) ─────────────────── -->
+    <div class="panel">
+      <div class="panel-title">2 · Buy Pulse + Floater</div>
+      <div class="panel-desc">
+        On every purchase, the row briefly scales 1.025× + icon pops 1.18× + a <code>+X Qi/s</code> floater
+        rises off the buy button. Click "Buy ×10" below to trigger.
+      </div>
+      <div class="cs-row rank-gold" id="row-pulse-target">
+        <div class="cs-row-icon">
+          🌿
+          <div class="cs-rank-badge gold">III</div>
+        </div>
+        <div class="cs-row-left">
+          <div class="cs-row-name">Spirit Herb Garden</div>
+          <div class="cs-row-meta">
+            <span class="cs-row-owned" id="owned-count">×27</span>
+            <span class="cs-row-sep">·</span>
+            <span class="cs-row-unit">+1 Qi/s each</span>
+            <span class="cs-row-sep">·</span>
+            <span class="cs-row-total" id="total-count">27 Qi/s total</span>
+          </div>
+          <div class="cs-row-desc">Spirit herbs absorb heavenly qi as they grow.</div>
+        </div>
+        <button class="cs-buy-btn" id="pulse-btn">
+          <span class="cs-buy-count">×10</span>
+          <span class="cs-buy-cost">8.4K Qi</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── Section 3: Rank-up celebration (clickable) ────────────────── -->
+    <div class="panel">
+      <div class="panel-title">3 · Rank-Up Celebration</div>
+      <div class="panel-desc">
+        When a producer crosses a rank threshold (Silver→Gold here), the row fires a spark burst
+        + banner. Rare event = feels earned. Click to trigger.
+      </div>
+      <div class="cs-row rank-gold" id="rankup-target">
+        <div class="cs-row-icon">
+          🔥
+          <div class="cs-rank-badge gold">III</div>
+        </div>
+        <div class="cs-row-left">
+          <div class="cs-row-name">Meridian Furnace</div>
+          <div class="cs-row-meta">
+            <span class="cs-row-owned">×25</span>
+            <span class="cs-row-sep">·</span>
+            <span class="cs-row-unit">+8 Qi/s each</span>
+            <span class="cs-row-sep">·</span>
+            <span class="cs-row-total">200 Qi/s total</span>
+          </div>
+          <div class="cs-row-desc">A sealed pillar of refining fire.</div>
+        </div>
+        <button class="cs-buy-btn" id="rankup-btn">
+          <span class="cs-buy-count">Trigger</span>
+          <span class="cs-buy-cost">↑ Rank-Up</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── Section 4: Sect Power Panel ───────────────────────────────── -->
+    <div class="panel">
+      <div class="panel-title">4 · Sect Power Panel</div>
+      <div class="panel-desc">
+        At-a-glance roll-up of the player's total investment. Shown above the producer list as a
+        constant "look how far you've come" reminder.
+      </div>
+      <div class="sect-power">
+        <div class="sect-power-block">
+          <div class="sect-power-label">Total Disciples</div>
+          <div class="sect-power-value">247</div>
+        </div>
+        <div class="sect-power-block">
+          <div class="sect-power-label">Producers Tier</div>
+          <div class="sect-power-value">3.4K Qi/s</div>
+        </div>
+        <div class="sect-power-block">
+          <div class="sect-power-label">Ranks Earned</div>
+          <div class="sect-power-badges">
+            <span class="sect-mini-badge mythic"   title="Mythic"></span>
+            <span class="sect-mini-badge platinum" title="Platinum"></span>
+            <span class="sect-mini-badge platinum" title="Platinum"></span>
+            <span class="sect-mini-badge gold"     title="Gold"></span>
+            <span class="sect-mini-badge gold"     title="Gold"></span>
+            <span class="sect-mini-badge gold"     title="Gold"></span>
+            <span class="sect-mini-badge silver"   title="Silver"></span>
+            <span class="sect-mini-badge silver"   title="Silver"></span>
+            <span class="sect-mini-badge bronze"   title="Bronze"></span>
+            <span class="sect-mini-badge bronze"   title="Bronze"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Section 5: Upgrade cards with category icons ──────────────── -->
+    <div class="panel">
+      <div class="panel-title">5 · Upgrade Cards with Category Icons</div>
+      <div class="panel-desc">
+        Each upgrade card gets a small category icon (left). The same icon appears on its
+        Purchased pill below — turns the bottom pill row into a colorful collection instead of a wall of text.
+      </div>
+
+      <div class="cs-up-grid">
+        <div class="cs-up-card">
+          <div class="cs-up-icon" title="Producer doubling">👊</div>
+          <div class="cs-up-body">
+            <div class="cs-up-name">Spirit Herb Garden II</div>
+            <div class="cs-up-desc">Doubles output of Spirit Herb Garden again.</div>
+            <button class="cs-up-buy">125K Qi</button>
+          </div>
+        </div>
+        <div class="cs-up-card">
+          <div class="cs-up-icon" title="Crystal-tap">💎</div>
+          <div class="cs-up-body">
+            <div class="cs-up-name">Refined Tap II</div>
+            <div class="cs-up-desc">Doubles the qi granted by tapping the crystal.</div>
+            <button class="cs-up-buy">4K Qi</button>
+          </div>
+        </div>
+        <div class="cs-up-card">
+          <div class="cs-up-icon" title="Focus mult">🌀</div>
+          <div class="cs-up-body">
+            <div class="cs-up-name">Deeper Breath I</div>
+            <div class="cs-up-desc">+50% to the hold-to-cultivate focus multiplier.</div>
+            <button class="cs-up-buy">5K Qi</button>
+          </div>
+        </div>
+        <div class="cs-up-card">
+          <div class="cs-up-icon" title="Gate reduction">⛓️</div>
+          <div class="cs-up-body">
+            <div class="cs-up-name">Patient Heart I</div>
+            <div class="cs-up-desc">Major-realm qi/s gate × 0.7.</div>
+            <button class="cs-up-buy">50K Qi</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cs-up-owned-grid" style="margin-top: 12px;">
+        <div class="cs-up-chip"><span class="cs-up-chip-icon">👊</span>Body Tempering Disciple I</div>
+        <div class="cs-up-chip"><span class="cs-up-chip-icon">💎</span>Refined Tap I</div>
+        <div class="cs-up-chip"><span class="cs-up-chip-icon">👊</span>Body Tempering Disciple II</div>
+        <div class="cs-up-chip"><span class="cs-up-chip-icon">⛓️</span>Patient Heart I</div>
+        <div class="cs-up-chip"><span class="cs-up-chip-icon">👊</span>Spirit Herb Garden I</div>
+        <div class="cs-up-chip"><span class="cs-up-chip-icon">🌀</span>Deeper Breath I</div>
+        <div class="cs-up-chip"><span class="cs-up-chip-icon">🎲</span>Practised Selection</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Buy-pulse interaction
+    let ownedCount = 27;
+    let totalRate  = 27;
+    const owned = document.getElementById('owned-count');
+    const total = document.getElementById('total-count');
+    const row   = document.getElementById('row-pulse-target');
+    const btn   = document.getElementById('pulse-btn');
+
+    btn.addEventListener('click', () => {
+      ownedCount += 10;
+      totalRate  += 10;
+      owned.textContent = '×' + ownedCount;
+      total.textContent = totalRate + ' Qi/s total';
+      row.classList.remove('pulsing');
+      void row.offsetWidth;
+      row.classList.add('pulsing');
+      const f = document.createElement('div');
+      f.className = 'floater';
+      f.textContent = '+10 Qi/s';
+      row.appendChild(f);
+      setTimeout(() => f.remove(), 1200);
+    });
+
+    // Rank-up demo
+    const rankupRow = document.getElementById('rankup-target');
+    const rankupBtn = document.getElementById('rankup-btn');
+    rankupBtn.addEventListener('click', () => {
+      rankupRow.classList.remove('rank-gold');
+      rankupRow.classList.add('rank-silver');
+      const badge = rankupRow.querySelector('.cs-rank-badge');
+      badge.classList.remove('gold'); badge.classList.add('silver');
+      badge.textContent = 'II';
+      setTimeout(() => {
+        rankupRow.classList.remove('rank-silver');
+        rankupRow.classList.add('rank-gold');
+        badge.classList.remove('silver'); badge.classList.add('gold');
+        badge.textContent = 'III';
+
+        // Banner
+        const banner = document.createElement('div');
+        banner.className = 'rank-up-banner gold';
+        banner.textContent = 'Rank Up · Gold';
+        rankupRow.appendChild(banner);
+
+        // Burst
+        const burst = document.createElement('div');
+        burst.className = 'burst';
+        for (let i = 0; i < 8; i++) burst.appendChild(Object.assign(document.createElement('div'), { className: 'dot' }));
+        rankupRow.appendChild(burst);
+
+        setTimeout(() => { banner.remove(); burst.remove(); }, 2100);
+      }, 120);
+    });
+
+    // Auto-replay rank-up animation on page load for visibility
+    setTimeout(() => rankupBtn.click(), 800);
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Temple Manifest — Producer Visualization Inside the Temple</title>
+<style>
+  :root {
+    --text:    #d8e6f5;
+    --muted:   rgba(216, 230, 245, 0.55);
+    --jade:    #a7f3e8;
+    --gold:    #ffd070;
+    --warm:    #d99752;
+    --violet:  #a78bfa;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: linear-gradient(180deg, #060912, #0a1320);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 24px; max-width: 900px; line-height: 1.5; }
+
+  .scenes-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 1200px) { .scenes-row { grid-template-columns: 1fr; } }
+
+  .scene-card {
+    background: rgba(15, 22, 28, 0.85);
+    border: 1px solid rgba(110, 200, 180, 0.18);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .scene-meta {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .scene-meta-name {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: var(--jade);
+    text-transform: uppercase;
+  }
+  .scene-meta-stage { font-size: 11px; color: var(--muted); }
+
+  /* ───────────────────────────────────────────────────────────────────────
+     The TEMPLE — placeholder for your AI-generated temple BG. Built from
+     CSS gradients to approximate a stone temple interior with warm light.
+     In production this is REPLACED by your actual temple PNG. The overlay
+     sprite positions remain identical.
+  ─────────────────────────────────────────────────────────────────────── */
+  .temple {
+    position: relative;
+    height: 420px;
+    overflow: hidden;
+    /* Placeholder temple BG — stone walls + floor + skylight oculus + side niches */
+    background:
+      /* Skylight beam from above */
+      radial-gradient(ellipse 80px 200px at 50% 0%, rgba(255, 215, 130, 0.25), transparent 70%),
+      /* Side niche left (glowing alcove) */
+      radial-gradient(ellipse 40px 70px at 12% 50%, rgba(255, 180, 100, 0.18), transparent 70%),
+      /* Side niche right */
+      radial-gradient(ellipse 40px 70px at 88% 50%, rgba(255, 180, 100, 0.18), transparent 70%),
+      /* Floor stone */
+      linear-gradient(180deg, transparent 65%, rgba(60, 40, 25, 0.7) 70%, rgba(40, 25, 15, 0.9) 100%),
+      /* Wall stone gradient */
+      linear-gradient(180deg, #1c1408 0%, #3a2818 30%, #4a3320 60%, #2e1f10 100%);
+    image-rendering: pixelated;
+  }
+
+  /* Temple "architecture" — soft pillar shadows on left/right edges */
+  .temple::before, .temple::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 14%;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .temple::before {
+    left: 0;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.6), transparent);
+  }
+  .temple::after {
+    right: 0;
+    background: linear-gradient(-90deg, rgba(0, 0, 0, 0.6), transparent);
+  }
+
+  /* Faint architectural detail — arched opening behind cultivator */
+  .temple-arch {
+    position: absolute;
+    left: 50%; top: 10%;
+    transform: translateX(-50%);
+    width: 240px; height: 200px;
+    border: 2px solid rgba(255, 200, 130, 0.12);
+    border-radius: 50% 50% 0 0 / 80% 80% 0 0;
+    border-bottom: none;
+    background: radial-gradient(ellipse at center top, rgba(20, 12, 6, 0.5), transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ─── Cultivator — always present, center, meditating ──────────────── */
+  .cultivator {
+    position: absolute;
+    left: 50%; bottom: 12%;
+    transform: translateX(-50%);
+    font-size: 80px;
+    filter: drop-shadow(0 0 14px rgba(255, 200, 130, 0.4));
+    z-index: 10;
+  }
+  .cultivator-aura {
+    position: absolute;
+    left: 50%; bottom: 8%;
+    transform: translateX(-50%);
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255, 200, 130, 0.18), transparent 65%);
+    border-radius: 50%;
+    z-index: 9;
+    pointer-events: none;
+  }
+  .temple.tier-2 .cultivator-aura { background: radial-gradient(circle, rgba(255, 200, 130, 0.32), transparent 65%); }
+  .temple.tier-3 .cultivator-aura {
+    background: radial-gradient(circle, rgba(255, 200, 130, 0.5), rgba(167, 139, 250, 0.2) 50%, transparent 75%);
+    width: 280px; height: 280px;
+  }
+
+  /* Crystal floating above cultivator (already in real game — placeholder here) */
+  .crystal {
+    position: absolute;
+    left: 50%; top: 18%;
+    transform: translateX(-50%);
+    font-size: 36px;
+    filter: drop-shadow(0 0 12px rgba(126, 212, 255, 0.7));
+    z-index: 11;
+    animation: crystal-hover 3s ease-in-out infinite;
+  }
+  @keyframes crystal-hover {
+    0%, 100% { transform: translate(-50%, 0); }
+    50%      { transform: translate(-50%, -6px); }
+  }
+
+  /* ─── Producer manifestations — temple-appropriate objects ────────── */
+
+  /* 1. DISCIPLES — meditation cushions in front of cultivator */
+  .disciples {
+    position: absolute;
+    left: 50%; bottom: 4%;
+    transform: translateX(-50%);
+    width: 360px; height: 50px;
+    z-index: 8;
+  }
+  .disciples .cushion {
+    position: absolute;
+    bottom: 0;
+    display: flex; flex-direction: column; align-items: center;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  }
+  .disciples .cushion .figure { font-size: 22px; }
+  .disciples .cushion .pad   { font-size: 12px; margin-top: -4px; opacity: 0.7; }
+
+  /* 2. HERB GARDEN — potted plants on side altars */
+  .herb-altar-l, .herb-altar-r {
+    position: absolute;
+    bottom: 22%;
+    z-index: 7;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  }
+  .herb-altar-l { left: 20%; }
+  .herb-altar-r { right: 20%; }
+  .herb-altar .plant { font-size: 22px; }
+  .herb-altar .stand { display: block; font-size: 16px; opacity: 0.65; margin-top: -4px; }
+  .temple.tier-3 .herb-altar .plant {
+    font-size: 28px;
+    filter: drop-shadow(0 0 10px rgba(160, 255, 180, 0.6)) brightness(1.15);
+  }
+
+  /* 3. MERIDIAN FURNACE — stone braziers in the corners */
+  .brazier-l, .brazier-r {
+    position: absolute;
+    bottom: 14%;
+    z-index: 7;
+  }
+  .brazier-l { left: 8%; }
+  .brazier-r { right: 8%; }
+  .brazier {
+    display: flex; flex-direction: column; align-items: center;
+    filter: drop-shadow(0 0 14px rgba(255, 130, 60, 0.5));
+  }
+  .brazier .flame { font-size: 26px; animation: flame-flicker 1.4s ease-in-out infinite; }
+  .brazier .base  { font-size: 22px; margin-top: -8px; opacity: 0.75; }
+  @keyframes flame-flicker {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.1); }
+  }
+
+  /* 4. MORTAL SECT FOLLOWERS — banners hanging from rafters */
+  .banners {
+    position: absolute;
+    left: 0; right: 0; top: 5%;
+    display: flex; justify-content: space-around;
+    z-index: 6;
+    pointer-events: none;
+  }
+  .banner {
+    width: 28px; height: 90px;
+    background: linear-gradient(180deg, rgba(180, 60, 60, 0.85), rgba(120, 40, 40, 0.7));
+    border-bottom: 4px solid rgba(140, 100, 40, 0.8);
+    clip-path: polygon(0 0, 100% 0, 100% 90%, 75% 100%, 50% 90%, 25% 100%, 0 90%);
+    position: relative;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+  }
+  .banner::after {
+    content: '☯';
+    position: absolute;
+    left: 50%; top: 20%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    color: rgba(255, 220, 140, 0.85);
+  }
+
+  /* 5. SPIRIT BEAST — companion creature beside cultivator */
+  .beast {
+    position: absolute;
+    left: calc(50% + 80px);
+    bottom: 12%;
+    font-size: 30px;
+    z-index: 9;
+    filter: drop-shadow(0 0 10px rgba(255, 140, 60, 0.5));
+    animation: beast-breathe 4s ease-in-out infinite;
+  }
+  @keyframes beast-breathe {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.05); }
+  }
+  .temple.tier-3 .beast {
+    font-size: 42px;
+    filter: drop-shadow(0 0 18px rgba(255, 100, 50, 0.85)) brightness(1.15);
+  }
+
+  /* 6. ANCESTRAL TREASURE — relic on a pedestal in the background */
+  .treasure {
+    position: absolute;
+    left: calc(50% - 90px);
+    bottom: 22%;
+    z-index: 6;
+    display: flex; flex-direction: column; align-items: center;
+    filter: drop-shadow(0 0 14px rgba(255, 215, 100, 0.7));
+    animation: treasure-float 3.5s ease-in-out infinite;
+  }
+  @keyframes treasure-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-4px); }
+  }
+  .treasure .relic { font-size: 22px; }
+  .treasure .pedestal { font-size: 16px; opacity: 0.65; margin-top: -3px; }
+  .temple.tier-3 .treasure .relic {
+    font-size: 32px;
+    filter: drop-shadow(0 0 18px rgba(255, 200, 80, 0.9)) brightness(1.2);
+  }
+
+  /* 7. LUNAR PAVILION — visible through the temple's main archway (distant) */
+  .pavilion {
+    position: absolute;
+    left: 50%; top: 30%;
+    transform: translateX(-50%);
+    font-size: 32px;
+    z-index: 5;
+    filter: drop-shadow(0 0 10px rgba(126, 212, 255, 0.5)) brightness(0.85) blur(0.3px);
+    opacity: 0.9;
+  }
+  .pavilion::before {
+    content: '';
+    position: absolute;
+    left: 50%; bottom: -16px;
+    transform: translateX(-50%);
+    width: 60px; height: 4px;
+    background: radial-gradient(ellipse, rgba(126, 212, 255, 0.4), transparent 70%);
+  }
+
+  /* 8. HEAVENLY PILLAR — intensifies the existing skylight beam */
+  .skylight-pillar {
+    position: absolute;
+    left: 50%; top: 0;
+    transform: translateX(-50%);
+    width: 40px; height: 50%;
+    background: linear-gradient(180deg, rgba(255, 240, 180, 0.6), rgba(255, 215, 100, 0.3) 60%, transparent);
+    filter: blur(3px);
+    z-index: 4;
+    animation: pillar-pulse 4s ease-in-out infinite;
+  }
+  @keyframes pillar-pulse {
+    0%, 100% { opacity: 0.7; width: 40px; }
+    50%      { opacity: 1; width: 50px; }
+  }
+
+  /* 9. VOID CONDUIT — purple rift on the wall */
+  .rift {
+    position: absolute;
+    right: 5%; top: 38%;
+    width: 50px; height: 70px;
+    background: radial-gradient(ellipse, rgba(167, 139, 250, 0.85), rgba(80, 40, 160, 0.4) 50%, transparent 75%);
+    border-radius: 50%;
+    z-index: 5;
+    animation: rift-warp 4s ease-in-out infinite;
+  }
+  @keyframes rift-warp {
+    0%, 100% { transform: scale(1) rotate(0); opacity: 0.85; }
+    50%      { transform: scale(1.15) rotate(8deg); opacity: 1; }
+  }
+
+  /* 10. DAO TREE MURAL — carved tree on the back wall, glows at high tier */
+  .dao-mural {
+    position: absolute;
+    left: 50%; top: 8%;
+    transform: translateX(-50%);
+    width: 240px; height: 200px;
+    z-index: 3;
+    opacity: 0.4;
+    background:
+      /* Trunk */
+      radial-gradient(ellipse 20px 100px at 50% 80%, rgba(120, 80, 50, 0.5), transparent 60%),
+      /* Canopy */
+      radial-gradient(circle at 35% 35%, rgba(150, 100, 60, 0.4) 0%, transparent 30%),
+      radial-gradient(circle at 65% 35%, rgba(150, 100, 60, 0.4) 0%, transparent 30%),
+      radial-gradient(circle at 50% 25%, rgba(150, 100, 60, 0.4) 0%, transparent 35%);
+    pointer-events: none;
+  }
+  .temple.tier-3 .dao-mural {
+    opacity: 1;
+    background:
+      radial-gradient(ellipse 20px 100px at 50% 80%, rgba(180, 120, 60, 0.8), transparent 60%),
+      radial-gradient(circle at 35% 35%, rgba(167, 243, 232, 0.5) 0%, transparent 30%),
+      radial-gradient(circle at 65% 35%, rgba(167, 243, 232, 0.5) 0%, transparent 30%),
+      radial-gradient(circle at 50% 25%, rgba(255, 215, 130, 0.6) 0%, transparent 35%);
+    animation: mural-glow 5s ease-in-out infinite;
+  }
+  @keyframes mural-glow {
+    0%, 100% { filter: brightness(1); }
+    50%      { filter: brightness(1.2); }
+  }
+
+  /* HANGING LANTERNS — atmospheric, ambient (always present) */
+  .lantern {
+    position: absolute;
+    top: 8%;
+    width: 16px; height: 22px;
+    z-index: 5;
+    filter: drop-shadow(0 0 10px rgba(255, 180, 100, 0.7));
+  }
+  .lantern::before {
+    content: '';
+    position: absolute;
+    left: 50%; top: -20px;
+    transform: translateX(-50%);
+    width: 1px; height: 20px;
+    background: rgba(140, 100, 60, 0.7);
+  }
+  .lantern .body {
+    width: 100%; height: 100%;
+    background: radial-gradient(circle, rgba(255, 200, 130, 1), rgba(220, 130, 50, 0.85) 60%, rgba(140, 60, 20, 0.9));
+    border-radius: 50%;
+    animation: lantern-flicker 2s ease-in-out infinite;
+  }
+  @keyframes lantern-flicker {
+    0%, 100% { opacity: 0.9; }
+    50%      { opacity: 1; }
+  }
+  .lantern.l1 { left: 25%; }
+  .lantern.l2 { right: 25%; }
+
+  /* Ambient qi particles drifting */
+  .qi-particles {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 8;
+  }
+  .qi-particles span {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 215, 130, 1), transparent 70%);
+    animation: qi-rise 6s ease-in-out infinite;
+  }
+  @keyframes qi-rise {
+    0%   { transform: translateY(0) scale(1); opacity: 0; }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { transform: translateY(-100px) scale(0.4); opacity: 0; }
+  }
+  .qi-particles span:nth-child(1) { left: 30%; bottom: 30%; animation-delay: 0s; }
+  .qi-particles span:nth-child(2) { left: 70%; bottom: 40%; animation-delay: 1.5s; }
+  .qi-particles span:nth-child(3) { left: 45%; bottom: 35%; animation-delay: 3s; }
+  .qi-particles span:nth-child(4) { left: 55%; bottom: 45%; animation-delay: 2.5s; }
+  .qi-particles span:nth-child(5) { left: 35%; bottom: 25%; animation-delay: 4s; }
+  .qi-particles span:nth-child(6) { left: 65%; bottom: 30%; animation-delay: 1s; }
+  .temple.tier-1 .qi-particles span:nth-child(n+4) { display: none; }
+  .temple.tier-3 .qi-particles span {
+    background: radial-gradient(circle, rgba(255, 240, 180, 1), transparent 70%);
+  }
+
+  /* ─── Status panel ─────────────────────────────────────────────────── */
+  .scene-status {
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .producer-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 1px 0;
+  }
+  .producer-emoji { font-size: 14px; width: 22px; text-align: center; }
+  .producer-name  { flex: 1; }
+  .producer-count { color: var(--jade); font-weight: 600; }
+  .producer-line.high  .producer-count { color: var(--gold); }
+  .producer-line.mythic .producer-count { color: var(--violet); }
+
+  /* ─── Notes ────────────────────────────────────────────────────────── */
+  .notes {
+    background: rgba(15, 22, 28, 0.85);
+    border: 1px solid rgba(110, 200, 180, 0.18);
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 16px;
+  }
+  .notes h2 {
+    font-size: 13px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--jade);
+    margin: 0 0 10px;
+  }
+  .notes p, .notes li {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .notes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px) { .notes-grid { grid-template-columns: 1fr; } }
+  .notes-grid h3 { font-size: 12px; color: var(--gold); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .slot-list { font-size: 11px; line-height: 1.7; }
+  .slot-list .slot-name { color: var(--jade); }
+</style>
+</head>
+<body>
+
+  <h1>Temple Manifest — Producers as Temple Inhabitants & Furnishings</h1>
+  <div class="subtitle">
+    Reframed: the temple BG never changes. Each producer manifests as a <em>temple-appropriate object</em>
+    layered ON TOP of the existing scene — disciples on cushions, braziers, banners, relics, a
+    companion beast, sect followers visible through the archway, a wall mural that glows at high tiers.
+    Every addition must feel like it belongs in a sacred meditation space.
+  </div>
+
+  <div class="scenes-row">
+
+    <!-- ─────────────────── EMPTY TEMPLE ─────────────────── -->
+    <div class="scene-card">
+      <div class="scene-meta">
+        <div class="scene-meta-name">Empty — Tempered Body L1</div>
+        <div class="scene-meta-stage">~30 sec played</div>
+      </div>
+      <div class="temple tier-0">
+        <div class="temple-arch"></div>
+        <div class="lantern l1"><div class="body"></div></div>
+        <div class="lantern l2"><div class="body"></div></div>
+        <div class="dao-mural"></div>
+        <div class="qi-particles"><span></span><span></span><span></span></div>
+        <div class="cultivator-aura"></div>
+        <div class="crystal">◇</div>
+        <div class="cultivator">🧘</div>
+      </div>
+      <div class="scene-status">
+        <div style="opacity: 0.5; font-style: italic;">A quiet temple. Just you, the crystal, and the lanterns.</div>
+      </div>
+    </div>
+
+    <!-- ─────────────────── MID TEMPLE ─────────────────── -->
+    <div class="scene-card">
+      <div class="scene-meta">
+        <div class="scene-meta-name">Filling — Saint Family</div>
+        <div class="scene-meta-stage">~3 days played</div>
+      </div>
+      <div class="temple tier-2">
+        <div class="temple-arch"></div>
+        <div class="lantern l1"><div class="body"></div></div>
+        <div class="lantern l2"><div class="body"></div></div>
+        <div class="dao-mural"></div>
+        <div class="skylight-pillar" style="opacity: 0.5;"></div>
+
+        <!-- Banners (sect followers) — moderate count -->
+        <div class="banners">
+          <div class="banner" style="opacity: 0.85;"></div>
+          <div class="banner" style="visibility: hidden;"></div>
+          <div class="banner" style="opacity: 0.85;"></div>
+        </div>
+
+        <!-- Treasure on pedestal -->
+        <div class="treasure">
+          <span class="relic">🏺</span>
+          <span class="pedestal">▰</span>
+        </div>
+
+        <!-- Pavilion visible through archway (distant) -->
+        <div class="pavilion" style="opacity: 0.4;">🏯</div>
+
+        <!-- Braziers in corners -->
+        <div class="brazier-l brazier">
+          <span class="flame">🔥</span>
+          <span class="base">▮</span>
+        </div>
+        <div class="brazier-r brazier">
+          <span class="flame">🔥</span>
+          <span class="base">▮</span>
+        </div>
+
+        <!-- Herb altars -->
+        <div class="herb-altar-l herb-altar">
+          <span class="plant">🌿</span>
+          <span class="stand">═</span>
+        </div>
+        <div class="herb-altar-r herb-altar">
+          <span class="plant">🌿</span>
+          <span class="stand">═</span>
+        </div>
+
+        <div class="qi-particles">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="cultivator-aura"></div>
+        <div class="crystal">◆</div>
+        <div class="cultivator">🧘</div>
+
+        <!-- Beast curled beside cultivator -->
+        <div class="beast">🐅</div>
+
+        <!-- Disciples on cushions in front -->
+        <div class="disciples">
+          <div class="cushion" style="left: 30px;"><span class="figure">🧎</span><span class="pad">▬</span></div>
+          <div class="cushion" style="left: 110px;"><span class="figure">🧎</span><span class="pad">▬</span></div>
+          <div class="cushion" style="left: 230px;"><span class="figure">🧎</span><span class="pad">▬</span></div>
+          <div class="cushion" style="left: 310px;"><span class="figure">🧎</span><span class="pad">▬</span></div>
+        </div>
+      </div>
+      <div class="scene-status">
+        <div class="producer-line high"><span class="producer-emoji">🧎</span><span class="producer-name">Disciples (cushions)</span><span class="producer-count">×42</span></div>
+        <div class="producer-line high"><span class="producer-emoji">🌿</span><span class="producer-name">Herb Garden (altars)</span><span class="producer-count">×38</span></div>
+        <div class="producer-line high"><span class="producer-emoji">🔥</span><span class="producer-name">Meridian Furnace (braziers)</span><span class="producer-count">×31</span></div>
+        <div class="producer-line"><span class="producer-emoji">☯</span><span class="producer-name">Sect Followers (banners)</span><span class="producer-count">×18</span></div>
+        <div class="producer-line"><span class="producer-emoji">🐅</span><span class="producer-name">Spirit Beast (companion)</span><span class="producer-count">×11</span></div>
+        <div class="producer-line"><span class="producer-emoji">🏺</span><span class="producer-name">Ancestral Relic (pedestal)</span><span class="producer-count">×6</span></div>
+        <div class="producer-line"><span class="producer-emoji">🏯</span><span class="producer-name">Lunar Pavilion (through arch)</span><span class="producer-count">×3</span></div>
+      </div>
+    </div>
+
+    <!-- ─────────────────── LATE TEMPLE ─────────────────── -->
+    <div class="scene-card">
+      <div class="scene-meta">
+        <div class="scene-meta-name">Full — Open Heaven</div>
+        <div class="scene-meta-stage">~3 weeks played</div>
+      </div>
+      <div class="temple tier-3">
+        <div class="temple-arch"></div>
+        <div class="lantern l1"><div class="body"></div></div>
+        <div class="lantern l2"><div class="body"></div></div>
+        <div class="dao-mural"></div>
+        <div class="skylight-pillar"></div>
+
+        <div class="banners">
+          <div class="banner"></div>
+          <div class="banner"></div>
+          <div class="banner"></div>
+          <div class="banner"></div>
+          <div class="banner"></div>
+        </div>
+
+        <!-- Void rift on the wall -->
+        <div class="rift"></div>
+
+        <!-- Treasure: Mythic upgrade -->
+        <div class="treasure">
+          <span class="relic">💎</span>
+          <span class="pedestal">▰</span>
+        </div>
+
+        <!-- Pavilion: bright -->
+        <div class="pavilion">🏯</div>
+
+        <!-- Braziers with stronger glow -->
+        <div class="brazier-l brazier">
+          <span class="flame">🔥</span>
+          <span class="base">▮</span>
+        </div>
+        <div class="brazier-r brazier">
+          <span class="flame">🔥</span>
+          <span class="base">▮</span>
+        </div>
+
+        <!-- Herb altars: late tier — bloom into bigger plants -->
+        <div class="herb-altar-l herb-altar">
+          <span class="plant">🌳</span>
+          <span class="stand">═</span>
+        </div>
+        <div class="herb-altar-r herb-altar">
+          <span class="plant">🌳</span>
+          <span class="stand">═</span>
+        </div>
+
+        <div class="qi-particles">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="cultivator-aura"></div>
+        <div class="crystal">✦</div>
+        <div class="cultivator">🧘</div>
+
+        <!-- Beast: Mythic upgrade -->
+        <div class="beast">🐉</div>
+
+        <!-- Disciples: full ring -->
+        <div class="disciples">
+          <div class="cushion" style="left: -10px;"><span class="figure">🧎</span><span class="pad">▬</span></div>
+          <div class="cushion" style="left: 45px;"><span class="figure">🧎</span><span class="pad">▬</span></div>
+          <div class="cushion" style="left: 100px;"><span class="figure">🧎</span><span class="pad">▬</span></div>
+          <div class="cushion" style="left: 155px;"><span class="figure">🧎</span><span class="pad">▬</span></div>
+          <div class="cushion" style="left: 210px;"><span class="figure">🧎</span><span class="pad">▬</span></div>
+          <div class="cushion" style="left: 265px;"><span class="figure">🧎</span><span class="pad">▬</span></div>
+          <div class="cushion" style="left: 320px;"><span class="figure">🧎</span><span class="pad">▬</span></div>
+        </div>
+      </div>
+      <div class="scene-status">
+        <div class="producer-line mythic"><span class="producer-emoji">🧎</span><span class="producer-name">Disciples (full ring)</span><span class="producer-count">×218</span></div>
+        <div class="producer-line mythic"><span class="producer-emoji">🌳</span><span class="producer-name">Herb Garden (blooming)</span><span class="producer-count">×195</span></div>
+        <div class="producer-line mythic"><span class="producer-emoji">🔥</span><span class="producer-name">Brazier (radiant)</span><span class="producer-count">×162</span></div>
+        <div class="producer-line mythic"><span class="producer-emoji">☯</span><span class="producer-name">Banners (5 hanging)</span><span class="producer-count">×135</span></div>
+        <div class="producer-line high"><span class="producer-emoji">🐉</span><span class="producer-name">Spirit Beast (dragon)</span><span class="producer-count">×118</span></div>
+        <div class="producer-line high"><span class="producer-emoji">💎</span><span class="producer-name">Ancestral Relic (crystallised)</span><span class="producer-count">×95</span></div>
+        <div class="producer-line high"><span class="producer-emoji">🏯</span><span class="producer-name">Lunar Pavilion (lit)</span><span class="producer-count">×72</span></div>
+        <div class="producer-line"><span class="producer-emoji">☼</span><span class="producer-name">Heavenly Pillar (skylight)</span><span class="producer-count">×48</span></div>
+        <div class="producer-line"><span class="producer-emoji">🌌</span><span class="producer-name">Void Rift (wall)</span><span class="producer-count">×28</span></div>
+        <div class="producer-line"><span class="producer-emoji">🌳</span><span class="producer-name">Dao Tree Mural (glowing)</span><span class="producer-count">×15</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="notes">
+    <h2>Fixed slot map — every producer claims a temple location</h2>
+    <div class="slot-list">
+      <div><span class="slot-name">Foreground (in front of cultivator):</span> Disciples on cushions · Spirit Beast at feet</div>
+      <div><span class="slot-name">Mid-ground beside cultivator:</span> Herb altars (left/right of cultivator) · Ancestral relic pedestal (behind/left) · Braziers (far left/right corners)</div>
+      <div><span class="slot-name">Architectural (built into temple):</span> Sect banners (hanging from rafters) · Heavenly skylight beam (intensifying overhead) · Void rift (wall niche)</div>
+      <div><span class="slot-name">Through the archway (distant):</span> Lunar Pavilion silhouette</div>
+      <div><span class="slot-name">Wall mural (back wall):</span> Dao Tree carving (faint → glowing at high tiers)</div>
+    </div>
+
+    <div class="notes-grid" style="margin-top: 14px;">
+      <div>
+        <h3>What's a placeholder vs final art</h3>
+        <p style="margin: 0;">
+          The temple BG is a CSS stand-in here — the real game uses your existing PNG temple. Every overlay
+          element (cushion+figure, brazier, banner, relic, beast, pavilion) is a SEPARATE small sprite
+          you can AI-generate independently and drop in at fixed coordinates. No temple BG edits needed.
+        </p>
+      </div>
+      <div>
+        <h3>AI-art friendly</h3>
+        <p style="margin: 0;">
+          Each overlay is a small, well-defined subject on transparent BG. "Meditating disciple on a cushion",
+          "stone brazier with flame", "hanging sect banner with yin-yang", "potted spirit herb on a stone altar" — these
+          are easy PixelLab prompts and you can iterate one at a time.
+        </p>
+      </div>
+      <div>
+        <h3>Tier escalation per slot</h3>
+        <p style="margin: 0;">
+          Each slot has 3-4 visual states. Count thresholds (1 / 10 / 50 / 100 owned) bump the slot:
+          more sprite instances, bigger sprite variant (sprout → tree, tiger → dragon, relic → crystal),
+          stronger glow. Driven by CSS classes, not new art every tier.
+        </p>
+      </div>
+      <div>
+        <h3>Minimum art shopping list</h3>
+        <p style="margin: 0;">
+          <strong>10 base overlays</strong> (one per producer) + <strong>4 "epic" variants</strong> for the
+          producers whose Mythic state benefits from a swap (beast tiger→dragon, herb sprout→tree, relic
+          urn→crystal, pavilion dim→lit). That's ~14 small sprites total.
+        </p>
+      </div>
+    </div>
+
+    <h2 style="margin-top: 16px;">Why this preserves immersion</h2>
+    <ul>
+      <li>The cultivator never moves; the crystal never moves; the temple itself never changes.</li>
+      <li>Every element added is an object a real cultivator would have in a sacred space — no flying ducks, no spaceships.</li>
+      <li>Light tones stay warm (gold/amber) for "in-temple" objects; cool tones (cyan, violet) only appear on cosmic-tier elements (void rift, heavenly beam, dao mural) where strange light is narratively appropriate.</li>
+      <li>Distant elements (pavilion, sect followers) are framed by the temple's architecture, not floating randomly.</li>
+      <li>The scene gets DENSER, not different. The player feels like their temple has become a place worth visiting.</li>
+    </ul>
+  </div>
+
+</body>
+</html>

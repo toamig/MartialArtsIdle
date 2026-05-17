@@ -16,7 +16,33 @@
  * upgrades plan.
  *
  * Unlock conditions reference realm INDEX (0-based) in `data/realms.js`.
+ *
+ * ── Sprite tiers (Cookie-Clicker-style lanes) ──────────────────────────────
+ * Each producer carries a `sprites` array of 4 strings — placeholder emojis
+ * for now; you'll replace these with PNG paths once you generate sprite art.
+ * Index follows SPRITE_TIERS below: 0=Bronze (1-9 owned), 1=Silver (10-24),
+ * 2=Gold (25-99), 3=Mythic (100+). When the player crosses a threshold, all
+ * lane sprites swap to the new variant simultaneously. CSS adds tier glow.
  */
+
+/** Ownership thresholds → sprite-tier index + tier name + UI accent. */
+export const SPRITE_TIERS = [
+  { idx: 0, name: 'bronze', label: 'Bronze',   minOwned: 1   },
+  { idx: 1, name: 'silver', label: 'Silver',   minOwned: 10  },
+  { idx: 2, name: 'gold',   label: 'Gold',     minOwned: 25  },
+  { idx: 3, name: 'mythic', label: 'Mythic',   minOwned: 100 },
+];
+
+/** Resolves an owned count to its tier descriptor, or null if 0/locked. */
+export function getSpriteTier(owned) {
+  if (!owned || owned < 1) return null;
+  let resolved = SPRITE_TIERS[0];
+  for (const t of SPRITE_TIERS) {
+    if (owned >= t.minOwned) resolved = t;
+    else break;
+  }
+  return resolved;
+}
 
 const PRODUCERS = [
   {
@@ -27,6 +53,8 @@ const PRODUCERS = [
     startQiPerSec: 0.1,
     costScaling:   1.15,
     unlock:        { type: 'always' },
+    // [Bronze, Silver, Gold, Mythic] — same role, escalating presence.
+    sprites:       ['🧎', '🥋', '⚔️', '✨'],
   },
   {
     id:            'p_herb_garden',
@@ -36,6 +64,7 @@ const PRODUCERS = [
     startQiPerSec: 1,
     costScaling:   1.15,
     unlock:        { type: 'realm', minRealmIndex: 4 },
+    sprites:       ['🌱', '🌿', '🌳', '🎋'],
   },
   {
     id:            'p_meridian_furnace',
@@ -45,6 +74,7 @@ const PRODUCERS = [
     startQiPerSec: 8,
     costScaling:   1.15,
     unlock:        { type: 'realm', minRealmIndex: 9 },
+    sprites:       ['🪨', '🔥', '🏭', '💥'],
   },
   {
     id:            'p_sect_followers',
@@ -54,6 +84,7 @@ const PRODUCERS = [
     startQiPerSec: 47,
     costScaling:   1.15,
     unlock:        { type: 'realm', minRealmIndex: 13 },
+    sprites:       ['👤', '👥', '🏛️', '👑'],
   },
   {
     id:            'p_beast_pact',
@@ -63,6 +94,7 @@ const PRODUCERS = [
     startQiPerSec: 260,
     costScaling:   1.15,
     unlock:        { type: 'realm', minRealmIndex: 17 },
+    sprites:       ['🐾', '🐅', '🐲', '🐉'],
   },
   {
     id:            'p_treasure',
@@ -72,6 +104,7 @@ const PRODUCERS = [
     startQiPerSec: 1400,
     costScaling:   1.15,
     unlock:        { type: 'realm', minRealmIndex: 20 },
+    sprites:       ['🏺', '⛩️', '💎', '🔱'],
   },
   {
     id:            'p_lunar',
@@ -81,6 +114,7 @@ const PRODUCERS = [
     startQiPerSec: 7800,
     costScaling:   1.15,
     unlock:        { type: 'realm', minRealmIndex: 23 },
+    sprites:       ['🌙', '🏯', '🌕', '☯️'],
   },
   {
     id:            'p_pillar',
@@ -90,6 +124,7 @@ const PRODUCERS = [
     startQiPerSec: 44000,
     costScaling:   1.15,
     unlock:        { type: 'realm', minRealmIndex: 29 },
+    sprites:       ['🗿', '🏛️', '🗽', '⚡'],
   },
   {
     id:            'p_void',
@@ -99,6 +134,7 @@ const PRODUCERS = [
     startQiPerSec: 260000,
     costScaling:   1.15,
     unlock:        { type: 'realm', minRealmIndex: 35 },
+    sprites:       ['🌑', '🌀', '🌌', '⭐'],
   },
   {
     id:            'p_dao_tree',
@@ -108,6 +144,7 @@ const PRODUCERS = [
     startQiPerSec: 1600000,
     costScaling:   1.15,
     unlock:        { type: 'realm', minRealmIndex: 44 },
+    sprites:       ['🌿', '🌳', '🌲', '🌟'],
   },
 ];
 

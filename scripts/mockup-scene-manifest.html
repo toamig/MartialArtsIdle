@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cultivation Realm — Scene Manifestation Mockup</title>
+<style>
+  /* Palette matches the live game */
+  :root {
+    --bg-deep: #050912;
+    --bg-mid:  #0a1320;
+    --text:    #d8e6f5;
+    --muted:   rgba(216, 230, 245, 0.55);
+    --jade:    #a7f3e8;
+    --gold:    #ffd070;
+    --rose:    #ff8bb0;
+    --violet:  #a78bfa;
+    --cyan:    #7ed4ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: linear-gradient(180deg, var(--bg-deep), var(--bg-mid));
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 24px; max-width: 900px; line-height: 1.5; }
+
+  .scenes-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 1100px) { .scenes-row { grid-template-columns: 1fr; } }
+
+  .scene-card {
+    background: rgba(15, 22, 28, 0.85);
+    border: 1px solid rgba(110, 200, 180, 0.18);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .scene-meta {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .scene-meta-name {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: var(--jade);
+    text-transform: uppercase;
+  }
+  .scene-meta-stage {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ───────────────────────────────────────────────────────────────────────
+     The scene itself — pixel-art-ish landscape that fills as producers
+     accumulate. Uses CSS gradients / shapes / emojis as placeholders for
+     final pixel-art sprites.
+  ─────────────────────────────────────────────────────────────────────── */
+  .scene {
+    position: relative;
+    height: 360px;
+    overflow: hidden;
+    background:
+      /* Sky gradient base */
+      linear-gradient(180deg, #0a0e1a 0%, #161e30 35%, #1d2640 60%, #2a2f3a 80%, #1a1610 100%);
+    image-rendering: pixelated;
+  }
+
+  /* ─── Cosmic backdrop: Dao Tree + Void Conduit + Heavenly Pillar ───── */
+  .layer-cosmic {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 600ms ease;
+  }
+  .scene.tier-3 .layer-cosmic { opacity: 1; }
+
+  /* Dao Tree — massive silhouette filling the upper half */
+  .dao-tree {
+    position: absolute;
+    left: 50%; top: -5%;
+    width: 80%; height: 70%;
+    transform: translateX(-50%);
+    background:
+      radial-gradient(circle at 50% 95%, rgba(167, 139, 250, 0.5) 0%, transparent 20%),
+      radial-gradient(circle at 30% 30%, rgba(167, 243, 232, 0.35) 0%, transparent 25%),
+      radial-gradient(circle at 70% 25%, rgba(167, 243, 232, 0.35) 0%, transparent 25%),
+      radial-gradient(circle at 50% 50%, rgba(126, 212, 255, 0.3) 0%, transparent 35%);
+    filter: blur(1px);
+  }
+  .dao-tree::before {
+    content: '';
+    position: absolute;
+    left: 50%; bottom: 0;
+    width: 30px; height: 60%;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, rgba(120, 100, 80, 0.6), rgba(80, 60, 40, 0.8));
+    border-radius: 4px;
+  }
+  .dao-tree::after {
+    content: '🌌';
+    position: absolute;
+    left: 50%; top: 25%;
+    transform: translateX(-50%);
+    font-size: 88px;
+    filter: hue-rotate(40deg) brightness(1.1) opacity(0.9);
+  }
+
+  /* Void Conduit — purple rift on the side */
+  .void-rift {
+    position: absolute;
+    right: 8%;
+    top: 12%;
+    width: 80px; height: 100px;
+    background: radial-gradient(ellipse at center, rgba(167, 139, 250, 0.8) 0%, rgba(80, 40, 160, 0.4) 40%, transparent 70%);
+    border-radius: 50%;
+    animation: rift-pulse 4s ease-in-out infinite;
+  }
+  @keyframes rift-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50%      { transform: scale(1.1); opacity: 1; }
+  }
+
+  /* Heavenly Pillar — vertical light beam */
+  .heavenly-pillar {
+    position: absolute;
+    left: 18%; top: 5%;
+    width: 30px; height: 70%;
+    background: linear-gradient(180deg, rgba(255, 240, 180, 0.85), rgba(255, 215, 100, 0.4) 50%, transparent);
+    filter: blur(2px);
+    animation: pillar-glow 3s ease-in-out infinite;
+  }
+  @keyframes pillar-glow {
+    0%, 100% { opacity: 0.7; }
+    50%      { opacity: 1; }
+  }
+
+  /* ─── Mid layer: Lunar Pavilion, Sect Followers, Meridian Furnace ──── */
+  .layer-mid {
+    position: absolute;
+    left: 0; right: 0; bottom: 35%;
+    height: 30%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 500ms ease;
+  }
+  .scene.tier-2 .layer-mid,
+  .scene.tier-3 .layer-mid { opacity: 1; }
+
+  /* Lunar Pavilion — small ornate structure on a hill */
+  .pavilion {
+    position: absolute;
+    right: 12%;
+    bottom: 0;
+    font-size: 36px;
+    filter: drop-shadow(0 0 8px rgba(126, 212, 255, 0.5)) brightness(0.9);
+  }
+
+  /* Sect Followers — silhouette crowd in middle distance */
+  .sect-followers {
+    position: absolute;
+    left: 35%; bottom: 5%;
+    display: flex;
+    gap: 6px;
+    filter: brightness(0.4) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+  }
+  .sect-followers span { font-size: 22px; }
+  .sect-followers.tier-3 { left: 25%; }
+  .sect-followers.tier-3 span:nth-child(odd) { filter: brightness(1.2); }
+
+  /* Meridian Furnace — stone column with smoke/fire */
+  .furnace {
+    position: absolute;
+    left: 12%;
+    bottom: 0;
+    width: 40px; height: 100px;
+    background: linear-gradient(180deg, rgba(140, 80, 40, 0.9), rgba(60, 30, 10, 1));
+    border-radius: 4px 4px 0 0;
+    box-shadow: 0 -8px 16px rgba(255, 120, 60, 0.6);
+  }
+  .furnace::after {
+    content: '🔥';
+    position: absolute;
+    left: 50%;
+    top: -16px;
+    transform: translateX(-50%);
+    font-size: 24px;
+    animation: flame-flicker 1.5s ease-in-out infinite;
+  }
+  @keyframes flame-flicker {
+    0%, 100% { transform: translate(-50%, 0) scale(1); }
+    50%      { transform: translate(-50%, -2px) scale(1.1); }
+  }
+
+  /* ─── Foreground: ground line, herbs, beasts, treasures, disciples ─── */
+  .layer-ground {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 35%;
+    background: linear-gradient(180deg, transparent, rgba(40, 25, 15, 0.4) 40%, rgba(20, 12, 8, 0.85));
+  }
+  .layer-ground::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: 30%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(167, 243, 232, 0.4) 30%, rgba(167, 243, 232, 0.4) 70%, transparent);
+    filter: blur(0.5px);
+  }
+
+  /* Cultivator — always present, center stage, slightly above ground line */
+  .cultivator {
+    position: absolute;
+    left: 50%; bottom: 10%;
+    transform: translateX(-50%);
+    font-size: 64px;
+    filter: drop-shadow(0 4px 12px rgba(167, 243, 232, 0.5));
+    z-index: 5;
+  }
+  .scene.tier-2 .cultivator { filter: drop-shadow(0 4px 16px rgba(167, 243, 232, 0.7)); }
+  .scene.tier-3 .cultivator {
+    filter: drop-shadow(0 0 24px rgba(255, 220, 130, 0.85)) brightness(1.1);
+    animation: cultivator-aura 4s ease-in-out infinite;
+  }
+  @keyframes cultivator-aura {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50%      { transform: translateX(-50%) scale(1.03); }
+  }
+
+  /* Cultivator aura — radial glow behind */
+  .cultivator-aura {
+    position: absolute;
+    left: 50%; bottom: 8%;
+    transform: translateX(-50%);
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(167, 243, 232, 0.18), transparent 70%);
+    border-radius: 50%;
+    z-index: 4;
+  }
+  .scene.tier-2 .cultivator-aura { background: radial-gradient(circle, rgba(167, 243, 232, 0.32), transparent 70%); }
+  .scene.tier-3 .cultivator-aura {
+    background: radial-gradient(circle, rgba(255, 220, 130, 0.4), rgba(167, 139, 250, 0.2) 40%, transparent 70%);
+    width: 300px; height: 300px;
+  }
+
+  /* Body Tempering Disciples — small figures ringed around cultivator */
+  .disciples {
+    position: absolute;
+    left: 50%; bottom: 5%;
+    transform: translateX(-50%);
+    width: 280px; height: 80px;
+    z-index: 6;
+  }
+  .disciples span {
+    position: absolute;
+    font-size: 20px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  }
+
+  /* Spirit Herb Garden — plants along the ground line */
+  .herbs {
+    position: absolute;
+    left: 0; right: 0; bottom: 12%;
+    pointer-events: none;
+    display: flex;
+    justify-content: space-around;
+    padding: 0 8%;
+  }
+  .herbs span { font-size: 18px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)); }
+  .scene.tier-2 .herbs span,
+  .scene.tier-3 .herbs span { font-size: 22px; }
+  .scene.tier-3 .herbs span { filter: drop-shadow(0 2px 6px rgba(126, 255, 180, 0.7)) brightness(1.2); }
+
+  /* Spirit Beast Pact — companion creature next to cultivator */
+  .beast {
+    position: absolute;
+    left: calc(50% + 60px);
+    bottom: 8%;
+    font-size: 32px;
+    z-index: 6;
+    filter: drop-shadow(0 0 6px rgba(255, 130, 60, 0.5));
+  }
+  .scene.tier-3 .beast {
+    font-size: 44px;
+    filter: drop-shadow(0 0 14px rgba(255, 80, 60, 0.85)) brightness(1.15);
+  }
+
+  /* Ancestral Treasure — floating relic */
+  .treasure {
+    position: absolute;
+    left: calc(50% - 80px);
+    bottom: 30%;
+    font-size: 28px;
+    z-index: 5;
+    filter: drop-shadow(0 0 10px rgba(255, 215, 100, 0.7));
+    animation: treasure-float 3s ease-in-out infinite;
+  }
+  @keyframes treasure-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+  .scene.tier-3 .treasure {
+    font-size: 40px;
+    filter: drop-shadow(0 0 18px rgba(255, 200, 80, 0.95)) brightness(1.2);
+  }
+
+  /* Ambient floating qi particles */
+  .qi-particles {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 7;
+  }
+  .qi-particles span {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(167, 243, 232, 1), transparent 70%);
+    animation: qi-drift 6s ease-in-out infinite;
+  }
+  .qi-particles span:nth-child(1) { left: 20%; bottom: 30%; animation-delay: 0s; }
+  .qi-particles span:nth-child(2) { left: 80%; bottom: 50%; animation-delay: 1s; }
+  .qi-particles span:nth-child(3) { left: 65%; bottom: 25%; animation-delay: 2s; }
+  .qi-particles span:nth-child(4) { left: 35%; bottom: 60%; animation-delay: 3s; }
+  .qi-particles span:nth-child(5) { left: 50%; bottom: 35%; animation-delay: 4s; }
+  .qi-particles span:nth-child(6) { left: 15%; bottom: 50%; animation-delay: 0.5s; }
+  .qi-particles span:nth-child(7) { left: 85%; bottom: 35%; animation-delay: 2.5s; }
+  .qi-particles span:nth-child(8) { left: 45%; bottom: 25%; animation-delay: 1.5s; }
+  @keyframes qi-drift {
+    0%   { transform: translateY(0) scale(1); opacity: 0; }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { transform: translateY(-80px) scale(0.4); opacity: 0; }
+  }
+  .scene.tier-1 .qi-particles span:nth-child(n+5) { display: none; }
+  .scene.tier-3 .qi-particles span {
+    background: radial-gradient(circle, rgba(255, 220, 130, 1), transparent 70%);
+  }
+
+  /* ─── Scene label & purchase list ──────────────────────────────────── */
+  .scene-status {
+    padding: 12px 14px;
+    background: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .scene-status strong { color: var(--text); }
+  .scene-status .producer-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+  }
+  .scene-status .producer-emoji {
+    font-size: 16px;
+    width: 22px;
+    text-align: center;
+  }
+  .scene-status .producer-name {
+    flex: 1;
+  }
+  .scene-status .producer-count {
+    color: var(--jade);
+    font-weight: 600;
+  }
+  .scene-status .producer-line.tier-mythic .producer-count { color: var(--violet); }
+  .scene-status .producer-line.tier-platinum .producer-count { color: #e6e6e6; }
+  .scene-status .producer-line.tier-gold .producer-count { color: var(--gold); }
+
+  /* ─── Notes section ───────────────────────────────────────────────── */
+  .notes {
+    background: rgba(15, 22, 28, 0.85);
+    border: 1px solid rgba(110, 200, 180, 0.18);
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 16px;
+  }
+  .notes h2 {
+    font-size: 13px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--jade);
+    margin: 0 0 10px;
+  }
+  .notes p, .notes li {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .notes ul { margin: 8px 0; padding-left: 18px; }
+  .notes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px) { .notes-grid { grid-template-columns: 1fr; } }
+  .notes-grid h3 { font-size: 12px; color: var(--gold); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+</style>
+</head>
+<body>
+
+  <h1>Cultivation Realm — Scene Manifestation Mockup</h1>
+  <div class="subtitle">
+    Same player at three points in the run. Each producer claims a spatial slot in the scene
+    and its presence escalates through tiers as ownership crosses 1 / 10 / 50 / 100 owned —
+    not 1:1 with count, but visually unmistakable. Cookie-Clicker scene-fill behavior adapted
+    to a single cultivator-centric view.
+  </div>
+
+  <div class="scenes-row">
+
+    <!-- ─────────────────────────── EARLY GAME ─────────────────────────── -->
+    <div class="scene-card">
+      <div class="scene-meta">
+        <div class="scene-meta-name">Early — Tempered Body</div>
+        <div class="scene-meta-stage">~15 min played</div>
+      </div>
+      <div class="scene tier-1">
+        <!-- Foreground: cultivator, faint aura, 1-2 disciples, a sprout, no beast/treasure -->
+        <div class="qi-particles">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="layer-ground"></div>
+        <div class="cultivator-aura"></div>
+        <div class="cultivator">🧘</div>
+        <div class="disciples">
+          <span style="left: 30px; bottom: 0;">🧍</span>
+          <span style="left: 220px; bottom: 0;">🧍</span>
+        </div>
+        <div class="herbs">
+          <span>🌱</span>
+          <span style="opacity: 0.4;">·</span>
+          <span style="opacity: 0.4;">·</span>
+          <span>🌱</span>
+        </div>
+      </div>
+      <div class="scene-status">
+        <div class="producer-line"><span class="producer-emoji">🧍</span><span class="producer-name">Body Tempering Disciple</span><span class="producer-count">×3</span></div>
+        <div class="producer-line"><span class="producer-emoji">🌱</span><span class="producer-name">Spirit Herb Garden</span><span class="producer-count">×2</span></div>
+        <div style="opacity: 0.4; font-size: 10px; margin-top: 4px;">Later producers locked.</div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────── MID GAME ─────────────────────────── -->
+    <div class="scene-card">
+      <div class="scene-meta">
+        <div class="scene-meta-name">Mid — Saint Family</div>
+        <div class="scene-meta-stage">~3 days played</div>
+      </div>
+      <div class="scene tier-2">
+        <div class="qi-particles">
+          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="layer-cosmic" style="opacity: 0.3;"><div class="heavenly-pillar" style="opacity: 0.5;"></div></div>
+        <div class="layer-mid">
+          <div class="pavilion">🏯</div>
+          <div class="sect-followers tier-2">
+            <span>👤</span><span>👤</span><span>👤</span><span>👤</span><span>👤</span>
+          </div>
+          <div class="furnace"></div>
+        </div>
+        <div class="layer-ground"></div>
+        <div class="cultivator-aura"></div>
+        <div class="cultivator">🧘</div>
+        <div class="disciples">
+          <span style="left: 0px; bottom: 0;">🧍</span>
+          <span style="left: 40px; bottom: 10px;">🧍</span>
+          <span style="left: 80px; bottom: 0;">🧍</span>
+          <span style="left: 200px; bottom: 10px;">🧍</span>
+          <span style="left: 240px; bottom: 0;">🧍</span>
+          <span style="left: 280px; bottom: 5px;">🧍</span>
+        </div>
+        <div class="herbs">
+          <span>🌿</span><span>🌿</span><span>🌿</span><span>🌿</span><span>🌿</span>
+        </div>
+        <div class="beast">🐅</div>
+        <div class="treasure">🏺</div>
+      </div>
+      <div class="scene-status">
+        <div class="producer-line tier-gold"><span class="producer-emoji">🧍</span><span class="producer-name">Body Tempering Disciple</span><span class="producer-count">×42</span></div>
+        <div class="producer-line tier-gold"><span class="producer-emoji">🌿</span><span class="producer-name">Spirit Herb Garden</span><span class="producer-count">×38</span></div>
+        <div class="producer-line tier-gold"><span class="producer-emoji">🔥</span><span class="producer-name">Meridian Furnace</span><span class="producer-count">×31</span></div>
+        <div class="producer-line tier-gold"><span class="producer-emoji">👤</span><span class="producer-name">Mortal Sect Followers</span><span class="producer-count">×26</span></div>
+        <div class="producer-line"><span class="producer-emoji">🐅</span><span class="producer-name">Spirit Beast Pact</span><span class="producer-count">×11</span></div>
+        <div class="producer-line"><span class="producer-emoji">🏺</span><span class="producer-name">Ancestral Treasure</span><span class="producer-count">×6</span></div>
+        <div class="producer-line"><span class="producer-emoji">🏯</span><span class="producer-name">Lunar Channeling Pavilion</span><span class="producer-count">×3</span></div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────── LATE GAME ─────────────────────────── -->
+    <div class="scene-card">
+      <div class="scene-meta">
+        <div class="scene-meta-name">Late — Open Heaven</div>
+        <div class="scene-meta-stage">~3 weeks played</div>
+      </div>
+      <div class="scene tier-3">
+        <div class="qi-particles">
+          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="layer-cosmic">
+          <div class="dao-tree"></div>
+          <div class="void-rift"></div>
+          <div class="heavenly-pillar"></div>
+        </div>
+        <div class="layer-mid">
+          <div class="pavilion" style="font-size: 48px; filter: drop-shadow(0 0 16px rgba(126, 212, 255, 0.9)) brightness(1.2);">🏯</div>
+          <div class="sect-followers tier-3">
+            <span>👥</span><span>👥</span><span>👥</span><span>👥</span><span>👥</span><span>👥</span>
+          </div>
+          <div class="furnace" style="height: 130px; box-shadow: 0 -16px 32px rgba(255, 100, 40, 0.8);"></div>
+        </div>
+        <div class="layer-ground"></div>
+        <div class="cultivator-aura"></div>
+        <div class="cultivator">🧘</div>
+        <div class="disciples">
+          <span style="left: -10px; bottom: 0;">🧍</span>
+          <span style="left: 30px; bottom: 10px;">🧍</span>
+          <span style="left: 70px; bottom: 0;">🧍</span>
+          <span style="left: 110px; bottom: 8px;">🧍</span>
+          <span style="left: 170px; bottom: 8px;">🧍</span>
+          <span style="left: 210px; bottom: 0;">🧍</span>
+          <span style="left: 250px; bottom: 10px;">🧍</span>
+          <span style="left: 290px; bottom: 0;">🧍</span>
+        </div>
+        <div class="herbs">
+          <span>🌳</span><span>🌿</span><span>🌳</span><span>🌿</span><span>🌳</span>
+        </div>
+        <div class="beast">🐉</div>
+        <div class="treasure">💎</div>
+      </div>
+      <div class="scene-status">
+        <div class="producer-line tier-mythic"><span class="producer-emoji">🧍</span><span class="producer-name">Body Tempering Disciple</span><span class="producer-count">×218</span></div>
+        <div class="producer-line tier-mythic"><span class="producer-emoji">🌿</span><span class="producer-name">Spirit Herb Garden</span><span class="producer-count">×195</span></div>
+        <div class="producer-line tier-platinum"><span class="producer-emoji">🔥</span><span class="producer-name">Meridian Furnace</span><span class="producer-count">×162</span></div>
+        <div class="producer-line tier-platinum"><span class="producer-emoji">👥</span><span class="producer-name">Mortal Sect Followers</span><span class="producer-count">×135</span></div>
+        <div class="producer-line tier-platinum"><span class="producer-emoji">🐉</span><span class="producer-name">Spirit Beast Pact</span><span class="producer-count">×118</span></div>
+        <div class="producer-line tier-gold"><span class="producer-emoji">💎</span><span class="producer-name">Ancestral Treasure</span><span class="producer-count">×95</span></div>
+        <div class="producer-line tier-gold"><span class="producer-emoji">🏯</span><span class="producer-name">Lunar Pavilion</span><span class="producer-count">×72</span></div>
+        <div class="producer-line tier-gold"><span class="producer-emoji">🗼</span><span class="producer-name">Heavenly Pillar</span><span class="producer-count">×48</span></div>
+        <div class="producer-line"><span class="producer-emoji">🌌</span><span class="producer-name">Void Conduit</span><span class="producer-count">×28</span></div>
+        <div class="producer-line"><span class="producer-emoji">🌳</span><span class="producer-name">Dao Tree</span><span class="producer-count">×15</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="notes">
+    <h2>How it scales</h2>
+    <div class="notes-grid">
+      <div>
+        <h3>Spatial slots (10 producers, fixed positions)</h3>
+        <ul>
+          <li><strong>Foreground:</strong> Disciples (ring around cultivator), Spirit Herb Garden (ground line), Spirit Beast Pact (beside cultivator), Ancestral Treasure (floating in front)</li>
+          <li><strong>Mid layer:</strong> Meridian Furnace (left), Sect Followers (middle distance), Lunar Pavilion (right)</li>
+          <li><strong>Cosmic layer:</strong> Heavenly Pillar (vertical beam), Void Conduit (purple rift), Dao Tree (filling the sky)</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Tier escalation (4 visual states per producer)</h3>
+        <ul>
+          <li><strong>Tier 0 (1-9 owned):</strong> 1-2 sprites, small, dim</li>
+          <li><strong>Tier 1 (10-24):</strong> 3-5 sprites, normal size</li>
+          <li><strong>Tier 2 (25-99):</strong> Dense, glowing, animated subtly</li>
+          <li><strong>Tier 3 (100+):</strong> Mythic — bigger sprite variant, particles, dramatic glow</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 style="margin-top: 16px;">What's a placeholder vs final</h2>
+    <p style="margin: 0;">
+      <strong>Real (would survive):</strong> CSS layering, animations, positioning logic, ambient particles, light/glow scaling, the basic compositional layout.
+      <strong>Placeholders:</strong> Every emoji on screen. Final versions are pixel-art sprites — the cultivator already has them; each producer needs 2-3 sprite variants for tier escalation, plus the cosmic-layer backdrops (Dao Tree, Void rift, Pillar) need bespoke artwork.
+    </p>
+
+    <h2 style="margin-top: 16px;">Art cost — three tiers of ambition</h2>
+    <div class="notes-grid">
+      <div>
+        <h3>Minimum viable (10 sprites)</h3>
+        <p style="margin: 0;">One sprite per producer. Scale, count, and CSS effects do the tier escalation. The scene fills via repetition + CSS filter passes (saturate, brightness, glow). Probably 1-2 hours in PixelLab.</p>
+      </div>
+      <div>
+        <h3>Polished (20-25 sprites)</h3>
+        <p style="margin: 0;">Each producer gets 2 variants — base and "epic". Plus 3-5 cosmic-layer pieces (Dao Tree silhouette, void rift texture, pillar beam). Half a day of PixelLab generation.</p>
+      </div>
+      <div>
+        <h3>Full diorama (40+ sprites)</h3>
+        <p style="margin: 0;">4 tier states per producer, multiple variants per tier for variety, dedicated cosmic-layer art. The Cookie-Clicker treatment. Multi-session art ask — defer.</p>
+      </div>
+      <div>
+        <h3>Recommendation</h3>
+        <p style="margin: 0;">Build with placeholders (this mockup's emojis) → ship → see which slots players notice → generate sprite art only for the slots that matter. Iterate from data, not from spec.</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

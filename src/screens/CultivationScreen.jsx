@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import PRODUCERS from '../data/producers';
-import ProducerRow from '../components/ProducerRow';
+import ProducerLane from '../components/ProducerLane';
 import UpgradeCard, { OwnedUpgradeChip } from '../components/UpgradeCard';
 import { fmt, fmtRate } from '../utils/format';
 
@@ -145,7 +145,7 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
           </div>
           <div className="cs-list">
             {PRODUCERS.map(p => (
-              <ProducerRow
+              <ProducerLane
                 key={p.id}
                 producer={p}
                 owned={producers.getOwned(p.id)}
