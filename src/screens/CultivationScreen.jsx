@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import PRODUCERS from '../data/producers';
 import ProducerRow from '../components/ProducerRow';
-import UpgradeCard from '../components/UpgradeCard';
+import UpgradeCard, { OwnedUpgradeChip } from '../components/UpgradeCard';
 import { fmt, fmtRate } from '../utils/format';
 
 /**
@@ -95,6 +95,19 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
     return upgrades.getVisible(upgradeCtx);
   }, [upgrades, upgradeCtx]);
 
+  // Cookie-Clicker pattern: separate available (full cards) from purchased
+  // (compact chips). Owned upgrades pile up over time — pushing them to a
+  // dense section at the bottom keeps the buyable list scannable.
+  const { availableUpgrades, ownedUpgrades } = useMemo(() => {
+    const available = [];
+    const owned     = [];
+    for (const u of visibleUpgrades) {
+      if (upgrades.isOwned(u.id)) owned.push(u);
+      else available.push(u);
+    }
+    return { availableUpgrades: available, ownedUpgrades: owned };
+  }, [visibleUpgrades, upgrades]);
+
   return (
     <div className="cultivation-screen">
       <div className="cs-sticky-header">
@@ -156,17 +169,32 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
             </div>
           </div>
         ) : (
-          <div className="cs-up-grid">
-            {visibleUpgrades.map(u => (
-              <UpgradeCard
-                key={u.id}
-                upgrade={u}
-                owned={upgrades.isOwned(u.id)}
-                unlocked={upgrades.checkUnlocked(u, upgradeCtx)}
-                qi={qi}
-                onBuy={handleBuyUpgrade}
-              />
-            ))}
+          <div className="cs-up-sections">
+            {availableUpgrades.length > 0 && (
+              <div className="cs-up-grid">
+                {availableUpgrades.map(u => (
+                  <UpgradeCard
+                    key={u.id}
+                    upgrade={u}
+                    unlocked={upgrades.checkUnlocked(u, upgradeCtx)}
+                    qi={qi}
+                    onBuy={handleBuyUpgrade}
+                  />
+                ))}
+              </div>
+            )}
+            {ownedUpgrades.length > 0 && (
+              <div className="cs-up-owned-section">
+                <div className="cs-up-owned-header">
+                  Purchased <span className="cs-up-owned-count">{ownedUpgrades.length}</span>
+                </div>
+                <div className="cs-up-owned-grid">
+                  {ownedUpgrades.map(u => (
+                    <OwnedUpgradeChip key={u.id} upgrade={u} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )
       )}

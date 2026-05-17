@@ -13710,8 +13710,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
-  padding: 8px 12px 80px;
-  overflow-y: auto;
+  padding: 8px 12px 0;
+  /* Outer scroll is owned by .cs-up-sections — keep this container static. */
 }
 
 .cs-up-card {
@@ -13777,4 +13777,83 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   border-color: rgba(255, 255, 255, 0.10);
   color: rgba(220, 220, 220, 0.35);
   cursor: not-allowed;
+}
+
+/* Upgrades tab — split layout: full cards for buyable, compact chips for
+   purchased (Cookie-Clicker pattern). Keeps the buyable list scannable
+   even when the player has dozens of upgrades owned. */
+.cs-up-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 80px;
+  overflow-y: auto;
+}
+
+.cs-up-owned-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px 0;
+  border-top: 1px solid rgba(110, 200, 180, 0.18);
+  margin-top: 4px;
+}
+
+.cs-up-owned-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: rgba(167, 243, 232, 0.78);
+}
+
+.cs-up-owned-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  background: rgba(110, 200, 180, 0.18);
+  color: #a7f3e8;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.cs-up-owned-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.cs-up-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(167, 243, 232, 0.92);
+  background: rgba(110, 200, 180, 0.10);
+  border: 1px solid rgba(110, 200, 180, 0.40);
+  border-radius: 999px;
+  cursor: help;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.cs-up-chip-check {
+  color: #a7f3c4;
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.cs-up-chip-name {
+  opacity: 0.92;
 }
