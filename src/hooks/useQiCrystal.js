@@ -1,14 +1,22 @@
 /**
- * useQiCrystal.js — Qi Crystal hook (refined QI accumulation).
+ * useQiCrystal.js — Qi Crystal hook.
  *
- * The Qi Crystal is a permanent upgrade that adds flat qi/sec to cultivation.
- * Players feed QI stones (cultivation materials) to accumulate refined QI.
- * When the accumulated refined QI reaches the threshold, the crystal levels up.
+ * The Qi Crystal is a permanent GLOBAL multiplier on cultivation rate.
+ * Players spend qi (Round 3 — qi-fed) to accumulate refined QI; thresholds
+ * trigger a level-up which raises the multiplier and unlocks mechanic-tier
+ * sparks at visual evolutions (L10, L25, L50, L100 — see `crystalMechanicGrants.js`).
  *
- * Bonus formula: each level L adds (L + 1) qi/sec, so the cumulative bonus at
- * level N is N·(N+3)/2 qi/sec. Per-level gains scale 2, 3, 4, 5, … to keep
- * upgrades feeling meaningful at high levels.
- * No level cap — cost scales infinitely.
+ * Multiplier formula (2026-05-17 rebalance):
+ *   crystalQiMult = 1 + level × CRYSTAL_MULT_PER_LEVEL  (0.003 → 0.3% / lvl)
+ *
+ * Designer intent: the crystal is NOT meant to be the primary qi engine.
+ * It's a small steady boost that compounds with producers/sparks/laws.
+ * Diminishing returns + soft-cap cost growth steer players to stop pursuing
+ * levels past ~1000; the real reward for evolution is mechanic discovery.
+ *
+ * No hard level cap — but cost grows quadratically (n²) while bonus grows
+ * linearly (×0.3% per level), so marginal qi/s/qi ratio decays fast enough
+ * that grinding past ~1000 is wildly uneconomical compared to producer buys.
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -34,15 +42,32 @@ export function getCrystalTier(level) {
   return 1;
 }
 
+/** Multiplier per crystal level. Total mult = 1 + level × this. */
+export const CRYSTAL_MULT_PER_LEVEL = 0.003;
+
+/** Total cultivation rate multiplier from owning a crystal at `level`. */
+export function getCrystalQiMult(level) {
+  if (level <= 0) return 1;
+  return 1 + level * CRYSTAL_MULT_PER_LEVEL;
+}
+
 /**
  * Refined QI required to reach the given level.
- * Gentle growth curve — exponent 1.30, base halved from 50 → 25 so early
- * upgrades stay brisk and high-level costs don't require indefinite grinding.
- * Sample progression: 25, 60, 105, 155, 210, 270, 330, 395, 465, 550, …
+ *
+ * Exponent 3.00: cost grows n³ while the multiplier grows linearly. The
+ * marginal qi/s gain per qi spent decays ~1/n² so the crystal naturally
+ * soft-caps player interest around level 1000-2000 — past that, producer
+ * purchases dominate the marginal-return calculation.
+ *
+ * Design intent: the crystal is for mechanic discovery (T2-T5 evolutions
+ * grant mechanic-tier sparks) + a small global qi mult. NOT a primary qi
+ * engine. See sim-cultivation.mjs for the optimal-greedy audit.
+ *
+ * Sample progression: 25, 200, 680, 1600, 3100, 5400, 8600, …
  */
 export function getRequiredRefinedQi(targetLevel) {
   if (targetLevel < 1) return 0;
-  const raw = 25 * Math.pow(targetLevel, 1.30);
+  const raw = 25 * Math.pow(targetLevel, 3.00);
   // Round to a clean step that scales with magnitude (keeps ~2 significant digits)
   const step = Math.pow(10, Math.max(1, Math.floor(Math.log10(raw)) - 1));
   return Math.round(raw / step) * step;
@@ -72,10 +97,13 @@ function saveState({ level, refinedQi }) {
 export default function useQiCrystal({ getQuantity, removeItem } = {}) {
   const [state, setState] = useState(loadState);
 
-  const crystalQiBonusRef = useRef((state.level * (state.level + 3)) / 2);
+  // Rebalance (2026-05-17): the ref now holds the MULTIPLIER (1 + level × 0.003)
+  // not the legacy flat bonus. Kept under the old name to avoid touching the
+  // many App.jsx mirror points; renamed conceptually via `getCrystalQiMult`.
+  const crystalQiBonusRef = useRef(getCrystalQiMult(state.level));
 
   useEffect(() => {
-    crystalQiBonusRef.current = (state.level * (state.level + 3)) / 2;
+    crystalQiBonusRef.current = getCrystalQiMult(state.level);
   }, [state.level]);
 
   /** Internal helper — set state, update ref, persist. */
@@ -85,7 +113,7 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
       refinedQi: Math.max(0, newState.refinedQi),
     };
     setState(next);
-    crystalQiBonusRef.current = (next.level * (next.level + 3)) / 2;
+    crystalQiBonusRef.current = getCrystalQiMult(next.level);
     saveState(next);
   }, []);
 
@@ -222,12 +250,17 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
 
   const requiredForNext = getRequiredRefinedQi(state.level + 1);
 
+  // Rebalance (2026-05-17): expose the multiplier directly. Keep the legacy
+  // `crystalQiBonus` field name so any UI consumer that hasn't migrated still
+  // resolves something (it now reads as the multiplier — UI re-labels needed).
+  const crystalQiMult = getCrystalQiMult(state.level);
   return {
     level:            state.level,
     refinedQi:        state.refinedQi,
     requiredForNext,
-    crystalQiBonus:   (state.level * (state.level + 3)) / 2,
-    crystalQiBonusRef,
+    crystalQiMult,
+    crystalQiBonus:   crystalQiMult, // legacy alias — soft-deprecated
+    crystalQiBonusRef,                // ref now holds the multiplier
     feed,
     feedMultiple,
     // Cookie-Clicker pivot (v1) — qi-fed crystal leveling. See CrystalFeedModal.

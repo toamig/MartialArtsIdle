@@ -100,7 +100,7 @@ function CrystalFeedModal({ crystal, inventory, cultivation, onClose, onEvolve }
   if (!FEATURES.combat) {
     return <CrystalQiFeedModal crystal={crystal} cultivation={cultivation} onClose={onClose} onEvolve={onEvolve} />;
   }
-  const { level, refinedQi, requiredForNext, crystalQiBonus, feedMultiple } = crystal;
+  const { level, refinedQi, requiredForNext, crystalQiMult, feedMultiple } = crystal;
 
   // ── Available stones (recomputed every render; cheap) ──────────────────────
   const availableStones = CULTIVATION_ITEMS
@@ -218,7 +218,7 @@ function CrystalFeedModal({ crystal, inventory, cultivation, onClose, onEvolve }
             {/* Current Qi/s — rendered at level 0 too (as "+0 Qi/s") so the
                 bonus-block height doesn't change when the crystal is unleveled. */}
             <div className={`cfm-bonus-current${level === 0 ? ' cfm-bonus-current-zero' : ''}`}>
-              <span className="cfm-bonus-gem">◆</span> +{crystalQiBonus} Qi/s
+              <span className="cfm-bonus-gem">◆</span> ×{(crystalQiMult ?? 1).toFixed(2)} Qi gain
             </div>
             {/* Always rendered so its space is reserved; invisible when not
                 leveling up. Prevents the header from growing and shifting the
@@ -226,7 +226,7 @@ function CrystalFeedModal({ crystal, inventory, cultivation, onClose, onEvolve }
             <div className={`cfm-bonus-next${willLevelUp ? '' : ' cfm-bonus-next-hidden'}`}>
               <span className="cfm-bonus-arrow">▲</span>
               <span>
-                Lv.{preview.level} → +{(preview.level * (preview.level + 3)) / 2} Qi/s
+                Lv.{preview.level} → ×{(1 + preview.level * 0.003).toFixed(2)} Qi gain
               </span>
             </div>
           </div>
@@ -373,7 +373,7 @@ function CrystalFeedModal({ crystal, inventory, cultivation, onClose, onEvolve }
  * it), nothing changes.
  * ─────────────────────────────────────────────────────────────────────── */
 function CrystalQiFeedModal({ crystal, cultivation, onClose, onEvolve }) {
-  const { level, refinedQi, requiredForNext, crystalQiBonus, feedQi } = crystal;
+  const { level, refinedQi, requiredForNext, crystalQiMult, feedQi } = crystal;
 
   // Live qi balance — same poll cadence as CultivationScreen's sticky header.
   const [qi, setQi] = useState(() => cultivation?.qiRef?.current ?? 0);
@@ -447,12 +447,12 @@ function CrystalQiFeedModal({ crystal, cultivation, onClose, onEvolve }) {
           </div>
           <div className="cfm-bonus-block">
             <div className={`cfm-bonus-current${level === 0 ? ' cfm-bonus-current-zero' : ''}`}>
-              <span className="cfm-bonus-gem">◆</span> +{crystalQiBonus} Qi/s
+              <span className="cfm-bonus-gem">◆</span> ×{(crystalQiMult ?? 1).toFixed(2)} Qi gain
             </div>
             <div className={`cfm-bonus-next${willLevelUp ? '' : ' cfm-bonus-next-hidden'}`}>
               <span className="cfm-bonus-arrow">▲</span>
               <span>
-                Lv.{preview.level} → +{(preview.level * (preview.level + 3)) / 2} Qi/s
+                Lv.{preview.level} → ×{(1 + preview.level * 0.003).toFixed(2)} Qi gain
               </span>
             </div>
           </div>

@@ -195,13 +195,25 @@ export default function useCultivation() {
       if (raw) producerOfflineRate = JSON.parse(raw).rate ?? 0;
     } catch {}
 
+    // Crystal multiplier (2026-05-17) — reads `mai_qi_crystal` directly so
+    // offline calc applies the global crystal mult without needing React to
+    // mount first. Mirrors the online rate formula structure.
+    let crystalMult = 1;
+    try {
+      const raw = localStorage.getItem('mai_qi_crystal');
+      if (raw) {
+        const lvl = JSON.parse(raw).level ?? 0;
+        crystalMult = 1 + lvl * 0.003;
+      }
+    } catch {}
+
     // Offline qi accrues at OFFLINE_QI_MULTIPLIER × the equivalent online
     // rate. Tuned to 0.20 on 2026-05-01 — players should feel rewarded for
     // sitting at the screen, while still earning meaningful catch-up qi
     // when away. Law / artefact / spark / pill modifiers still compound on
     // top so investment in those continues to matter offline.
     const OFFLINE_QI_MULTIPLIER = 0.20;
-    const baseRate = (BASE_RATE + producerOfflineRate) * lawMult * offlineQiMult * artefactOfflineMult * sparkOfflineMult * (1 + pillQiSpeedBonus) * OFFLINE_QI_MULTIPLIER;
+    const baseRate = (BASE_RATE + producerOfflineRate) * crystalMult * lawMult * offlineQiMult * artefactOfflineMult * sparkOfflineMult * (1 + pillQiSpeedBonus) * OFFLINE_QI_MULTIPLIER;
     const total = baseRate * awaySeconds;
 
     // Crystal Click offline reservoir fill — silently updates localStorage so
@@ -232,8 +244,11 @@ export default function useCultivation() {
   // only applies while the ad (heavenly) boost is active.
   const treeQiMultRef       = useRef(1);
   const treeHeavenlyMultRef = useRef(1);
-  // Crystal flat qi/sec bonus — written by App.jsx from useQiCrystal.crystalQiBonus
-  const crystalQiBonusRef  = useRef(0);
+  // Crystal qi-rate MULTIPLIER (2026-05-17 rebalance — was a flat bonus).
+  // Written by App.jsx from useQiCrystal.crystalQiMult. 1.0 = no bonus.
+  // Applied as a multiplier on the (BASE + crystal_flat + spark_flat + producers)
+  // sum in the rate formula below.
+  const crystalQiBonusRef  = useRef(1);
   // Producer flat qi/sec — written by App.jsx from useProducers.getRate(). Folded
   // into the base-rate sum alongside crystal/spark flats; subject to the same
   // law/boost/tree multipliers as the base rate. Phase B (cookie-clicker pivot).
@@ -478,7 +493,9 @@ export default function useCultivation() {
       // multipliers BEFORE folding into the base sum so it composes correctly
       // with the law/boost/tree-cult-speed multipliers downstream.
       const producerFlat = producerRateRef.current * upgradeProducerMultRef.current * treeProducerOutputMultRef.current;
-      const rate = (BASE_RATE + crystalQiBonusRef.current + sparkQiFlatRef.current + producerFlat) * lawMult * qiUniqueMult *
+      // 2026-05-17 — crystalQiBonusRef now holds a MULTIPLIER (1 + level × 0.003).
+      // Multiplies the base-rate sum so it applies to every flat source equally.
+      const rate = (BASE_RATE + sparkQiFlatRef.current + producerFlat) * crystalQiBonusRef.current * lawMult * qiUniqueMult *
         artefactQiMultRef.current *
         boostMult * consecutiveMult *
         adBoostRef.current * heavenlyTree * heavenlyArt *
