@@ -6,17 +6,16 @@
  * trigger a level-up which raises the multiplier and unlocks mechanic-tier
  * sparks at visual evolutions (L10, L25, L50, L100 — see `crystalMechanicGrants.js`).
  *
- * Multiplier formula (2026-05-17 rebalance):
- *   crystalQiMult = 1 + level × CRYSTAL_MULT_PER_LEVEL  (0.003 → 0.3% / lvl)
+ * Multiplier formula:
+ *   crystalQiMult = 1 + level × CRYSTAL_MULT_PER_LEVEL  (currently 0.01 → 1% / lvl)
  *
- * Designer intent: the crystal is NOT meant to be the primary qi engine.
- * It's a small steady boost that compounds with producers/sparks/laws.
- * Diminishing returns + soft-cap cost growth steer players to stop pursuing
- * levels past ~1000; the real reward for evolution is mechanic discovery.
+ * Designer intent: the crystal IS the player's primary global qi multiplier.
+ * It compounds with every additive source of qi (producers, sparks, base
+ * rate, etc.). Levels are the main scaling lever after producer purchases.
  *
- * No hard level cap — but cost grows quadratically (n²) while bonus grows
- * linearly (×0.3% per level), so marginal qi/s/qi ratio decays fast enough
- * that grinding past ~1000 is wildly uneconomical compared to producer buys.
+ * No hard level cap — but cost grows cubically (n³) while bonus grows
+ * linearly (×1% per level), so marginal qi/s/qi ratio decays fast enough
+ * that grinding past ~1000 is uneconomical compared to producer buys.
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -43,7 +42,7 @@ export function getCrystalTier(level) {
 }
 
 /** Multiplier per crystal level. Total mult = 1 + level × this. */
-export const CRYSTAL_MULT_PER_LEVEL = 0.003;
+export const CRYSTAL_MULT_PER_LEVEL = 0.01;
 
 /** Total cultivation rate multiplier from owning a crystal at `level`. */
 export function getCrystalQiMult(level) {

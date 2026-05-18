@@ -27,36 +27,37 @@
  */
 
 // ── Data: mirror src/data/realms.js (cost = qi to leave the current realm) ──
-// REBALANCED 2026-05-17: +12% per realm past Tempered Body. Sim must match
-// the new values committed in src/data/realms.js.
+// REBALANCED 2026-05-18: crystal mult bumped to +1%/lvl. Every cost from
+// Qi Transformation onwards was scaled ×4 to keep the 1-2 month casual
+// pacing. Tempered Body untouched. Must match src/data/realms.js exactly.
 const REALMS = [
   // Tempered Body L1-10 (indices 0-9) — unchanged
   50, 100, 175, 300, 500, 850, 1_400, 2_400, 4_000, 6_500,
   // Qi Transformation Early/Middle/Late/Peak (10-13)
-  11_000, 22_000, 41_000, 74_000,
+  150_000, 305_000, 570_000, 1_000_000,
   // True Element Early/Middle/Late/Peak (14-17)
-  120_000, 225_000, 415_000, 745_000,
+  1_650_000, 3_100_000, 5_700_000, 10_500_000,
   // Separation & Reunion 1st/2nd/3rd (18-20)
-  1_300_000, 2_200_000, 3_950_000,
+  18_000_000, 30_500_000, 55_000_000,
   // Immortal Ascension 1st/2nd/3rd (21-23)
-  6_830_000, 12_030_000, 21_440_000,
+  95_000_000, 165_000_000, 300_000_000,
   // Saint Early/Middle/Late (24-26)
-  36_400_000, 64_240_000, 106_400_000,
+  500_000_000, 880_000_000, 1_500_000_000,
   // Saint King 1st/2nd/3rd (27-29)
-  183_280_000, 311_600_000, 544_000_000,
+  2_550_000_000, 4_300_000_000, 7_600_000_000,
   // Origin Returning 1st/2nd/3rd (30-32)
-  915_200_000, 1_565_200_000, 2_632_000_000,
+  12_500_000_000, 22_000_000_000, 36_000_000_000,
   // Origin King 1st/2nd/3rd (33-35)
-  4_462_000_000, 7_600_000_000, 13_184_000_000,
+  62_000_000_000, 105_000_000_000, 185_000_000_000,
   // Void King 1st/2nd/3rd (36-38)
-  22_048_000_000, 37_060_000_000, 62_720_000_000,
+  305_000_000_000, 515_000_000_000, 860_000_000_000,
   // Dao Source 1st/2nd/3rd (39-41)
-  105_800_000_000, 179_360_000_000, 300_080_000_000,
+  1_500_000_000_000, 2_450_000_000_000, 4_150_000_000_000,
   // Emperor Realm 1st/2nd/3rd (42-44)
-  496_000_000_000, 863_600_000_000, 1_456_000_000_000,
+  6_900_000_000_000, 12_000_000_000_000, 20_000_000_000_000,
   // Open Heaven L1-L6 (45-50)
-  2_447_200_000_000, 4_080_000_000_000, 6_672_000_000_000,
-  11_360_000_000_000, 19_140_000_000_000, 32_560_000_000_000,
+  34_000_000_000_000, 57_000_000_000_000, 91_500_000_000_000,
+  157_000_000_000_000, 264_000_000_000_000, 448_500_000_000_000,
 ];
 
 // Major-realm transitions — when the realm NAME changes, not just the stage.
@@ -142,7 +143,7 @@ const MAX_TICKS = 60 * 60 * 24 * 365; // 1 year safety cap (seconds)
 const CRYSTAL_BASE = 25;
 const CRYSTAL_EXP  = 3.00;
 // Crystal MULTIPLIER per level (2026-05-17 rebalance). Total = 1 + lvl × this.
-const CRYSTAL_MULT_PER_LEVEL = 0.003;
+const CRYSTAL_MULT_PER_LEVEL = 0.01;
 
 // Realm-cost multiplier curve. Multiplies the original REALMS array by a
 // factor that ramps with realm index — early realms stay brisk, late realms

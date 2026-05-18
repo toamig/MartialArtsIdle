@@ -14304,3 +14304,193 @@ button.pl-leader.pl-leader-clickable:focus-visible {
   .pdm-lore { font-size: 12px; }
   .pdm-stat-row { font-size: 12px; padding: 8px 10px; }
 }
+
+/* ─── Crystal inline refine button (v1 Cookie-Clicker pivot) ───────────────
+   Hangs absolutely beneath the crystal sprite. Behaves like an upgrade buy:
+   one click spends qi, the crystal levels up, and if the visual tier crosses
+   a threshold, the existing evolve overlay plays. Positioning is absolute
+   inside `.home-crystal-img-wrap` so toggling/showing the button never
+   reflows surrounding layout (HomeScreen real-estate is tight). */
+.home-crystal-refine-btn {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 215, 130, 0.4);
+  background: linear-gradient(180deg, rgba(60, 44, 22, 0.92), rgba(34, 24, 14, 0.92));
+  color: #ffe9b9;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 0 12px rgba(255, 200, 100, 0.18);
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.08s ease-out, box-shadow 0.15s ease-out, filter 0.15s ease-out;
+  /* Keep it on top of the reservoir-fill glow when the reservoir is full. */
+  z-index: 2;
+}
+.home-crystal-refine-btn:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 0 16px rgba(255, 215, 130, 0.45);
+}
+.home-crystal-refine-btn:active {
+  transform: translateX(-50%) scale(0.95);
+}
+.home-crystal-refine-btn:focus-visible {
+  outline: 2px solid rgba(255, 215, 130, 0.7);
+  outline-offset: 2px;
+}
+.home-crystal-refine-btn-disabled,
+.home-crystal-refine-btn:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.45);
+  color: rgba(220, 200, 170, 0.55);
+  border-color: rgba(120, 100, 80, 0.35);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+.home-crystal-refine-btn-disabled:hover,
+.home-crystal-refine-btn:disabled:hover {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+.home-crystal-refine-icon {
+  color: var(--cg-a, #ffd66b);
+  text-shadow: 0 0 6px var(--cg-a, rgba(255, 215, 130, 0.6));
+  font-size: 13px;
+  line-height: 1;
+}
+.home-crystal-refine-btn-disabled .home-crystal-refine-icon,
+.home-crystal-refine-btn:disabled .home-crystal-refine-icon {
+  color: rgba(180, 160, 130, 0.5);
+  text-shadow: none;
+}
+.home-crystal-refine-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.home-crystal-refine-lv {
+  color: #fff4d4;
+  font-weight: 700;
+}
+.home-crystal-refine-cost {
+  color: #ffd66b;
+  font-variant-numeric: tabular-nums;
+}
+.home-crystal-refine-btn-disabled .home-crystal-refine-cost,
+.home-crystal-refine-btn:disabled .home-crystal-refine-cost {
+  color: rgba(200, 180, 150, 0.6);
+}
+
+@media (max-width: 480px) {
+  .home-crystal-refine-btn {
+    padding: 3px 8px;
+    font-size: 10px;
+    margin-top: 3px;
+    gap: 4px;
+  }
+  .home-crystal-refine-icon { font-size: 12px; }
+  .home-crystal-refine-label { gap: 4px; }
+}
+
+/* ─── Major-realm BREAKTHROUGH button ──────────────────────────────────────
+   Renders above the realm progress bar on HomeScreen when the realm meter
+   has hit 100% AND the next transition is a major one. Qi production keeps
+   running underneath; tapping this button fires the existing banner +
+   spark-offer + character-evolution chain (the rituals players were missing
+   when breakthroughs auto-fired off-screen). */
+.home-major-breakthrough-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 18px;
+  margin: 0 0 10px;
+  border: 1px solid rgba(255, 215, 130, 0.7);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(95, 60, 28, 0.95), rgba(45, 28, 14, 0.95));
+  color: #ffe9b9;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.55),
+    0 0 22px rgba(255, 215, 130, 0.35);
+  animation: home-mb-pulse 2.2s ease-in-out infinite;
+  transition: transform 0.08s ease-out;
+}
+.home-major-breakthrough-btn:hover {
+  filter: brightness(1.08);
+}
+.home-major-breakthrough-btn:active {
+  transform: scale(0.97);
+}
+.home-major-breakthrough-btn:focus-visible {
+  outline: 2px solid rgba(255, 215, 130, 0.9);
+  outline-offset: 2px;
+}
+.home-mb-icon {
+  color: #ffd66b;
+  font-size: 22px;
+  line-height: 1;
+  text-shadow: 0 0 10px rgba(255, 215, 130, 0.85);
+  animation: home-mb-bob 1.4s ease-in-out infinite;
+}
+.home-mb-icon:last-of-type { animation-delay: 0.7s; }
+.home-mb-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  line-height: 1.1;
+}
+.home-mb-cta {
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  color: #fff4d4;
+  text-shadow: 0 0 8px rgba(255, 215, 130, 0.5);
+}
+.home-mb-next {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 220, 170, 0.85);
+  letter-spacing: 0.03em;
+}
+@keyframes home-mb-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.4),
+      0 4px 16px rgba(0, 0, 0, 0.55),
+      0 0 22px rgba(255, 215, 130, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.4),
+      0 4px 20px rgba(0, 0, 0, 0.55),
+      0 0 40px rgba(255, 215, 130, 0.75);
+  }
+}
+@keyframes home-mb-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+@media (max-width: 480px) {
+  .home-major-breakthrough-btn {
+    padding: 10px 12px;
+    gap: 10px;
+    margin: 0 0 8px;
+  }
+  .home-mb-icon { font-size: 18px; }
+  .home-mb-cta  { font-size: 13px; letter-spacing: 0.12em; }
+  .home-mb-next { font-size: 10px; }
+}

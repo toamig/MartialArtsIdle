@@ -9,16 +9,13 @@
 import { mergeArrayByIndex } from './config/loader';
 
 const REALMS_RAW = [
-  // 2026-05-17 rebalance — Cookie Clicker / Idle Slayer pacing target.
-  // Costs ramp +12% per realm past Tempered Body (idx 10..50). Tempered Body
-  // stays unchanged — early game brisk so new players don't bounce. Open Heaven
-  // L6 ends at ~6× the pre-rebalance value. Combined with the crystal
-  // multiplier model (small +0.3%/lvl mult, no longer a flat qi engine) and
-  // optimal-greedy ROI math, single-life sim lands at ~13 days to OH L6;
-  // casual real-player ≈ 1-2 months. Multi-life prestige loop will further
-  // stretch this when the Eternal Tree producer-mult rebalance lands.
-  // Audit: `scripts/sim-cultivation.mjs`.
-  // ── Tempered Body (10 Layers) ──────────────────────────────────────────────
+  // 2026-05-18 rebalance — crystal multiplier bumped to +1%/lvl (was +0.3%).
+  // To preserve the 1–2 month casual pacing target, every cost from Qi
+  // Transformation onwards is scaled ×4 from the prior table. Tempered Body
+  // is untouched — early game stays brisk so new players don't bounce.
+  // Audit: `scripts/sim-cultivation.mjs` should land at ~15d optimal-greedy
+  // to OH L6 (≈ 1–2 months casual real-player).
+  // ── Tempered Body (10 Layers) — onboarding, unchanged ──────────────────────
   { name: 'Tempered Body',    stage: 'Layer 1',      cost: 50 },
   { name: 'Tempered Body',    stage: 'Layer 2',      cost: 100 },
   { name: 'Tempered Body',    stage: 'Layer 3',      cost: 175 },
@@ -31,69 +28,69 @@ const REALMS_RAW = [
   { name: 'Tempered Body',    stage: 'Layer 10',     cost: 6_500 },
 
   // ── Qi Transformation (4 Stages) ───────────────────────────────────────────
-  { name: 'Qi Transformation', stage: 'Early Stage',  cost: 11_000 },
-  { name: 'Qi Transformation', stage: 'Middle Stage', cost: 22_000 },
-  { name: 'Qi Transformation', stage: 'Late Stage',   cost: 41_000 },
-  { name: 'Qi Transformation', stage: 'Peak Stage',   cost: 74_000 },
+  { name: 'Qi Transformation', stage: 'Early Stage',  cost: 150_000 },
+  { name: 'Qi Transformation', stage: 'Middle Stage', cost: 305_000 },
+  { name: 'Qi Transformation', stage: 'Late Stage',   cost: 570_000 },
+  { name: 'Qi Transformation', stage: 'Peak Stage',   cost: 1_000_000 },
 
   // ── True Element (4 Stages) ────────────────────────────────────────────────
-  { name: 'True Element',      stage: 'Early Stage',  cost: 120_000 },
-  { name: 'True Element',      stage: 'Middle Stage', cost: 225_000 },
-  { name: 'True Element',      stage: 'Late Stage',   cost: 415_000 },
-  { name: 'True Element',      stage: 'Peak Stage',   cost: 745_000 },
+  { name: 'True Element',      stage: 'Early Stage',  cost: 1_650_000 },
+  { name: 'True Element',      stage: 'Middle Stage', cost: 3_100_000 },
+  { name: 'True Element',      stage: 'Late Stage',   cost: 5_700_000 },
+  { name: 'True Element',      stage: 'Peak Stage',   cost: 10_500_000 },
 
   // ── Separation & Reunion (3 Stages) ────────────────────────────────────────
-  { name: 'Separation & Reunion', stage: '1st Stage', cost: 1_300_000 },
-  { name: 'Separation & Reunion', stage: '2nd Stage', cost: 2_200_000 },
-  { name: 'Separation & Reunion', stage: '3rd Stage', cost: 3_950_000 },
+  { name: 'Separation & Reunion', stage: '1st Stage', cost: 18_000_000 },
+  { name: 'Separation & Reunion', stage: '2nd Stage', cost: 30_500_000 },
+  { name: 'Separation & Reunion', stage: '3rd Stage', cost: 55_000_000 },
 
   // ── Immortal Ascension (3 Stages) ──────────────────────────────────────────
-  { name: 'Immortal Ascension', stage: '1st Stage',   cost: 6_830_000 },
-  { name: 'Immortal Ascension', stage: '2nd Stage',   cost: 12_030_000 },
-  { name: 'Immortal Ascension', stage: '3rd Stage',   cost: 21_440_000 },
+  { name: 'Immortal Ascension', stage: '1st Stage',   cost: 95_000_000 },
+  { name: 'Immortal Ascension', stage: '2nd Stage',   cost: 165_000_000 },
+  { name: 'Immortal Ascension', stage: '3rd Stage',   cost: 300_000_000 },
 
   // ── Saint (3 Stages) ───────────────────────────────────────────────────────
-  { name: 'Saint',              stage: 'Early Stage',  cost: 36_400_000 },
-  { name: 'Saint',              stage: 'Middle Stage', cost: 64_240_000 },
-  { name: 'Saint',              stage: 'Late Stage',   cost: 106_400_000 },
+  { name: 'Saint',              stage: 'Early Stage',  cost: 500_000_000 },
+  { name: 'Saint',              stage: 'Middle Stage', cost: 880_000_000 },
+  { name: 'Saint',              stage: 'Late Stage',   cost: 1_500_000_000 },
 
   // ── Saint King (3 Stages) ──────────────────────────────────────────────────
-  { name: 'Saint King',         stage: '1st Stage',   cost: 183_280_000 },
-  { name: 'Saint King',         stage: '2nd Stage',   cost: 311_600_000 },
-  { name: 'Saint King',         stage: '3rd Stage',   cost: 544_000_000 },
+  { name: 'Saint King',         stage: '1st Stage',   cost: 2_550_000_000 },
+  { name: 'Saint King',         stage: '2nd Stage',   cost: 4_300_000_000 },
+  { name: 'Saint King',         stage: '3rd Stage',   cost: 7_600_000_000 },
 
   // ── Origin Returning (3 Stages) ────────────────────────────────────────────
-  { name: 'Origin Returning',   stage: '1st Stage',   cost: 915_200_000 },
-  { name: 'Origin Returning',   stage: '2nd Stage',   cost: 1_565_200_000 },
-  { name: 'Origin Returning',   stage: '3rd Stage',   cost: 2_632_000_000 },
+  { name: 'Origin Returning',   stage: '1st Stage',   cost: 12_500_000_000 },
+  { name: 'Origin Returning',   stage: '2nd Stage',   cost: 22_000_000_000 },
+  { name: 'Origin Returning',   stage: '3rd Stage',   cost: 36_000_000_000 },
 
   // ── Origin King (3 Stages) ─────────────────────────────────────────────────
-  { name: 'Origin King',        stage: '1st Stage',   cost: 4_462_000_000 },
-  { name: 'Origin King',        stage: '2nd Stage',   cost: 7_600_000_000 },
-  { name: 'Origin King',        stage: '3rd Stage',   cost: 13_184_000_000 },
+  { name: 'Origin King',        stage: '1st Stage',   cost: 62_000_000_000 },
+  { name: 'Origin King',        stage: '2nd Stage',   cost: 105_000_000_000 },
+  { name: 'Origin King',        stage: '3rd Stage',   cost: 185_000_000_000 },
 
   // ── Void King (3 Stages) ───────────────────────────────────────────────────
-  { name: 'Void King',          stage: '1st Stage',   cost: 22_048_000_000 },
-  { name: 'Void King',          stage: '2nd Stage',   cost: 37_060_000_000 },
-  { name: 'Void King',          stage: '3rd Stage',   cost: 62_720_000_000 },
+  { name: 'Void King',          stage: '1st Stage',   cost: 305_000_000_000 },
+  { name: 'Void King',          stage: '2nd Stage',   cost: 515_000_000_000 },
+  { name: 'Void King',          stage: '3rd Stage',   cost: 860_000_000_000 },
 
   // ── Dao Source (3 Stages) ──────────────────────────────────────────────────
-  { name: 'Dao Source',         stage: '1st Stage',   cost: 105_800_000_000 },
-  { name: 'Dao Source',         stage: '2nd Stage',   cost: 179_360_000_000 },
-  { name: 'Dao Source',         stage: '3rd Stage',   cost: 300_080_000_000 },
+  { name: 'Dao Source',         stage: '1st Stage',   cost: 1_500_000_000_000 },
+  { name: 'Dao Source',         stage: '2nd Stage',   cost: 2_450_000_000_000 },
+  { name: 'Dao Source',         stage: '3rd Stage',   cost: 4_150_000_000_000 },
 
   // ── Emperor Realm (3 Stages) ───────────────────────────────────────────────
-  { name: 'Emperor Realm',      stage: '1st Stage',   cost: 496_000_000_000 },
-  { name: 'Emperor Realm',      stage: '2nd Stage',   cost: 863_600_000_000 },
-  { name: 'Emperor Realm',      stage: '3rd Stage',   cost: 1_456_000_000_000 },
+  { name: 'Emperor Realm',      stage: '1st Stage',   cost: 6_900_000_000_000 },
+  { name: 'Emperor Realm',      stage: '2nd Stage',   cost: 12_000_000_000_000 },
+  { name: 'Emperor Realm',      stage: '3rd Stage',   cost: 20_000_000_000_000 },
 
   // ── Open Heaven (6 Layers) ─────────────────────────────────────────────────
-  { name: 'Open Heaven',        stage: 'Layer 1',     cost: 2_447_200_000_000 },  // Low-Rank
-  { name: 'Open Heaven',        stage: 'Layer 2',     cost: 4_080_000_000_000 },  // Low-Rank
-  { name: 'Open Heaven',        stage: 'Layer 3',     cost: 6_672_000_000_000 },  // Low-Rank
-  { name: 'Open Heaven',        stage: 'Layer 4',     cost: 11_360_000_000_000 }, // Mid-Rank
-  { name: 'Open Heaven',        stage: 'Layer 5',     cost: 19_140_000_000_000 }, // Mid-Rank
-  { name: 'Open Heaven',        stage: 'Layer 6',     cost: 32_560_000_000_000 }, // High-Rank
+  { name: 'Open Heaven',        stage: 'Layer 1',     cost: 34_000_000_000_000 },   // Low-Rank
+  { name: 'Open Heaven',        stage: 'Layer 2',     cost: 57_000_000_000_000 },   // Low-Rank
+  { name: 'Open Heaven',        stage: 'Layer 3',     cost: 91_500_000_000_000 },   // Low-Rank
+  { name: 'Open Heaven',        stage: 'Layer 4',     cost: 157_000_000_000_000 },  // Mid-Rank
+  { name: 'Open Heaven',        stage: 'Layer 5',     cost: 264_000_000_000_000 },  // Mid-Rank
+  { name: 'Open Heaven',        stage: 'Layer 6',     cost: 448_500_000_000_000 },  // High-Rank
 ];
 
 const REALMS = mergeArrayByIndex(REALMS_RAW, 'realms');

@@ -7,11 +7,10 @@ import OfflineEarningsModal from '../components/OfflineEarningsModal';
 import { useVFX } from '../components/VFXLayer';
 import { useRewardedAd, formatCooldown } from '../ads/useRewardedAd';
 import { fmt as fmtNum, fmtRate as fmtRateNum, fmtDelta } from '../utils/format';
-import CrystalFeedModal from '../components/CrystalFeedModal';
 import DailyBonusWidget from '../components/DailyBonusWidget';
 import ActiveSparksBar from '../components/ActiveSparksBar';
 import { FEATURE_GATES } from '../data/featureGates';
-import { useEventQueue, useBlockingPresence } from '../contexts/EventQueueContext';
+import { useEventQueue } from '../contexts/EventQueueContext';
 import { QI_SPARK_BY_ID } from '../data/qiSparks';
 import WORLDS from '../data/worlds';
 import AudioManager from '../audio/AudioManager';
@@ -432,10 +431,33 @@ const CRYSTAL_COLORS = {
 
 /** Qi Crystal — locked (dim, greyscale) or unlocked (glowing, tapable when
  *  Crystal Click mechanic is active). Reservoir fill tracked via rAF. */
-function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reservoirRef, crystalClickCapMinRef, rateRef, onCollect }) {
+function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reservoirRef, crystalClickCapMinRef, rateRef, onCollect, qiRef, onRefine }) {
   const unlockHint = FEATURE_GATES.qi_crystal?.hint ?? 'Reach a higher realm';
   // true only when the Crystal Click spark is active AND the crystal is unlocked
   const mechanicOn = !!(crystalClickCapMinRef && onCollect && isUnlocked);
+
+  // Refine button affordability — polled at 5 Hz from cultivation.qiRef.
+  // The button sits absolutely positioned beneath the crystal sprite (see
+  // `.home-crystal-refine-btn` in App.css), so toggling its enabled state
+  // does not reflow the surrounding layout.
+  const refineCost = isUnlocked && crystal
+    ? Math.max(0, crystal.requiredForNext - crystal.refinedQi)
+    : 0;
+  const [canAffordRefine, setCanAffordRefine] = useState(false);
+  useEffect(() => {
+    if (!isUnlocked || !onRefine) return;
+    const tick = () => setCanAffordRefine(
+      refineCost > 0 && ((qiRef?.current ?? 0) >= refineCost)
+    );
+    tick();
+    const id = setInterval(tick, 200);
+    return () => clearInterval(id);
+  }, [isUnlocked, onRefine, qiRef, refineCost]);
+  const handleRefineClick = (e) => {
+    e.stopPropagation();   // never collect the reservoir on a refine tap
+    if (!canAffordRefine) return;
+    onRefine?.();
+  };
 
   const fillBarRef = useRef(null);
   const anchorRef  = useRef(null);
@@ -511,9 +533,32 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
           {mechanicOn && (
             <div ref={fillBarRef} className="home-crystal-reservoir-fill" style={{ opacity: 0 }} />
           )}
+          {/* Inline refine — behaves like an upgrade buy. Absolutely positioned
+              below the crystal so it does not push surrounding layout. Click
+              spends qi, the crystal levels up, and if the visual tier changes,
+              the existing evolve overlay fires from HomeScreen. */}
+          {onRefine && refineCost > 0 && (
+            <button
+              className={`home-crystal-refine-btn${canAffordRefine ? '' : ' home-crystal-refine-btn-disabled'}`}
+              onClick={handleRefineClick}
+              disabled={!canAffordRefine}
+              aria-label={`Refine Qi Crystal to level ${level + 1} for ${fmtNum(refineCost)} qi`}
+            >
+              <span className="home-crystal-refine-icon">◆</span>
+              <span className="home-crystal-refine-label">
+                <span className="home-crystal-refine-lv">Lv {level + 1}</span>
+                <span className="home-crystal-refine-cost">{fmtNum(refineCost)} Qi</span>
+              </span>
+            </button>
+          )}
         </div>
       </div>
-      <QiParticles colors={particleColors} rung={cfRung} />
+      {/* QiParticles intentionally not rendered in v1.5+ — we're rebuilding the
+          crystal→player particle stream with pixel-art assets. The component
+          definition stays in this file for now so the new system can reuse the
+          existing path infrastructure once the new art lands. The gap variable
+          --qi-particles-h still holds the layout open so the refine button has
+          its breathing room. */}
       <div className="crystal-tooltip">
         <div className="ctt-title">Qi Crystal · Lv {level}</div>
         <div className="ctt-desc">A crystallised vessel of refined Qi. Feed it QI stones to level it up and increase your cultivation speed.</div>
@@ -522,7 +567,7 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
         </div>
         {mechanicOn
           ? <div className="ctt-hint">Tap to collect stored Qi</div>
-          : <div className="ctt-hint">Feed via 🪨 in the top bar</div>
+          : <div className="ctt-hint">Tap the chip below to refine</div>
         }
       </div>
     </div>
@@ -1480,23 +1525,9 @@ function HomeScreen({
   // crystal evolution) all flow through one FIFO queue so they don't stack.
   const { enqueue, currentEvent, dismiss } = useEventQueue();
 
-  // ── Crystal feed modal ───────────────────────────────────────────────────
-  const [crystalModalOpen, setCrystalModalOpen] = useState(false);
-  useEffect(() => {
-    if (openCrystal && isCrystalUnlocked) {
-      window.dispatchEvent(new CustomEvent('mai:modal-opened', { detail: { id: 'crystal-feed' } }));
-      setCrystalModalOpen(true);
-    }
-  }, [openCrystal]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Close crystal feed whenever another modal announces itself
-  useEffect(() => {
-    const handler = (e) => { if (e.detail?.id !== 'crystal-feed') setCrystalModalOpen(false); };
-    window.addEventListener('mai:modal-opened', handler);
-    return () => window.removeEventListener('mai:modal-opened', handler);
-  }, []);
-  // While the player is feeding the crystal, queued events (breakthrough
-  // banner, level-up cards) wait until the modal closes.
-  useBlockingPresence(crystalModalOpen);
+  // ── Crystal feed modal (v1: inlined into the crystal sprite) ────────────
+  // Replaced by the inline refine button rendered inside <KeyCrystal>. The
+  // modal still exists in CrystalFeedModal.jsx for v2 stone-fed reactivation.
 
   // ── Crystal evolution overlay ────────────────────────────────────────────
   // Enqueued at high priority so the moment of evolution feels immediate
@@ -1536,6 +1567,26 @@ function HomeScreen({
     window.addEventListener('mai:crystal-evolve', handler);
     return () => window.removeEventListener('mai:crystal-evolve', handler);
   }, [handleCrystalEvolve]);
+
+  // ── Inline crystal refine (replaces the v1 feed modal) ───────────────────
+  // The crystal exposes `feedQi(amount, spendFn)`; under the v1 Cookie-Clicker
+  // pivot, 1 qi == 1 RQI, so spending exactly `requiredForNext - refinedQi`
+  // buys precisely +1 crystal level. If that level-up crosses a visual tier
+  // threshold, fire the same evolve overlay the modal used to trigger.
+  const handleCrystalRefine = useCallback(() => {
+    if (!crystal || !isCrystalUnlocked) return;
+    const cost = Math.max(0, (crystal.requiredForNext ?? 0) - (crystal.refinedQi ?? 0));
+    if (cost <= 0) return;
+    const result = crystal.feedQi?.(cost, cultivation?.spendQi);
+    if (!result) return;
+    if (result.tierChanged) {
+      handleCrystalEvolve({
+        previousTier: result.previousTier,
+        newTier:      result.newTier,
+        newLevel:     result.newLevel,
+      });
+    }
+  }, [crystal, isCrystalUnlocked, cultivation, handleCrystalEvolve]);
 
   // ── Breakthrough banner — enqueue when majorBreakthrough state appears ──
   const enqueuedBreakthroughIdRef = useRef(null);
@@ -1742,6 +1793,8 @@ function HomeScreen({
             crystalClickCapMinRef={crystalClickCapMinRef}
             rateRef={cultivation.rateRef}
             onCollect={handleCrystalCollect}
+            qiRef={cultivation.qiRef}
+            onRefine={handleCrystalRefine}
           />
 
           {/* Character + hold-hint group — grounded at scene bottom */}
@@ -1804,6 +1857,20 @@ function HomeScreen({
           </div>
 
           <div className="home-bar-wrap">
+            {cultivation.pendingMajorBreakthrough && (
+              <button
+                className="home-major-breakthrough-btn"
+                onClick={cultivation.confirmMajorBreakthrough}
+                aria-label={`Breakthrough to ${cultivation.nextRealmName ?? 'next realm'}`}
+              >
+                <span className="home-mb-icon">▲</span>
+                <span className="home-mb-label">
+                  <span className="home-mb-cta">BREAKTHROUGH</span>
+                  <span className="home-mb-next">{cultivation.nextRealmName}</span>
+                </span>
+                <span className="home-mb-icon">▲</span>
+              </button>
+            )}
             <RealmProgressBar
               qiRef={qiRef}
               progressRef={qiEarnedThisRealmRef}
@@ -1825,17 +1892,6 @@ function HomeScreen({
         <div className="home-pc-right" aria-hidden="true" />
 
       </div>{/* end home-scene */}
-
-      {/* Crystal feed modal */}
-      {crystalModalOpen && isCrystalUnlocked && (
-        <CrystalFeedModal
-          crystal={crystal}
-          inventory={inventory}
-          cultivation={cultivation}
-          onClose={() => setCrystalModalOpen(false)}
-          onEvolve={handleCrystalEvolve}
-        />
-      )}
 
       {/* Crystal evolution celebration — fires on visual-tier change. */}
       {currentEvent?.kind === 'crystal-evolution' && (

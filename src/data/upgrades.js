@@ -127,6 +127,44 @@ const SPARKS_REROLL = [{
   effect:    { type: 'sparks_reroll', mult: 0.5 },
 }];
 
+// ── E2. Offline gain rate (4 tiers, additive bonus to base 20%) ──────────────
+// Each tier adds +5% to the offline qi rate. Base 0.20 → 0.25 / 0.30 / 0.35 /
+// 0.40 (Idle-Slayer-equivalent maximum). Numbers Policy: starting values;
+// sim run after sweep to confirm hardcore-active land at ~7-8 days.
+const OFFLINE_RATE = [
+  { id: 'u_offline_rate_1', name: 'Idle Cultivation I',   add: 0.05, cost:        50_000, realm:  9 },
+  { id: 'u_offline_rate_2', name: 'Idle Cultivation II',  add: 0.05, cost:    50_000_000, realm: 17 },
+  { id: 'u_offline_rate_3', name: 'Idle Cultivation III', add: 0.05, cost: 5_000_000_000, realm: 27 },
+  { id: 'u_offline_rate_4', name: 'Idle Cultivation IV',  add: 0.05, cost: 500_000_000_000, realm: 38 },
+].map(u => ({
+  id:        u.id,
+  category:  'offline_rate',
+  name:      u.name,
+  desc:      `Adds +${Math.round(u.add * 100)}% to your offline qi accrual rate.`,
+  cost:      u.cost,
+  unlock:    { type: 'realm', minRealmIndex: u.realm },
+  effect:    { type: 'offline_rate', add: u.add },
+}));
+
+// ── E3. Offline duration cap (4 tiers, additive hours to base 8h) ────────────
+// Each tier adds +4 h to the offline window. Base 8 → 12 / 16 / 20 / 24 h
+// (typical idle-game ceiling). Past 24 h the cap caps — players returning
+// after a week-long absence don't get a week of qi.
+const OFFLINE_CAP = [
+  { id: 'u_offline_cap_1', name: 'Deeper Slumber I',   addH: 4, cost:        250_000, realm: 13 },
+  { id: 'u_offline_cap_2', name: 'Deeper Slumber II',  addH: 4, cost:    250_000_000, realm: 20 },
+  { id: 'u_offline_cap_3', name: 'Deeper Slumber III', addH: 4, cost:  50_000_000_000, realm: 30 },
+  { id: 'u_offline_cap_4', name: 'Deeper Slumber IV',  addH: 4, cost: 5_000_000_000_000, realm: 41 },
+].map(u => ({
+  id:        u.id,
+  category:  'offline_cap',
+  name:      u.name,
+  desc:      `Extends your offline accrual window by +${u.addH} hours.`,
+  cost:      u.cost,
+  unlock:    { type: 'realm', minRealmIndex: u.realm },
+  effect:    { type: 'offline_cap', addHours: u.addH },
+}));
+
 // ── F. Mechanic tier upgrades (Round 3 — Crystal Discovery) ──────────────────
 // Each mechanic's T1 is granted by crystal evolution; T2-T5 are purchased
 // here. Unlock requires owning the previous tier of that mechanic. Effect
@@ -196,6 +234,8 @@ const UPGRADES = [
   ...FOCUS_MULT,
   ...GATE_REDUCTION,
   ...SPARKS_REROLL,
+  ...OFFLINE_RATE,
+  ...OFFLINE_CAP,
   ...MECHANIC_TIERS,
 ];
 

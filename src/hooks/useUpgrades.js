@@ -131,6 +131,27 @@ export default function useUpgrades() {
     return m;
   }, [owned]);
 
+  // Additive bonuses to the offline accrual rate and cap. The base values
+  // (0.20 and 8 h) live in useCultivation / autoFarm; these stack on top.
+  // Offline calc runs pre-React-mount, so it reads upgrades from localStorage
+  // directly (see the helper below) rather than depending on this hook.
+  const offlineRateAdd = useMemo(() => {
+    let s = 0;
+    for (const id of owned) {
+      const u = UPGRADES_BY_ID[id];
+      if (u?.category === 'offline_rate') s += u.effect.add;
+    }
+    return s;
+  }, [owned]);
+  const offlineCapAddHours = useMemo(() => {
+    let s = 0;
+    for (const id of owned) {
+      const u = UPGRADES_BY_ID[id];
+      if (u?.category === 'offline_cap') s += u.effect.addHours;
+    }
+    return s;
+  }, [owned]);
+
   // ── Public API ─────────────────────────────────────────────────────────────
 
   /** Lookup the per-producer output mult applied by upgrades (1 if none owned). */
@@ -143,6 +164,8 @@ export default function useUpgrades() {
   const getFocusMultAdd    = useCallback(() => focusMultAdd,    [focusMultAdd]);
   const getGateReductionMult = useCallback(() => gateReductionMult, [gateReductionMult]);
   const getSparksRerollMult  = useCallback(() => sparksRerollMult,  [sparksRerollMult]);
+  const getOfflineRateAdd    = useCallback(() => offlineRateAdd,    [offlineRateAdd]);
+  const getOfflineCapAddHours = useCallback(() => offlineCapAddHours, [offlineCapAddHours]);
 
   /**
    * The average per-producer multiplier weighted by current rate
@@ -193,6 +216,8 @@ export default function useUpgrades() {
     getFocusMultAdd,
     getGateReductionMult,
     getSparksRerollMult,
+    getOfflineRateAdd,
+    getOfflineCapAddHours,
     reset,
   };
 }

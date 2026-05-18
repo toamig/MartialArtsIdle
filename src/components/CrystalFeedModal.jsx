@@ -226,7 +226,7 @@ function CrystalFeedModal({ crystal, inventory, cultivation, onClose, onEvolve }
             <div className={`cfm-bonus-next${willLevelUp ? '' : ' cfm-bonus-next-hidden'}`}>
               <span className="cfm-bonus-arrow">▲</span>
               <span>
-                Lv.{preview.level} → ×{(1 + preview.level * 0.003).toFixed(2)} Qi gain
+                Lv.{preview.level} → ×{(1 + preview.level * 0.01).toFixed(2)} Qi gain
               </span>
             </div>
           </div>
@@ -452,7 +452,7 @@ function CrystalQiFeedModal({ crystal, cultivation, onClose, onEvolve }) {
             <div className={`cfm-bonus-next${willLevelUp ? '' : ' cfm-bonus-next-hidden'}`}>
               <span className="cfm-bonus-arrow">▲</span>
               <span>
-                Lv.{preview.level} → ×{(1 + preview.level * 0.003).toFixed(2)} Qi gain
+                Lv.{preview.level} → ×{(1 + preview.level * 0.01).toFixed(2)} Qi gain
               </span>
             </div>
           </div>

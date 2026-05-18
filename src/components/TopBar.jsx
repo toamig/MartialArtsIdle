@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
+import { FEATURES } from '../data/featureFlags';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -48,7 +49,9 @@ export default function TopBar({
           ☸
         </button>
       )}
-      {crystalUnlocked && (
+      {/* v1: Crystal feed lives inline beneath the crystal sprite. The 🪨
+          top-bar trigger is preserved for v2 (stone-fed combat flow). */}
+      {crystalUnlocked && FEATURES.combat && (
         <button
           className="home-hud-crystal"
           onClick={onOpenCrystal}

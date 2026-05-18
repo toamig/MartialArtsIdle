@@ -47,6 +47,12 @@ export default function useCultivation() {
   );
   const [realmIndex, setRealmIndex] = useState(savedIndex);
   const [boosting, setBoosting] = useState(false);
+  // Major-realm tap gate (2026-05-18): when the realm meter hits 100% AND the
+  // next transition is a major one, we HALT auto-advance and surface a button
+  // on HomeScreen for the player to confirm. Qi production keeps running
+  // underneath — only the realm meter is held; qi balance still accrues.
+  const [pendingMajorBreakthrough, setPendingMajorBreakthrough] = useState(false);
+  const pendingMajorBreakthroughRef = useRef(false);
   // Transient event set whenever a MAJOR realm transition fires — the home
   // screen renders a celebratory banner keyed on this id. Null otherwise.
   const [majorBreakthrough, setMajorBreakthrough] = useState(null);
@@ -126,9 +132,26 @@ export default function useCultivation() {
     const now = Date.now();
     const rawAwaySeconds = (now - saved.lastSeen) / 1000;
     if (rawAwaySeconds < MIN_OFFLINE_SEC) return 0;
+    // Owned-upgrades set lives in localStorage (mai_upgrades). The offline
+    // calc runs pre-React-mount, so we read directly. Used to apply the
+    // additive offline-rate and offline-cap bonuses from upgrades.js.
+    let ownedUpgrades = new Set();
+    try {
+      const raw = localStorage.getItem('mai_upgrades');
+      if (raw) ownedUpgrades = new Set(JSON.parse(raw));
+    } catch {}
+    const hasUp = (id) => ownedUpgrades.has(id);
+    const offlineRateBonus = (hasUp('u_offline_rate_1') ? 0.05 : 0)
+                           + (hasUp('u_offline_rate_2') ? 0.05 : 0)
+                           + (hasUp('u_offline_rate_3') ? 0.05 : 0)
+                           + (hasUp('u_offline_rate_4') ? 0.05 : 0);
+    const offlineCapBonusH = (hasUp('u_offline_cap_1') ? 4 : 0)
+                           + (hasUp('u_offline_cap_2') ? 4 : 0)
+                           + (hasUp('u_offline_cap_3') ? 4 : 0)
+                           + (hasUp('u_offline_cap_4') ? 4 : 0);
     // Cap at MAX_OFFLINE_HOURS so a week-long absence doesn't trivialise
     // progression. Same constant as gather/mine offline cap.
-    const awaySeconds = Math.min(rawAwaySeconds, MAX_OFFLINE_HOURS * 3600);
+    const awaySeconds = Math.min(rawAwaySeconds, (MAX_OFFLINE_HOURS + offlineCapBonusH) * 3600);
     const realm = REALMS[saved.realmIndex];
     if (!realm || !REALMS[saved.realmIndex + 1]) return 0; // maxed
 
@@ -203,16 +226,16 @@ export default function useCultivation() {
       const raw = localStorage.getItem('mai_qi_crystal');
       if (raw) {
         const lvl = JSON.parse(raw).level ?? 0;
-        crystalMult = 1 + lvl * 0.003;
+        crystalMult = 1 + lvl * 0.01;
       }
     } catch {}
 
     // Offline qi accrues at OFFLINE_QI_MULTIPLIER × the equivalent online
-    // rate. Tuned to 0.20 on 2026-05-01 — players should feel rewarded for
-    // sitting at the screen, while still earning meaningful catch-up qi
-    // when away. Law / artefact / spark / pill modifiers still compound on
-    // top so investment in those continues to matter offline.
-    const OFFLINE_QI_MULTIPLIER = 0.20;
+    // rate. Base 0.20 — Idle Cultivation upgrades each add +5% (max +20%, so
+    // a fully-upgraded player hits 0.40, in the Idle-Slayer band). Players
+    // who sink upgrades into idle progression are rewarded with real-time
+    // pacing closer to the always-on sim ceiling.
+    const OFFLINE_QI_MULTIPLIER = 0.20 + offlineRateBonus;
     const baseRate = (BASE_RATE + producerOfflineRate) * crystalMult * lawMult * offlineQiMult * artefactOfflineMult * sparkOfflineMult * (1 + pillQiSpeedBonus) * OFFLINE_QI_MULTIPLIER;
     const total = baseRate * awaySeconds;
 
@@ -561,6 +584,26 @@ export default function useCultivation() {
             // qi/s is enough. qi balance is untouched.
             qiEarnedThisRealmRef.current = costRef.current;
             gateRef.current = { required: requiredRate, current: rate };
+          } else if (
+            isMajorTransition(indexRef.current) &&
+            !pendingMajorBreakthroughRef.current
+          ) {
+            // 2026-05-18 — Major realms now require an explicit player tap so
+            // the spark offer, character evolution, and epic banner aren't
+            // missed by idle/off-screen players. Cap the meter at 100% and
+            // surface a button on HomeScreen via the pendingMajorBreakthrough
+            // state. Qi production keeps running (qiRef.current still ticks
+            // upward), so producer buys remain affordable while the player
+            // waits. confirmMajorBreakthrough() below runs the advance logic.
+            qiEarnedThisRealmRef.current = costRef.current;
+            gateRef.current = null;
+            pendingMajorBreakthroughRef.current = true;
+            setPendingMajorBreakthrough(true);
+          } else if (pendingMajorBreakthroughRef.current) {
+            // Already pending — keep the meter capped so qi production doesn't
+            // overflow the bar past 100%. Nothing else to do; the player
+            // confirms via the HomeScreen button.
+            qiEarnedThisRealmRef.current = costRef.current;
           } else {
             // Cookie-Clicker pivot: breakthrough no longer drains qi balance.
             // The realm meter resets to 0 instead. Painless Ascension spark
@@ -678,6 +721,56 @@ export default function useCultivation() {
   const startBoost = useCallback(() => { boostRef.current = true;  setBoosting(true);  }, []);
   const stopBoost  = useCallback(() => { boostRef.current = false; setBoosting(false); }, []);
 
+  /**
+   * Player confirms a pending major-realm breakthrough. Runs the advance
+   * logic (mirror of the auto-advance branch in the rAF tick) and fires the
+   * existing banner / spark-offer flow. No-op if no breakthrough is pending.
+   */
+  const confirmMajorBreakthrough = useCallback(() => {
+    if (!pendingMajorBreakthroughRef.current) return;
+    const fromIndex = indexRef.current;
+    const nextIndex = fromIndex + 1;
+    if (!REALMS[nextIndex]) return;
+
+    pendingMajorBreakthroughRef.current = false;
+    setPendingMajorBreakthrough(false);
+
+    // Painless Ascension spark — graceful no-op for old saves with the spark
+    // still active. Same handling as the rAF tick's auto-advance branch.
+    if (sparkPainlessRef.current) {
+      sparkPainlessRef.current = false;
+      try { window.dispatchEvent(new CustomEvent('mai:painless-consumed')); } catch {}
+    }
+
+    qiEarnedThisRealmRef.current = 0;
+    indexRef.current  = nextIndex;
+    costRef.current   = REALMS[nextIndex].cost;
+    maxedRef.current  = !REALMS[nextIndex + 1];
+    gateRef.current   = null;
+
+    // Yin Reservoir — pre-fund the next realm's qi balance + meter.
+    const reservoir = qiOnRealmFracRef.current;
+    if (reservoir > 0) {
+      const bonus = costRef.current * reservoir;
+      qiRef.current               += bonus;
+      qiEarnedThisRealmRef.current += bonus;
+    }
+    setRealmIndex(nextIndex);
+
+    try { trackQiSink(REALMS[fromIndex].cost, 'Breakthrough', `r${nextIndex}`); } catch {}
+    try { trackFirstTime('RealmAdvance', nextIndex); } catch {}
+    try {
+      trackRealmAdvance(nextIndex, REALMS[nextIndex].name, false, false);
+      trackFirstTime('RealmMajor', nextIndex);
+    } catch {}
+
+    // Fires the BreakthroughBanner + downstream spark-offer flow.
+    setMajorBreakthrough({
+      id:    Date.now(),
+      label: REALMS[nextIndex].name,
+    });
+  }, []);
+
   /** Called when the player earns the rewarded ad boost. */
   const activateAdBoost = useCallback((durationMs = 30 * 60 * 1000) => {
     const endsAt = Date.now() + durationMs;
@@ -778,6 +871,10 @@ export default function useCultivation() {
     gateRef,
     majorBreakthrough,
     clearMajorBreakthrough: () => setMajorBreakthrough(null),
+    // Major-realm tap gate (2026-05-18). HomeScreen reads `pendingMajorBreakthrough`
+    // to render the BREAKTHROUGH button; tap fires `confirmMajorBreakthrough()`.
+    pendingMajorBreakthrough,
+    confirmMajorBreakthrough,
     ascended,
     // True only at the very final realm (Open Heaven Layer 6) so peak-stage
     // bar treatment is reserved for the actual endgame pinnacle. Per-realm
