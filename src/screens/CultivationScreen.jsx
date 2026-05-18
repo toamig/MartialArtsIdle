@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import PRODUCERS from '../data/producers';
 import ProducerLane from '../components/ProducerLane';
+import ProducerDetailModal from '../components/ProducerDetailModal';
 import UpgradeCard, { OwnedUpgradeChip } from '../components/UpgradeCard';
 import { fmt, fmtRate } from '../utils/format';
 
@@ -12,10 +13,13 @@ import { fmt, fmtRate } from '../utils/format';
  * triggering useCultivation re-renders).
  */
 export default function CultivationScreen({ cultivation, producers, upgrades, crystal, qiSparks }) {
-  const [tab, setTab]       = useState('producers');     // 'producers' | 'upgrades'
+  const [tab, setTab]         = useState('producers');     // 'producers' | 'upgrades'
   const [buyMode, setBuyMode] = useState(1);             // 1 | 10 | 'max'
-  const [qi, setQi]         = useState(() => cultivation.qiRef?.current ?? 0);
-  const [rate, setRate]     = useState(() => cultivation.rateRef?.current ?? 0);
+  const [qi, setQi]           = useState(() => cultivation.qiRef?.current ?? 0);
+  const [rate, setRate]       = useState(() => cultivation.rateRef?.current ?? 0);
+  // Producer detail modal — opens when the player taps a lane's leader sprite.
+  // Stores the producer object directly so the modal can read sprites/desc.
+  const [detailProducer, setDetailProducer] = useState(null);
 
   // Poll the cultivation refs ~10×/sec for the sticky header.
   // useCultivation deliberately never re-renders on qi/rate change, so we
@@ -154,10 +158,22 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
                 qi={qi}
                 producers={producers}
                 onBuy={handleBuy}
+                onShowDetail={setDetailProducer}
               />
             ))}
           </div>
         </>
+      )}
+
+      {detailProducer && (
+        <ProducerDetailModal
+          producer={detailProducer}
+          owned={producers.getOwned(detailProducer.id)}
+          unlocked={producers.isUnlocked(detailProducer.id, realmIndex)}
+          upgradeMult={upgrades?.getProducerMult?.(detailProducer.id) ?? 1}
+          totalGameRate={rate}
+          onClose={() => setDetailProducer(null)}
+        />
       )}
 
       {tab === 'upgrades' && (

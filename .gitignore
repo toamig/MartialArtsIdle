@@ -16,6 +16,9 @@ dist-ssr
 # Scratch directory for asset generation / previews
 tmp
 
+# Python compiled cache from scripts/
+__pycache__/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -99,13 +99,13 @@ const PRODUCERS = [
   { id: 'p_disciple',          startCost: 15,            startQiPerSec: 0.1,       unlock: 0 },
   { id: 'p_herb_garden',       startCost: 100,           startQiPerSec: 1,         unlock: 4 },
   { id: 'p_meridian_furnace',  startCost: 1_100,         startQiPerSec: 8,         unlock: 9 },
-  { id: 'p_sect_followers',    startCost: 12_000,        startQiPerSec: 47,        unlock: 13 },
+  { id: 'p_treasure',          startCost: 12_000,        startQiPerSec: 47,        unlock: 13 },
   { id: 'p_beast_pact',        startCost: 130_000,       startQiPerSec: 260,       unlock: 17 },
-  { id: 'p_treasure',          startCost: 1_400_000,     startQiPerSec: 1_400,     unlock: 20 },
-  { id: 'p_lunar',             startCost: 20_000_000,    startQiPerSec: 7_800,     unlock: 23 },
-  { id: 'p_pillar',            startCost: 330_000_000,   startQiPerSec: 44_000,    unlock: 29 },
-  { id: 'p_void',              startCost: 5_100_000_000, startQiPerSec: 260_000,   unlock: 35 },
-  { id: 'p_dao_tree',          startCost: 75_000_000_000,startQiPerSec: 1_600_000, unlock: 44 },
+  { id: 'p_pillar',            startCost: 1_400_000,     startQiPerSec: 1_400,     unlock: 20 },
+  { id: 'p_sect_followers',    startCost: 20_000_000,    startQiPerSec: 7_800,     unlock: 23 },
+  { id: 'p_void',              startCost: 330_000_000,   startQiPerSec: 44_000,    unlock: 29 },
+  { id: 'p_dragon',            startCost: 5_100_000_000, startQiPerSec: 260_000,   unlock: 35 },
+  { id: 'p_phoenix',           startCost: 75_000_000_000,startQiPerSec: 1_600_000, unlock: 44 },
 ];
 const COST_SCALING = 1.15;
 

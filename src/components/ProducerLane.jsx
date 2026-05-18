@@ -6,6 +6,27 @@ import { getSpriteTier } from '../data/producers';
  *  (the overflow `+N` chip shifts left automatically when stack overflows). */
 const MAX_VISIBLE_UNITS = 20;
 
+const BASE = import.meta.env.BASE_URL;
+
+/** Render a sprite — handles both emoji placeholders and image paths.
+ *  Path detection: strings starting with `/` are treated as `public/`-relative
+ *  PNG paths and rendered via <img>. Anything else (emoji glyphs) renders
+ *  as text. The global image-rendering CSS rule applies pixelated upscaling
+ *  to imgs automatically (see App.css). */
+function Sprite({ sprite, className }) {
+  if (typeof sprite === 'string' && sprite.startsWith('/')) {
+    return (
+      <img
+        src={`${BASE}${sprite.replace(/^\//, '')}`}
+        alt=""
+        className={className}
+        draggable={false}
+      />
+    );
+  }
+  return <span className={className} aria-hidden="true">{sprite}</span>;
+}
+
 /**
  * One Cookie-Clicker-style lane in the CultivationScreen producer list.
  *
@@ -27,6 +48,7 @@ export default function ProducerLane({
   qi,
   producers,
   onBuy,
+  onShowDetail,
 }) {
   // Resolve current tier + sprite. Tier null when 0 owned.
   const tier = unlocked ? getSpriteTier(owned) : null;
@@ -72,9 +94,14 @@ export default function ProducerLane({
     const minRealm = producer.unlock?.minRealmIndex ?? '?';
     return (
       <div className="pl-lane pl-locked" aria-disabled="true">
-        <div className="pl-leader">
-          <span className="pl-leader-sprite" aria-hidden="true">🔒</span>
-        </div>
+        <button
+          className="pl-leader pl-leader-clickable"
+          onClick={() => onShowDetail?.(producer)}
+          aria-label={`${producer.name} details`}
+          type="button"
+        >
+          <Sprite sprite="🔒" className="pl-leader-sprite" />
+        </button>
         <div className="pl-info">
           <div className="pl-name pl-name-locked">??? Locked</div>
           <div className="pl-meta">Unlocks at realm {minRealm}</div>
@@ -96,9 +123,14 @@ export default function ProducerLane({
 
   return (
     <div className={`pl-lane ${tierClass}${celebrating ? ' pl-celebrate' : ''}`}>
-      <div className="pl-leader">
-        <span className="pl-leader-sprite" aria-hidden="true">{sprite}</span>
-      </div>
+      <button
+        className="pl-leader pl-leader-clickable"
+        onClick={() => onShowDetail?.(producer)}
+        aria-label={`${producer.name} details`}
+        type="button"
+      >
+        <Sprite sprite={sprite} className="pl-leader-sprite" />
+      </button>
 
       <div className="pl-info">
         <div className="pl-name">{producer.name}</div>
@@ -118,7 +150,7 @@ export default function ProducerLane({
 
       <div className="pl-stack">
         {Array.from({ length: visible }).map((_, i) => (
-          <span key={i} className="pl-unit" aria-hidden="true">{sprite}</span>
+          <Sprite key={i} sprite={sprite} className="pl-unit" />
         ))}
         {overflow > 0 && (
           <div className="pl-overflow">+{overflow}</div>
