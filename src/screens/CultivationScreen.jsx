@@ -102,6 +102,10 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
   // Cookie-Clicker pattern: separate available (full cards) from purchased
   // (compact chips). Owned upgrades pile up over time — pushing them to a
   // dense section at the bottom keeps the buyable list scannable.
+  //
+  // Buyables sort by cost ascending so the cheapest next thing always lives
+  // in slot 0 — the player can spam-click the same screen position to buy
+  // in price order without moving the cursor.
   const { availableUpgrades, ownedUpgrades } = useMemo(() => {
     const available = [];
     const owned     = [];
@@ -109,6 +113,7 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
       if (upgrades.isOwned(u.id)) owned.push(u);
       else available.push(u);
     }
+    available.sort((a, b) => a.cost - b.cost);
     return { availableUpgrades: available, ownedUpgrades: owned };
   }, [visibleUpgrades, upgrades]);
 
