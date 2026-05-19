@@ -21,12 +21,35 @@ const AD_BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 const HOME_BG_W = 1376;
 const HOME_BG_H = 768;
 
-// 4 states: idle | boost | adboosted | adboosted-boost
-function getSpriteState(boosting, adBoostActive) {
-  if (adBoostActive && boosting) return 4;
-  if (adBoostActive)             return 3;
-  if (boosting)                  return 2;
-  return 1;
+// ── Cultivator sprite tier mapping ──────────────────────────────────────────
+// 8 character tiers (T0..T7), each spans 1-2 major realms. Each tier has two
+// static 256×256 sprites: `<tier>_normal.png` (idle cultivation) and
+// `<tier>_focused.png` (Avatar-mode glow). When the rewarded-ad boost is
+// active, a 4-frame `heavenly_aura.png` underlay renders behind the sprite.
+// As more tiers are generated, bump CULTIVATOR_MAX_TIER below — until then,
+// higher-realm players see the T0 sprite (no missing-file 404s).
+const CULTIVATOR_TIER_NAMES = [
+  't0_novice',     // Tempered Body (idx 0-9)
+  't1_cultivator', // Qi Transformation + True Element (10-17)
+  't2_adept',      // Separation & Reunion + Immortal Ascension (18-23)
+  't3_saint',      // Saint + Saint King (24-29)
+  't4_sage',       // Origin Returning + Origin King (30-35)
+  't5_sovereign',  // Void King + Dao Source (36-41)
+  't6_emperor',    // Emperor Realm (42-44)
+  't7_heavenly',   // Open Heaven (45-50)
+];
+const CULTIVATOR_MAX_TIER = 0; // bump as more tiers are generated
+
+function getCultivatorTier(realmIndex) {
+  let t = 0;
+  if (realmIndex >= 10) t = 1;
+  if (realmIndex >= 18) t = 2;
+  if (realmIndex >= 24) t = 3;
+  if (realmIndex >= 30) t = 4;
+  if (realmIndex >= 36) t = 5;
+  if (realmIndex >= 42) t = 6;
+  if (realmIndex >= 45) t = 7;
+  return Math.min(t, CULTIVATOR_MAX_TIER);
 }
 
 
@@ -1613,9 +1636,16 @@ function HomeScreen({
     ? formatCooldown(adBoostEndsAt - Date.now())
     : null;
 
-  const spriteState = getSpriteState(boosting, adBoostActive);
-  const spriteSrc   = `${BASE}sprites/cultivator/state${spriteState}.png`;
-  const fps         = boosting ? 14 : 5;
+  // Cultivator: static 256×256 PNG per (tier, pose). Tier from realmIndex,
+  // pose from `boosting`. CSS does the gentle breathing pulse. The aura
+  // overlay underneath uses SpriteAnimator (4-frame loop) and is only
+  // mounted when the rewarded-ad boost is active.
+  const cultivatorTier = getCultivatorTier(cultivation.realmIndex);
+  const cultivatorTierName = CULTIVATOR_TIER_NAMES[cultivatorTier];
+  const cultivatorPose = boosting ? 'focused' : 'normal';
+  const spriteSrc = `${BASE}sprites/cultivator/${cultivatorTierName}_${cultivatorPose}.png`;
+  const auraSrc   = `${BASE}sprites/cultivator/heavenly_aura.png`;
+  const fps       = boosting ? 14 : 5; // kept for any remaining animated consumers
 
   return (
     <div className={`screen home-screen${boosting ? ' home-boosting' : ''}`}>
@@ -1799,14 +1829,30 @@ function HomeScreen({
               onPointerCancel={handlePointerUp}
             >
               {vfxLayer}
-              <SpriteAnimator
-                key={spriteState}
+              {/* Heavenly aura — only rendered when the rewarded-ad boost is
+                  active. 4-frame loop at 6 fps. Sits BEHIND the cultivator
+                  via z-index; alpha-zero center lets the character show
+                  through cleanly. */}
+              {adBoostActive && (
+                <SpriteAnimator
+                  src={auraSrc}
+                  frameWidth={256}
+                  frameHeight={256}
+                  frameCount={4}
+                  fps={6}
+                  className="home-cultivator-aura"
+                  style={{ width: '120%', height: '120%' }}
+                />
+              )}
+              {/* Cultivator — static 256×256 PNG. CSS breathing pulse adds
+                  life without API-side animation. `key` forces a remount
+                  on tier/pose change so the breathing animation restarts. */}
+              <img
+                key={`${cultivatorTierName}-${cultivatorPose}`}
                 src={spriteSrc}
-                frameWidth={128}
-                frameHeight={128}
-                frameCount={4}
-                fps={fps}
-                scale={spriteScale}
+                alt="Cultivator"
+                className="home-cultivator-sprite"
+                draggable="false"
               />
             </div>
           </div>

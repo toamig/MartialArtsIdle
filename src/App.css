@@ -14502,3 +14502,48 @@ button.pl-leader.pl-leader-clickable:focus-visible {
   .home-mb-cta  { font-size: 13px; letter-spacing: 0.12em; }
   .home-mb-next { font-size: 10px; }
 }
+
+/* ─── Cultivator sprite + heavenly aura (2026-05-19) ───────────────────────
+   Replaces the old 4-frame state{1..4} spritesheet. New sprites are static
+   256×256 per (tier, pose). CSS adds the gentle breathing pulse so the
+   character feels alive without burning per-frame API calls. The aura is a
+   separate 4-frame SpriteAnimator that mounts only when the ad-boost is
+   active and renders BEHIND the cultivator via z-index. */
+.home-fighter-stage {
+  position: relative;
+}
+.home-cultivator-sprite {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: center bottom;
+  animation: home-cultivator-breathe 3.6s ease-in-out infinite;
+  z-index: 2;
+  /* image-rendering follows the global Settings → Rendering toggle
+     via the .rendering-pixelated rule at the top of this file. */
+}
+@keyframes home-cultivator-breathe {
+  0%, 100% { transform: scale(1.000); }
+  50%      { transform: scale(1.015); }
+}
+
+/* Heavenly aura — 120% size so the flames extend past the cultivator's
+   silhouette, anchored to center. Pulses opacity gently for an alive feel
+   on top of the 4-frame loop. */
+.home-cultivator-aura {
+  position: absolute !important;
+  left: 50%;
+  top:  50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  pointer-events: none;
+  animation: home-aura-pulse 2.4s ease-in-out infinite;
+  /* image-rendering follows the global Settings → Rendering toggle.
+     .sprite-animator is already covered by the .rendering-pixelated rule. */
+}
+@keyframes home-aura-pulse {
+  0%, 100% { opacity: 0.92; }
+  50%      { opacity: 1.00; }
+}
