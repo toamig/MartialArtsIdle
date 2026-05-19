@@ -16,7 +16,7 @@ function OfflineEarningsModal({ amount, onCollect, onDoubleCollect }) {
         <div className="offline-header">
           <div className="offline-icon-wrap">
             <img
-              src={`${BASE}sprites/items/spirit_stone.png`}
+              src={`${BASE}ui/qi.png`}
               className="offline-icon"
               alt=""
               draggable="false"

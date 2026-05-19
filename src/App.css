@@ -2917,7 +2917,17 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .home-hq-text  { white-space: nowrap; }
 .home-hq-timer { font-size: 10px; opacity: 0.82; }
 
-/* Pulsing dot indicator */
+/* Small qi_divine pearl icon inside the chip (replaces the old pulsing dot) */
+.home-hq-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+  /* image-rendering follows the global Settings → Rendering toggle */
+}
+.home-hq-chip-cd .home-hq-icon { filter: grayscale(0.8) opacity(0.6); }
+
+/* Pulsing dot indicator (legacy — kept for any other chip variants) */
 .home-hq-dot {
   width: 6px;
   height: 6px;
