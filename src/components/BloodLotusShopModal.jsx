@@ -67,7 +67,7 @@ export default function BloodLotusShopCard({ onClose, onBalanceChange }) {
             disabled={!!pending}
           >
             {BADGE[pkg.id] && <span className="blood-lotus-shop-badge">{BADGE[pkg.id]}</span>}
-            <img src={`${BASE}sprites/items/blood_lotus.png`} className="blood-lotus-shop-item-icon" alt="" draggable="false" />
+            <img src={`${BASE}sprites/items/${pkg.id}.png`} className="blood-lotus-shop-item-icon" alt="" draggable="false" />
             <span className="blood-lotus-shop-item-amount">{pkg.amount.toLocaleString()}</span>
             <span className="blood-lotus-shop-item-label">{pkg.label}</span>
             <span className="blood-lotus-shop-item-price">
