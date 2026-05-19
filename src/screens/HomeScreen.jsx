@@ -186,12 +186,9 @@ function BreakthroughBanner({ event, onDone }) {
   );
 }
 
-const HOLD_HINT_SEEN_KEY = 'mai_home_hold_hint_seen';
-const HOLD_HINT_IDLE_MS  = 60 * 1000;
-
 /**
- * ConsecutiveFocusMeter — replaces the "hold to cultivate faster" hint while
- * the player is focusing AND has at least one Consecutive Focus rung unlocked.
+ * ConsecutiveFocusMeter — shown while the player is focusing AND has at least
+ * one Consecutive Focus rung unlocked.
  *
  * Progress bar runs continuously over the full hold window (0ms → last
  * threshold) with a tick at every rung the player has unlocked, so they can
@@ -1515,10 +1512,6 @@ function HomeScreen({
     return () => window.removeEventListener('mai:cf-rung', onRung);
   }, []);
 
-  // ── Hold-hint ────────────────────────────────────────────────────────────
-  const [showHoldHint, setShowHoldHint] = useState(() => {
-    try { return !localStorage.getItem(HOLD_HINT_SEEN_KEY); } catch { return true; }
-  });
 
   // ── Event queue wiring ───────────────────────────────────────────────────
   // Spontaneous popups (offline earnings, breakthrough banner, level-up cards,
@@ -1600,13 +1593,6 @@ function HomeScreen({
   // ── Offline earnings — render via queue. App.jsx is already enqueueing. ─
   // (Render condition below combines queue head with cultivation state.)
 
-  const idleTimerRef = useRef(null);
-  const resetIdleTimer = useCallback(() => {
-    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    idleTimerRef.current = setTimeout(() => setShowHoldHint(true), HOLD_HINT_IDLE_MS);
-  }, []);
-  useEffect(() => { resetIdleTimer(); return () => clearTimeout(idleTimerRef.current); }, [resetIdleTimer]);
-
   // Release hold state whenever a breakthrough fires — the modal that follows
   // would steal the pointer and stopBoost() would never be called otherwise.
   useEffect(() => { if (majorBreakthrough) stopBoost(); }, [majorBreakthrough]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1617,13 +1603,8 @@ function HomeScreen({
     startBoost();
     const rect = e.currentTarget.getBoundingClientRect();
     spawnVFX({ type: 'burst', x: e.clientX - rect.left, y: e.clientY - rect.top, duration: 600 });
-    if (showHoldHint) {
-      setShowHoldHint(false);
-      try { localStorage.setItem(HOLD_HINT_SEEN_KEY, '1'); } catch {}
-    }
-    resetIdleTimer();
   };
-  const handlePointerUp = () => { stopBoost(); resetIdleTimer(); };
+  const handlePointerUp = () => { stopBoost(); };
 
   // ── Ad boost countdown ───────────────────────────────────────────────────
   const adBoostRemaining = adBoostActive
@@ -1797,18 +1778,14 @@ function HomeScreen({
             onRefine={handleCrystalRefine}
           />
 
-          {/* Character + hold-hint group — grounded at scene bottom */}
+          {/* Character + Consecutive-Focus meter group — grounded at scene bottom */}
           <div className="home-char-group">
-            {!maxed && (
+            {!maxed && boosting && sparkConsecutiveLadderRef?.current?.length > 0 && (
               <div className="home-char-hint-slot">
-                {boosting && sparkConsecutiveLadderRef?.current?.length > 0
-                  ? <ConsecutiveFocusMeter
-                      ladder={sparkConsecutiveLadderRef.current}
-                      boostStartTimeRef={boostStartTimeRef}
-                    />
-                  : <div className={`home-hold-hint${showHoldHint ? '' : ' home-hold-hint-fade'}`}>
-                      {t('home.holdToCultivate')}
-                    </div>}
+                <ConsecutiveFocusMeter
+                  ladder={sparkConsecutiveLadderRef.current}
+                  boostStartTimeRef={boostStartTimeRef}
+                />
               </div>
             )}
             <div

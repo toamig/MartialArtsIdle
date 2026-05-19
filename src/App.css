@@ -2769,50 +2769,18 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   color: #9cd2ff;
 }
 
-/* Fixed-height slot for either the hold-hint OR the consecutive-focus
-   meter — keeps the crystal above from shifting when the meter (which is
-   taller) takes over. The meter overflows upward into the qi-particle
+/* Slot for the consecutive-focus meter — only rendered while focusing with
+   at least one rung unlocked. The meter overflows upward into the qi-particle
    area; covering some of those VFX is intentional and expected. */
 .home-char-hint-slot {
   position:       relative;
   width:          100%;
-  height:         22px;          /* matches .home-hold-hint natural height */
   pointer-events: none;
 }
 
-/* Hold-to-cultivate hint — anchored to the slot's bottom edge. */
-.home-hold-hint {
-  display: block;
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
-  z-index: 3;
-  padding: 3px 12px;
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.55);
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.72rem;
-  letter-spacing: 0.02em;
-  pointer-events: none;
-  white-space: nowrap;
-  opacity: 1;
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  animation: hold-hint-pulse 2s ease-in-out infinite;
-}
-.home-hold-hint-fade {
-  opacity: 0;
-  transform: translateY(6px);
-  animation: none;
-}
-@keyframes hold-hint-pulse {
-  0%, 100% { opacity: 0.78; transform: translateY(0); }
-  50%      { opacity: 1;    transform: translateY(2px); }
-}
-
-/* Consecutive Focus meter — replaces the hold-hint while focusing.
-   Continuous timeline (0ms → final rung's threshold) with ticks at every
-   unlocked rung; the bar fills toward the next milestone bonus. */
+/* Consecutive Focus meter — continuous timeline (0ms → final rung's
+   threshold) with ticks at every unlocked rung; the bar fills toward the
+   next milestone bonus. */
 .home-cf-meter {
   display:        flex;
   flex-direction: column;
