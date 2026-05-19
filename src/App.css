@@ -2477,6 +2477,31 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   pointer-events: none;
 }
 
+/* Qi + Karma currency rows — sit right of the Blood Lotus button.
+   Stacked vertically (2 rows) to fit the top bar's 48px height. */
+.topbar-currencies {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.1;
+  min-width: 0;
+}
+.topbar-currency-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ui-purple-light);
+  white-space: nowrap;
+}
+.topbar-currency-icon {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
 .home-hud-spacer { flex: 1; }
 
 /* Realm name + stage in the top bar — mobile only; PC left panel handles it at >=900px */

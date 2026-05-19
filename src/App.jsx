@@ -1072,6 +1072,8 @@ function AppInner() {
         crystalUnlocked={featureFlags.isUnlocked('qi_crystal')}
         realmName={cultivation.realmName}
         realmStage={cultivation.realmStage}
+        qiRef={cultivation.qiRef}
+        karma={karma.karma}
       />
       <NavBar
         currentScreen={currentScreen}

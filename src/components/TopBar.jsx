@@ -1,7 +1,26 @@
 import { useRef, useEffect, useState } from 'react';
 import { FEATURES } from '../data/featureFlags';
+import { fmt as fmtNum } from '../utils/format';
 
 const BASE = import.meta.env.BASE_URL;
+
+// Live QI readout — qiRef is a mutable ref updated outside React (no state
+// re-renders), so we poll it via rAF and write directly to the DOM. Same
+// pattern as QiProgressChip in HomeScreen.
+function QiLiveText({ qiRef }) {
+  const spanRef = useRef(null);
+  useEffect(() => {
+    if (!qiRef) return;
+    let raf;
+    const tick = () => {
+      if (spanRef.current) spanRef.current.textContent = fmtNum(qiRef.current ?? 0);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [qiRef]);
+  return <span ref={spanRef}>—</span>;
+}
 
 export default function TopBar({
   bloodLotusBalance,
@@ -17,6 +36,8 @@ export default function TopBar({
   crystalUnlocked,
   realmName,
   realmStage,
+  qiRef,
+  karma,
 }) {
   return (
     <div className="top-bar">
@@ -33,6 +54,26 @@ export default function TopBar({
         />
         <span className="home-hud-blood-lotus-amount">{bloodLotusBalance ?? 0}</span>
       </button>
+      <div className="topbar-currencies">
+        <div className="topbar-currency-row" aria-label="Current Qi">
+          <img
+            src={`${BASE}ui/qi.png`}
+            className="topbar-currency-icon"
+            alt=""
+            draggable="false"
+          />
+          <QiLiveText qiRef={qiRef} />
+        </div>
+        <div className="topbar-currency-row" aria-label="Current Karma">
+          <img
+            src={`${BASE}ui/karma.png`}
+            className="topbar-currency-icon"
+            alt=""
+            draggable="false"
+          />
+          <span>{karma ?? 0}</span>
+        </div>
+      </div>
       {realmName && (
         <div className="topbar-realm">
           <span className="topbar-realm-name">{realmName.split(' - ')[0]}</span>
