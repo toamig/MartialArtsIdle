@@ -22,34 +22,51 @@ const HOME_BG_W = 1376;
 const HOME_BG_H = 768;
 
 // ── Cultivator sprite tier mapping ──────────────────────────────────────────
-// 8 character tiers (T0..T7), each spans 1-2 major realms. Each tier has two
+// 13 character tiers (T0..T12), one per major realm name. Each tier has two
 // static 256×256 sprites: `<tier>_normal.png` (idle cultivation) and
 // `<tier>_focused.png` (Avatar-mode glow). When the rewarded-ad boost is
 // active, a 4-frame `heavenly_aura.png` underlay renders behind the sprite.
-// As more tiers are generated, bump CULTIVATOR_MAX_TIER below — until then,
-// higher-realm players see the T0 sprite (no missing-file 404s).
+// As more tiers are generated, add the tier index to CULTIVATOR_DONE_TIERS —
+// players on a not-yet-generated tier fall back to the highest done tier
+// below their realm (no missing-file 404s).
 const CULTIVATOR_TIER_NAMES = [
-  't0_novice',     // Tempered Body (idx 0-9)
-  't1_cultivator', // Qi Transformation + True Element (10-17)
-  't2_adept',      // Separation & Reunion + Immortal Ascension (18-23)
-  't3_saint',      // Saint + Saint King (24-29)
-  't4_sage',       // Origin Returning + Origin King (30-35)
-  't5_sovereign',  // Void King + Dao Source (36-41)
-  't6_emperor',    // Emperor Realm (42-44)
-  't7_heavenly',   // Open Heaven (45-50)
+  't0_novice',              // Tempered Body          (idx  0-9)
+  't1_qi_transformation',   // Qi Transformation      (idx 10-13)
+  't2_true_element',        // True Element           (idx 14-17)
+  't3_separation',          // Separation & Reunion   (idx 18-20)
+  't4_immortal_ascension',  // Immortal Ascension     (idx 21-23)
+  't5_saint',               // Saint                  (idx 24-26)
+  't6_saint_king',          // Saint King             (idx 27-29)
+  't7_origin_returning',    // Origin Returning       (idx 30-32)
+  't8_origin_king',         // Origin King            (idx 33-35)
+  't9_void_king',           // Void King              (idx 36-38)
+  't10_dao_source',         // Dao Source             (idx 39-41)
+  't11_emperor_realm',      // Emperor Realm          (idx 42-44)
+  't12_open_heaven',         // Open Heaven           (idx 45-50)
 ];
-const CULTIVATOR_MAX_TIER = 0; // bump as more tiers are generated
+// Tiers with sprite files in public/sprites/cultivator/. Players on a tier
+// that isn't in this set see the highest done tier below their realm.
+const CULTIVATOR_DONE_TIERS = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
 
 function getCultivatorTier(realmIndex) {
   let t = 0;
   if (realmIndex >= 10) t = 1;
-  if (realmIndex >= 18) t = 2;
-  if (realmIndex >= 24) t = 3;
-  if (realmIndex >= 30) t = 4;
-  if (realmIndex >= 36) t = 5;
-  if (realmIndex >= 42) t = 6;
-  if (realmIndex >= 45) t = 7;
-  return Math.min(t, CULTIVATOR_MAX_TIER);
+  if (realmIndex >= 14) t = 2;
+  if (realmIndex >= 18) t = 3;
+  if (realmIndex >= 21) t = 4;
+  if (realmIndex >= 24) t = 5;
+  if (realmIndex >= 27) t = 6;
+  if (realmIndex >= 30) t = 7;
+  if (realmIndex >= 33) t = 8;
+  if (realmIndex >= 36) t = 9;
+  if (realmIndex >= 39) t = 10;
+  if (realmIndex >= 42) t = 11;
+  if (realmIndex >= 45) t = 12;
+  // Fall back to the highest done tier ≤ t (avoids 404s for tiers not yet generated)
+  for (let i = t; i >= 0; i--) {
+    if (CULTIVATOR_DONE_TIERS.has(i)) return i;
+  }
+  return 0;
 }
 
 

@@ -1,41 +1,57 @@
 """
-Cultivator sprite prompts — 8 realm tiers × 2 poses + 1 heavenly aura underlay.
-Static single-frame sprites. Per-frame breathing animation was rejected as
-too costly and prone to inter-frame drift; we get "alive" feel back via CSS
-(subtle scale pulse on the sprite + opacity pulse on the aura).
+Cultivator sprite prompts — 13 realm tiers × 2 poses + 1 heavenly aura
+underlay. One sprite per major realm name. Static single-frame sprites
+(per-frame breathing animation was rejected — CSS handles the "alive"
+feel via subtle scale pulse on the sprite + opacity pulse on the aura).
 
 Pipeline shape (to be implemented in `gen_cultivator.py`):
 
   per tier T:
-    Step 1 — generate 4 design candidates from `design_prompt` (no reference
-             for T0; previous tier's chosen candidate as reference for T1-T7).
-    Step 2 — user picks one candidate → saved as `t{T}_normal.png`.
-    Step 3 — using t{T}_normal.png as reference_images + style_image, run
-             `focused_prompt` once → save as `t{T}_focused.png`. Same
-             silhouette, qi effects escalated.
-    Step 4 — t{T}_normal.png becomes the reference for tier T+1's Step 1,
-             so the character's face/hair/proportions carry forward and the
-             player sees the same person evolving across realms.
+    Step 1 — generate design candidate from `design_prompt`. No reference
+             for T0 (seeds the look). T1+ use the previous tier's normal
+             sprite as `reference_images` + `style_image` to lock identity.
+    Step 2 — user picks the candidate → saved as `<tier_id>_normal.png`.
+    Step 3 — using that normal sprite as reference_images + style_image, run
+             `focused_prompt` once → save as `<tier_id>_focused.png`. Same
+             silhouette/robes, qi effects escalated.
+    Step 4 — the normal sprite becomes the reference for the next tier's
+             Step 1, so the player sees the same person evolving across
+             the 13 major realms.
 
   heavenly aura:
-    Same single-step flow. Design prompt describes a transparent-center aura
-    with sun-disc + sutra-glyphs + light beams. Final sprite renders BEHIND
-    the cultivator on HomeScreen when the ad boost is active.
+    Single 4-frame spritesheet. Frame 0 has no reference; frames 1-3
+    reference the previous frame to keep the silhouette stable while the
+    flames shift state. Renders BEHIND the cultivator when the ad boost
+    is active.
 
-All prompts target 128×128 single-frame transparent PNGs. Each is under the
-PixelLab 2000-char limit (verify via `python cultivator_prompts.py`).
+All prompts target 256×256 single-frame transparent PNGs. Each prompt is
+under the PixelLab 2000-char limit (verify via `python cultivator_prompts.py`).
+
+Tier → realm mapping (one sprite per major realm name):
+  t0_novice              → Tempered Body          (idx  0-9)
+  t1_qi_transformation   → Qi Transformation      (idx 10-13)
+  t2_true_element        → True Element           (idx 14-17)
+  t3_separation          → Separation & Reunion   (idx 18-20)
+  t4_immortal_ascension  → Immortal Ascension     (idx 21-23)
+  t5_saint               → Saint                  (idx 24-26)
+  t6_saint_king          → Saint King             (idx 27-29)
+  t7_origin_returning    → Origin Returning       (idx 30-32)
+  t8_origin_king         → Origin King            (idx 33-35)
+  t9_void_king           → Void King              (idx 36-38)
+  t10_dao_source         → Dao Source             (idx 39-41)
+  t11_emperor_realm      → Emperor Realm          (idx 42-44)
+  t12_open_heaven        → Open Heaven            (idx 45-50)
 
 Notes:
   • Pose silhouette stays constant across all tiers (seated cross-legged,
-    facing camera, hands in mudra at chest level, feet grounded). The
-    cultivator's outline never reframes when the player crosses a tier — only
-    the robes / accessories / aura escalate.
-  • The "focused" pose has the SAME silhouette as "normal" — the difference
-    is the qi effects radiating from the hands and crown. CSS handles the
-    crossfade between the two so the boost-state swap is visually continuous.
-  • Heavenly aura is generic across all tiers (Option B from the design doc).
-    If it later feels under-art-directed at high realms, we'll generate 2
-    more aura variants and map realm tier → aura tier (Option C).
+    facing camera, hands in mudra at chest level, feet grounded). Only
+    the robes / accessories / build escalate.
+  • The "focused" pose has the SAME silhouette as "normal" — the only
+    differences are the two internal-qi effects (eyes glowing through
+    eyelids + chest dantian beam streaming up). NO motes/particles/halos/
+    orbits/rings — those are separate VFX assets.
+  • Power progression across tiers comes via robes / gear / build /
+    posture, never via external VFX baked into the sprite.
 """
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -76,14 +92,24 @@ POSE = (
     "moment with quiet menace under the calm."
 )
 
+# Shared focused-pose negatives — appended to every focused_prompt to keep
+# the Avatar-mode visual language clean (eye-glow + chest dantian beam ONLY).
+FOC_NEG = (
+    "NO motes, NO particles, NO dots, NO sparkles, NO orbs of any kind "
+    "around the head or body. NO halo disc, NO sutra-glyph rings, NO "
+    "light beams, NO thick rim or stroke around the body, NO body "
+    "luminosity past the silhouette. Identical character, identical "
+    "silhouette, identical robes as the reference."
+)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Per-tier prompts (8 tiers, T0..T7)
+# Per-tier prompts (13 tiers, T0..T12)
 # ─────────────────────────────────────────────────────────────────────────────
 
 TIERS = {
 
-    # ── T0 Novice (Tempered Body, idx 0-9) ────────────────────────────────────
+    # ── T0 Tempered Body (idx 0-9) ────────────────────────────────────────────
     "t0_novice": {
         "name": "Novice Disciple",
         "realms": ["Tempered Body"],
@@ -99,182 +125,492 @@ TIERS = {
             f"seated meditation pose. Hands stay in the EXACT same prayer-"
             f"mudra position as the reference — DO NOT move or change the "
             f"hands. The qi-gathering is INTERNAL ('Avatar state' style), "
-            f"radiating from the body itself: "
-
+            f"radiating from the body itself. ONLY two qi effects exist: "
             f"• Closed eyes radiate faint cyan light leaking through the "
             f"eyelids (the eyes are still shut but visibly glowing). "
-            f"• A small cyan glow at the chest where the dantian is. "
-            f"• A faint cyan aura outline hugs the cultivator's silhouette. "
-            f"• A few subtle cyan motes hover in the air around the head. "
-
-            f"NO qi orb between the hands, NO halo disc behind the head yet "
-            f"(saved for higher tiers), NO beams. Qi at this tier is "
-            f"fragile, just-discovered, shown by the body's inner glow only. "
-            f"Identical character, identical silhouette as the reference. {S}"
+            f"• A small cyan glow at the chest dantian, visibly streaming "
+            f"UP through the robe collar V. "
+            f"Qi at this tier is fragile, just-discovered. {FOC_NEG} {S}"
         ),
     },
 
-    # ── T1 Cultivator (Qi Transformation, True Element, idx 10-17) ────────────
-    "t1_cultivator": {
+    # ── T1 Qi Transformation (idx 10-13) ──────────────────────────────────────
+    "t1_qi_transformation": {
         "name": "Inner Sect Disciple",
-        "realms": ["Qi Transformation", "True Element"],
+        "realms": ["Qi Transformation"],
         "design_prompt": (
             f"Same cultivator as the reference image, now an inner-sect "
             f"disciple. White inner-sect robes with grey trim, jade-green "
             f"sash, simple cloth shoes. Wooden hairpin holding a tidy "
-            f"topknot, no loose strands. Slightly fairer skin from less "
-            f"manual work. {POSE} Same face as reference. {S}"
+            f"topknot, no loose strands. Slightly stronger build than the "
+            f"reference — a touch broader at the shoulders, more upright "
+            f"posture, the bearing of a disciple beginning real training. "
+            f"IDENTICAL face, skin tone, complexion, eyebrows, jawline, "
+            f"hairline, and proportions as the reference image — character "
+            f"identity is fully locked, only the build/robes/sash/hairpin "
+            f"change. NO halo, NO orbiting orbs, NO glyphs, NO glow effects "
+            f"of any kind — the character is shown without qi effects "
+            f"(those live in the focused-pose sprite and separate VFX "
+            f"layers). {POSE} {S}"
         ),
         "focused_prompt": (
             f"Same inner-sect cultivator as the reference image, in the "
             f"same seated meditation pose, now in focused cultivation. "
-            f"Identical character, identical silhouette. A small bright cyan "
-            f"qi-orb is forming between the palms; cyan threads rise along "
-            f"the arms toward the crown; a faint cyan halo flickers behind "
-            f"the head. {S}"
+            f"Hands stay in the EXACT same prayer-mudra position as the "
+            f"reference — DO NOT move or change the hands. The qi-"
+            f"gathering is INTERNAL ('Avatar state' style), in the same "
+            f"visual language as the T0 novice focused sprite — just "
+            f"slightly brighter. ONLY two qi effects exist: "
+            f"• Closed eyes radiate cyan light leaking through the eyelids "
+            f"(eyes are still shut but visibly glowing), a touch brighter "
+            f"than the T0 reference. "
+            f"• A small cyan glow at the chest dantian, visibly streaming "
+            f"UP through the robe collar V. "
+            f"{FOC_NEG} {S}"
         ),
     },
 
-    # ── T2 Adept (Separation & Reunion, Immortal Ascension, idx 18-23) ────────
-    "t2_adept": {
+    # ── T2 True Element (idx 14-17) — NEW design ──────────────────────────────
+    "t2_true_element": {
+        "name": "True-Element Cultivator",
+        "realms": ["True Element"],
+        "design_prompt": (
+            f"Same cultivator as the reference image, now a true-element "
+            f"cultivator — qi has solidified into a stable elemental "
+            f"affinity. Off-white robes with jade-green trim (richer than "
+            f"the previous inner-sect grey trim), bronze sash, small jade "
+            f"pendant of elemental affinity at the chest, simple cloth "
+            f"shoes. Carved jade hairpin (a step up from the wooden one) "
+            f"holding a tidy topknot, no loose strands. Visibly more "
+            f"capable build than the reference — clearly broader at the "
+            f"shoulders, more grounded posture, the bearing of a cultivator "
+            f"who has stabilised their qi. IDENTICAL face, skin tone, "
+            f"complexion, eyebrows, jawline, hairline, and proportions as "
+            f"the reference image — character identity is fully locked, "
+            f"only the build/robes/sash/hairpin/pendant change. NO halo, "
+            f"NO orbiting orbs, NO glyphs, NO glow of any kind — no qi "
+            f"effects on the sprite (those live in separate VFX layers). "
+            f"{POSE} {S}"
+        ),
+        "focused_prompt": (
+            f"Same true-element cultivator as the reference image, in the "
+            f"same seated meditation pose, now in focused cultivation. "
+            f"Hands stay in the EXACT same prayer-mudra position as the "
+            f"reference — DO NOT move or change the hands. The qi-"
+            f"gathering is INTERNAL ('Avatar state' style), in the same "
+            f"visual language as the T0 novice focused sprite — escalated "
+            f"in brightness. ONLY two qi effects exist: "
+            f"• Closed eyes radiate bright cyan light leaking through the "
+            f"eyelids. "
+            f"• A clear cyan glow at the chest dantian, streaming UP "
+            f"through the robe collar V. "
+            f"{FOC_NEG} {S}"
+        ),
+    },
+
+    # ── T3 Separation & Reunion (idx 18-20) ───────────────────────────────────
+    "t3_separation": {
         "name": "Sect Adept",
-        "realms": ["Separation & Reunion", "Immortal Ascension"],
+        "realms": ["Separation & Reunion"],
         "design_prompt": (
             f"Same cultivator as the reference image, now a proper sect "
             f"adept. Layered jade-green robes with phoenix embroidery along "
             f"the hem, bronze sash, a small jade pendant at the chest. "
             f"Carved jade hairpin holding a refined static topknot, no "
-            f"loose strands. Calm, confident face. {POSE} Same face as "
-            f"reference. {S}"
+            f"loose strands. Visibly stronger and more disciplined build "
+            f"than the reference — broader shoulders, more upright "
+            f"commanding posture, the bearing of someone who has begun to "
+            f"master qi. IDENTICAL face, skin tone, complexion, eyebrows, "
+            f"jawline, hairline, and proportions as the reference image — "
+            f"character identity is fully locked, only the build/robes/"
+            f"sash/hairpin/pendant change. NO halo, NO orbiting orbs, NO "
+            f"glyphs, NO glow of any kind — no qi effects on the sprite "
+            f"(those live in separate VFX layers). {POSE} {S}"
         ),
         "focused_prompt": (
             f"Same sect adept as the reference image, in the same seated "
-            f"meditation pose, now in focused cultivation. Identical "
-            f"character, identical silhouette. A visible cyan-white qi swirl "
-            f"coils around the hands, cyan threads climb the arms in spiral "
-            f"patterns, a soft cyan-white halo radiates behind the head, "
-            f"and small qi orbs orbit at the shoulders. {S}"
+            f"meditation pose, now in focused cultivation. Hands stay in "
+            f"the EXACT same prayer-mudra position as the reference — DO "
+            f"NOT move or change the hands. The qi-gathering is INTERNAL "
+            f"('Avatar state' style), in the same visual language as the "
+            f"T0 novice focused sprite — escalated in brightness. ONLY "
+            f"two qi effects exist: "
+            f"• Closed eyes radiate bright cyan-white light leaking "
+            f"through the eyelids. "
+            f"• A clear cyan-white glow at the chest dantian, streaming "
+            f"UP through the robe collar V. "
+            f"{FOC_NEG} {S}"
         ),
     },
 
-    # ── T3 Saint (Saint, Saint King, idx 24-29) ───────────────────────────────
-    "t3_saint": {
+    # ── T4 Immortal Ascension (idx 21-23) — NEW design ────────────────────────
+    "t4_immortal_ascension": {
+        "name": "Ascending Immortal",
+        "realms": ["Immortal Ascension"],
+        "design_prompt": (
+            f"Same cultivator as the reference image, now an ascending "
+            f"immortal. Layered jade-green robes (deeper, richer green "
+            f"than the previous tier) with phoenix embroidery and silver-"
+            f"thread woven into the sleeves and chest. Bronze-and-silver "
+            f"sash, jade pendant with silver inlay. Jade hairpin with "
+            f"silver lotus tip holding a refined static topknot, no loose "
+            f"strands. More imposing build than the reference — broader "
+            f"chest, more powerful shoulders, the bearing of one on the "
+            f"brink of immortality. IDENTICAL face, skin tone, complexion, "
+            f"eyebrows, jawline, hairline, and proportions as the "
+            f"reference image — character identity is fully locked, only "
+            f"the build/robes/sash/hairpin/pendant change. NO halo, NO "
+            f"orbiting orbs, NO glyphs, NO glow of any kind — no qi "
+            f"effects on the sprite (those live in separate VFX layers). "
+            f"{POSE} {S}"
+        ),
+        "focused_prompt": (
+            f"Same ascending immortal as the reference image, in the same "
+            f"seated meditation pose, now in focused cultivation. Hands "
+            f"stay in the EXACT same prayer-mudra position as the "
+            f"reference — DO NOT move or change the hands. The qi-"
+            f"gathering is INTERNAL ('Avatar state' style), in the same "
+            f"visual language as the T0 novice focused sprite — escalated "
+            f"to a clearer bright cyan-white. ONLY two qi effects exist: "
+            f"• Closed eyes radiate bright cyan-white light leaking "
+            f"through the eyelids. "
+            f"• A vivid cyan-white glow at the chest dantian, streaming "
+            f"UP through the robe collar V. "
+            f"{FOC_NEG} {S}"
+        ),
+    },
+
+    # ── T5 Saint (idx 24-26) ──────────────────────────────────────────────────
+    "t5_saint": {
         "name": "Sect Master",
-        "realms": ["Saint", "Saint King"],
+        "realms": ["Saint"],
         "design_prompt": (
             f"Same cultivator as the reference image, now a sect master. "
             f"White-and-gold trimmed robes with a high collar, hanging jade "
             f"pendant, elegant gold sash. Robes hang plainly without "
             f"billowing. Ornate phoenix-tail hairpin holding a tall static "
-            f"topknot, no loose strands. A serene wise face. {POSE} Same "
-            f"face as reference. {S}"
+            f"topknot, no loose strands. Visibly more powerful frame than "
+            f"the reference — broader chest and shoulders, calm dominant "
+            f"presence, the bearing of a seasoned sect master. IDENTICAL "
+            f"face, skin tone, complexion, eyebrows, jawline, hairline, "
+            f"and proportions as the reference image — character identity "
+            f"is fully locked, only the build/robes/hairpin/sash/pendant "
+            f"change. NO halo, NO orbiting orbs, NO glyphs, NO glow of any "
+            f"kind — no qi effects on the sprite (those live in separate "
+            f"VFX layers). {POSE} {S}"
         ),
         "focused_prompt": (
-            f"Same sect master as the reference image, in the same seated "
-            f"meditation pose, now in focused cultivation. Identical "
-            f"character, identical silhouette. Brilliant golden-cyan qi "
-            f"swirls tightly around the hands and rises along the arms in "
-            f"spiral patterns. A clear golden halo radiates behind the head. "
-            f"Golden qi orbs orbit at the wrists and shoulders. {S}"
+            f"Same sect master as the reference image, in the same "
+            f"seated meditation pose, now in focused cultivation. Hands "
+            f"stay in the EXACT same prayer-mudra position as the "
+            f"reference — DO NOT move or change the hands. The qi-"
+            f"gathering is INTERNAL ('Avatar state' style), in the same "
+            f"visual language as the T0 novice focused sprite — palette "
+            f"shifted toward warm gold-cyan. ONLY two qi effects exist: "
+            f"• Closed eyes radiate bright golden-cyan light leaking "
+            f"through the eyelids. "
+            f"• A vivid golden-cyan glow at the chest dantian, streaming "
+            f"UP through the robe collar. "
+            f"{FOC_NEG} {S}"
         ),
     },
 
-    # ── T4 Sage (Origin Returning, Origin King, idx 30-35) ────────────────────
-    "t4_sage": {
+    # ── T6 Saint King (idx 27-29) — NEW design ────────────────────────────────
+    "t6_saint_king": {
+        "name": "Saint King",
+        "realms": ["Saint King"],
+        "design_prompt": (
+            f"Same cultivator as the reference image, now a Saint King. "
+            f"White-and-gold robes (richer than the previous Saint tier) "
+            f"with deeper gold borders along the hem AND silver-violet "
+            f"accents along the sleeves. Both dragon AND phoenix "
+            f"embroidery on the chest panel. Hanging jade-and-silver "
+            f"pendant. Gold-and-silver sash. Crown-like jade hairpin "
+            f"with silver lotus inlay holding a tall static topknot, no "
+            f"loose strands. More commanding frame than the reference — "
+            f"visibly broader, more imposing presence, the bearing of a "
+            f"saint who rules other saints. IDENTICAL face, skin tone, "
+            f"complexion, eyebrows, jawline, hairline, and proportions "
+            f"as the reference image — character identity is fully "
+            f"locked, only the build/robes/hairpin/sash/pendant change. "
+            f"NO halo, NO orbiting orbs, NO glyphs, NO glow of any "
+            f"kind — no qi effects on the sprite (those live in separate "
+            f"VFX layers). {POSE} {S}"
+        ),
+        "focused_prompt": (
+            f"Same Saint King as the reference image, in the same seated "
+            f"meditation pose, now in focused cultivation. Hands stay in "
+            f"the EXACT same prayer-mudra position as the reference — DO "
+            f"NOT move or change the hands. The qi-gathering is INTERNAL "
+            f"('Avatar state' style), in the same visual language as the "
+            f"T0 novice focused sprite — escalated to a vivid golden-cyan "
+            f"palette. ONLY two qi effects exist: "
+            f"• Closed eyes radiate vivid golden-cyan light leaking "
+            f"through the eyelids. "
+            f"• A brilliant golden-cyan glow at the chest dantian, "
+            f"streaming UP through the robe collar. "
+            f"{FOC_NEG} {S}"
+        ),
+    },
+
+    # ── T7 Origin Returning (idx 30-32) ───────────────────────────────────────
+    "t7_origin_returning": {
         "name": "Immortal Sage",
-        "realms": ["Origin Returning", "Origin King"],
+        "realms": ["Origin Returning"],
         "design_prompt": (
-            f"Same cultivator as the reference image, now an immortal sage. "
-            f"Cosmic-thread robes in jade-white with subtle woven "
-            f"constellation pattern, wide sleeves hanging plainly, gold-"
-            f"thread sash. Lotus-shaped jade crown on the head holding a "
-            f"tall static topknot, no loose strands. Faintly luminous skin. "
-            f"{POSE} Same face as reference. {S}"
+            f"Same cultivator as the reference image, now an immortal "
+            f"sage. Layered ceremonial robes — white outer with wide "
+            f"gold borders down the chest, gold under-tunic visible at "
+            f"chest V, celestial AZURE collar trim (a new cosmic "
+            f"element). Bold gold DRAGON emblem on chest panel AND "
+            f"bold gold PHOENIX on sleeve cuff (twin bold graphics). "
+            f"Wide solid gold sash with LARGE gold clasp centre. TALL "
+            f"jade-and-gold crown with azure gem centre — bolder than "
+            f"the previous tier's hairpin. White trousers (gold on "
+            f"upper body only). Imposing immortal presence — broader "
+            f"more powerful frame, regal commanding bearing. IDENTICAL "
+            f"face, skin tone, eyebrows, jawline, hairline, and "
+            f"proportions — character identity is fully locked, only "
+            f"the build/robes/crown/sash change. NO fine embroidery, "
+            f"NO thin patterns, NO halo, NO orbs, NO glow — qi effects "
+            f"live in VFX layers. {POSE} {S}"
         ),
         "focused_prompt": (
-            f"Same immortal sage as the reference image, in the same seated "
-            f"meditation pose, now in focused cultivation. Identical "
-            f"character, identical silhouette. Golden qi orbs orbit tightly "
-            f"around the body. Faint sutra-glyphs glow at the wrists. A "
-            f"clear golden halo radiates behind the head; faint white-gold "
-            f"radiance at the closed eyes and the crown. {S}"
+            f"Same immortal sage as the reference image, in the same "
+            f"seated meditation pose, now in focused cultivation. Hands "
+            f"stay in the EXACT same prayer-mudra position as the "
+            f"reference — DO NOT move or change the hands. The qi-"
+            f"gathering is INTERNAL ('Avatar state' style), in the same "
+            f"visual language as the T0 novice focused sprite — escalated "
+            f"to a full gold palette. ONLY two qi effects exist: "
+            f"• Closed eyes radiate bright gold light leaking through "
+            f"the eyelids. "
+            f"• A vivid gold glow at the chest dantian, streaming UP "
+            f"through the robe collar. "
+            f"{FOC_NEG} {S}"
         ),
     },
 
-    # ── T5 Sovereign (Void King, Dao Source, idx 36-41) ───────────────────────
-    "t5_sovereign": {
-        "name": "Divine Sovereign",
-        "realms": ["Void King", "Dao Source"],
+    # ── T8 Origin King (idx 33-35) — NEW design ───────────────────────────────
+    "t8_origin_king": {
+        "name": "Origin King",
+        "realms": ["Origin King"],
         "design_prompt": (
-            f"Same cultivator as the reference image, now a divine sovereign. "
-            f"Multi-layered celestial robes in violet, gold and white with "
-            f"intricate embroidered dragon and phoenix patterns along the "
-            f"hem. Robes hang plainly. Carved crown of static jade flames "
-            f"on the head holding an elaborate static gathered topknot — no "
-            f"flowing or loose hair. A subtle gold halo-disc behind the "
-            f"head. Body slightly luminous. {POSE} Same face as reference. {S}"
+            f"Same cultivator as the reference image, now an Origin "
+            f"King. Layered ceremonial robes — gold outer continues "
+            f"the gold, with CLEAR VIOLET inner robe visible at chest "
+            f"opening (violet replaces the previous azure). Bold gold "
+            f"ceremonial shoulder panels. Bold gold DRAGON emblem on "
+            f"chest panel AND bold gold PHOENIX on sleeve cuff (twin "
+            f"bold graphics). Wide solid gold sash with LARGE violet "
+            f"sapphire clasp centre. TALL jade-and-gold crown with "
+            f"violet sapphire centre — taller than the previous. "
+            f"White trousers with gold trim. King-tier — broader "
+            f"chest, more powerful frame, regal dominant bearing. IDENTICAL face, skin tone, "
+            f"eyebrows, jawline, hairline, and proportions — character "
+            f"identity is fully locked, only the build/robes/crown/sash "
+            f"change. NO fine embroidery, NO thin patterns, NO halo, "
+            f"NO orbs, NO glyphs, NO glow — qi effects live in VFX "
+            f"layers. {POSE} {S}"
+        ),
+        "focused_prompt": (
+            f"Same Origin King as the reference image, in the same "
+            f"seated meditation pose, now in focused cultivation. Hands "
+            f"stay in the EXACT same prayer-mudra position as the "
+            f"reference — DO NOT move or change the hands. The qi-"
+            f"gathering is INTERNAL ('Avatar state' style — a closed-"
+            f"eye warrior visibly channeling power through glowing "
+            f"eyes), escalated to a vivid gold palette. ONLY two qi "
+            f"effects exist: "
+            f"• EYES — closed but BLAZING with intense bright gold "
+            f"light leaking through the eyelids, the eyelids glowing "
+            f"as if backlit by raw power. The eye-glow is the MOST "
+            f"prominent qi effect — clearly bright, powerful, the "
+            f"visual focal point. "
+            f"• A brilliant gold glow at the chest dantian, streaming "
+            f"UP through the robe collar. "
+            f"{FOC_NEG} {S}"
+        ),
+    },
+
+    # ── T9 Void King (idx 36-38) ──────────────────────────────────────────────
+    "t9_void_king": {
+        "name": "Divine Sovereign",
+        "realms": ["Void King"],
+        "design_prompt": (
+            f"Same cultivator as the reference image, now a divine "
+            f"sovereign — cosmic war-god aesthetic (NOT priestly, "
+            f"NOT white). Body VIOLET (continues from T8) with LARGE "
+            f"GOLD shoulder pauldrons (massive gold armour plates "
+            f"with violet sapphires). Bold gold DRAGON on chest panel "
+            f"AND bold gold PHOENIX on sleeve cuff. Wide gold sash "
+            f"with LARGE violet sapphire clasp centre. SHARP ANGULAR "
+            f"gold-and-violet warrior crown (flame-like, NOT rounded) "
+            f"with LARGE violet sapphire centrepiece. Imposing war-god "
+            f"frame — broader chest, powerful shoulders, divine "
+            f"commanding bearing. IDENTICAL face, WARM TAN skin (no "
+            f"pink/red drift), eyebrows, jawline, hairline, and "
+            f"proportions — character identity is fully locked. NO "
+            f"white-dominant outer, NO fine embroidery, NO thin "
+            f"patterns, NO halo, NO orbs, NO glyphs, NO glow — qi "
+            f"effects live in VFX layers. {POSE} {S}"
         ),
         "focused_prompt": (
             f"Same divine sovereign as the reference image, in the same "
-            f"levitating meditation pose, now in focused cultivation. "
-            f"Identical character, identical silhouette. Violet-gold qi "
-            f"columns rise around the body. A brilliant halo-disc blazes "
-            f"behind the head. Sutra-glyphs orbit in two concentric rings "
-            f"around the body. The jade lotus below glows brighter. {S}"
+            f"seated meditation pose, now in focused cultivation. Hands "
+            f"stay in the EXACT same prayer-mudra position as the "
+            f"reference — DO NOT move or change the hands. The qi-"
+            f"gathering is INTERNAL ('Avatar state' style — a closed-"
+            f"eye warrior visibly channeling power through glowing "
+            f"eyes), escalated to a violet-gold palette. ONLY two qi "
+            f"effects exist: "
+            f"• EYES — closed but BLAZING with intense bright violet-"
+            f"gold light leaking through the eyelids, the eyelids "
+            f"glowing as if backlit by raw power. The eye-glow is the "
+            f"MOST prominent qi effect — clearly bright, powerful, the "
+            f"visual focal point. "
+            f"• A vivid violet-gold glow at the chest dantian, streaming "
+            f"UP through the robe collar. "
+            f"{FOC_NEG} {S}"
         ),
     },
 
-    # ── T6 Emperor (Emperor Realm, idx 42-44) ─────────────────────────────────
-    "t6_emperor": {
+    # ── T10 Dao Source (idx 39-41) — NEW design ───────────────────────────────
+    "t10_dao_source": {
+        "name": "Dao Source Cultivator",
+        "realms": ["Dao Source"],
+        "design_prompt": (
+            f"Same cultivator as the reference image, now a Dao Source "
+            f"cultivator — cosmic war-god escalating ADDS (NOT "
+            f"priestly, NOT white, NO crimson). KEEPS T9's massive "
+            f"gold pauldrons WITH violet sapphires (sapphires visible "
+            f"on each). KEEPS the deep violet body. ADDS sharp "
+            f"angular GOLD spikes across the chest panel (matching "
+            f"the crown). ADDS VIOLET trousers with bold GOLD accent "
+            f"bands (NOT white/cream). Bold gold DRAGON on chest AND "
+            f"bold gold PHOENIX on sleeve cuff. Wide gold sash with "
+            f"LARGE violet sapphire clasp centre. EVEN SHARPER crown "
+            f"(more spikes than T9, LARGE sapphire centre). Imposing "
+            f"Dao-touched frame — broader chest, more powerful "
+            f"shoulders. IDENTICAL face, WARM TAN skin (no pink/red "
+            f"drift), eyebrows, jawline, hairline, and proportions — "
+            f"character identity is fully locked. NO white, NO "
+            f"crimson, NO fine embroidery, NO halo, NO orbs, NO glow "
+            f"— qi effects live in VFX layers. {POSE} {S}"
+        ),
+        "focused_prompt": (
+            f"Same Dao Source cultivator as the reference image, in the "
+            f"same seated meditation pose, now in focused cultivation. "
+            f"Hands stay in the EXACT same prayer-mudra position as the "
+            f"reference — DO NOT move or change the hands. The qi-"
+            f"gathering is INTERNAL ('Avatar state' style — a closed-"
+            f"eye warrior visibly channeling power through glowing "
+            f"eyes), escalated to a deep violet-gold palette. ONLY two "
+            f"qi effects exist: "
+            f"• EYES — closed but BLAZING with intense bright violet-"
+            f"gold light leaking through the eyelids, the eyelids "
+            f"glowing as if backlit by raw power. The eye-glow is the "
+            f"MOST prominent qi effect — clearly bright, powerful, the "
+            f"visual focal point. "
+            f"• A brilliant violet-gold glow at the chest dantian, "
+            f"streaming UP through the robe collar. "
+            f"{FOC_NEG} {S}"
+        ),
+    },
+
+    # ── T11 Emperor Realm (idx 42-44) ─────────────────────────────────────────
+    "t11_emperor_realm": {
         "name": "Dao Emperor",
         "realms": ["Emperor Realm"],
         "design_prompt": (
-            f"Same cultivator as the reference image, now a Dao Emperor. "
-            f"Imperial dragon-and-phoenix embroidered robes in deep red, "
-            f"gold and violet, ceremonial high collar. Robes hang plainly "
-            f"without billowing. Multi-tier crown of carved golden lotus "
-            f"petals on the head holding an elaborate static topknot — no "
-            f"flowing or loose hair. A bright golden halo disc behind the "
-            f"head. Static sutra-glyphs etched in the air at the wrists. "
-            f"Cosmic blue-violet glow around the body. {POSE} Same face as "
-            f"reference. {S}"
+            f"Same cultivator as the reference image, now a Dao "
+            f"Emperor — cosmic war-god escalating ADDS (NOT priestly, "
+            f"NO crimson, NO white). KEEPS T10's gold pauldrons "
+            f"(sapphires intact), violet body, gold-banded violet "
+            f"trousers. ADDS a flowing IMPERIAL CAPE (violet with "
+            f"bold gold trim). ADDS a CLEAN BOLD GOLD CHESTPLATE "
+            f"covering the chest (one large solid gold armour block, "
+            f"clean metal, no embroidery). ADDS a SOLID GOLD imperial "
+            f"crown (clean angular silhouette, LARGE violet sapphire "
+            f"centrepiece, NOT messy multi-tier). "
+            f"Wide gold sash with LARGE violet sapphire clasp. "
+            f"Powerful imperial frame, commanding shoulders. "
+            f"IDENTICAL face, WARM TAN skin (no pink/red "
+            f"drift), eyebrows, jawline, hairline, and proportions — "
+            f"character identity is fully locked. NO white, NO "
+            f"crimson, NO thin embroidery, NO dragon/phoenix thin "
+            f"lines, NO halo, NO orbs, NO glow — qi effects live in "
+            f"VFX layers. {POSE} {S}"
         ),
         "focused_prompt": (
             f"Same Dao Emperor as the reference image, in the same "
-            f"levitating meditation pose, now in focused imperial "
-            f"cultivation. Identical character, identical silhouette. A "
-            f"blazing golden halo disc behind the head, violet-gold static "
-            f"sutra-glyphs arranged in three concentric rings around the "
-            f"body, etched spirit-dragon motifs glowing on the shoulders "
-            f"of the robes. Cosmic blue-violet glow around the body. {S}"
+            f"seated meditation pose, now in focused cultivation. Hands "
+            f"stay in the EXACT same prayer-mudra position as the "
+            f"reference — DO NOT move or change the hands. The qi-"
+            f"gathering is INTERNAL ('Avatar state' style — a closed-"
+            f"eye warrior visibly channeling power through glowing "
+            f"eyes), in the EXACT visual language of the T0-T7 focused "
+            f"sprites (NO red, NO crimson). ONLY two qi effects exist: "
+            f"• EYES — closed but BLAZING with intense violet-gold "
+            f"light leaking through the eyelids. Bright eye-glow is "
+            f"the visual focal point. "
+            f"• A subtle violet-gold glow visible at the edges of the "
+            f"praying hands — the qi flame is HIDDEN INSIDE the hands "
+            f"(cupped between the palms, NOT visible as a drawn flame "
+            f"shape), only the radiance leaking out from where the "
+            f"palms meet is visible (like T0-T7 — just glow peeking, "
+            f"no flame icon). "
+            f"NO chunky halo, NO wide glow spread, NO general "
+            f"illumination on the cape / chestplate / pauldrons. "
+            f"{FOC_NEG} {S}"
         ),
     },
 
-    # ── T7 Heavenly (Open Heaven, idx 45-50) ──────────────────────────────────
-    "t7_heavenly": {
+    # ── T12 Open Heaven (idx 45-50) ───────────────────────────────────────────
+    "t12_open_heaven": {
         "name": "Heavenly Sovereign",
         "realms": ["Open Heaven"],
         "design_prompt": (
-            f"Same cultivator as the reference image, ascended into a "
-            f"heavenly sovereign. Nine-layered celestial silk robes "
-            f"embroidered with static constellation and dragon-motif "
-            f"patterns in violet, gold and white. Robes hang plainly "
-            f"without billowing. Elaborate static crown of gathered hair "
-            f"with embedded star-points — no flowing or loose strands. "
-            f"Multi-tiered halo disc of carved stars and etched sutra-"
-            f"glyphs behind the head. Blazing white-gold light at the "
-            f"closed eyes. Body luminous with cosmic radiance. {POSE} "
-            f"Same face as reference. {S}"
+            f"Same cultivator as the reference image, ascended into "
+            f"a heavenly sovereign — GOD-OF-EVERYTHING APEX (NO "
+            f"white, NO crimson). KEEPS T11's pauldrons, chestplate. "
+            f"GOLD-DOMINANT body armour across chest/abdomen/arms. "
+            f"ADDS bold DRAGON engraving on the chestplate (clean "
+            f"bold relief, NOT thin lines). ADDS multiple LARGE "
+            f"violet sapphires across the armour (chest centre, sash, "
+            f"pauldrons, crown — gems break up the plain gold). "
+            f"UPGRADES cape to GOLDEN (gold metallic, violet inner "
+            f"trim). SLEEK STAR-CROWN (sharp gold star-points, THREE "
+            f"large star-gems). ADDS bold gold LOTUS on hem. Wide "
+            f"gold sash with LARGE star-gem clasp. Sleeker "
+            f"silhouette, broadest chest. IDENTICAL face, WARM TAN "
+            f"skin (no pink/red drift), eyebrows, jawline, hairline, "
+            f"and proportions — character identity is fully locked. "
+            f"NO crimson, NO white, NO thin embroidery, NO halo, NO "
+            f"orbs — qi effects live in VFX layers. {POSE} {S}"
         ),
         "focused_prompt": (
-            f"Same heavenly sovereign as the reference image, in the same "
-            f"levitating meditation pose, now in focused divine cultivation. "
-            f"Identical character, identical silhouette. The multi-tier "
-            f"halo blazes bright; constellations on the nine-layered robes "
-            f"glow vivid. Etched spirit-dragon motifs blaze on the "
-            f"shoulders of the robes. Closed eyes radiate white-gold light. "
-            f"Static violet-gold flame motes around the body. The apex of "
-            f"cultivation. {S}"
+            f"Same heavenly sovereign as the reference image, in the "
+            f"same seated meditation pose, now in focused cultivation "
+            f"(apex of all tiers). Hands stay in the EXACT same prayer-"
+            f"mudra position as the reference — DO NOT move or change "
+            f"the hands. The qi-gathering is INTERNAL ('Avatar state' "
+            f"style), in the EXACT visual language of the T0-T11 "
+            f"focused sprites, escalated to a blazing white-gold "
+            f"palette. ONLY two qi effects exist: "
+            f"• EYES — full ICONIC AVATAR STATE eye-glow (like "
+            f"Aang/Korra at peak power — both eyes blazing with "
+            f"intense pure WHITE-GOLD energy through the closed "
+            f"eyelids, overwhelming brightness, the unmistakable "
+            f"visual focal point, brightest eye-glow of any tier). "
+            f"• A subtle white-gold glow visible at the edges of the "
+            f"praying hands — the qi flame is HIDDEN INSIDE the hands "
+            f"(cupped between the palms, NOT a drawn flame shape), "
+            f"only the radiance leaking out from where the palms meet "
+            f"is visible (like T0-T11). "
+            f"NO chunky halo, NO wide glow spread, NO general "
+            f"illumination on the cape / chestplate / pauldrons. "
+            f"{FOC_NEG} {S}"
         ),
     },
 
@@ -380,5 +716,5 @@ if __name__ == "__main__":
     total = sum(
         len(t["design_prompt"]) + len(t["focused_prompt"]) for t in TIERS.values()
     ) + len(HEAVENLY_AURA["design_prompt"])
-    print(f"\nTotal sprites to generate: {len(TIERS) * 2 + 1} (8 tiers × 2 + 1 aura)")
+    print(f"\nTotal sprites to generate: {len(TIERS) * 2 + 1} ({len(TIERS)} tiers × 2 + 1 aura)")
     print(f"{'All under limit' if bad == 0 else f'{bad} over limit'}.")
