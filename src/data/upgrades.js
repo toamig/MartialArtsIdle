@@ -12,9 +12,10 @@
  *                     "empty reservoir floor" granted by a crystal tap.
  *   focus_mult      — 4 upgrades, realm-gated. Add +50%/+50%/+50%/+100% to the
  *                     hold-to-cultivate focus multiplier.
- *   gate_reduction  — 2 upgrades, realm-gated. Each ×0.7 to the major-realm
- *                     qi/s gate (stack to ×0.49).
- *   sparks_reroll   — 1 upgrade, realm-gated. Halves the per-rerollspark cost.
+ *   offline_rate    — 4 upgrades, realm-gated. Each +5% to the offline qi rate
+ *                     (base 20% → 40% with all four).
+ *   offline_cap     — 4 upgrades, realm-gated. Each +4 h to the offline window
+ *                     (base 8h → 24h with all four).
  *
  * Cost values are STARTING VALUES — validate in scripts/sim-cultivation.js
  * (Phase F) before locking. Visibility: an upgrade is HIDDEN until its
@@ -24,8 +25,8 @@
  *   { type: 'producer_double', producerId, mult: 2 }
  *   { type: 'crystal_tap',     mult: 2 }
  *   { type: 'focus_mult',      add: 50 }   — percentage points
- *   { type: 'gate_reduction',  mult: 0.7 }
- *   { type: 'sparks_reroll',   mult: 0.5 }
+ *   { type: 'offline_rate',    add: 0.05 } — additive fraction
+ *   { type: 'offline_cap',     addHours: 4 }
  *
  * Unlock shape:
  *   { type: 'realm',         minRealmIndex: N }
@@ -100,34 +101,7 @@ const FOCUS_MULT = [
   effect:    { type: 'focus_mult', add: u.add },
 }));
 
-// ── D. Major-realm gate reduction (2 tiers) ──────────────────────────────────
-
-const GATE_REDUCTION = [
-  { id: 'u_gate_1', name: 'Patient Heart I',  cost:        50_000, realm: 13 },
-  { id: 'u_gate_2', name: 'Patient Heart II', cost: 100_000_000, realm: 29 },
-].map(u => ({
-  id:        u.id,
-  category:  'gate_reduction',
-  name:      u.name,
-  desc:      `Reduces the major-realm qi/s gate by 30% (multiplicative).`,
-  cost:      u.cost,
-  unlock:    { type: 'realm', minRealmIndex: u.realm },
-  effect:    { type: 'gate_reduction', mult: 0.7 },
-}));
-
-// ── E. Sparks reroll discount (1 upgrade) ────────────────────────────────────
-
-const SPARKS_REROLL = [{
-  id:        'u_sparks_reroll',
-  category:  'sparks_reroll',
-  name:      'Practised Selection',
-  desc:      'Spark reroll cost halved.',
-  cost:      10_000,
-  unlock:    { type: 'realm', minRealmIndex: 9 },
-  effect:    { type: 'sparks_reroll', mult: 0.5 },
-}];
-
-// ── E2. Offline gain rate (4 tiers, additive bonus to base 20%) ──────────────
+// ── D. Offline gain rate (4 tiers, additive bonus to base 20%) ───────────────
 // Each tier adds +5% to the offline qi rate. Base 0.20 → 0.25 / 0.30 / 0.35 /
 // 0.40 (Idle-Slayer-equivalent maximum). Numbers Policy: starting values;
 // sim run after sweep to confirm hardcore-active land at ~7-8 days.
@@ -146,7 +120,7 @@ const OFFLINE_RATE = [
   effect:    { type: 'offline_rate', add: u.add },
 }));
 
-// ── E3. Offline duration cap (4 tiers, additive hours to base 8h) ────────────
+// ── E. Offline duration cap (4 tiers, additive hours to base 8h) ─────────────
 // Each tier adds +4 h to the offline window. Base 8 → 12 / 16 / 20 / 24 h
 // (typical idle-game ceiling). Past 24 h the cap caps — players returning
 // after a week-long absence don't get a week of qi.
@@ -205,7 +179,7 @@ const MECHANIC_TIER_CONFIG = [
   },
   {
     mechanicId: 'pattern_click',
-    label:      'Pattern Clicking',
+    label:      'Tracing Meridians',
     descTier:   { 2: 'Spark every ~100s. 4 dots, 12s window. Full clear: 40s of qi.',
                   3: 'Spark every ~80s. 5 dots, 14s window. Full clear: 50s of qi.',
                   4: 'Spark every ~60s. 6 dots, 16s window. Full clear: 60s of qi.',
@@ -232,8 +206,6 @@ const UPGRADES = [
   ...PRODUCER_DOUBLES,
   ...CRYSTAL_TAP,
   ...FOCUS_MULT,
-  ...GATE_REDUCTION,
-  ...SPARKS_REROLL,
   ...OFFLINE_RATE,
   ...OFFLINE_CAP,
   ...MECHANIC_TIERS,

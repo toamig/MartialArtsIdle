@@ -231,6 +231,197 @@ ELEMENTS = {
         ),
     },
 
+    # ── Cultivation upgrade icons (128×128, sit in cs-up-card top-centre) ─────
+    # Style anchor for all upgrade_* icons:
+    #   - Same "carved jade + bronze" treatment as card_frame / btn_stone.
+    #   - One clear central motif, readable at 76px display.
+    #   - Transparent background. Slight bronze ring or stone base around the
+    #     motif so each icon reads as a coherent emblem on the dark card.
+
+    "upgrade_focus": {
+        "size": (128, 128),
+        "desc": (
+            "A pixel art emblem icon for a xianxia cultivation game upgrade — Deep Focus / "
+            "Deeper Breath. Centred composition on transparent background. "
+            "Subject: a single large stylised third-eye viewed front-on, centred in the icon. "
+            "The eye is almond-shaped, narrowed in deep focused concentration (not wide open). "
+            "Eyelid edges are carved bronze-gold lines; lashes are short angular bronze pixels. "
+            "Inside the eye is a dark jade-green iris with a thin bronze-gold inner rim. "
+            "At the centre of the iris sits a tight bright pinpoint of pale cyan qi — only 2-3 "
+            "pixels — surrounded by a single faint cyan glow ring (the focused point of qi). "
+            "Above the eye, a small forehead mark — a tiny vertical bronze tear-drop gem. "
+            "Treatment: thick charcoal outline, flat colour fills, no gradients. "
+            "Symmetrical, mystical, intense — the icon must read as 'concentrated inward focus'. "
+            "Surround everything with a thin aged bronze-gold circular ring border like a carved "
+            "bronze coin, with 4 tiny stud notches at N/S/E/W. The interior of the ring (around "
+            "the eye) is fully transparent so the eye sits cleanly on the dark card. "
+            "Palette: dark jade green (#0f2520), aged bronze-gold (#8a5a2a), pale cyan qi "
+            "highlight (#7adcc4), charcoal outline (#111). No red, no purple, no grey stone, "
+            "no human face/skin — just the eye motif. "
+            f"{S}"
+        ),
+    },
+
+    "upgrade_divine_qi": {
+        "size": (128, 128),
+        "desc": (
+            "A pixel art emblem icon for a xianxia cultivation game upgrade — Divine Qi. "
+            "Match the reference image's overall composition: a circular jade-green and bronze "
+            "badge framing a clear centred subject. "
+            ""
+            "BORDER: jade-green ring with engraved cloud-scroll relief, four small bronze "
+            "stud notches at N/S/E/W, tiny bronze tear-drop gem at the top (12 o'clock). "
+            ""
+            "SUBJECT (inside the ring): a single radiant celestial orb floating centred. "
+            "The orb is a solid bright bronze-gold circle with a brighter pale-cyan core "
+            "highlight. Around the orb, 8 sharp golden rays radiate outward in a starburst — "
+            "long thin triangular spikes at N/NE/E/SE/S/SW/W/NW. Between the long rays, "
+            "shorter secondary rays fill the gaps for a 16-point sunburst feel. "
+            "Below the orb, a small bronze cloud-scroll motif (two curling waves) acts as a "
+            "base, suggesting the orb hovers above clouds. "
+            "Background behind the orb is deep charcoal-black so the gold and cyan pop with "
+            "strong contrast. "
+            ""
+            "Treatment: thick charcoal outlines, flat colour fills, no gradients. "
+            "Perfectly symmetrical. Reads as 'a divine sun orb radiating qi above clouds'. "
+            ""
+            "Palette: jade green (#0f2520) badge ring, bright bronze-gold (#c08a3a) orb + "
+            "rays + cloud-scroll + gem + studs, pale cyan qi highlight (#7adcc4) orb core, "
+            "deep charcoal (#0a0a0a) interior background, charcoal outline (#111). "
+            "No red, no purple, no grey stone, no human figure. "
+            f"{S}"
+        ),
+    },
+
+    "upgrade_consecutive_focus": {
+        "size": (128, 128),
+        "desc": (
+            "A pixel art emblem icon for a xianxia cultivation game upgrade — Consecutive Focus. "
+            "Match the reference image's overall composition: a circular jade-green and bronze "
+            "badge framing a clear centred subject. "
+            ""
+            "BORDER: jade-green ring with engraved cloud-scroll relief, four small bronze "
+            "stud notches at N/S/E/W, tiny bronze tear-drop gem at the top (12 o'clock). "
+            ""
+            "SUBJECT (inside the ring): three concentric circular meditation rings stacking "
+            "outward from a single bright pale-cyan qi pinpoint at the dead centre. "
+            "Innermost ring is small and pale cyan; middle ring is medium and bronze-gold; "
+            "outermost ring is largest and a slightly deeper bronze with a faint cyan glow "
+            "highlight on its top edge. Each ring is a thin clean line (2-3 pixels), evenly "
+            "spaced. Between the rings, four short bronze chevron tick marks at N/S/E/W "
+            "between the middle and outer rings suggest the rings are 'snapping into place' "
+            "as focus deepens. "
+            "Background behind the rings is deep charcoal-black so the cyan and bronze pop "
+            "with strong contrast. "
+            ""
+            "Treatment: thick charcoal outlines, flat colour fills, no gradients. "
+            "Perfectly symmetrical. Reads as 'stacking focus aura tightening around a qi point'. "
+            ""
+            "Palette: jade green (#0f2520) badge ring, bronze-gold (#8a5a2a) middle/outer "
+            "rings + gem + studs + chevrons, pale cyan qi highlight (#7adcc4) inner ring + "
+            "centre point + outer-ring top highlight, deep charcoal (#0a0a0a) interior "
+            "background, charcoal outline (#111). No red, no purple, no grey stone, no "
+            "human figure. "
+            f"{S}"
+        ),
+    },
+
+    "upgrade_crystal_click": {
+        "size": (128, 128),
+        "desc": (
+            "A pixel art emblem icon for a xianxia cultivation game upgrade — Crystal Reservoir. "
+            "Match the reference image's overall composition: a circular jade-green and bronze "
+            "badge framing a clear centred subject. "
+            ""
+            "BORDER: jade-green ring with engraved cloud-scroll relief, four small bronze "
+            "stud notches at N/S/E/W, tiny bronze tear-drop gem at the top (12 o'clock). "
+            ""
+            "SUBJECT (inside the ring): a small wuxia-style cultivation gourd / hulu flask "
+            "viewed head-on, centred and upright. The gourd is hourglass-shaped: a small "
+            "round top bulb joined to a larger round bottom bulb by a narrow waist. It has "
+            "a tiny bronze stopper/cork at the very top and a small bronze hanging cord ring. "
+            "The gourd body is dark jade-green with a thick charcoal outline. "
+            ""
+            "The gourd is half to two-thirds full of glowing pale-cyan qi liquid that fills "
+            "the bottom bulb and rises into the waist. From above the gourd, three or four "
+            "pale-cyan qi droplets are mid-fall, dripping DOWN toward the open stopper — "
+            "showing that the reservoir is actively being filled. "
+            "Background behind the gourd is deep charcoal-black so the cyan qi pops with "
+            "strong contrast. "
+            ""
+            "Treatment: thick charcoal outlines, flat colour fills, no gradients. "
+            "Symmetrical horizontally. Reads as 'qi droplets fill the reservoir gourd'. "
+            ""
+            "Palette: jade green (#0f2520) badge ring + gourd body, bronze-gold (#8a5a2a) "
+            "stopper, cord ring, gem, studs, pale cyan qi highlight (#7adcc4) qi liquid + "
+            "droplets, deep charcoal (#0a0a0a) interior background, charcoal outline (#111). "
+            "No red, no purple, no grey stone. "
+            f"{S}"
+        ),
+    },
+
+    "upgrade_pattern_click": {
+        "size": (128, 128),
+        "desc": (
+            "A pixel art emblem icon for a xianxia cultivation game upgrade — Tracing Meridians. "
+            "Match the reference image's overall composition: a circular jade-green and bronze "
+            "badge framing a clear centred subject. "
+            ""
+            "BORDER: jade-green ring with engraved cloud-scroll relief, four small bronze "
+            "stud notches at N/S/E/W, tiny bronze tear-drop gem at the top (12 o'clock). "
+            ""
+            "SUBJECT (inside the ring): five glowing bronze-gold acupressure nodes arranged "
+            "in a small five-point constellation pattern. Each node has a bright pale-cyan "
+            "qi pinpoint at its centre. Thin curving pale-cyan qi lines flow from node to "
+            "node connecting them in a single traced path. The subject sits on a dark "
+            "charcoal-black background (NOT jade) so the cyan and bronze pop with strong "
+            "contrast — no body silhouette behind the nodes. "
+            ""
+            "Treatment: thick charcoal outlines, flat colour fills, no gradients. "
+            "Symmetrical. Reads as 'glowing meridian points joined by traced qi'. "
+            ""
+            "Palette: jade green (#0f2520) badge ring only, bronze-gold (#8a5a2a) nodes/gem/studs, "
+            "pale cyan qi highlight (#7adcc4) qi lines and node centres, deep charcoal (#0a0a0a) "
+            "interior background, charcoal outline (#111). No red, no purple, no grey stone. "
+            f"{S}"
+        ),
+    },
+
+    "upgrade_crystal_tap": {
+        "size": (128, 128),
+        "desc": (
+            "A pixel art emblem icon for a xianxia cultivation game upgrade — Refined Tap. "
+            "Centred composition on transparent background. "
+            ""
+            "BORDER (must match the established upgrade-icon style): a thick aged bronze-gold "
+            "circular ring filling the outer ~20% of the icon, covered all the way around with "
+            "carved cloud-scroll relief patterns in slightly darker bronze. Four small dark "
+            "jade-green square stud notches embedded at N/S/E/W positions on the ring. A tiny "
+            "bronze-gold tear-drop gem sits centred at the very top of the ring (12 o'clock). "
+            "The interior of the ring is fully transparent. "
+            ""
+            "SUBJECT (inside the ring): a single pointing finger — jade-green stylised hand "
+            "silhouette, just the index finger and partial palm visible from the TOP of the "
+            "icon — reaching DOWN to tap the apex of a small upright hexagonal qi crystal "
+            "sitting at the bottom-centre. At the point of contact between fingertip and "
+            "crystal apex, a sharp bright burst of pale cyan qi explodes outward — 5-6 "
+            "short angular cyan spark lines radiating like a strike-impact starburst. "
+            "The crystal: small upright hexagonal prism, deep jade-blue body, bronze-gold "
+            "facet edge lines, bright cyan glow visible through it. The crystal sits on a "
+            "tiny bronze pedestal base. "
+            ""
+            "Treatment: thick charcoal outlines, flat colour fills, no gradients. "
+            "Symmetrical horizontally. Reads as 'finger strikes crystal → sharp qi burst'. "
+            ""
+            "Palette: aged bronze-gold (#8a5a2a) for the border, pedestal, gem, "
+            "jade green (#0f2520) for the hand and ring studs, "
+            "deep jade-blue (#1a3a55) for the crystal body, "
+            "pale cyan qi highlight (#7adcc4) for the burst and crystal core, "
+            "charcoal outline (#111). No red, no purple, no grey stone, no human face. "
+            f"{S}"
+        ),
+    },
+
     # ── Cultivation QI bar — red lacquer & gold, matching cultivation bg ──────
     "qi_bar_red": {
         "size": (320, 60),
@@ -440,15 +631,39 @@ def carve_bar_channel(img, scan_x_pct=(0.25, 0.75), lip_threshold=30):
 # Pipeline steps
 # ─────────────────────────────────────────────────────────────────────────────
 
-def run_generate(element_id):
+def _style_ref_for(element_id):
+    """
+    Auto-resolve a style-only reference for upgrade_* icons (all upgrades
+    except the tone-setter `upgrade_focus` itself). Returns the finalised
+    upgrade_focus.png so the model echoes its palette/border treatment.
+
+    NOTE: we pass this ONLY as `style_image`, not as `reference_images`.
+    `reference_images` locks the SUBJECT (it caused PixelLab to copy the
+    third-eye motif in earlier tests); `style_image` just hints at palette
+    and line treatment, letting the subject described in the prompt come
+    through cleanly.
+    """
+    if element_id.startswith("upgrade_") and element_id != "upgrade_focus":
+        p = OUT_DIR / "upgrade_focus.png"
+        return p if p.exists() else None
+    return None
+
+
+def run_generate(element_id, ref_path=None):
     if element_id not in ELEMENTS:
         raise ValueError(f"Unknown element '{element_id}'. Known: {list(ELEMENTS)}")
 
     cfg = ELEMENTS[element_id]
     w, h = cfg["size"]
     api_path = cfg.get("api_path", "/generate-image-v2")
+
+    if ref_path is None:
+        ref_path = _style_ref_for(element_id)
+
     print(f"\n{'='*60}")
     print(f"  Generating: {element_id}  ({w}x{h})  via {api_path}")
+    if ref_path:
+        print(f"  Style ref:  {ref_path.name} (style_image only)")
     print(f"{'='*60}")
 
     body = {
@@ -459,6 +674,15 @@ def run_generate(element_id):
         body["no_background"] = True
     if cfg.get("color_palette"):
         body["color_palette"] = cfg["color_palette"]
+
+    if ref_path and ref_path.exists():
+        ref_b64   = base64.b64encode(ref_path.read_bytes()).decode()
+        ref_img   = {"type": "base64", "base64": ref_b64, "format": "png"}
+        rw, rh    = Image.open(ref_path).size
+        ref_sized = {"image": ref_img, "size": {"width": rw, "height": rh}}
+        # style_image only — `reference_images` would lock the subject and
+        # the model would copy the third-eye motif instead of varying it.
+        body["style_image"] = ref_sized
 
     status, r = api_post(api_path, body)
     if status != 202:
@@ -477,6 +701,21 @@ def run_generate(element_id):
 
     print(f"\n  Review, then run:")
     print(f"    python gen_ui.py finalize {element_id} <cand_number>")
+
+
+def compose_through_badge(img, badge_path):
+    """
+    Alpha-composite a generated upgrade-icon candidate through the canonical
+    badge frame so every upgrade icon shares a pixel-identical border. The
+    badge's opaque border overlays the candidate; the candidate's central
+    subject shows through the badge's transparent interior.
+
+    Both images are resized to the badge's dimensions if they differ.
+    """
+    badge = Image.open(badge_path).convert("RGBA")
+    if img.size != badge.size:
+        img = img.resize(badge.size, Image.NEAREST)
+    return Image.alpha_composite(img, badge)
 
 
 def run_finalize(element_id, cand_n):
@@ -502,6 +741,16 @@ def run_finalize(element_id, cand_n):
     # Carve a transparent channel into a solid bar (when model filled in the interior)
     if cfg.get("carve_channel"):
         img = carve_bar_channel(img, **cfg.get("carve_channel_kwargs", {}))
+
+    # Optional per-config composite through the canonical badge frame.
+    # Default off: with style_image-based generation the model already echoes
+    # the focus border, and forcing a composite caused jade-on-jade overlap.
+    # Set `cfg["compose_through_badge"] = True` on an element to re-enable.
+    if cfg.get("compose_through_badge"):
+        badge_path = OUT_DIR / "_upgrade_badge.png"
+        if badge_path.exists():
+            img = compose_through_badge(img, badge_path)
+            print(f"  Composed through canonical badge: {badge_path.name}")
 
     out_path = OUT_DIR / f"{element_id}.png"
     img.save(str(out_path))

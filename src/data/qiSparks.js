@@ -332,7 +332,7 @@ const QI_SPARKS_RAW = [
     rateBuffMs:      30_000,
   },
 
-  // ── Rare — Mechanic: Pattern Clicking ──────────────────────────────────
+  // ── Rare — Mechanic: Tracing Meridians (id stays `pattern_click`) ─────
   // A spark prompt appears in the scene; tap it within `promptWindowMs` to
   // open the dot challenge, or ignore it to let it pass (no penalty). Once
   // opened, tap the numbered dots in order before `windowMs` runs out for a
@@ -343,7 +343,7 @@ const QI_SPARKS_RAW = [
     id:              'pattern_click_t1',
     rarity:          'rare',
     retired:         true,
-    name:            'Pattern Clicking',
+    name:            'Tracing Meridians',
     description:     'A pattern spark appears every ~2 min. Tap to begin: 3 dots, 10s to clear for 30s of qi.',
     kind:            'mechanic',
     mechanicId:      'pattern_click',
@@ -358,7 +358,7 @@ const QI_SPARKS_RAW = [
     id:              'pattern_click_t2',
     rarity:          'rare',
     retired:         true,
-    name:            'Pattern Clicking',
+    name:            'Tracing Meridians',
     description:     'Spark every ~100s. 4 dots, 12s window. Full clear: 40s of qi.',
     kind:            'mechanic',
     mechanicId:      'pattern_click',
@@ -373,7 +373,7 @@ const QI_SPARKS_RAW = [
     id:              'pattern_click_t3',
     rarity:          'rare',
     retired:         true,
-    name:            'Pattern Clicking',
+    name:            'Tracing Meridians',
     description:     'Spark every ~80s. 5 dots, 14s window. Full clear: 50s of qi.',
     kind:            'mechanic',
     mechanicId:      'pattern_click',
@@ -388,7 +388,7 @@ const QI_SPARKS_RAW = [
     id:              'pattern_click_t4',
     rarity:          'rare',
     retired:         true,
-    name:            'Pattern Clicking',
+    name:            'Tracing Meridians',
     description:     'Spark every ~60s. 6 dots, 16s window. Full clear: 60s of qi.',
     kind:            'mechanic',
     mechanicId:      'pattern_click',
@@ -403,7 +403,7 @@ const QI_SPARKS_RAW = [
     id:              'pattern_click_t5',
     rarity:          'rare',
     retired:         true,
-    name:            'Pattern Clicking',
+    name:            'Tracing Meridians',
     description:     'Spark every ~45s. 7 dots, 18s window. Full clear: 120s of qi + ×2 qi/s for 15s.',
     kind:            'mechanic',
     mechanicId:      'pattern_click',

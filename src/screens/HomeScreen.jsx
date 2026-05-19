@@ -745,7 +745,7 @@ function PatternClickOverlay({ pattern, onComplete, rateRef, spawnVFX }) {
   }, [pattern.dots.length, pattern.burstSeconds, rateRef, spawnVFX, onComplete]);
 
   return (
-    <div className={`pc-overlay pc-overlay-${phase}`} aria-label="Pattern Clicking challenge">
+    <div className={`pc-overlay pc-overlay-${phase}`} aria-label="Tracing Meridians challenge">
 
       {/* osu-style connecting lines — SVG spanning full overlay */}
       <svg className="pc-connections" aria-hidden="true">
