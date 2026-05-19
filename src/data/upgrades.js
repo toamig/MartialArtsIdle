@@ -79,7 +79,16 @@ const CRYSTAL_TAP = [
   name:      u.name,
   desc:      `Doubles the qi granted by tapping the crystal when its reservoir is empty.`,
   cost:      u.cost,
-  unlock:    { type: 'crystal_level', min: u.crystalLevel },
+  // Crystal-level ramp AND the Crystal Reservoir mechanic must be unlocked —
+  // the upgrade's effect ("tap when reservoir is empty") is meaningless
+  // before crystal_click T1 is granted at crystal tier 2 (level 10).
+  unlock: {
+    type: 'all',
+    gates: [
+      { type: 'crystal_level', min: u.crystalLevel },
+      { type: 'mechanic_tier', mechanicId: 'crystal_click', min: 1 },
+    ],
+  },
   effect:    { type: 'crystal_tap', mult: 2 },
   _tier:     i + 1,
 }));

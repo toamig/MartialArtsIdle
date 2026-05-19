@@ -24,16 +24,25 @@ function saveOwnedSet(set) {
  * ctx: { realmIndex, crystalLevel, getProducerOwned(id), getMechanicTier(id) }
  */
 function isUnlocked(upgrade, ctx) {
-  const u = upgrade.unlock;
-  if (!u) return true;
-  switch (u.type) {
-    case 'realm':         return ctx.realmIndex   >= u.minRealmIndex;
-    case 'crystal_level': return ctx.crystalLevel >= u.min;
-    case 'producer':      return ctx.getProducerOwned(u.producerId) >= u.min;
+  return evalGate(upgrade.unlock, ctx);
+}
+
+function evalGate(gate, ctx) {
+  if (!gate) return true;
+  switch (gate.type) {
+    case 'realm':         return ctx.realmIndex   >= gate.minRealmIndex;
+    case 'crystal_level': return ctx.crystalLevel >= gate.min;
+    case 'producer':      return ctx.getProducerOwned(gate.producerId) >= gate.min;
     // Round 3 — mechanic-tier upgrades unlock once the previous tier of that
     // mechanic is owned (granted by crystal evolution for T1, by buying the
     // prior u_<mechanic>_tN entry for T2-T5).
-    case 'mechanic_tier': return (ctx.getMechanicTier?.(u.mechanicId) ?? 0) >= u.min;
+    case 'mechanic_tier': return (ctx.getMechanicTier?.(gate.mechanicId) ?? 0) >= gate.min;
+    // Composite — every sub-gate must pass. Used by crystal_tap upgrades
+    // to require both a crystal-level milestone AND the Crystal Reservoir
+    // mechanic being unlocked (so "double the tap-empty-reservoir reward"
+    // upgrades don't appear before the player has a reservoir to tap).
+    case 'all':           return (gate.gates ?? []).every(g => evalGate(g, ctx));
+    case 'any':           return (gate.gates ?? []).some(g  => evalGate(g, ctx));
     default:              return true;
   }
 }
