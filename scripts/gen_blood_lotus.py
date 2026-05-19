@@ -126,7 +126,7 @@ PACKS = {
 
     # ── Tier 1 — Handful (1 lotus, also the currency icon) ───────────────────
     "blood_lotus_60": {
-        "size": (64, 64),
+        "size": (128, 128),
         "desc": (
             "A single Blood Lotus bloom, centered, filling the frame at icon scale. "
             "Five large outer petals arranged in a pentagon pointing outward. "
@@ -139,19 +139,21 @@ PACKS = {
 
     # ── Tier 2 — Pouch (2 lotuses) ──────────────────────────────────────────
     "blood_lotus_330": {
-        "size": (64, 64),
+        "size": (128, 128),
         "desc": (
-            "Two Blood Lotus blooms, paired side by side, each occupying about a third of the frame width. "
+            "EXACTLY TWO Blood Lotus blooms — only 2 flowers visible in this icon, never 3, never 1. "
+            "Each lotus is large and prominent, filling nearly half the frame each. "
             "Both flowers identical: 5 outer + 5 inner crimson petals around a golden core. "
-            "Arrangement: one slightly upper-left, one slightly lower-right, overlapping minimally. "
-            "Both fully visible — neither cropped by the canvas edge. "
+            "Arrangement: one upper-left bloom, one lower-right bloom, slightly overlapping where they meet. "
+            "Both fully visible — neither cropped by the canvas edge. Negative space around them. "
+            "Do not add a third flower. Two lotuses only. "
             f"{S}"
         ),
     },
 
     # ── Tier 3 — Chest (3 lotuses, triangle) ────────────────────────────────
     "blood_lotus_980": {
-        "size": (64, 64),
+        "size": (128, 128),
         "desc": (
             "Three Blood Lotus blooms arranged in a triangle: one on top center, two on the bottom corners. "
             "Each flower identical and recognisable — 5 outer + 5 inner red petals around a gold core. "
@@ -162,7 +164,7 @@ PACKS = {
 
     # ── Tier 4 — Vault (5 lotuses, pentagon) ────────────────────────────────
     "blood_lotus_1980": {
-        "size": (64, 64),
+        "size": (128, 128),
         "desc": (
             "Five Blood Lotus blooms arranged in a pentagon — one on top, two upper sides, two lower sides. "
             "Each lotus smaller than the 3-pack so all five fit cleanly. "
@@ -174,7 +176,7 @@ PACKS = {
 
     # ── Tier 5 — Treasury (7 lotuses + halo) ────────────────────────────────
     "blood_lotus_3280": {
-        "size": (64, 64),
+        "size": (128, 128),
         "desc": (
             "Seven Blood Lotus blooms — one slightly-larger centerpiece surrounded by six smaller ones in a hexagonal ring. "
             "Behind the cluster: a soft warm gold radial halo (translucent gold-yellow glow, NOT a hard ring), "
@@ -186,7 +188,7 @@ PACKS = {
 
     # ── Tier 6 — Heaven's Fortune (9+ lotuses + radiant halo) ───────────────
     "blood_lotus_6480": {
-        "size": (64, 64),
+        "size": (128, 128),
         "desc": (
             "Nine Blood Lotus blooms — one prominent centerpiece bloom slightly larger than the others, "
             "surrounded by eight smaller blooms in a denser cluster filling the frame. "
