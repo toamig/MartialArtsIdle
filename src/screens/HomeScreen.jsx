@@ -126,7 +126,7 @@ function HeavenlyQiButton({ ad, adBoostActive, adBoostRemaining, maxed }) {
   if (adBoostActive) {
     return (
       <div className="home-hq-chip home-hq-chip-active" title={t('home.heavenlyQiActive')}>
-        <img className="home-hq-icon" src={`${BASE}ui/qi_divine.png`} alt="" draggable="false" />
+        <span className="home-hq-dot" />
         <span className="home-hq-text">×2</span>
         <span className="home-hq-timer">{adBoostRemaining}</span>
       </div>
@@ -148,7 +148,7 @@ function HeavenlyQiButton({ ad, adBoostActive, adBoostRemaining, maxed }) {
       disabled={!ad.isReady}
       title={ad.isReady ? t('home.channelTitle') : label}
     >
-      <img className="home-hq-icon" src={`${BASE}ui/qi_divine.png`} alt="" draggable="false" />
+      <span className="home-hq-dot" />
       <span className="home-hq-text">{label}</span>
     </button>
   );
@@ -1044,7 +1044,9 @@ function DivineQiOrb({ orb, onResolve, spawnVFX, rateRef }) {
       onClick={handleClick}
       data-sfx="none"
       aria-label="Divine Qi orb"
-    />
+    >
+      <img className="divine-qi-orb-img" src={`${BASE}ui/qi_divine.png`} alt="" draggable="false" />
+    </button>
   );
 }
 

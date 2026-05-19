@@ -2917,17 +2917,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .home-hq-text  { white-space: nowrap; }
 .home-hq-timer { font-size: 10px; opacity: 0.82; }
 
-/* Small qi_divine pearl icon inside the chip (replaces the old pulsing dot) */
-.home-hq-icon {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-  flex-shrink: 0;
-  /* image-rendering follows the global Settings → Rendering toggle */
-}
-.home-hq-chip-cd .home-hq-icon { filter: grayscale(0.8) opacity(0.6); }
-
-/* Pulsing dot indicator (legacy — kept for any other chip variants) */
+/* Pulsing dot indicator */
 .home-hq-dot {
   width: 6px;
   height: 6px;
@@ -3953,7 +3943,9 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 /* ── Divine Qi — golden orb ─────────────────────────────────────────────── */
 
-/* Orb sits absolutely within the .home-cultivation-zone */
+/* Orb sits absolutely within the .home-cultivation-zone. Visual is the
+   qi_divine.png pearl child; box-shadow halo + pulse animation stay on
+   the button so the existing scale/glow keyframes still apply. */
 .divine-qi-orb {
   position:      absolute;
   width:         52px;
@@ -3962,15 +3954,8 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   transform:     translate(-50%, -50%);
   border:        none;
   padding:       0;
+  background:    transparent;
   cursor:        pointer;
-  /* Golden radial core with a bright halo */
-  background: radial-gradient(
-    ellipse at 40% 35%,
-    #fff9c4 0%,
-    #ffe55a 28%,
-    #ffa800 65%,
-    rgba(255, 140, 0, 0) 100%
-  );
   box-shadow:
     0 0 18px 6px rgba(255, 200, 30, 0.75),
     0 0 40px 12px rgba(255, 140, 0, 0.45);
@@ -3978,6 +3963,14 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
              divine-qi-pulse  2.2s ease-in-out 0.35s infinite;
   z-index: 60;
   touch-action: manipulation;
+}
+
+.divine-qi-orb-img {
+  width:  100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  /* image-rendering follows the global Settings → Rendering toggle */
 }
 
 /* Spawn: pop in from scale 0 with overshoot */
