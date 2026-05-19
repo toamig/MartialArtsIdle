@@ -2504,35 +2504,6 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 .home-hud-spacer { flex: 1; }
 
-/* Realm name + stage in the top bar — mobile only; PC left panel handles it at >=900px */
-.topbar-realm {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  line-height: 1.15;
-  min-width: 0;
-}
-.topbar-realm-name {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ui-purple-light);
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.topbar-realm-stage {
-  font-size: 10px;
-  font-weight: 600;
-  color: rgba(255, 210, 100, 0.75);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-@media (min-width: 900px) {
-  .topbar-realm { display: none; }
-}
-
 .home-hud-settings {
   width: 34px;
   height: 34px;
@@ -3409,8 +3380,20 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
      68–85%  new crystal at centre, settled
      85–100% return (centre → origin, scaling down) */
 
-/* Hide the in-scene crystal while the overlay "holds" it. */
+/* Hide the in-scene crystal while the overlay "holds" it. We ALSO pause the
+   float + glow animations: the overlay captures origin.x/y from the crystal's
+   getBoundingClientRect() at one bob frame, then holds for ~4 s. If the float
+   keeps running silently, the crystal's actual Y drifts up to ~9 px from the
+   captured Y by the time the overlay returns — revealing the home crystal at
+   a different spot than the overlay shrunk to (visible pop). Pausing freezes
+   the bob/glow at the exact lift frame; the reveal lands on the same spot
+   the overlay shrinks back to, and the animations resume seamlessly from
+   that paused frame after the overlay unmounts. */
 .home-crystal-anchor-lifted { opacity: 0; pointer-events: none; }
+.home-crystal-anchor-lifted .home-crystal-float,
+.home-crystal-anchor-lifted .home-crystal-img {
+  animation-play-state: paused;
+}
 
 /* Settled phase accepts taps anywhere on the overlay. */
 .ces-phase-settled { pointer-events: auto; cursor: pointer; }
@@ -3643,6 +3626,36 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   z-index: 7;
 }
 
+/* Realm name + stage — sits above the qi row on mobile only. */
+.home-scene-realm-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 16px 0;
+  line-height: 1.15;
+}
+.home-scene-realm-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ui-purple-light);
+  letter-spacing: 0.04em;
+  text-shadow:
+    0 0 14px rgba(245, 175, 20, 0.75),
+    0 2px 6px rgba(0, 0, 0, 1);
+  text-align: center;
+}
+.home-scene-realm-stage {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 210, 100, 0.92);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 8px rgba(220, 150, 20, 0.7),
+    0 1px 4px rgba(0, 0, 0, 1);
+}
+
 /* Qi progress + qi/s chips — each owns half the row */
 .home-scene-overlay-row {
   display: flex;
@@ -3698,6 +3711,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
   /* On PC the left panel already shows realm + qi/s — hide the mobile row */
   .home-scene-overlay-row { display: none; }
+  .home-scene-realm-header { display: none; }
 
   /* Constrain the dragon bar width on wide screens */
   .home-bar-wrap { max-width: 462px; }

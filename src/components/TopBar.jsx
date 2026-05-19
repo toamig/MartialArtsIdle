@@ -34,8 +34,6 @@ export default function TopBar({
   reincarnationUnlocked,
   onOpenCrystal,
   crystalUnlocked,
-  realmName,
-  realmStage,
   qiRef,
   karma,
 }) {
@@ -74,12 +72,6 @@ export default function TopBar({
           <span>{karma ?? 0}</span>
         </div>
       </div>
-      {realmName && (
-        <div className="topbar-realm">
-          <span className="topbar-realm-name">{realmName.split(' - ')[0]}</span>
-          {realmStage && <span className="topbar-realm-stage">{realmStage}</span>}
-        </div>
-      )}
       <div className="home-hud-spacer" />
       {reincarnationUnlocked && (
         <button

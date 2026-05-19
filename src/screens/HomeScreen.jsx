@@ -382,9 +382,28 @@ function CrystalEvolutionOverlay({ event, onDone }) {
   // Lift-and-return geometry — overlay stage starts at the home crystal's
   // rect and returns there at the end. Falls back to screen centre if no
   // origin was captured (e.g. gd trigger while crystal was off-screen).
-  const originX     = event.origin?.x ?? (typeof window !== 'undefined' ? window.innerWidth  / 2 - CES_STAGE_SIZE / 2 : 0);
-  const originY     = event.origin?.y ?? (typeof window !== 'undefined' ? window.innerHeight / 2 - CES_STAGE_SIZE / 2 : 0);
-  const originScale = event.origin?.w ? event.origin.w / CES_STAGE_SIZE : 1;
+  //
+  // The stage is a square (CES_STAGE_SIZE × CES_STAGE_SIZE) but the crystal
+  // PNG is NOT square (89 × 110 native → taller than wide). Naïvely scaling
+  // the stage by origin.w / CES_STAGE_SIZE gives a square that fits the
+  // home crystal's width, but the contained crystal inside is letterboxed
+  // and ends up SHORTER (e.g. 58×72 instead of the home's 72×89). At lift-
+  // off the crystal visibly shrinks, and inverse at landing — the visible
+  // "flicker". Pick the LARGER of width/height as the scaling base so the
+  // contained crystal matches the home crystal exactly, then offset X/Y to
+  // re-centre the (now-bigger) stage over the home crystal's actual rect.
+  let originX, originY, originScale;
+  if (event.origin?.w && event.origin?.h) {
+    const baseDim    = Math.max(event.origin.w, event.origin.h);
+    originScale      = baseDim / CES_STAGE_SIZE;
+    const scaledSize = baseDim;
+    originX          = event.origin.x - (scaledSize - event.origin.w) / 2;
+    originY          = event.origin.y - (scaledSize - event.origin.h) / 2;
+  } else {
+    originX     = typeof window !== 'undefined' ? window.innerWidth  / 2 - CES_STAGE_SIZE / 2 : 0;
+    originY     = typeof window !== 'undefined' ? window.innerHeight / 2 - CES_STAGE_SIZE / 2 : 0;
+    originScale = 1;
+  }
   const stageStyle  = {
     '--ce-a':         glowA,
     '--ce-b':         glowB,
@@ -1879,6 +1898,15 @@ function HomeScreen({
 
         {/* ── Bottom section: realm name + qi/s row + bar ──────────── */}
         <div className="home-scene-bottom">
+
+          {/* Realm name + stage header — mobile only; PC left panel shows the
+              same info at the top of the side rail at ≥900px. */}
+          {realmName && (
+            <div className="home-scene-realm-header">
+              <span className="home-scene-realm-name">{realmName.split(' - ')[0]}</span>
+              {realmStage && <span className="home-scene-realm-stage">{realmStage}</span>}
+            </div>
+          )}
 
           {/* Overlay row — hidden on PC (info lives in left panel instead) */}
           <div className="home-scene-overlay-row">
