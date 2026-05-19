@@ -5508,6 +5508,21 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   100% { transform: translate(var(--qi-drift-x, 0px), -100px) scale(0.9); opacity: 0; }
 }
 
+/* Divine Qi pickup floater — recolour to match the golden orb icon
+   (qi_divine.png). Selector includes the cf-rung body class so it also
+   wins against the rung-aware qi-tick recolour. */
+.vfx-qi-tick.vfx-qi-tick-divine .vfx-content,
+body[class*="cf-rung-"] .vfx-qi-tick.vfx-qi-tick-divine .vfx-content {
+  color: #ffd76a;
+  text-shadow:
+    0 0 8px  rgba(243, 181, 34, 0.95),
+    0 0 18px rgba(180, 120, 0, 0.55),
+    0 2px 0 rgba(0, 0, 0, 0.85),
+    1px 0 0 rgba(0, 0, 0, 0.75),
+    -1px 0 0 rgba(0, 0, 0, 0.75),
+    0 -1px 0 rgba(0, 0, 0, 0.75);
+}
+
 /* VFX: Burst ring */
 .vfx-burst {
   width: 60px;

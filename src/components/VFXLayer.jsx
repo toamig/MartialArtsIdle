@@ -57,7 +57,7 @@ export function useVFX() {
       {effects.map((effect) => (
         <div
           key={effect.id}
-          className={`vfx-effect ${effect.type ? `vfx-${effect.type}` : ''}`}
+          className={`vfx-effect ${effect.type ? `vfx-${effect.type}` : ''} ${effect.className || ''}`}
           style={{
             left: effect.x,
             top: effect.y,

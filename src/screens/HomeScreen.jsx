@@ -1089,7 +1089,7 @@ function DivineQiOrb({ orb, onResolve, spawnVFX, rateRef }) {
           const y  = (orbRect.top  + orbRect.height / 2) - sr.top;
           const reward = orb.burstSeconds * (rateRef.current ?? 1);
           const fmt = fmtDelta;
-          spawnVFX({ type: 'qi-tick', x, y, content: fmt(reward), duration: 1500,
+          spawnVFX({ type: 'qi-tick', className: 'vfx-qi-tick-divine', x, y, content: fmt(reward), duration: 1500,
             style: { '--qi-drift-x': '0px' } });
         }
       } catch {}
