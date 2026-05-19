@@ -286,10 +286,6 @@ export default function useCultivation() {
   // useUpgrades.getCrystalTapMult(). Each owned crystal_tap upgrade ×2.
   // Applied inside collectCrystalReservoir() against the empty-reservoir floor.
   const upgradeCrystalTapMultRef = useRef(1);
-  // Upgrade-driven major-realm gate multiplier — written by App.jsx from
-  // useUpgrades.getGateReductionMult(). Each owned gate_reduction upgrade ×0.7.
-  // Composes with sparkGateReductionRef (which is a 0..1 fraction subtracted).
-  const upgradeGateMultRef = useRef(1);
   // Upgrade-driven focus-mult adder (percentage points, 0..N). Added to the
   // stat-driven focus mult inside App.jsx's focusMult-write interval. Phase D.
   const upgradeFocusMultAddRef = useRef(0);
@@ -574,11 +570,9 @@ export default function useCultivation() {
           const majorRate    = getMajorBreakthroughRate(indexRef.current);
           const baseRequired = majorRate > 0 ? majorRate : getPeakBreakthroughRate(indexRef.current);
           // Patience of Stone (Qi Spark) shrinks the gate requirement by a 0..1
-          // fraction (subtracted). Patient Heart upgrades multiply it (×0.7 each,
-          // stacking ×0.49). Composes by multiplying the two reduction sources.
+          // fraction (subtracted).
           const requiredRate = baseRequired
-            * (1 - sparkGateReductionRef.current)
-            * (upgradeGateMultRef.current || 1);
+            * (1 - sparkGateReductionRef.current);
           if (requiredRate > 0 && rate < requiredRate) {
             // Major-realm gate: hold the realm meter at 100% until sustained
             // qi/s is enough. qi balance is untouched.
@@ -923,9 +917,8 @@ export default function useCultivation() {
     producerRateRef,
     upgradeProducerMultRef,
     treeProducerOutputMultRef,
-    // Upgrade-driven crystal-tap floor mult + gate-reduction mult — updated by App.jsx
+    // Upgrade-driven crystal-tap floor mult — updated by App.jsx
     upgradeCrystalTapMultRef,
-    upgradeGateMultRef,
     upgradeFocusMultAddRef,
     // Artefact qi_speed aggregate ref — updated by App.jsx each second
     artefactQiMultRef,

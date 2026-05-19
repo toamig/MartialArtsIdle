@@ -13734,6 +13734,19 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   border-color: rgba(110, 200, 180, 0.55);
 }
 
+.cs-up-icon {
+  display: block;
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 2px;
+  object-fit: contain;
+  /* image-rendering follows the global Settings → Rendering toggle */
+}
+
+.cs-up-card-locked .cs-up-icon {
+  filter: grayscale(0.7) opacity(0.55);
+}
+
 .cs-up-name {
   font-size: 13px;
   font-weight: 600;
@@ -13846,6 +13859,13 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   cursor: help;
   white-space: nowrap;
   line-height: 1.4;
+}
+
+.cs-up-chip-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  /* image-rendering follows the global Settings → Rendering toggle */
 }
 
 .cs-up-chip-check {

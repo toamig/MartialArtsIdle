@@ -324,13 +324,10 @@ function AppInner() {
       cultivation.upgradeCrystalTapMultRef.current =
         upgrades.getCrystalTapMult() * (tree.modifiers.crystalTapMult ?? 1);
     }
-    if (cultivation.upgradeGateMultRef) {
-      cultivation.upgradeGateMultRef.current = upgrades.getGateReductionMult();
-    }
     if (cultivation.upgradeFocusMultAddRef) {
       cultivation.upgradeFocusMultAddRef.current = upgrades.getFocusMultAdd();
     }
-  }, [upgrades.owned, tree.modifiers, cultivation.upgradeCrystalTapMultRef, cultivation.upgradeGateMultRef, cultivation.upgradeFocusMultAddRef]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [upgrades.owned, tree.modifiers, cultivation.upgradeCrystalTapMultRef, cultivation.upgradeFocusMultAddRef]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Mirror Qi Sparks multipliers + flags into cultivation refs each render.
   // Cheap; runs only when activeSparks identity changes (the hook returns

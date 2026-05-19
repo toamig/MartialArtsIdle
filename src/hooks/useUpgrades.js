@@ -66,8 +66,6 @@ function isVisible(upgrade, ctx) {
  *                                    (currently none, but the hook supports it for future "global" upgrades)
  *   - getCrystalTapMult()          — product of crystal_tap mults
  *   - getFocusMultAdd()            — sum of focus_mult adds (percentage points)
- *   - getGateReductionMult()       — product of gate_reduction mults (0.7 * 0.7 = 0.49)
- *   - getSparksRerollMult()        — product of sparks_reroll mults
  *
  * App.jsx mirrors these into useCultivation refs / useQiSparks refs.
  */
@@ -113,24 +111,6 @@ export default function useUpgrades() {
     return s;
   }, [owned]);
 
-  const gateReductionMult = useMemo(() => {
-    let m = 1;
-    for (const id of owned) {
-      const u = UPGRADES_BY_ID[id];
-      if (u?.category === 'gate_reduction') m *= u.effect.mult;
-    }
-    return m;
-  }, [owned]);
-
-  const sparksRerollMult = useMemo(() => {
-    let m = 1;
-    for (const id of owned) {
-      const u = UPGRADES_BY_ID[id];
-      if (u?.category === 'sparks_reroll') m *= u.effect.mult;
-    }
-    return m;
-  }, [owned]);
-
   // Additive bonuses to the offline accrual rate and cap. The base values
   // (0.20 and 8 h) live in useCultivation / autoFarm; these stack on top.
   // Offline calc runs pre-React-mount, so it reads upgrades from localStorage
@@ -162,9 +142,7 @@ export default function useUpgrades() {
 
   const getCrystalTapMult  = useCallback(() => crystalTapMult,  [crystalTapMult]);
   const getFocusMultAdd    = useCallback(() => focusMultAdd,    [focusMultAdd]);
-  const getGateReductionMult = useCallback(() => gateReductionMult, [gateReductionMult]);
-  const getSparksRerollMult  = useCallback(() => sparksRerollMult,  [sparksRerollMult]);
-  const getOfflineRateAdd    = useCallback(() => offlineRateAdd,    [offlineRateAdd]);
+  const getOfflineRateAdd     = useCallback(() => offlineRateAdd,     [offlineRateAdd]);
   const getOfflineCapAddHours = useCallback(() => offlineCapAddHours, [offlineCapAddHours]);
 
   /**
@@ -214,8 +192,6 @@ export default function useUpgrades() {
     getGlobalProducerMult,
     getCrystalTapMult,
     getFocusMultAdd,
-    getGateReductionMult,
-    getSparksRerollMult,
     getOfflineRateAdd,
     getOfflineCapAddHours,
     reset,
