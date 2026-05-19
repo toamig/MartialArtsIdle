@@ -231,6 +231,67 @@ ELEMENTS = {
         ),
     },
 
+    # ── Standalone currency / content icons (128×128, no badge frame) ─────────
+
+    "qi": {
+        "size": (128, 128),
+        "desc": (
+            "A pixel art icon of a single perfectly round translucent BLUE pearl-sphere "
+            "of dense qi energy. Standalone subject on transparent background. NO rays, "
+            "NO wisps, NO tails, NO trailing motes, NO frame, NO ring, NO ornaments — "
+            "just the sphere, centred, filling the middle 60-70% of the image. "
+            ""
+            "The sphere reads like a polished glass marble or pearl with light trapped "
+            "inside it. Translucent body in saturated mid-blue (think sapphire), with a "
+            "brighter bright-cyan inner glow at the centre (the dense qi energy core "
+            "visible through the translucent shell). A small white-cyan specular highlight "
+            "near the top-left of the sphere sells the pearl/glass material. A thin darker "
+            "deep-blue crescent at the bottom-right edge sells the underside. A subtle "
+            "soft cyan halo (1-2 px) hugs the outside of the sphere to suggest the qi "
+            "leaking past the surface. "
+            ""
+            "Treatment: thick charcoal outline around the sphere, flat colour fills, no "
+            "gradients (build the volume with 3-4 colour bands: highlight / midtone / "
+            "shadow / core glow). Perfectly circular. "
+            ""
+            "Palette: bright cyan core (#7adcc4), translucent sapphire midtone (#3a8fc8), "
+            "deep blue shadow (#1a3a70), white-cyan specular highlight (#e8ffff), faint "
+            "cyan halo (#7adcc4 at low alpha), charcoal outline (#111). No gold, no bronze, "
+            "no red. "
+            f"{S}"
+        ),
+    },
+
+    "qi_divine": {
+        "size": (128, 128),
+        "desc": (
+            "A pixel art icon of a single perfectly round translucent GOLDEN pearl-sphere "
+            "of dense divine qi energy. Standalone subject on transparent background. "
+            "NO rays, NO sunburst, NO sparkles, NO wisps, NO frame, NO ring, NO ornaments "
+            "— just the sphere, centred, filling the middle 60-70% of the image. "
+            ""
+            "The sphere reads like a polished amber gemstone or golden pearl with divine "
+            "light trapped inside it. Translucent body in warm gold-amber, with a brighter "
+            "bright-gold inner glow at the centre (the dense divine qi visible through the "
+            "translucent shell). A small white-gold specular highlight near the top-left "
+            "of the sphere sells the pearl/glass material. A thin darker bronze crescent "
+            "at the bottom-right edge sells the underside. A subtle soft gold halo (1-2 "
+            "px) hugs the outside of the sphere to suggest the divine qi leaking past the "
+            "surface. "
+            ""
+            "Treatment: thick charcoal outline around the sphere, flat colour fills, no "
+            "gradients (build the volume with 3-4 colour bands: highlight / midtone / "
+            "shadow / core glow). Perfectly circular. Same composition and pose as the "
+            "regular qi pearl — only the colour family differs. "
+            ""
+            "Palette: bright gold core (#fff0a0), translucent amber midtone (#d0a040), "
+            "deep bronze shadow (#7a4a18), white-gold specular highlight (#fffacc), faint "
+            "gold halo (#f0c060 at low alpha), charcoal outline (#111). No blue, no cyan, "
+            "no red. "
+            f"{S}"
+        ),
+    },
+
     # ── Cultivation upgrade icons (128×128, sit in cs-up-card top-centre) ─────
     # Style anchor for all upgrade_* icons:
     #   - Same "carved jade + bronze" treatment as card_frame / btn_stone.
