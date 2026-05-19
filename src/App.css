@@ -3302,9 +3302,28 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
     0 0 3px rgba(0, 0, 0, 0.95);
 }
 
-/* Sub: white text with a solid dark "outline" built from 8-way 1px shadows
-   plus a soft glow. The stroke effect makes the letters pop off the flash
-   and tier-tinted backdrop regardless of colour behind them. */
+/* Mechanic-unlock single-line hint shown UNDER the tier name when this
+   evolution crosses a tier that grants a new mechanic. Cleaner than the
+   old "Tier N · Level M" sub-line (level info now lives in the tier name
+   itself / in the HUD). Tier-tinted glow + dark outline so it reads on
+   any flash colour. */
+.crystal-evolve-unlock {
+  margin-top: 6px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #ffffff;
+  text-transform: uppercase;
+  text-shadow:
+    -1px -1px 0 rgba(0, 0, 0, 1),
+     1px -1px 0 rgba(0, 0, 0, 1),
+    -1px  1px 0 rgba(0, 0, 0, 1),
+     1px  1px 0 rgba(0, 0, 0, 1),
+     0 0 12px var(--ce-a, rgba(170, 110, 240, 0.7)),
+     0 2px 6px rgba(0, 0, 0, 0.95);
+}
+
+/* Legacy sub (kept for back-compat if any callsite still emits it). */
 .crystal-evolve-sub {
   margin-top: 6px;
   font-size: 1rem;
@@ -3638,11 +3657,11 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .home-scene-realm-name {
   font-size: 15px;
   font-weight: 800;
-  color: var(--ui-purple-light);
+  color: #ffffff;
   letter-spacing: 0.04em;
   text-shadow:
-    0 0 14px rgba(245, 175, 20, 0.75),
-    0 2px 6px rgba(0, 0, 0, 1);
+    0 1px 3px rgba(0, 0, 0, 0.95),
+    0 0 10px rgba(0, 0, 0, 0.6);
   text-align: center;
 }
 .home-scene-realm-stage {
@@ -14577,8 +14596,16 @@ button.pl-leader.pl-leader-clickable:focus-visible {
   transform-origin: center bottom;
   animation: home-cultivator-breathe 3.6s ease-in-out infinite;
   z-index: 2;
+  /* Opacity crossfade between normal/focused — both poses are mounted
+     as stacked siblings (see HomeScreen.jsx). The breathing keyframe
+     runs continuously on both, perfectly phase-synced, so toggling
+     pose is a smooth fade rather than a remount-restart. */
+  transition: opacity 0.22s ease;
   /* image-rendering follows the global Settings → Rendering toggle
      via the .rendering-pixelated rule at the top of this file. */
+}
+.home-cultivator-sprite-fade {
+  opacity: 0;
 }
 @keyframes home-cultivator-breathe {
   0%, 100% { transform: scale(1.000); }
@@ -14602,4 +14629,156 @@ button.pl-leader.pl-leader-clickable:focus-visible {
 @keyframes home-aura-pulse {
   0%, 100% { opacity: 0.92; }
   50%      { opacity: 1.00; }
+}
+
+/* ── TutorialModal — generic one-step instructional popup ──────────────────
+   First user: the "new mechanic unlocked" beat that fires right after a
+   crystal evolution. The shape is intentionally generic (title + body +
+   icon + CTA) so the same component handles any future onboarding moment.
+
+   Visual identity: a light-jade-tinted panel that reads as a larger version
+   of the icon medallion's frame — the framed pixel-art icon sits inside it
+   naturally. Callers can override the accent via { glowA, glowB } props if a
+   future use needs a different tone (e.g. tier-tinted celebration). */
+.tutorial-overlay {
+  --tut-a:      rgba(140, 230, 180, 0.95);  /* bright jade highlight */
+  --tut-b:      rgba( 36, 110,  76, 0.50);  /* deep jade shadow      */
+  --tut-kicker: rgba(190, 245, 215, 0.98);
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 310; /* sits ABOVE the evolution overlay (220) and below toasts */
+  padding: calc(var(--top-bar-h) + env(safe-area-inset-top) + 8px) 20px calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);
+  animation: fade-in 0.22s ease-out;
+}
+
+/* Light-jade gradient — brighter on top than the icon-frame inner shadow,
+   deeper at the bottom so the panel reads as a sculpted carving rather
+   than a flat block. The framed pixel-art icon sits ON the jade tone the
+   same way it sits on its own medallion frame, blending the two layers
+   into one cohesive ornament. */
+.tutorial-card {
+  position: relative;
+  background:
+    linear-gradient(160deg, rgba(78, 145, 110, 0.97) 0%, rgba(36, 80, 60, 0.97) 100%);
+  border: 1px solid var(--tut-a);
+  border-radius: 18px;
+  padding: 22px 22px 18px;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  box-shadow:
+    0 10px 48px rgba(0, 0, 0, 0.78),
+    0 0 28px var(--tut-b),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  animation: modal-pop 0.24s ease-out;
+}
+
+/* Icon container — sits the upgrade_*.png on a soft jade glow that ties
+   the medallion frame into the surrounding card. */
+.tutorial-icon-wrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  filter:
+    drop-shadow(0 0 14px var(--tut-a))
+    drop-shadow(0 0 28px var(--tut-b));
+}
+.tutorial-icon-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%,
+    var(--tut-a) 0%,
+    var(--tut-b) 40%,
+    rgba(0, 0, 0, 0) 70%);
+  opacity: 0.55;
+  filter: blur(4px);
+  z-index: -1;
+  animation: tutorialIconPulse 2.4s ease-in-out infinite;
+}
+.tutorial-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* image-rendering follows the global Settings → Rendering toggle. */
+}
+
+@keyframes tutorialIconPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.45; }
+  50%      { transform: scale(1.07); opacity: 0.72; }
+}
+
+.tutorial-kicker {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.36em;
+  color: var(--tut-kicker, var(--tut-a));
+  text-transform: uppercase;
+  text-shadow:
+    0 0 10px rgba(0, 0, 0, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.92);
+  margin-top: 4px;
+}
+
+.tutorial-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  text-shadow:
+    0 0 14px rgba(0, 0, 0, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.95);
+}
+
+.tutorial-body {
+  margin: 2px 0 6px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: rgba(250, 252, 246, 0.96);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
+}
+
+/* CTA — dark base contrasts the jade panel so it reads as a button, NOT a
+   tinted slab. Jade glow on hover/active to keep the accent consistent. */
+.tutorial-cta {
+  margin-top: 4px;
+  padding: 9px 28px;
+  border: 1px solid var(--tut-a);
+  border-radius: 999px;
+  background: linear-gradient(140deg, rgba(14, 30, 22, 0.95), rgba(8, 20, 14, 0.95));
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow:
+    0 4px 18px var(--tut-b),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  transition: transform 0.08s ease, box-shadow 0.16s ease, filter 0.16s ease;
+}
+.tutorial-cta:hover,
+.tutorial-cta:focus-visible {
+  filter: brightness(1.12);
+  box-shadow:
+    0 6px 24px var(--tut-a),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  outline: none;
+}
+.tutorial-cta:active {
+  transform: translateY(1px) scale(0.98);
 }

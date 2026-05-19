@@ -12,6 +12,8 @@ import ActiveSparksBar from '../components/ActiveSparksBar';
 import { FEATURE_GATES } from '../data/featureGates';
 import { useEventQueue } from '../contexts/EventQueueContext';
 import { QI_SPARK_BY_ID } from '../data/qiSparks';
+import { sparksToGrantOnEvolution } from '../data/crystalMechanicGrants';
+import TutorialModal from '../components/TutorialModal';
 import WORLDS from '../data/worlds';
 import AudioManager from '../audio/AudioManager';
 const BASE = import.meta.env.BASE_URL;
@@ -371,11 +373,21 @@ function CrystalEvolutionOverlay({ event, onDone }) {
     : `${BASE}crystals/crystal_locked.png`;
   const newSrc = `${BASE}crystals/crystal_${event.newTier}.png`;
   const tierName = CRYSTAL_TIER_NAMES[event.newTier] ?? `Tier ${event.newTier}`;
+  // If this evolution crosses one or more mechanic-granting thresholds, show
+  // a single-line hint on the celebration card so the player knows a tutorial
+  // is coming next. The actual TutorialModal queues separately and pops after
+  // dismissal. Multiple mechanics collapse to a count to keep the line tight.
+  const grantedSparkIds = sparksToGrantOnEvolution(event.previousTier ?? 0, event.newTier ?? 0);
+  const grantedNames    = grantedSparkIds
+    .map((id) => QI_SPARK_BY_ID[id]?.name)
+    .filter(Boolean);
+  let unlockLine = null;
+  if (grantedNames.length === 1) unlockLine = `✦ Mechanic Unlocked — ${grantedNames[0]}`;
+  else if (grantedNames.length > 1) unlockLine = `✦ ${grantedNames.length} Mechanics Unlocked`;
   const card = (
     <div className="crystal-evolve-card">
-      <div className="crystal-evolve-kicker">Evolution</div>
       <div className="crystal-evolve-name">{tierName}</div>
-      <div className="crystal-evolve-sub">Tier {event.newTier} · Level {event.newLevel}</div>
+      {unlockLine && <div className="crystal-evolve-unlock">{unlockLine}</div>}
     </div>
   );
 
@@ -1600,6 +1612,32 @@ function HomeScreen({
     }
     enqueue('crystal-evolution', { ...info, origin }, { priority: 'high' });
 
+    // Queue a tutorial modal for every mechanic granted by crossing tiers in
+    // this evolution. They fire AFTER the player dismisses the celebration
+    // overlay (FIFO queue), so the flow is: shatter + reform → "tap to
+    // continue" → tutorial pop for each newly-unlocked mechanic in order.
+    // Crystal Reservoir → Consecutive Focus → Divine Qi → Tracing Meridians
+    // is the natural ladder defined in crystalMechanicGrants.js.
+    //
+    // Icon: each mechanic already ships with an existing upgrade-card icon
+    // at public/ui/upgrade_<mechanicId>.png (jade-medallion framed pixel
+    // art — same asset the upgrade screen uses, so the player recognises
+    // it when they encounter it again later). No tier colours passed —
+    // TutorialModal's jade-green default accent matches the icon frame
+    // and keeps the modal's identity consistent across all mechanics.
+    const newlyGranted = sparksToGrantOnEvolution(info?.previousTier ?? 0, info?.newTier ?? 0);
+    newlyGranted.forEach((sparkId) => {
+      const card = QI_SPARK_BY_ID[sparkId];
+      if (!card) return;
+      enqueue('tutorial', {
+        kicker:  'New Mechanic',
+        title:   card.name,
+        body:    card.description,
+        ctaText: 'Got it',
+        iconSrc: card.mechanicId ? `${BASE}ui/upgrade_${card.mechanicId}.png` : undefined,
+      });
+    });
+
     // Round 3 — Crystal Discovery. Re-broadcast the tier delta as a window
     // event so the App.jsx orchestrator can grant any mechanic-tier sparks
     // attached to the crossed tiers (see data/crystalMechanicGrants.js).
@@ -1881,13 +1919,26 @@ function HomeScreen({
                 />
               )}
               {/* Cultivator — static 256×256 PNG. CSS breathing pulse adds
-                  life without API-side animation. `key` forces a remount
-                  on tier/pose change so the breathing animation restarts. */}
+                  life without API-side animation. We render BOTH poses
+                  (normal + focused) stacked and toggle visibility via
+                  opacity so a pose change is a crossfade rather than a
+                  remount — the breathing-pulse keyframe keeps its phase
+                  across the swap, no jump back to scale 1.0. Keys are
+                  tier-only so both layers remount together (and re-sync
+                  the breathing) only when the tier itself changes. */}
               <img
-                key={`${cultivatorTierName}-${cultivatorPose}`}
-                src={spriteSrc}
+                key={`${cultivatorTierName}-normal`}
+                src={`${BASE}sprites/cultivator/${cultivatorTierName}_normal.png`}
                 alt="Cultivator"
-                className="home-cultivator-sprite"
+                className={`home-cultivator-sprite${cultivatorPose === 'normal' ? '' : ' home-cultivator-sprite-fade'}`}
+                draggable="false"
+              />
+              <img
+                key={`${cultivatorTierName}-focused`}
+                src={`${BASE}sprites/cultivator/${cultivatorTierName}_focused.png`}
+                alt=""
+                aria-hidden="true"
+                className={`home-cultivator-sprite${cultivatorPose === 'focused' ? '' : ' home-cultivator-sprite-fade'}`}
                 draggable="false"
               />
             </div>
@@ -1968,6 +2019,23 @@ function HomeScreen({
         <CrystalEvolutionOverlay
           key={currentEvent.id}
           event={currentEvent.payload}
+          onDone={() => dismiss(currentEvent.id)}
+        />
+      )}
+
+      {/* Tutorial popups — queued after celebrations (e.g. new mechanic
+          unlocked by a crystal evolution). Generic; reusable for any future
+          onboarding moment. */}
+      {currentEvent?.kind === 'tutorial' && (
+        <TutorialModal
+          key={currentEvent.id}
+          kicker={currentEvent.payload?.kicker}
+          title={currentEvent.payload?.title}
+          body={currentEvent.payload?.body}
+          iconSrc={currentEvent.payload?.iconSrc}
+          ctaText={currentEvent.payload?.ctaText}
+          glowA={currentEvent.payload?.glowA}
+          glowB={currentEvent.payload?.glowB}
           onDone={() => dismiss(currentEvent.id)}
         />
       )}
