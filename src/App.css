@@ -3459,11 +3459,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .ces-tap-hint {
   position: fixed;
   left: 50%;
-  /* Sits below the evolution card, clamped so very short viewports keep
-     ~30 px breathing room from the screen bottom and very tall viewports
-     don't strand the hint far below the cluster. Centre offset matches the
-     lifted stage anchor (50vh - 60) plus card height + gap. */
-  top: min(calc(100vh - 50px), calc(50vh + 230px));
+  /* Sits near the top of the viewport so the player reads the prompt before
+     dropping their gaze to the sprite. Clamped so very short viewports keep
+     ~40 px breathing room from the screen top edge / status bar. */
+  top: clamp(40px, 7vh, 70px);
   bottom: auto;
   transform: translateX(-50%);
   color: rgba(255, 255, 255, 0.78);
