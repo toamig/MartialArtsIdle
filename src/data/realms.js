@@ -113,16 +113,23 @@ export function isMajorTransition(fromIndex) {
 
 /**
  * Is the transition `fromIndex → fromIndex+1` a "peak" event?
- * Two cases:
- *   1. Entering a Peak Stage within the same realm (name unchanged).
- *   2. Entering the absolute last realm in the array (no entry after it) —
- *      that layer is the endgame pinnacle before the final ascension.
+ *
+ * Only one case now: entering the absolute last realm in the array (no
+ * entry after it) — that layer is the endgame pinnacle before the final
+ * ascension and gets its own banner.
+ *
+ * REMOVED (2026-05-20): same-name Peak Stage entries (e.g. Qi Transformation
+ * Late Stage → Peak Stage) used to count as peak transitions and triggered
+ * both the qi/s gate and the old BreakthroughBanner. That was wrong — the
+ * peak stage is a normal sub-stage; the gate + banner belong only at the
+ * EXIT of the realm (handled by isMajorTransition when the realm name
+ * changes). Without this, the player got gated AND celebrated twice
+ * (entering peak + exiting peak to the next realm).
  */
 export function isPeakTransition(fromIndex) {
   const a = REALMS[fromIndex];
   const b = REALMS[fromIndex + 1];
   if (!a || !b) return false;
-  if (a.name === b.name && (b.stage?.includes('Peak') ?? false)) return true;
   if (!REALMS[fromIndex + 2]) return true; // entering the very last realm
   return false;
 }
