@@ -119,6 +119,28 @@ export default function useProducers() {
   }, []);
 
   /**
+   * Force-sets a producer's owned count. Used by sparks that consume
+   * producers (e.g. Phoenix Reborn resets the Phoenix count to 0 on
+   * every major realm breakthrough). Bypasses the qi-spend path — caller
+   * is responsible for any compensating bonus.
+   */
+  const setOwnedCount = useCallback((id, count) => {
+    if (!PRODUCERS_BY_ID[id]) return false;
+    const n = Math.max(0, Math.floor(count));
+    setOwned(prev => {
+      if ((prev[id] ?? 0) === n) return prev;
+      if (n === 0) {
+        // Drop the key entirely so the empty state matches a fresh save.
+        if (!(id in prev)) return prev;
+        const { [id]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [id]: n };
+    });
+    return true;
+  }, []);
+
+  /**
    * Reincarnation reset — retain a fractional portion of each producer's
    * level (driven by Eternal Tree's `keepProducerLevelsFrac` modifier).
    * Default 0 = full wipe.
@@ -144,6 +166,7 @@ export default function useProducers() {
     getRate,
     isUnlocked,
     buy,
+    setOwnedCount,
     resetToFraction,
   };
 }

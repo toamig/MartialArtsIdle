@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { QI_SPARK_BY_ID, SPARK_RARITY } from '../data/qiSparks';
+import { QI_SPARK_BY_ID, SPARK_RARITY, TRINITY_SPARK_IDS } from '../data/qiSparks';
 
 // Unique id used to identify this modal in the mai:modal-opened broadcast.
 const MODAL_ID = 'active-sparks';
@@ -64,6 +64,34 @@ function ActiveSparksBar({ activeSparks }) {
   const count = activeSparks.length;
   const now   = Date.now();
 
+  // Trinity Convergence detection: are all three beast sparks active?
+  const trinitySet  = new Set(TRINITY_SPARK_IDS);
+  const trinityActive = TRINITY_SPARK_IDS.every(id => activeSparks.some(s => s.sparkId === id));
+  // Legendary presence drives a chip-level accent so the player sees
+  // "I have something rare" at a glance.
+  const hasLegendary = activeSparks.some(s => QI_SPARK_BY_ID[s.sparkId]?.rarity === 'legendary');
+
+  // Reorder the list so trinity pieces cluster at the top (right under the
+  // convergence banner when active). Stable secondary order is the original
+  // index so non-trinity sparks keep their relative order.
+  const orderedSparks = useMemo(() => {
+    const indexed = activeSparks.map((s, i) => ({ s, i }));
+    indexed.sort((a, b) => {
+      const aIsTrinity = trinitySet.has(a.s.sparkId);
+      const bIsTrinity = trinitySet.has(b.s.sparkId);
+      if (aIsTrinity && !bIsTrinity) return -1;
+      if (!aIsTrinity && bIsTrinity) return 1;
+      // Within trinity, follow the canonical TRINITY_SPARK_IDS order so the
+      // 3 always appear: tiger → dragon → phoenix.
+      if (aIsTrinity && bIsTrinity) {
+        return TRINITY_SPARK_IDS.indexOf(a.s.sparkId) - TRINITY_SPARK_IDS.indexOf(b.s.sparkId);
+      }
+      return a.i - b.i;
+    });
+    return indexed.map(x => x.s);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSparks]);
+
   // Soonest-expiring timed spark → shown as countdown on the chip itself
   const timedSparks   = activeSparks.filter(s => s.expiresAt);
   const soonestExpiry = timedSparks.length > 0
@@ -83,11 +111,11 @@ function ActiveSparksBar({ activeSparks }) {
     <>
       <button
         type="button"
-        className={`home-sparks-chip${chipTimer !== null && chipTimer <= 10 ? ' home-sparks-chip-urgent' : ''}`}
+        className={`home-sparks-chip${chipTimer !== null && chipTimer <= 10 ? ' home-sparks-chip-urgent' : ''}${hasLegendary ? ' home-sparks-chip-legendary' : ''}${trinityActive ? ' home-sparks-chip-trinity' : ''}`}
         onClick={handleOpen}
         aria-haspopup="dialog"
         aria-expanded={open}
-        title="View active Qi Sparks"
+        title={trinityActive ? 'Trinity Convergence active!' : 'View active Qi Sparks'}
       >
         <span className="home-sparks-chip-icon">✦</span>
         <span className="home-sparks-chip-label">
@@ -121,7 +149,15 @@ function ActiveSparksBar({ activeSparks }) {
             </header>
 
             <ul className="active-sparks-panel-list">
-              {activeSparks.map((s) => {
+              {trinityActive && (
+                <li className="trinity-convergence-banner" aria-label="Trinity Convergence active">
+                  <span className="tcb-mark">✦</span>
+                  <span className="tcb-label">Trinity Convergence</span>
+                  <span className="tcb-bonus">+500% global qi/s</span>
+                  <span className="tcb-mark">✦</span>
+                </li>
+              )}
+              {orderedSparks.map((s) => {
                 const card   = QI_SPARK_BY_ID[s.sparkId];
                 if (!card) return null;
                 const rarity      = SPARK_RARITY[card.rarity] ?? SPARK_RARITY.common;
@@ -129,6 +165,8 @@ function ActiveSparksBar({ activeSparks }) {
                 const isTimed     = remainingMs !== null;
                 const isExpiring  = isTimed && remainingMs <= 0;
                 const isUrgent    = isTimed && remainingMs > 0 && remainingMs < 10_000;
+                const isLegendary    = card.rarity === 'legendary';
+                const isTrinityPiece = card.trinityPiece === true;
                 // Non-timer suffix (stacks ×N, breakthrough count, tier label)
                 const suffix      = !isTimed ? formatSuffix(card, s) : null;
                 // Progress 0→1; original duration from card definition
@@ -143,7 +181,7 @@ function ActiveSparksBar({ activeSparks }) {
                 return (
                   <li
                     key={s.instanceId}
-                    className={`active-spark-row${isUrgent ? ' active-spark-row-urgent' : ''}${isExpiring ? ' active-spark-row-expiring' : ''}`}
+                    className={`active-spark-row${isUrgent ? ' active-spark-row-urgent' : ''}${isExpiring ? ' active-spark-row-expiring' : ''}${isLegendary ? ' active-spark-row-legendary' : ''}${isTrinityPiece ? ' active-spark-row-trinity-piece' : ''}${isTrinityPiece && trinityActive ? ' active-spark-row-trinity-active' : ''}`}
                     style={{ '--rarity-color': rarity.color }}
                   >
                     <span

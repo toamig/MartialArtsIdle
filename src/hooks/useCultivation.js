@@ -335,6 +335,13 @@ export default function useCultivation() {
   // Written by the 'mai:pattern-click-buff' event handler below.
   const patternClickMultRef = useRef(1);
 
+  // Legendary producer-synergy sparks — global multiplier from trinity
+  // convergence + producer_pair_global_mult cards. Per-producer multipliers
+  // are folded into producerRateRef directly by App.jsx (via the perProducer
+  // callback to producers.getRate). This ref carries only the GLOBAL
+  // contributions (factors that apply to the whole rate).
+  const sparkLegendaryGlobalMultRef = useRef(1);
+
   // Crystal Click mechanic — rate/cap mirrored from useQiSparks by App.jsx.
   // crystalReservoirRef holds the accumulated qi waiting to be collected.
   const sparkCrystalClickRateRef   = useRef(0);
@@ -522,6 +529,7 @@ export default function useCultivation() {
         treeQiMultRef.current * rebirthCultBuffRef.current *
         divineQiMultRef.current *
         patternClickMultRef.current *
+        sparkLegendaryGlobalMultRef.current *
         debugQiMultRef.current;
       rateRef.current = rate;
       const dQi = rate * dt;
@@ -900,6 +908,9 @@ export default function useCultivation() {
     divineQiMultRef,
     // Pattern Click rate-buff ref — written by the mai:pattern-click-buff event listener
     patternClickMultRef,
+    // Legendary producer-synergy global mult — written by App.jsx from
+    // qiSparks.getGlobalSparkMult() whenever activeSparks or producers.owned changes.
+    sparkLegendaryGlobalMultRef,
     // Crystal Click refs — rate/cap written by App.jsx, reservoir updated each tick
     sparkCrystalClickRateRef,
     sparkCrystalClickCapMinRef,

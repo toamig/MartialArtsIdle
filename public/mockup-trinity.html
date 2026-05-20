@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mockup — The Three Beasts Trinity</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg-page:     #0f1418;
+      --text:        #e6f0ee;
+      --text-dim:    #8aa39e;
+      --gold:        #ffd66b;
+      --gold-soft:   rgba(255, 215, 100, 0.7);
+      --gold-warm:   rgba(255, 200, 80, 0.45);
+      --jade:        #6ee0b5;
+      --violet:      #c4b5fd;
+    }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg-page);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      padding: 28px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0 0 6px;
+    }
+    .intro {
+      color: var(--text-dim);
+      font-size: 13px;
+      line-height: 1.55;
+      max-width: 760px;
+      margin: 0 0 30px;
+    }
+    .intro strong { color: var(--gold); }
+    .intro code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .scene-label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin: 28px 0 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 6px;
+    }
+    .scene-note {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin: 0 0 12px;
+      line-height: 1.5;
+    }
+
+    /* ── Simulated active-sparks bar (mimics the in-game layout) ───────── */
+    .active-sparks-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 14px 16px;
+      background: linear-gradient(180deg, rgba(20, 28, 36, 0.85), rgba(12, 18, 24, 0.85));
+      border: 1px solid rgba(110, 200, 180, 0.18);
+      border-radius: 12px;
+      min-height: 78px;
+    }
+
+    /* ── Base chip styling (mirrors today's ActiveSparksBar chips) ─────── */
+    .spark-chip {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 6px 11px;
+      min-width: 110px;
+      background: rgba(20, 28, 36, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      font-size: 11px;
+      line-height: 1.25;
+      color: var(--text);
+      position: relative;
+    }
+    .spark-chip .chip-name {
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .spark-chip .chip-effect {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 1px;
+    }
+    /* Common / uncommon / rare rarity examples (just for context) */
+    .spark-chip-common   { border-color: rgba(156, 163, 175, 0.6); }
+    .spark-chip-uncommon { border-color: rgba(74, 222, 128, 0.55); }
+    .spark-chip-rare     { border-color: rgba(167, 139, 250, 0.65); }
+
+    /* ── Legendary base styling — gold border, slightly darker ────────── */
+    .spark-chip-legendary {
+      border-color: rgba(255, 215, 100, 0.6);
+      background: linear-gradient(180deg, rgba(38, 28, 14, 0.95), rgba(22, 16, 10, 0.95));
+      box-shadow: 0 0 10px rgba(255, 200, 80, 0.18);
+    }
+    .spark-chip-legendary .chip-name  { color: #fff4d4; }
+    .spark-chip-legendary .chip-effect { color: rgba(255, 215, 130, 0.85); }
+
+    /* ── Trinity piece marker — corner ✦ badge ────────────────────────── */
+    .spark-chip-trinity-piece::after {
+      content: '✦';
+      position: absolute;
+      top: 3px;
+      right: 5px;
+      font-size: 10px;
+      color: rgba(255, 215, 100, 0.55);
+      text-shadow: 0 0 4px rgba(255, 200, 80, 0.45);
+    }
+
+    /* ── Trinity active state — solid gold badge + pulse ──────────────── */
+    .spark-chip-trinity-active::after {
+      color: var(--gold);
+      text-shadow: 0 0 8px rgba(255, 215, 100, 0.95);
+      animation: trinity-badge-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes trinity-badge-pulse {
+      0%, 100% { opacity: 0.7; transform: scale(1); }
+      50%      { opacity: 1;   transform: scale(1.18); }
+    }
+
+    /* ── Trinity Convergence cluster (State 2: all 3 active) ──────────── */
+    .spark-trinity-cluster {
+      position: relative;
+      display: flex;
+      gap: 0;
+      padding-top: 18px;       /* room for the floating label */
+      margin: 2px 0;
+    }
+    .spark-trinity-cluster::before {
+      /* Gold gradient bar joining the 3 chips visually */
+      content: '';
+      position: absolute;
+      top: 16px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg,
+        rgba(255, 200, 80, 0)    0%,
+        rgba(255, 215, 100, 0.9) 20%,
+        rgba(255, 230, 140, 1)   50%,
+        rgba(255, 215, 100, 0.9) 80%,
+        rgba(255, 200, 80, 0)    100%);
+      filter: blur(0.5px);
+      animation: trinity-bar-shimmer 4s ease-in-out infinite;
+    }
+    @keyframes trinity-bar-shimmer {
+      0%, 100% { opacity: 0.85; }
+      50%      { opacity: 1; }
+    }
+    .spark-trinity-cluster::after {
+      content: '✦ TRINITY CONVERGENCE   +500% global ✦';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: var(--gold);
+      text-shadow: 0 0 8px rgba(255, 200, 80, 0.85);
+      white-space: nowrap;
+    }
+
+    /* Cluster-member chip overrides — merge borders so they look like one piece */
+    .spark-trinity-cluster .spark-chip-legendary {
+      border-radius: 0;
+      border-left-color: transparent;
+      border-right-color: transparent;
+      animation: trinity-breathe 2.4s ease-in-out infinite;
+      box-shadow: 0 0 12px rgba(255, 200, 80, 0.35);
+    }
+    .spark-trinity-cluster .spark-chip-legendary:first-child {
+      border-radius: 8px 0 0 8px;
+      border-left-color: rgba(255, 215, 100, 0.75);
+    }
+    .spark-trinity-cluster .spark-chip-legendary:last-child {
+      border-radius: 0 8px 8px 0;
+      border-right-color: rgba(255, 215, 100, 0.75);
+    }
+    @keyframes trinity-breathe {
+      0%, 100% { box-shadow: 0 0 12px rgba(255, 200, 80, 0.4); }
+      50%      { box-shadow: 0 0 22px rgba(255, 215, 120, 0.75); }
+    }
+  </style>
+</head>
+<body>
+  <h1>The Three Beasts — Trinity Visual Mockup</h1>
+  <p class="intro">
+    Two states for the three creature chips in <strong>ActiveSparksBar</strong>:
+    <br/>• <strong>State 1 (Partial)</strong>: 1 or 2 of the trinity are
+    active. Each piece carries a small <code>✦</code> corner badge so the
+    player notices "this is part of something bigger".
+    <br/>• <strong>State 2 (Trinity Convergence)</strong>: all three active. Chips
+    automatically reorder to cluster together, share a gold gradient bar
+    across the top, and the <code>✦ TRINITY CONVERGENCE ✦</code> label floats
+    above them. The cluster breathes with a slow gold pulse.
+  </p>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <p class="scene-label">State 1 — One trinity piece active</p>
+  <p class="scene-note">Just the Storm-Furred Tiger drawn. Other sparks fill the bar normally. The ✦ corner badge hints at the chase.</p>
+  <div class="active-sparks-bar">
+    <div class="spark-chip spark-chip-common">
+      <span class="chip-name">Surging Stream</span>
+      <span class="chip-effect">+50% qi/s · 22 s</span>
+    </div>
+    <div class="spark-chip spark-chip-legendary spark-chip-trinity-piece">
+      <span class="chip-name">Storm-Furred Tiger</span>
+      <span class="chip-effect">Beast Pact ×3</span>
+    </div>
+    <div class="spark-chip spark-chip-uncommon">
+      <span class="chip-name">Steady Cultivation × 3</span>
+      <span class="chip-effect">+3 base qi/s</span>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <p class="scene-label">State 1 — Two trinity pieces active</p>
+  <p class="scene-note">Tiger + Dragon drawn, Phoenix still missing. The two pieces sit wherever the draw put them (not yet clustered). Player sees two ✦ badges and feels the pull toward rerolling for the third.</p>
+  <div class="active-sparks-bar">
+    <div class="spark-chip spark-chip-legendary spark-chip-trinity-piece">
+      <span class="chip-name">Storm-Furred Tiger</span>
+      <span class="chip-effect">Beast Pact ×3</span>
+    </div>
+    <div class="spark-chip spark-chip-common">
+      <span class="chip-name">Surging Stream</span>
+      <span class="chip-effect">+50% qi/s · 22 s</span>
+    </div>
+    <div class="spark-chip spark-chip-legendary spark-chip-trinity-piece">
+      <span class="chip-name">Pearl-Dream Dragon</span>
+      <span class="chip-effect">Dragon ×3</span>
+    </div>
+    <div class="spark-chip spark-chip-rare">
+      <span class="chip-name">Divine Qi</span>
+      <span class="chip-effect">tier 3</span>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <p class="scene-label">State 2 — Trinity Convergence (all three active)</p>
+  <p class="scene-note">Phoenix drawn at last. The three chips snap together, share a gold bar across the top, and the convergence label floats above. The ✦ badges fill in solid gold and pulse. The rest of the bar continues unchanged.</p>
+  <div class="active-sparks-bar">
+    <div class="spark-chip spark-chip-common">
+      <span class="chip-name">Surging Stream</span>
+      <span class="chip-effect">+50% qi/s · 22 s</span>
+    </div>
+    <div class="spark-trinity-cluster">
+      <div class="spark-chip spark-chip-legendary spark-chip-trinity-piece spark-chip-trinity-active">
+        <span class="chip-name">Storm-Furred Tiger</span>
+        <span class="chip-effect">Beast Pact ×3</span>
+      </div>
+      <div class="spark-chip spark-chip-legendary spark-chip-trinity-piece spark-chip-trinity-active">
+        <span class="chip-name">Pearl-Dream Dragon</span>
+        <span class="chip-effect">Dragon ×3</span>
+      </div>
+      <div class="spark-chip spark-chip-legendary spark-chip-trinity-piece spark-chip-trinity-active">
+        <span class="chip-name">Rainbow-Cry Phoenix</span>
+        <span class="chip-effect">Phoenix ×3</span>
+      </div>
+    </div>
+    <div class="spark-chip spark-chip-rare">
+      <span class="chip-name">Divine Qi</span>
+      <span class="chip-effect">tier 3</span>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <p class="scene-label">Cluster alone — to inspect spacing / pulse</p>
+  <p class="scene-note">Just the trinity cluster on its own row so you can see the breathing pulse and gold bar shimmer without other chips around it.</p>
+  <div class="active-sparks-bar">
+    <div class="spark-trinity-cluster">
+      <div class="spark-chip spark-chip-legendary spark-chip-trinity-piece spark-chip-trinity-active">
+        <span class="chip-name">Storm-Furred Tiger</span>
+        <span class="chip-effect">Beast Pact ×3</span>
+      </div>
+      <div class="spark-chip spark-chip-legendary spark-chip-trinity-piece spark-chip-trinity-active">
+        <span class="chip-name">Pearl-Dream Dragon</span>
+        <span class="chip-effect">Dragon ×3</span>
+      </div>
+      <div class="spark-chip spark-chip-legendary spark-chip-trinity-piece spark-chip-trinity-active">
+        <span class="chip-name">Rainbow-Cry Phoenix</span>
+        <span class="chip-effect">Phoenix ×3</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

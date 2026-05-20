@@ -3,9 +3,17 @@ import { QI_SPARK_BY_ID, SPARK_RARITY } from '../data/qiSparks';
 
 const CHOICE_TIMEOUT_MS = 30_000;
 
-// ── Single card ──────────────────────────────────────────────────────────────
+// ── Single card with its own per-card reroll button ─────────────────────────
 
-function SparkCard({ sparkId, onPick }) {
+function SparkCard({
+  sparkId,
+  cardIndex,
+  onPick,
+  onRerollCard,
+  isFreeReroll,
+  rerollCost,
+  canAffordReroll,
+}) {
   const card = QI_SPARK_BY_ID[sparkId];
   if (!card) return null;
   const rarity = SPARK_RARITY[card.rarity] ?? SPARK_RARITY.common;
@@ -14,16 +22,36 @@ function SparkCard({ sparkId, onPick }) {
     <div
       className={`qi-spark-card qi-spark-card-${card.rarity}`}
       style={{ '--rarity-color': rarity.color }}
-      onClick={() => onPick(sparkId)}
     >
-      <div className="qi-spark-strip">
-        <span className="qi-spark-rarity-dot" style={{ background: rarity.color }} />
-        <span className="qi-spark-rarity-label">{rarity.label}</span>
-      </div>
-      <div className="qi-spark-body">
-        <p className="qi-spark-name">{card.name}</p>
-        <p className="qi-spark-desc">{card.description}</p>
-      </div>
+      <button
+        type="button"
+        className="qi-spark-card-pick"
+        onClick={() => onPick(sparkId)}
+      >
+        <div className="qi-spark-strip">
+          <span className="qi-spark-rarity-dot" style={{ background: rarity.color }} />
+          <span className="qi-spark-rarity-label">{rarity.label}</span>
+        </div>
+        <div className="qi-spark-body">
+          <p className="qi-spark-name">{card.name}</p>
+          <p className="qi-spark-desc">{card.description}</p>
+        </div>
+      </button>
+      {/* Per-card reroll button. First reroll on each card is FREE; subsequent
+          rerolls cost escalating Blood Lotus, tracked independently. */}
+      <button
+        type="button"
+        className={`qi-spark-card-reroll${isFreeReroll ? ' qi-spark-card-reroll-free' : ''}${!canAffordReroll ? ' qi-spark-card-reroll-locked' : ''}`}
+        disabled={!canAffordReroll}
+        onClick={() => onRerollCard?.(cardIndex)}
+        title={
+          isFreeReroll       ? 'Reroll this card — free!'
+          : !canAffordReroll ? `Need ${rerollCost} Blood Lotus to reroll`
+          :                    `Reroll this card — ${rerollCost} Blood Lotus`
+        }
+      >
+        ↺ {isFreeReroll ? 'Free reroll' : `${rerollCost} BL`}
+      </button>
     </div>
   );
 }
@@ -34,21 +62,32 @@ function SparkCard({ sparkId, onPick }) {
  * Two-card pick UI. Auto-resolves to the leftmost card after CHOICE_TIMEOUT_MS
  * if the player ignores it, so cultivation never blocks indefinitely.
  *
+ * Per-card reroll model: each of the 2 cards has its own ↺ button and its
+ * own free-reroll allowance + paid-cost escalator. The footer is a small
+ * transparency strip showing the baseline legendary chance + pity counter
+ * status so the player understands the surface mechanic.
+ *
  * Props:
- *   offer:           { id, cards, rerollsUsed, freeRerollsLeft }
+ *   offer:             { id, cards, cardFreeRerollsLeft, cardPaidRerollsUsed }
  *   bloodLotusBalance
- *   nextRerollCost:  number (0 if free reroll available)
+ *   nextRerollCostFor: (cardIndex) → number (0 if free reroll available)
  *   onChoose(sparkId)
- *   onReroll()
+ *   onRerollCard(cardIndex)
  *   onSkip()
+ *   pityCounter:       number (breakthroughs since last legendary appeared)
+ *   pityThreshold:     number (cap before pity triggers a guaranteed legendary)
+ *   legendaryChance:   number (per-card baseline chance, 0..1)
  */
 function QiSparkChoiceModal({
   offer,
   bloodLotusBalance,
-  nextRerollCost,
+  nextRerollCostFor,
   onChoose,
-  onReroll,
+  onRerollCard,
   onSkip,
+  pityCounter = 0,
+  pityThreshold = 17,
+  legendaryChance = 0.03,
 }) {
   // Auto-skip after timeout — captures onSkip via ref so the timer doesn't
   // reset on every render of the parent.
@@ -62,8 +101,11 @@ function QiSparkChoiceModal({
 
   if (!offer) return null;
 
-  const isFreeReroll = (offer.freeRerollsLeft ?? 0) > 0;
-  const canAffordReroll = isFreeReroll || (bloodLotusBalance ?? 0) >= nextRerollCost;
+  const freeLeftPerCard = offer.cardFreeRerollsLeft ?? [1, 1];
+  const pityRemaining   = Math.max(0, pityThreshold - pityCounter);
+  const pityImminent    = pityRemaining <= 3;
+  const pityGuaranteed  = pityRemaining === 0;
+  const chancePct       = Math.round(legendaryChance * 100);
 
   return (
     <div className="modal-overlay qi-spark-overlay">
@@ -74,24 +116,37 @@ function QiSparkChoiceModal({
         </div>
 
         <div className="qi-spark-grid">
-          {offer.cards.map((sparkId) => (
-            <SparkCard key={sparkId} sparkId={sparkId} onPick={onChoose} />
-          ))}
+          {offer.cards.map((sparkId, idx) => {
+            const cost          = nextRerollCostFor?.(idx) ?? 0;
+            const isFreeReroll  = (freeLeftPerCard[idx] ?? 0) > 0;
+            const canAfford     = isFreeReroll || (bloodLotusBalance ?? 0) >= cost;
+            return (
+              <SparkCard
+                key={`${sparkId}-${idx}`}
+                sparkId={sparkId}
+                cardIndex={idx}
+                onPick={onChoose}
+                onRerollCard={onRerollCard}
+                isFreeReroll={isFreeReroll}
+                rerollCost={cost}
+                canAffordReroll={canAfford}
+              />
+            );
+          })}
         </div>
 
-        <div className="qi-spark-footer">
-          <button
-            className={`qi-spark-reroll-btn${isFreeReroll ? ' qi-spark-reroll-free' : ''}${!canAffordReroll ? ' qi-spark-reroll-locked' : ''}`}
-            disabled={!canAffordReroll}
-            onClick={onReroll}
-            title={
-              isFreeReroll      ? 'Reroll — free!'
-              : !canAffordReroll ? `Need ${nextRerollCost} Blood Lotus`
-              :                    `Reroll — costs ${nextRerollCost} Blood Lotus`
-            }
-          >
-            ↺ {isFreeReroll ? 'Reroll (Free)' : `Reroll · ${nextRerollCost} BL`}
-          </button>
+        <div className={`qi-spark-footer-meta${pityImminent ? ' qi-spark-footer-meta-pity-soon' : ''}${pityGuaranteed ? ' qi-spark-footer-meta-pity-now' : ''}`}>
+          <span className="qsfm-chance">
+            ✦ <strong>{chancePct}%</strong> legendary chance per card
+          </span>
+          <span className="qsfm-sep">·</span>
+          <span className="qsfm-pity">
+            {pityGuaranteed
+              ? <>⚡ <strong>Next breakthrough: guaranteed legendary</strong></>
+              : pityImminent
+                ? <>⚡ Legendary guaranteed in <strong>{pityRemaining}</strong> {pityRemaining === 1 ? 'realm' : 'realms'}</>
+                : <>Pity in <strong>{pityRemaining}</strong> realms</>}
+          </span>
         </div>
       </div>
     </div>

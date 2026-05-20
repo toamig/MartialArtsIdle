@@ -23,9 +23,83 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { QI_SPARKS, QI_SPARK_BY_ID, drawOffer } from '../data/qiSparks';
+import {
+  QI_SPARKS,
+  QI_SPARK_BY_ID,
+  drawOffer,
+  drawSingleCard,
+  TRINITY_SPARK_IDS,
+  TRINITY_CONVERGENCE_MULT,
+  LEGENDARY_PER_CARD_CHANCE,
+  LEGENDARY_PITY_THRESHOLD,
+} from '../data/qiSparks';
+import { isMajorTransition } from '../data/realms';
 import { spendBloodLotus, getBloodLotusBalance } from '../systems/bloodLotus';
 import { trackSparkPicked, trackSparkRerolled, trackSparkExpired } from '../analytics';
+
+// ── Legendary producer-synergy helpers ─────────────────────────────────────
+// Pure functions that compose the per-producer + global multipliers from
+// the active spark set + current owned counts. Called from App.jsx every
+// time producers.owned or activeSparks changes.
+
+/** Per-producer mult from active legendary sparks. Returns 1 if no sparks apply. */
+function computeProducerSparkMult(pid, sparks, owned) {
+  let mult = 1;
+  for (const s of sparks) {
+    const card = QI_SPARK_BY_ID[s.sparkId];
+    const eff = card?.effect;
+    if (!eff) continue;
+    if (eff.type === 'producer_self_mult' && eff.target === pid) {
+      mult *= eff.mult;
+    } else if (eff.type === 'producer_count_mult' && eff.target === pid) {
+      const sourceCount = owned[eff.source] ?? 0;
+      mult *= (1 + sourceCount * eff.perEach);
+    } else if (eff.type === 'producer_count_threshold_mult' && eff.target === pid) {
+      const sourceCount = owned[eff.source] ?? 0;
+      if (sourceCount >= eff.threshold) mult *= eff.mult;
+    } else if (eff.type === 'producer_pair_synergy' && (eff.producerA === pid || eff.producerB === pid)) {
+      const numPairs = Math.min(owned[eff.producerA] ?? 0, owned[eff.producerB] ?? 0);
+      // Each pair adds (mult - 1) to the per-producer multiplier additively
+      // so 3 pairs at mult=2 → ×(1 + 3×1) = ×4 (not ×8).
+      if (numPairs > 0) mult *= (1 + numPairs * (eff.mult - 1));
+    } else if (eff.type === 'phoenix_reborn' && pid !== 'p_phoenix') {
+      // Phoenix Reborn: every major realm transition since this spark was
+      // drawn doubles every OTHER producer's qi/s. Stack counter lives on
+      // the per-instance state (s.phoenixRebornStacks).
+      const stacks = s.phoenixRebornStacks ?? 0;
+      if (stacks > 0) mult *= Math.pow(2, stacks);
+    }
+  }
+  return mult;
+}
+
+/** Global mult from active legendary sparks: trinity convergence + pair-global. */
+function computeGlobalSparkMult(sparks, owned) {
+  let mult = 1;
+  // Trinity Convergence — all 3 beast sparks simultaneously → +500% global.
+  const activeIds = new Set(sparks.map(s => s.sparkId));
+  if (TRINITY_SPARK_IDS.every(id => activeIds.has(id))) {
+    mult *= TRINITY_CONVERGENCE_MULT;
+  }
+  for (const s of sparks) {
+    const eff = QI_SPARK_BY_ID[s.sparkId]?.effect;
+    if (eff?.type === 'producer_pair_global_mult') {
+      const numPairs = Math.min(owned[eff.producerA] ?? 0, owned[eff.producerB] ?? 0);
+      if (numPairs > 0) mult *= (1 + numPairs * (eff.mult - 1));
+    }
+  }
+  return mult;
+}
+
+/** True iff Phoenix Reborn (E2) is active in the spark set. */
+function isPhoenixRebornActive(sparks) {
+  return sparks.some(s => QI_SPARK_BY_ID[s.sparkId]?.effect?.type === 'phoenix_reborn');
+}
+
+/** True iff any id in `ids` is a legendary spark. Used by pity reset. */
+function containsLegendary(ids) {
+  return (ids ?? []).some(id => QI_SPARK_BY_ID[id]?.rarity === 'legendary');
+}
 
 const ACTIVE_KEY           = 'mai_qi_sparks_active';
 const PENDING_KEY          = 'mai_qi_sparks_pending';
@@ -59,11 +133,16 @@ function saveJSON(key, value) {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
-  // Stable ref so drawOffer can read the latest gate state without forcing
+export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUnlocked }) {
+  // Stable refs so drawOffer can read the latest gate state without forcing
   // the breakthrough effect to re-subscribe.
   const isFeatureUnlockedRef = useRef(isFeatureUnlocked);
   useEffect(() => { isFeatureUnlockedRef.current = isFeatureUnlocked; }, [isFeatureUnlocked]);
+  // Producer-unlock gate (legendary producer-synergy sparks). The callback
+  // identity churns on realmIndex change — that's fine, the effect just
+  // resyncs the ref. drawOffer reads via the ref so it always sees current.
+  const producerUnlockedRef  = useRef(producerUnlocked);
+  useEffect(() => { producerUnlockedRef.current = producerUnlocked; }, [producerUnlocked]);
   const [activeSparks, setActiveSparks] = useState(() => {
     // Reassign every instanceId on rehydrate. Older saves can contain
     // duplicate ids (the counter used to reset to 0 on reload), and the
@@ -112,6 +191,10 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
   useEffect(() => { saveJSON(ACTIVE_KEY,  activeSparks); }, [activeSparks]);
   useEffect(() => { saveJSON(PENDING_KEY, pendingOffer); }, [pendingOffer]);
   useEffect(() => { saveJSON(PITY_KEY,    pityCounter);  }, [pityCounter]);
+  // Ref mirror for pity — setState updaters need fresh value (the breakthrough
+  // effect calls drawOffer() with forceLegendary based on the current pity).
+  const pityCounterRef = useRef(pityCounter);
+  useEffect(() => { pityCounterRef.current = pityCounter; }, [pityCounter]);
 
   // Keep BL balance in sync
   useEffect(() => {
@@ -246,6 +329,7 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
   const drawOfferCtx = useCallback(() => ({
     activeSparks:      activeSparksRef.current,
     isFeatureUnlocked: isFeatureUnlockedRef.current,
+    producerUnlocked:  producerUnlockedRef.current,
   }), []);
 
   // ── Expiry tick — runs every second to prune timed sparks ───────────────
@@ -296,6 +380,25 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
           next.push({ ...s, breakthroughsAccrued: (s.breakthroughsAccrued ?? 0) + 1 });
           continue;
         }
+        // Phoenix Reborn (legendary E2) — each MAJOR realm transition between
+        // `prev` and `curr` bumps the stack counter (mult = 2^stacks applied
+        // to every non-phoenix producer) and fires the reset event so App.jsx
+        // can zero out the player's Phoenix count.
+        if (card.kind === 'permanent' && card.effect?.type === 'phoenix_reborn') {
+          let majorCount = 0;
+          for (let i = prev; i < curr; i++) {
+            if (isMajorTransition(i)) majorCount++;
+          }
+          if (majorCount > 0) {
+            next.push({ ...s, phoenixRebornStacks: (s.phoenixRebornStacks ?? 0) + majorCount });
+            try {
+              window.dispatchEvent(new CustomEvent('mai:phoenix-reborn', { detail: { count: majorCount } }));
+            } catch {}
+          } else {
+            next.push(s);
+          }
+          continue;
+        }
         next.push(s);
       }
       return next;
@@ -315,24 +418,27 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
           queueMicrotask(() => applySparkChoice(leftmostId));
         }
       }
-      const cards = drawOffer(2, drawOfferCtx());
+      // Pity: if the counter has reached the threshold, force the FIRST
+      // card slot to be a legendary on this draw. Counter resets below.
+      const pityNow = pityCounterRef.current ?? 0;
+      const forceLegendary = pityNow >= LEGENDARY_PITY_THRESHOLD;
+      const ctxBase = drawOfferCtx();
+      const cards = drawOffer(2, { ...ctxBase, forceLegendary });
       if (cards.length === 0) return null;
+      // After draw: reset pity if a legendary appeared (forced or natural),
+      // else increment by 1. We do this here (not in a separate setPity call)
+      // to make pity advancement deterministic with respect to the draw.
+      const sawLegendary = containsLegendary(cards);
+      setPityCounter(c => sawLegendary ? 0 : (c + 1));
       return {
-        id:               `qs-offer-${++instanceCounter}-${curr}`,
+        id:                   `qs-offer-${++instanceCounter}-${curr}`,
         cards,
-        rerollsUsed:      0,
-        freeRerollsLeft:  1,
-        rolledAtRealm:    curr,
+        // Per-card reroll state: each of the 2 cards gets 1 free reroll
+        // independently, then escalating Lotus costs (tracked per card).
+        cardFreeRerollsLeft:  [1, 1],
+        cardPaidRerollsUsed:  [0, 0],
+        rolledAtRealm:        curr,
       };
-    });
-
-    // Pity counter increments on every offer. Resets when a rare draws.
-    // Phase 1 has no rares so this just climbs harmlessly until rare cards
-    // are added.
-    setPityCounter(c => {
-      const cards = pendingRollPreviewRef.current;
-      const containsRare = cards?.some(id => QI_SPARK_BY_ID[id]?.rarity === 'rare');
-      return containsRare ? 0 : c + 1;
     });
   }, [cultivation.realmIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -457,55 +563,76 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
   }, [applySparkChoice]);
 
   /**
-   * Rerolls all cards in the offer.
-   * - First reroll is free (`freeRerollsLeft` decrements)
-   * - Subsequent rerolls cost escalating Blood Lotus (3, 6, 12; cap at 12)
-   * - Returns true if reroll happened, false if blocked by cost.
+   * Reroll a single card in the offer (per-card reroll model).
+   *   - First reroll per card is free (per-card `cardFreeRerollsLeft[i]` decrements)
+   *   - Subsequent rerolls cost escalating Blood Lotus (PAID_REROLL_COSTS,
+   *     indexed by the card's own paid-reroll count)
+   *   - Same 3% legendary chance per roll regardless of free/paid
+   *   - Pity counter: if a legendary appears in the new card, pity resets;
+   *     otherwise pity is unchanged (the pity ADVANCE happens on breakthroughs).
+   *   - Returns true if reroll happened, false if blocked by cost / invalid idx.
    */
-  const reroll = useCallback(() => {
+  const rerollCard = useCallback((cardIndex) => {
     let result = false;
     setPendingOffer(prev => {
       if (!prev) return prev;
-      const isFree = (prev.freeRerollsLeft ?? 0) > 0;
-      let nextFreeLeft = prev.freeRerollsLeft ?? 0;
-      let nextRerollsUsed = prev.rerollsUsed ?? 0;
+      if (cardIndex !== 0 && cardIndex !== 1) return prev;
+      const freeLeft = prev.cardFreeRerollsLeft ?? [1, 1];
+      const paidUsed = prev.cardPaidRerollsUsed ?? [0, 0];
+      const isFree = (freeLeft[cardIndex] ?? 0) > 0;
 
       if (isFree) {
-        nextFreeLeft = nextFreeLeft - 1;
+        // free roll — decrement and proceed
       } else {
-        const paidIdx = Math.min(
-          (prev.rerollsUsed - (prev.freeRerollsLeft === undefined ? 1 : 0)),
-          PAID_REROLL_COSTS.length - 1,
-        );
+        const paidIdx = Math.min(paidUsed[cardIndex] ?? 0, PAID_REROLL_COSTS.length - 1);
         const cost = PAID_REROLL_COSTS[Math.max(0, paidIdx)];
         if (!spendBloodLotus(cost)) return prev;
         try { setBloodLotusBalance(getBloodLotusBalance()); } catch {}
         try { trackSparkRerolled(false, cost); } catch {}
       }
       if (isFree) { try { trackSparkRerolled(true, 0); } catch {} }
-      const fresh = drawOffer(2, drawOfferCtx());
-      if (fresh.length === 0) return prev;
+
+      // Pity: same as breakthrough-time — if counter has reached threshold,
+      // force this single replacement to be a legendary.
+      const pityNow = pityCounterRef.current ?? 0;
+      const forceLegendary = pityNow >= LEGENDARY_PITY_THRESHOLD;
+      // Exclude the OTHER card so the reroll never duplicates the offer.
+      const otherId = prev.cards[1 - cardIndex];
+      const newId = drawSingleCard({ ...drawOfferCtx(), forceLegendary }, [otherId]);
+      if (!newId) return prev;
+      // Reset pity if a legendary surfaced — even on a per-card reroll.
+      if (QI_SPARK_BY_ID[newId]?.rarity === 'legendary') {
+        setPityCounter(0);
+      }
       result = true;
+      const newCards = [...prev.cards];
+      newCards[cardIndex] = newId;
+      const newFree = [...freeLeft];
+      const newPaid = [...paidUsed];
+      if (isFree) newFree[cardIndex] = newFree[cardIndex] - 1;
+      else        newPaid[cardIndex] = (newPaid[cardIndex] ?? 0) + 1;
       return {
         ...prev,
-        cards:           fresh,
-        rerollsUsed:     nextRerollsUsed + 1,
-        freeRerollsLeft: nextFreeLeft,
+        cards:                newCards,
+        cardFreeRerollsLeft:  newFree,
+        cardPaidRerollsUsed:  newPaid,
       };
     });
     return result;
   }, []);
 
   /**
-   * Cost of the next reroll. Returns 0 if a free reroll is available, else
-   * the next escalating BL cost.
+   * Per-card cost of the next reroll. 0 if a free reroll is available for
+   * the slot, else the escalating BL cost.
    */
-  const nextRerollCost = useCallback(() => {
+  const nextRerollCost = useCallback((cardIndex = 0) => {
     if (!pendingOffer) return 0;
-    if ((pendingOffer.freeRerollsLeft ?? 0) > 0) return 0;
-    // After the free is spent, paid index = (rerollsUsed - 1) so first paid is index 0
+    if (cardIndex !== 0 && cardIndex !== 1) return 0;
+    const freeLeft = pendingOffer.cardFreeRerollsLeft ?? [1, 1];
+    const paidUsed = pendingOffer.cardPaidRerollsUsed ?? [0, 0];
+    if ((freeLeft[cardIndex] ?? 0) > 0) return 0;
     const paidIdx = Math.min(
-      Math.max(0, (pendingOffer.rerollsUsed ?? 0) - 1),
+      Math.max(0, paidUsed[cardIndex] ?? 0),
       PAID_REROLL_COSTS.length - 1,
     );
     return PAID_REROLL_COSTS[paidIdx];
@@ -566,10 +693,14 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
     crystalClickRateRef,
     crystalClickCapMinRef,
     choose,
-    reroll,
+    rerollCard,
     nextRerollCost,
     skip,
     clearAll,
+    // Pity counter — exposed so the choice modal can show "Pity in N realms".
+    pityCounter,
+    pityThreshold: LEGENDARY_PITY_THRESHOLD,
+    legendaryChance: LEGENDARY_PER_CARD_CHANCE,
     // Round 3 — bypass the offer flow entirely. `grant` is used by:
     //   - crystal evolution (HomeScreen.handleCrystalEvolve) to unlock
     //     mechanic T1s when the crystal crosses a visual tier
@@ -603,6 +734,22 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked }) {
       }
       return max;
     },
+    /**
+     * Per-producer multiplier composed from active legendary sparks.
+     * Caller passes the current owned map (from useProducers). Returns 1
+     * when no legendary sparks apply to this producer.
+     */
+    getProducerSparkMult: (pid, ownedMap) =>
+      computeProducerSparkMult(pid, activeSparks, ownedMap ?? {}),
+    /**
+     * Global multiplier composed from active legendary sparks (trinity
+     * convergence + producer-pair global mults). Folded into useCultivation's
+     * rate calc via sparkLegendaryGlobalMultRef.
+     */
+    getGlobalSparkMult: (ownedMap) =>
+      computeGlobalSparkMult(activeSparks, ownedMap ?? {}),
+    /** True iff Phoenix Reborn is active — App.jsx uses this to gate the reset listener. */
+    isPhoenixRebornActive: () => isPhoenixRebornActive(activeSparks),
     // Direct-apply for debug bridges — bypasses the offer modal flow.
     applySpark: applySparkChoice,
   };

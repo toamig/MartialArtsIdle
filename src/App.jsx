@@ -171,7 +171,15 @@ function AppInner() {
     (id) => featureFlagsRef.current?.isUnlocked?.(id) ?? false,
     [],
   );
-  const qiSparks        = useQiSparks({ cultivation, isFeatureUnlocked });
+  // Producer-unlock gate for legendary producer-synergy sparks. Cards with
+  // `requiresProducers: [...]` are filtered out of the offer pool unless
+  // every referenced producer is unlocked. Closes over the latest
+  // realmIndex — useQiSparks resyncs its ref on identity change.
+  const producerUnlocked = useCallback(
+    (pid) => producers.isUnlocked(pid, cultivation.realmIndex),
+    [producers, cultivation.realmIndex],
+  );
+  const qiSparks        = useQiSparks({ cultivation, isFeatureUnlocked, producerUnlocked });
 
   // Record every new realm reached so karma awards are first-time-only.
   useEffect(() => {
@@ -304,13 +312,36 @@ function AppInner() {
   // upgrade change.
   useEffect(() => {
     if (!cultivation.producerRateRef) return;
-    const perProducer = (pid) => upgrades.getProducerMult(pid);
+    // Per-producer multiplier composes the upgrade-doubling mult with the
+    // legendary spark per-producer mult (pair synergies, count-based bonuses,
+    // single-producer ×N, Phoenix Reborn). Both contribute multiplicatively.
+    const ownedMap = producers.owned;
+    const perProducer = (pid) =>
+      upgrades.getProducerMult(pid) * qiSparks.getProducerSparkMult(pid, ownedMap);
     const effective = producers.getRate(perProducer);
     cultivation.producerRateRef.current = effective;
+    // Trinity Convergence + producer_pair_global_mult — global multipliers
+    // from legendary sparks, folded into the rate calc downstream.
+    if (cultivation.sparkLegendaryGlobalMultRef) {
+      cultivation.sparkLegendaryGlobalMultRef.current = qiSparks.getGlobalSparkMult(ownedMap);
+    }
     try {
       localStorage.setItem('mai_producers_rate_snapshot', JSON.stringify({ rate: effective }));
     } catch {}
-  }, [producers.owned, upgrades.owned, cultivation.producerRateRef]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [producers.owned, upgrades.owned, qiSparks.activeSparks, cultivation.producerRateRef, cultivation.sparkLegendaryGlobalMultRef]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Phoenix Reborn (legendary E2) — useQiSparks dispatches this event when
+  // a major realm transition fires while the spark is active. Reset the
+  // player's Phoenix count to 0 (the permanent +mult bonus on other producers
+  // is already accounted for in qiSparks.getProducerSparkMult via the
+  // per-instance stack counter).
+  useEffect(() => {
+    const handler = () => {
+      try { producers.setOwnedCount?.('p_phoenix', 0); } catch {}
+    };
+    window.addEventListener('mai:phoenix-reborn', handler);
+    return () => window.removeEventListener('mai:phoenix-reborn', handler);
+  }, [producers]);
 
   // Mirror remaining upgrade effects into cultivation refs. crystal-tap mult
   // is applied inside collectCrystalReservoir; gate-reduction mult into the
@@ -1125,10 +1156,13 @@ function AppInner() {
         <QiSparkChoiceModal
           offer={qiSparks.pendingOffer}
           bloodLotusBalance={qiSparks.bloodLotusBalance}
-          nextRerollCost={qiSparks.nextRerollCost()}
+          nextRerollCostFor={qiSparks.nextRerollCost}
           onChoose={qiSparks.choose}
-          onReroll={qiSparks.reroll}
+          onRerollCard={qiSparks.rerollCard}
           onSkip={qiSparks.skip}
+          pityCounter={qiSparks.pityCounter}
+          pityThreshold={qiSparks.pityThreshold}
+          legendaryChance={qiSparks.legendaryChance}
         />
       )}
       {activeModal === 'settings'     && <SettingsScreen onClose={() => setActiveModal(null)} />}
