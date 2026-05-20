@@ -3462,10 +3462,14 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .ces-tap-hint {
   position: fixed;
   left: 50%;
-  /* Sits near the top of the viewport so the player reads the prompt before
-     dropping their gaze to the sprite. Clamped so very short viewports keep
-     ~40 px breathing room from the screen top edge / status bar. */
-  top: clamp(40px, 7vh, 70px);
+  /* Sits in the upper portion of the cluster, above the hero sprite but
+     not pinned to the screen top edge. Anchored to the lifted stage centre
+     (sprite top sits at 50vh − 170 for crystal, − 188 for char); place the
+     hint at 50vh − 240 to leave ~30–40 px breathing room above whichever
+     sprite is showing (the cesTapHint pulse animation lifts it ~6 px so we
+     budget extra). Floor with max() so very short viewports keep the hint
+     on screen. */
+  top: max(20px, calc(50vh - 240px));
   bottom: auto;
   transform: translateX(-50%);
   color: rgba(255, 255, 255, 0.78);
@@ -14039,9 +14043,10 @@ body[class*="cf-rung-"] .vfx-qi-tick.vfx-qi-tick-divine .vfx-content {
 
 .pl-lane {
   display: flex;
-  align-items: center;
+  align-items: stretch;      /* children fill the row height — leader spans full lane */
   gap: 10px;
   padding: 8px 10px;
+  min-height: 92px;          /* lane is taller so the full-height leader has room */
   background: rgba(20, 28, 36, 0.7);
   border: 1px solid rgba(110, 200, 180, 0.18);
   border-radius: 10px;
@@ -14089,31 +14094,29 @@ body[class*="cf-rung-"] .vfx-qi-tick.vfx-qi-tick-divine .vfx-content {
   100% { transform: scale(1); box-shadow: 0 0 0 rgba(255, 215, 130, 0); }
 }
 
-/* ── Leader sprite — bigger, left edge of the lane ─────────────────────── */
+/* ── Leader sprite — square, full-height of the lane, left edge.
+   Clickable button that opens the detail modal. ─────────────────────── */
 .pl-leader {
-  width: 48px;
-  height: 48px;
+  width: 88px;
+  height: 88px;
   flex-shrink: 0;
   background: linear-gradient(135deg, rgba(60, 50, 40, 0.5), rgba(30, 25, 20, 0.6));
-  border-radius: 8px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.08);
   transition: filter 220ms ease, box-shadow 220ms ease;
 }
 .pl-leader-sprite {
-  font-size: 26px;        /* for emoji text fallback */
+  font-size: 44px;        /* emoji fallback (locked 🔒) */
   line-height: 1;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
 }
-/* When the sprite is an <img> (real pixel art has shipped), size it via
-   width/height so it slots into the 48px leader. The global pixelated
-   image-rendering rule keeps it crisp. */
 img.pl-leader-sprite {
-  width: 40px;
-  height: 40px;
+  width: 76px;
+  height: 76px;
   object-fit: contain;
-  font-size: 0; /* belt-and-braces: kill any inherited text sizing */
+  font-size: 0;
 }
 .pl-locked .pl-leader {
   background: rgba(30, 30, 30, 0.4);
@@ -14128,13 +14131,40 @@ img.pl-leader-sprite {
 .pl-tier-gold   .pl-leader { box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.40); }
 .pl-tier-mythic .pl-leader { box-shadow: inset 0 0 28px rgba(167, 139, 250, 0.55); }
 
-/* ── Info column — name, count, rate, tier badge ───────────────────────── */
-.pl-info {
-  flex-shrink: 0;
-  width: 130px;
+/* ── Body column — thin caption on top, instance stack below ──────────── */
+.pl-body {
+  flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  position: relative;
 }
+/* Thin caption line: "Name · 340 Qi/s". Sits subtle above the stack so
+   the row's visual centre of gravity stays on the producer art. */
+.pl-caption {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 10px;
+  color: rgba(138, 163, 158, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+.pl-caption .pl-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(230, 240, 238, 0.95);
+}
+.pl-caption .pl-sep  { opacity: 0.35; }
+.pl-caption .pl-rate { color: rgba(167, 243, 196, 0.85); font-weight: 500; }
+
 .pl-name {
+  /* Generic name styling — caption overrides apply via the .pl-caption ancestor. */
   font-size: 13px;
   font-weight: 600;
   color: #c2e6ff;
@@ -14144,76 +14174,44 @@ img.pl-leader-sprite {
   text-overflow: ellipsis;
 }
 .pl-name-locked {
-  color: rgba(200, 210, 220, 0.5);
+  color: rgba(200, 210, 220, 0.55);
   font-style: italic;
 }
-.pl-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  align-items: center;
-  font-size: 11px;
-  color: rgba(230, 235, 240, 0.7);
-  margin-top: 2px;
-}
-.pl-owned   { color: #a7f3e8; font-weight: 600; }
-.pl-tier-gold   .pl-owned { color: #ffd070; }
-.pl-tier-mythic .pl-owned { color: #c4b5fd; }
-.pl-sep     { opacity: 0.5; }
-.pl-rate    { color: rgba(167, 243, 196, 0.85); }
+.pl-rate { color: rgba(167, 243, 196, 0.85); }
+.pl-sep  { opacity: 0.5; }
 
-.pl-badge {
-  display: inline-block;
-  padding: 1px 6px;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  border-radius: 999px;
-  color: rgba(0, 0, 0, 0.85);
-}
-.pl-badge-bronze { background: linear-gradient(135deg, #d99752, #8b5a2b); }
-.pl-badge-silver { background: linear-gradient(135deg, #e0e0e0, #909090); }
-.pl-badge-gold   { background: linear-gradient(135deg, #ffe770, #b8860b); }
-.pl-badge-mythic {
-  background: conic-gradient(from 0deg, #a78bfa, #f0abfc, #fbbf24, #a78bfa);
-  color: rgba(255, 255, 255, 0.95);
-}
-
-/* ── Sprite stack — the CC-style visualizer ────────────────────────────── */
+/* ── Sprite stack — left-anchored, full width of the body column. The
+   always-visible .pl-total chip floats on top of the right-edge sprites
+   (z-index 2), so the stack does NOT reserve right padding for it — every
+   pixel of width goes to instances. Clipping only happens on the right
+   when sprites overflow the body width. ──────────────────────────────── */
 .pl-stack {
-  flex: 1;
-  height: 48px;
-  min-width: 0;
+  position: relative;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 0;
+  justify-content: flex-start;
+  padding: 0;
+  height: 60px;
   overflow: hidden;
-  position: relative;
-  padding-right: 32px; /* reserve space for the overflow chip */
-  padding-left: 6px;   /* room for the first unit's lean */
+  min-width: 0;
 }
 .pl-stack-empty { padding-right: 0; }
 
-/* Cookie-Clicker style: bigger units that overlap each other by ~40%, with
-   slight per-position rotation/offset so the cluster feels organic instead of
-   robotically aligned. Each unit's transform is baked in via nth-child below. */
 .pl-unit {
   flex-shrink: 0;
-  font-size: 28px;        /* for emoji text fallback */
+  font-size: 36px;        /* emoji fallback */
   line-height: 1;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
-  margin-left: -14px;     /* overlap each next sprite by ~40% */
-  /* Subtle breathing — staggered via nth-child. */
+  margin-left: -10px;     /* leftmost sprite fully visible; subsequent ones overlap toward the right */
   animation: pl-unit-breathe 4s ease-in-out infinite;
   transform-origin: center bottom;
 }
 .pl-unit:first-child { margin-left: 0; }
 
-/* Img variant — sized so the cluster reads at lane height. */
 img.pl-unit {
-  width: 36px;
-  height: 36px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
   font-size: 0;
 }
@@ -14244,22 +14242,28 @@ img.pl-unit {
 .pl-tier-gold   .pl-unit { filter: saturate(1.05) brightness(1.05) drop-shadow(0 0 4px rgba(255, 215, 0, 0.35)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
 .pl-tier-mythic .pl-unit { filter: saturate(1.2) brightness(1.15) drop-shadow(0 0 6px rgba(167, 139, 250, 0.55)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
 
-/* Overflow indicator — shown when more units than visible */
-.pl-overflow {
+/* Total-count chip — always visible, floats above the rightmost sprites.
+   Replaces the old +N overflow chip. z-index keeps it on top of unit imgs. */
+.pl-total {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 10px;
-  font-weight: 600;
-  color: rgba(230, 235, 240, 0.75);
-  background: rgba(0, 0, 0, 0.6);
-  padding: 1px 6px;
+  z-index: 2;
+  font-size: 11px;
+  font-weight: 800;
+  color: #a7f3e8;
+  background: rgba(0, 0, 0, 0.78);
+  padding: 3px 9px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(110, 224, 181, 0.55);
+  letter-spacing: 0.03em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
-.pl-tier-gold   .pl-overflow { color: #ffd070; border-color: rgba(255, 215, 0, 0.45); }
-.pl-tier-mythic .pl-overflow { color: #c4b5fd; border-color: rgba(167, 139, 250, 0.55); }
+.pl-tier-bronze .pl-total { color: #ffd2a3; border-color: rgba(217, 151, 82, 0.6); }
+.pl-tier-silver .pl-total { color: #e0e0e0; border-color: rgba(192, 192, 192, 0.6); }
+.pl-tier-gold   .pl-total { color: #ffd070; border-color: rgba(255, 215, 0, 0.55); }
+.pl-tier-mythic .pl-total { color: #c4b5fd; border-color: rgba(167, 139, 250, 0.65); }
 
 /* ── Buy button — right edge of the lane ───────────────────────────────── */
 .pl-buy {
@@ -14308,18 +14312,19 @@ img.pl-unit {
 
 /* ── Mobile responsiveness ─────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .pl-lane { gap: 8px; padding: 8px; }
-  .pl-leader { width: 40px; height: 40px; }
-  .pl-leader-sprite { font-size: 22px; }
-  .pl-info { width: 100px; }
-  .pl-name { font-size: 12px; }
-  .pl-meta { font-size: 10px; }
-  .pl-stack { height: 40px; padding-right: 30px; padding-left: 4px; }
-  .pl-unit { font-size: 22px; margin-left: -10px; }
-  img.pl-unit { width: 28px; height: 28px; }
-  .pl-buy { min-width: 64px; padding: 6px 8px; }
-  .pl-buy-count { font-size: 11px; }
-  .pl-buy-cost  { font-size: 9px; }
+  .pl-lane            { gap: 8px; padding: 7px 8px; min-height: 80px; }
+  .pl-leader          { width: 72px; height: 72px; }
+  .pl-leader-sprite   { font-size: 36px; }
+  img.pl-leader-sprite{ width: 62px; height: 62px; }
+  .pl-caption         { font-size: 10px; }
+  .pl-caption .pl-name{ font-size: 11px; }
+  .pl-stack           { height: 50px; }
+  .pl-unit            { font-size: 30px; }
+  img.pl-unit         { width: 46px; height: 46px; }
+  .pl-buy             { min-width: 74px; padding: 7px 10px; }
+  .pl-buy-count       { font-size: 11px; }
+  .pl-buy-cost        { font-size: 10px; }
+  .pl-total           { font-size: 10px; padding: 3px 8px; }
 }
 
 /* ─── Producer-lane leader as a clickable button ───────────────────────────
