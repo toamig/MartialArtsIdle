@@ -70,6 +70,17 @@ const CULTIVATOR_TIER_DISPLAY_NAMES = [
   'Heavenly Sovereign',       // T12
 ];
 
+// Module-scoped set of breakthrough event ids that have already been enqueued
+// into the event queue. Lifted out of the component so it survives HomeScreen
+// unmount/remount cycles (e.g. tab navigation away and back while the banner
+// is still pending). Without this, navigating away mid-banner would cause the
+// effect to re-enqueue the same breakthrough on remount, popping a stale
+// "BREAKTHROUGH — True Element · Peak Stage" banner on a screen the player
+// already finished. See useCultivation.majorBreakthrough — that state lives at
+// App level so it persists across HomeScreen unmounts; this set is the App-
+// scoped peer that prevents the effect from re-acting on it.
+const _enqueuedBreakthroughIds = new Set();
+
 function getCultivatorTier(realmIndex) {
   let t = 0;
   if (realmIndex >= 10) t = 1;
@@ -1837,10 +1848,14 @@ function HomeScreen({
   //    major realm-name changes (and the final ascension) pop the cinematic
   //    Character Evolution overlay so the player gets a real emotional beat
   //    every time their cultivator's appearance changes.
-  const enqueuedBreakthroughIdRef = useRef(null);
+  //
+  // The "already enqueued" tracker is module-scoped (_enqueuedBreakthroughIds
+  // above) so it survives HomeScreen unmount/remount; otherwise navigating
+  // away mid-banner and back re-enqueues the same event for an already-
+  // completed transition.
   useEffect(() => {
-    if (!majorBreakthrough || enqueuedBreakthroughIdRef.current === majorBreakthrough.id) return;
-    enqueuedBreakthroughIdRef.current = majorBreakthrough.id;
+    if (!majorBreakthrough || _enqueuedBreakthroughIds.has(majorBreakthrough.id)) return;
+    _enqueuedBreakthroughIds.add(majorBreakthrough.id);
     if (majorBreakthrough.isPeak) {
       // Sub-realm peak — same realm name, same cultivator tier, no new
       // visual identity. Lightweight 2.6 s text banner is right.
@@ -2209,12 +2224,20 @@ function HomeScreen({
       )}
 
       {/* Character evolution cinematic — fires on major realm-name changes
-          (every cultivator-tier visual transition). Tap-to-continue. */}
+          (every cultivator-tier visual transition). Tap-to-continue.
+          clearMajorBreakthrough() mirrors BreakthroughBanner's onDone so the
+          cultivation hook's state doesn't leak across the dismiss; otherwise
+          a later tab-navigation cycle would see the stale majorBreakthrough
+          state and (combined with a remount-fresh enqueue tracker, were it
+          not module-scoped) re-enqueue a spurious cinematic. */}
       {currentEvent?.kind === 'character-evolution' && (
         <CharacterEvolutionOverlay
           key={currentEvent.id}
           event={currentEvent.payload}
-          onDone={() => dismiss(currentEvent.id)}
+          onDone={() => {
+            dismiss(currentEvent.id);
+            clearMajorBreakthrough();
+          }}
         />
       )}
 
