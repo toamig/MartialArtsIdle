@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mockup — Producer Row Redesign</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    /* ── Page chrome ─────────────────────────────────────────────────────── */
+    :root {
+      --bg-page:     #0f1418;
+      --bg-card:     rgba(20, 28, 36, 0.7);
+      --bg-row:      rgba(20, 28, 36, 0.7);
+      --border-dim:  rgba(110, 200, 180, 0.18);
+      --text:        #e6f0ee;
+      --text-dim:    #8aa39e;
+      --jade:        #6ee0b5;
+      --jade-soft:   rgba(110, 224, 181, 0.85);
+    }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg-page);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+    }
+    body {
+      padding: 24px;
+      max-width: 1620px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0 0 6px;
+      letter-spacing: 0.02em;
+    }
+    .intro {
+      color: var(--text-dim);
+      font-size: 13px;
+      line-height: 1.5;
+      max-width: 920px;
+      margin: 0 0 28px;
+    }
+    .intro strong { color: var(--jade); }
+
+    /* Each .pair holds CURRENT and NEW columns side-by-side for one device width. */
+    .pair {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin: 8px 0 12px 4px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .col-label {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin: 0 0 8px 4px;
+    }
+    .scroller {
+      background: linear-gradient(180deg, #14191e, #0c1014);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 14px;
+      overflow: hidden;
+    }
+
+    .variant-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 999px;
+      margin: 18px 0 10px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-dim);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .variant-tag.current { color: #d99752; border-color: rgba(217, 151, 82, 0.45); }
+    .variant-tag.a       { color: var(--jade); border-color: rgba(110, 224, 181, 0.4); }
+    .variant-tag.b       { color: #ffd070; border-color: rgba(255, 215, 0, 0.45); }
+    .variant-tag.c       { color: #c4b5fd; border-color: rgba(167, 139, 250, 0.45); }
+    .variant-note {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin: 0 0 8px 4px;
+      line-height: 1.4;
+    }
+
+    /* ── Common producer-row styling — copy of the game's pl-* ───────────── */
+    .stack-rows { display: flex; flex-direction: column; gap: 8px; }
+    .pl-lane {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      background: var(--bg-row);
+      border: 1px solid var(--border-dim);
+      border-radius: 10px;
+      position: relative;
+    }
+    .pl-tier-bronze { border-color: rgba(217, 151, 82, 0.55); box-shadow: 0 0 10px rgba(205, 127, 50, 0.12); }
+    .pl-tier-silver { border-color: rgba(192, 192, 192, 0.55); box-shadow: 0 0 14px rgba(192, 192, 192, 0.18); }
+    .pl-tier-gold   { border-color: rgba(255, 215, 0, 0.55);   box-shadow: 0 0 18px rgba(255, 215, 0, 0.22); }
+    .pl-tier-mythic { border-color: rgba(167, 139, 250, 0.65); box-shadow: 0 0 28px rgba(167, 139, 250, 0.36); }
+    .pl-locked { background: rgba(15, 20, 26, 0.55); border-style: dashed; opacity: 0.55; }
+
+    /* Leader sprite — sizes vary per variant */
+    .pl-leader {
+      flex-shrink: 0;
+      background: linear-gradient(135deg, rgba(60, 50, 40, 0.5), rgba(30, 25, 20, 0.6));
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+    .pl-leader img {
+      object-fit: contain;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+    }
+    .pl-tier-bronze .pl-leader { box-shadow: inset 0 0 12px rgba(205, 127, 50, 0.3); }
+    .pl-tier-silver .pl-leader { box-shadow: inset 0 0 16px rgba(192, 192, 192, 0.35); }
+    .pl-tier-gold   .pl-leader { box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.4); }
+    .pl-tier-mythic .pl-leader { box-shadow: inset 0 0 28px rgba(167, 139, 250, 0.55); }
+
+    .pl-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+    }
+    .pl-name {
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pl-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-dim);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .pl-owned { color: #a7f3e8; font-weight: 600; }
+    .pl-tier-gold   .pl-owned { color: #ffd070; }
+    .pl-tier-mythic .pl-owned { color: #c4b5fd; }
+    .pl-sep { opacity: 0.4; }
+    .pl-rate { color: rgba(167, 243, 196, 0.85); }
+    .pl-badge {
+      display: inline-block;
+      margin-left: 4px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #1a1a1a;
+    }
+    .pl-badge-bronze { background: linear-gradient(135deg, #d99752, #8b5a2b); }
+    .pl-badge-silver { background: linear-gradient(135deg, #e0e0e0, #909090); }
+    .pl-badge-gold   { background: linear-gradient(135deg, #ffe770, #b8860b); }
+    .pl-badge-mythic { background: linear-gradient(135deg, #c4b5fd, #8b5cf6); color: white; }
+
+    .pl-stack {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 30px;
+      position: relative;
+      overflow: hidden;
+      min-width: 0;
+    }
+    .pl-unit { flex-shrink: 0; }
+    .pl-unit img {
+      object-fit: contain;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+    }
+    .pl-tier-bronze .pl-unit img { filter: saturate(0.7) brightness(0.85) drop-shadow(0 1px 2px rgba(0,0,0,0.6)); }
+    .pl-tier-silver .pl-unit img { filter: saturate(0.95) drop-shadow(0 0 3px rgba(192,192,192,0.3)) drop-shadow(0 1px 2px rgba(0,0,0,0.6)); }
+    .pl-tier-gold   .pl-unit img { filter: saturate(1.05) brightness(1.05) drop-shadow(0 0 4px rgba(255,215,0,0.35)) drop-shadow(0 1px 2px rgba(0,0,0,0.6)); }
+    .pl-tier-mythic .pl-unit img { filter: saturate(1.2) brightness(1.15) drop-shadow(0 0 6px rgba(167,139,250,0.55)) drop-shadow(0 1px 2px rgba(0,0,0,0.6)); }
+
+    .pl-overflow {
+      position: absolute;
+      right: 4px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--jade);
+      padding: 2px 6px;
+      background: rgba(0, 0, 0, 0.65);
+      border-radius: 8px;
+      border: 1px solid rgba(110, 224, 181, 0.35);
+    }
+    .pl-tier-gold   .pl-overflow { color: #ffd070; border-color: rgba(255, 215, 0, 0.45); }
+    .pl-tier-mythic .pl-overflow { color: #c4b5fd; border-color: rgba(167, 139, 250, 0.55); }
+
+    /* Buy button — sizes vary per variant */
+    .pl-buy {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      background: linear-gradient(180deg, rgba(95, 60, 28, 0.95), rgba(45, 28, 14, 0.95));
+      color: #fff4d4;
+      border: 1px solid rgba(255, 215, 130, 0.55);
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.85);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 12px rgba(255, 200, 90, 0.18);
+    }
+    .pl-buy-count { font-size: 12px; letter-spacing: 0.5px; }
+    .pl-buy-cost  { font-size: 10px; opacity: 0.92; }
+    .pl-buy-zone-locked {
+      flex-shrink: 0;
+      padding: 8px 12px;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-style: italic;
+    }
+
+    /* ════════════════════════════════════════════════════════════════════
+       CURRENT — the live game's sizes (faithful copy)
+       ──────────────────────────────────────────────────────────────────── */
+    .v-current .pl-leader        { width: 48px; height: 48px; }
+    .v-current .pl-leader img    { width: 40px; height: 40px; }
+    .v-current .pl-info          { width: 130px; }
+    .v-current .pl-name          { font-size: 13px; }
+    .v-current .pl-meta          { font-size: 11px; }
+    .v-current .pl-stack         { height: 44px; }
+    .v-current .pl-unit          { margin-left: -10px; }
+    .v-current .pl-unit:first-child { margin-left: 0; }
+    .v-current .pl-unit img      { width: 32px; height: 32px; }
+    .v-current .pl-buy           { min-width: 74px; padding: 6px 8px; }
+
+    /* Mobile col uses tighter sizes per the @media (max-width:480px) rules */
+    .col-mobile .v-current .pl-leader     { width: 40px; height: 40px; }
+    .col-mobile .v-current .pl-leader img { width: 32px; height: 32px; }
+    .col-mobile .v-current .pl-info       { width: 100px; }
+    .col-mobile .v-current .pl-name       { font-size: 12px; }
+    .col-mobile .v-current .pl-meta       { font-size: 10px; }
+    .col-mobile .v-current .pl-stack      { height: 40px; padding-right: 30px; }
+    .col-mobile .v-current .pl-unit       { margin-left: -10px; }
+    .col-mobile .v-current .pl-unit img   { width: 28px; height: 28px; }
+    .col-mobile .v-current .pl-buy        { min-width: 64px; padding: 6px 8px; }
+
+    /* ════════════════════════════════════════════════════════════════════
+       VARIANT A (conservative) — drop redundant text, bigger art, wider buy
+       ──────────────────────────────────────────────────────────────────── */
+    .v-a .pl-leader              { width: 64px; height: 64px; border-radius: 10px; }
+    .v-a .pl-leader img          { width: 56px; height: 56px; }
+    .v-a .pl-info                { flex: 0 0 auto; min-width: 0; max-width: 150px; }
+    .v-a .pl-name                { font-size: 14px; }
+    .v-a .pl-meta                { font-size: 11px; gap: 5px; }
+    .v-a .pl-stack               { height: 56px; padding-right: 38px; }
+    .v-a .pl-unit                { margin-left: -10px; }
+    .v-a .pl-unit:first-child    { margin-left: 0; }
+    .v-a .pl-unit img            { width: 40px; height: 40px; }
+    .v-a .pl-overflow            { font-size: 11px; padding: 3px 7px; }
+    .v-a .pl-buy                 { min-width: 96px; padding: 8px 12px; }
+    .v-a .pl-buy-count           { font-size: 13px; }
+    .v-a .pl-buy-cost            { font-size: 11px; }
+
+    .col-mobile .v-a .pl-leader      { width: 52px; height: 52px; }
+    .col-mobile .v-a .pl-leader img  { width: 44px; height: 44px; }
+    .col-mobile .v-a .pl-info        { max-width: 110px; }
+    .col-mobile .v-a .pl-name        { font-size: 13px; }
+    .col-mobile .v-a .pl-meta        { font-size: 10px; }
+    .col-mobile .v-a .pl-stack       { height: 46px; padding-right: 34px; }
+    .col-mobile .v-a .pl-unit img    { width: 34px; height: 34px; }
+    .col-mobile .v-a .pl-buy         { min-width: 84px; padding: 7px 10px; }
+    .col-mobile .v-a .pl-buy-count   { font-size: 12px; }
+    .col-mobile .v-a .pl-buy-cost    { font-size: 10px; }
+
+    /* ════════════════════════════════════════════════════════════════════
+       VARIANT B (aggressive) — drop the stack entirely. Bigger leader,
+       owned count as a corner chip on the leader, very wide buy button.
+       ──────────────────────────────────────────────────────────────────── */
+    .v-b .pl-leader              { width: 80px; height: 80px; border-radius: 12px; }
+    .v-b .pl-leader img          { width: 70px; height: 70px; }
+    .v-b .pl-info                { flex: 1; min-width: 0; }
+    .v-b .pl-name                { font-size: 15px; }
+    .v-b .pl-meta                { font-size: 12px; gap: 5px; }
+    .v-b .pl-buy                 { min-width: 132px; padding: 10px 14px; }
+    .v-b .pl-buy-count           { font-size: 14px; }
+    .v-b .pl-buy-cost            { font-size: 12px; }
+
+    /* The owned-count corner chip on the leader */
+    .pl-owned-chip {
+      position: absolute;
+      bottom: -6px;
+      right: -6px;
+      min-width: 28px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.85);
+      color: #a7f3e8;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      border: 1.5px solid rgba(110, 224, 181, 0.55);
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+    }
+    .pl-tier-bronze .pl-owned-chip { color: #ffd2a3; border-color: rgba(217, 151, 82, 0.7); }
+    .pl-tier-silver .pl-owned-chip { color: #e8e8e8; border-color: rgba(192, 192, 192, 0.7); }
+    .pl-tier-gold   .pl-owned-chip { color: #ffd070; border-color: rgba(255, 215, 0, 0.7); }
+    .pl-tier-mythic .pl-owned-chip { color: #c4b5fd; border-color: rgba(167, 139, 250, 0.7); }
+
+    .col-mobile .v-b .pl-leader     { width: 64px; height: 64px; }
+    .col-mobile .v-b .pl-leader img { width: 56px; height: 56px; }
+    .col-mobile .v-b .pl-name       { font-size: 14px; }
+    .col-mobile .v-b .pl-meta       { font-size: 11px; }
+    .col-mobile .v-b .pl-buy        { min-width: 108px; padding: 9px 12px; }
+    .col-mobile .v-b .pl-buy-count  { font-size: 13px; }
+    .col-mobile .v-b .pl-buy-cost   { font-size: 11px; }
+    .col-mobile .pl-owned-chip      { font-size: 11px; min-width: 26px; padding: 2px 6px; bottom: -5px; right: -5px; }
+
+    /* ════════════════════════════════════════════════════════════════════
+       VARIANT C (user idea) — refined:
+         • Leader is a FULL-HEIGHT clickable square on the LEFT. Spans
+           the whole row vertically, not just a centred 48 px chip.
+         • To the right of the leader, a body column:
+            - thin caption line on top: "Name · 340 Qi/s"
+            - instance stack below, left-anchored, using the FULL
+              horizontal width (no padding-right for the chip).
+         • The ×N count chip floats ABOVE the sprites at the right edge
+           (position: absolute, z-index 2) so we don't sacrifice sprite
+           space for it. Sprites under the chip stay rendered.
+         • Sprites overlap right-over-left (default margin-left: -10 px)
+           so the LEFT edges are always visible; clipping only happens on
+           the right when the stack overflows.
+         • Buy button stays on the far right.
+       ──────────────────────────────────────────────────────────────────── */
+    .v-c .pl-lane {
+      align-items: stretch;       /* full-height children */
+      padding: 8px 10px;
+      gap: 10px;
+      min-height: 88px;           /* lane is taller so the leader has room to be big */
+    }
+
+    /* Leader — square, fills the row vertically. Explicit pixel size at
+       each breakpoint (more reliable than aspect-ratio: 1 with flex
+       stretch, which can be brushed by the inner img's intrinsic size). */
+    .v-c .pl-leader {
+      width: 88px;
+      height: 88px;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+    .v-c .pl-leader img {
+      width: 76px;
+      height: 76px;
+      object-fit: contain;
+    }
+
+    /* Body column — caption on top, instance stack below. */
+    .v-c .pl-body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      position: relative;
+    }
+    .v-c .pl-caption {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      font-size: 10px;
+      color: rgba(138, 163, 158, 0.85);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.01em;
+      line-height: 1.15;
+    }
+    .v-c .pl-caption .pl-name { font-size: 11px; font-weight: 700; color: rgba(230, 240, 238, 0.95); }
+    .v-c .pl-caption .pl-sep  { opacity: 0.35; }
+    .v-c .pl-caption .pl-rate { color: rgba(167, 243, 196, 0.85); font-weight: 500; }
+
+    /* Instance stack — uses the FULL width of the body column (no
+       padding for the chip). Sprites left-anchored; right side gets
+       clipped by overflow:hidden when they overflow. */
+    .v-c .pl-stack {
+      position: relative;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0;
+      height: 60px;
+      overflow: hidden;
+      min-width: 0;
+    }
+    .v-c .pl-unit               { margin-left: -10px; }
+    .v-c .pl-unit:first-child   { margin-left: 0; }
+    .v-c .pl-unit img           { width: 56px; height: 56px; }
+
+    /* Count chip — floats ABOVE the sprite row at its right edge.
+       Sprites underneath still paint; the chip's dark backplate +
+       border keep the number readable. */
+    .v-c .pl-total {
+      position: absolute;
+      right: 0; top: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--jade);
+      padding: 3px 9px;
+      background: rgba(0, 0, 0, 0.78);
+      border-radius: 999px;
+      border: 1px solid rgba(110, 224, 181, 0.55);
+      letter-spacing: 0.03em;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    }
+    .v-c .pl-tier-gold   .pl-total { color: #ffd070; border-color: rgba(255, 215, 0, 0.55); }
+    .v-c .pl-tier-mythic .pl-total { color: #c4b5fd; border-color: rgba(167, 139, 250, 0.65); }
+    .v-c .pl-tier-bronze .pl-total { color: #ffd2a3; border-color: rgba(217, 151, 82, 0.6); }
+    .v-c .pl-tier-silver .pl-total { color: #e0e0e0; border-color: rgba(192, 192, 192, 0.6); }
+
+    .v-c .pl-buy        { min-width: 86px; padding: 8px 12px; align-self: stretch; }
+    .v-c .pl-buy-count  { font-size: 12px; }
+    .v-c .pl-buy-cost   { font-size: 10px; }
+
+    /* Mobile — slightly tighter padding, leader and units scale down */
+    .col-mobile .v-c .pl-lane     { min-height: 76px; padding: 7px 8px; gap: 8px; }
+    .col-mobile .v-c .pl-leader   { width: 72px; height: 72px; }
+    .col-mobile .v-c .pl-leader img { width: 62px; height: 62px; }
+    .col-mobile .v-c .pl-caption  { font-size: 10px; }
+    .col-mobile .v-c .pl-caption .pl-name { font-size: 11px; }
+    .col-mobile .v-c .pl-stack    { height: 50px; }
+    .col-mobile .v-c .pl-unit img { width: 46px; height: 46px; }
+    .col-mobile .v-c .pl-buy      { min-width: 74px; padding: 7px 10px; }
+    .col-mobile .v-c .pl-buy-count{ font-size: 11px; }
+    .col-mobile .v-c .pl-buy-cost { font-size: 10px; }
+    .col-mobile .v-c .pl-total    { font-size: 10px; padding: 3px 8px; }
+  </style>
+</head>
+<body>
+  <h1>Producer Row — Current vs New</h1>
+  <p class="intro">
+    Side-by-side comparison at <strong>iPhone 13 (390 px)</strong> and <strong>desktop (~760 px)</strong>. New = caption-on-top with full-height clickable leader, bigger instance sprites, floating <code>×N</code> total-count chip.
+  </p>
+
+  <!-- ── iPhone 13 — 390 px ─────────────────────────────────────────── -->
+  <p class="section-label">iPhone 13 — 390 px</p>
+  <div class="pair">
+    <div class="col col-mobile" style="width: 390px;">
+      <span class="variant-tag current">Current</span>
+      <div class="scroller">
+        <div class="stack-rows" id="rows-current-m"></div>
+      </div>
+    </div>
+    <div class="col col-mobile" style="width: 390px;">
+      <span class="variant-tag c">New</span>
+      <div class="scroller">
+        <div class="stack-rows" id="rows-c-m"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Desktop — 760 px ───────────────────────────────────────────── -->
+  <p class="section-label" style="margin-top: 36px;">Desktop — 760 px</p>
+  <div class="pair">
+    <div class="col col-desktop" style="width: 760px; max-width: 760px;">
+      <span class="variant-tag current">Current</span>
+      <div class="scroller">
+        <div class="stack-rows" id="rows-current-d"></div>
+      </div>
+    </div>
+    <div class="col col-desktop" style="width: 760px; max-width: 760px;">
+      <span class="variant-tag c">New</span>
+      <div class="scroller">
+        <div class="stack-rows" id="rows-c-d"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sample rows: hit every tier band (bronze/silver/gold/mythic) + locked
+    const ROWS = [
+      { id: 'p_disciple',         name: 'Body Tempering Disciple', owned: 3,   rate: '0.30',   cost: '24',     tier: 'bronze' },
+      { id: 'p_herb_garden',      name: 'Spirit Herb Garden',      owned: 12,  rate: '12.0',   cost: '532',    tier: 'silver' },
+      { id: 'p_meridian_furnace', name: 'Meridian Furnace',        owned: 34,  rate: '340',    cost: '12.4K',  tier: 'gold'   },
+      { id: 'p_beast_pact',       name: 'Beast Pact',              owned: 127, rate: '12.7K',  cost: '4.18M',  tier: 'mythic' },
+      { id: 'p_dragon',           name: '??? Locked',              owned: 0,   rate: null,     cost: null,     tier: null,    locked: true, minRealm: 28 },
+    ];
+
+    function imgFor(id, tier) {
+      if (!tier || tier === 'locked') return '/sprites/producers/p_disciple_bronze.png';
+      return `/sprites/producers/${id}_${tier}.png`;
+    }
+
+    function visibleUnits(owned, max) {
+      return Math.min(owned, max);
+    }
+
+    function renderCurrent(row) {
+      if (row.locked) {
+        return `
+          <div class="pl-lane pl-locked">
+            <div class="pl-leader"><img src="/sprites/producers/p_disciple_bronze.png" alt=""/></div>
+            <div class="pl-info">
+              <div class="pl-name">${row.name}</div>
+              <div class="pl-meta">Unlocks at realm ${row.minRealm}</div>
+            </div>
+            <div class="pl-stack"></div>
+            <div class="pl-buy-zone-locked">Locked</div>
+          </div>`;
+      }
+      const tierClass = `pl-tier-${row.tier}`;
+      const max       = 20;
+      const visible   = visibleUnits(row.owned, max);
+      const overflow  = row.owned - visible;
+      const units     = Array.from({ length: visible }, () => `<div class="pl-unit"><img src="${imgFor(row.id, row.tier)}" alt=""/></div>`).join('');
+      const overflowEl = overflow > 0 ? `<div class="pl-overflow">+${overflow}</div>` : '';
+      const tierLabel = row.tier.charAt(0).toUpperCase() + row.tier.slice(1);
+      return `
+        <div class="pl-lane ${tierClass}">
+          <div class="pl-leader"><img src="${imgFor(row.id, row.tier)}" alt=""/></div>
+          <div class="pl-info">
+            <div class="pl-name">${row.name}</div>
+            <div class="pl-meta">
+              <span class="pl-owned">×${row.owned}</span>
+              <span class="pl-sep">·</span>
+              <span class="pl-rate">${row.rate} Qi/s</span>
+              <span class="pl-badge pl-badge-${row.tier}">${tierLabel}</span>
+            </div>
+          </div>
+          <div class="pl-stack">${units}${overflowEl}</div>
+          <button class="pl-buy">
+            <span class="pl-buy-count">×1</span>
+            <span class="pl-buy-cost">${row.cost} Qi</span>
+          </button>
+        </div>`;
+    }
+
+    function renderVariantA(row) {
+      if (row.locked) {
+        return `
+          <div class="pl-lane pl-locked">
+            <div class="pl-leader"><img src="/sprites/producers/p_disciple_bronze.png" alt=""/></div>
+            <div class="pl-info">
+              <div class="pl-name">${row.name}</div>
+              <div class="pl-meta">Unlocks at realm ${row.minRealm}</div>
+            </div>
+            <div class="pl-stack"></div>
+            <div class="pl-buy-zone-locked">Locked</div>
+          </div>`;
+      }
+      const tierClass = `pl-tier-${row.tier}`;
+      const max       = 20;
+      const visible   = visibleUnits(row.owned, max);
+      const overflow  = row.owned - visible;
+      const units     = Array.from({ length: visible }, () => `<div class="pl-unit"><img src="${imgFor(row.id, row.tier)}" alt=""/></div>`).join('');
+      // For A: overflow chip displays the FULL owned count when it overflows;
+      // otherwise just sprites carry it (1-20 readable at a glance).
+      const overflowEl = overflow > 0
+        ? `<div class="pl-overflow">×${row.owned}</div>`
+        : '';
+      // Meta is now just the rate (name + rate on one line, no count, no badge).
+      return `
+        <div class="pl-lane ${tierClass}">
+          <div class="pl-leader"><img src="${imgFor(row.id, row.tier)}" alt=""/></div>
+          <div class="pl-info">
+            <div class="pl-name">${row.name}</div>
+            <div class="pl-meta">
+              <span class="pl-rate">${row.rate} Qi/s</span>
+            </div>
+          </div>
+          <div class="pl-stack">${units}${overflowEl}</div>
+          <button class="pl-buy">
+            <span class="pl-buy-count">×1</span>
+            <span class="pl-buy-cost">${row.cost} Qi</span>
+          </button>
+        </div>`;
+    }
+
+    function renderVariantC(row) {
+      if (row.locked) {
+        return `
+          <div class="pl-lane pl-locked">
+            <div class="pl-leader"><img src="/sprites/producers/p_disciple_bronze.png" alt=""/></div>
+            <div class="pl-body">
+              <div class="pl-caption"><span class="pl-name">${row.name}</span></div>
+              <div class="pl-stack"></div>
+            </div>
+            <div class="pl-buy-zone-locked">Locked</div>
+          </div>`;
+      }
+      const tierClass = `pl-tier-${row.tier}`;
+      // Show enough units to fill the row visually; the right-edge ×N chip
+      // (which floats on top of the rightmost sprites) carries the real
+      // count regardless of how many fit.
+      const max     = 30;
+      const visible = visibleUnits(row.owned, max);
+      const units   = Array.from({ length: visible }, () => `<div class="pl-unit"><img src="${imgFor(row.id, row.tier)}" alt=""/></div>`).join('');
+      return `
+        <div class="pl-lane ${tierClass}">
+          <div class="pl-leader"><img src="${imgFor(row.id, row.tier)}" alt=""/></div>
+          <div class="pl-body">
+            <div class="pl-caption">
+              <span class="pl-name">${row.name}</span>
+              <span class="pl-sep">·</span>
+              <span class="pl-rate">${row.rate} Qi/s</span>
+            </div>
+            <div class="pl-stack">
+              ${units}
+              <div class="pl-total">×${row.owned}</div>
+            </div>
+          </div>
+          <button class="pl-buy">
+            <span class="pl-buy-count">×1</span>
+            <span class="pl-buy-cost">${row.cost} Qi</span>
+          </button>
+        </div>`;
+    }
+
+    function renderVariantB(row) {
+      if (row.locked) {
+        return `
+          <div class="pl-lane pl-locked">
+            <div class="pl-leader"><img src="/sprites/producers/p_disciple_bronze.png" alt=""/></div>
+            <div class="pl-info">
+              <div class="pl-name">${row.name}</div>
+              <div class="pl-meta">Unlocks at realm ${row.minRealm}</div>
+            </div>
+            <div class="pl-buy-zone-locked">Locked</div>
+          </div>`;
+      }
+      const tierClass = `pl-tier-${row.tier}`;
+      // No stack — owned count lives on the leader as a corner chip
+      return `
+        <div class="pl-lane ${tierClass}">
+          <div class="pl-leader">
+            <img src="${imgFor(row.id, row.tier)}" alt=""/>
+            <div class="pl-owned-chip">×${row.owned}</div>
+          </div>
+          <div class="pl-info">
+            <div class="pl-name">${row.name}</div>
+            <div class="pl-meta">
+              <span class="pl-rate">${row.rate} Qi/s</span>
+            </div>
+          </div>
+          <button class="pl-buy">
+            <span class="pl-buy-count">×1</span>
+            <span class="pl-buy-cost">${row.cost} Qi</span>
+          </button>
+        </div>`;
+    }
+
+    function mount(selector, html, variant) {
+      const el = document.querySelector(selector);
+      if (!el) return;
+      el.classList.add('v-' + variant);
+      el.innerHTML = html;
+    }
+
+    const curHTML = ROWS.map(renderCurrent).join('');
+    const cHTML   = ROWS.map(renderVariantC).join('');
+
+    mount('#rows-current-m', curHTML, 'current');
+    mount('#rows-c-m',       cHTML,   'c');
+    mount('#rows-current-d', curHTML, 'current');
+    mount('#rows-c-d',       cHTML,   'c');
+  </script>
+</body>
+</html>

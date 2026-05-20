@@ -89,7 +89,9 @@ export default function ProducerLane({
     return producers.getCost(producer.id, n);
   }, [producer.id, producers, resolvedCount, unlocked]);
 
-  // Locked state — render a muted placeholder with the unlock hint.
+  // Locked state — keep the leader as a tap target so the player can still
+  // open the details modal and read what they're working toward. Unlock hint
+  // takes the spot where the Qi/s rate normally lives in the caption line.
   if (!unlocked) {
     const minRealm = producer.unlock?.minRealmIndex ?? '?';
     return (
@@ -102,11 +104,14 @@ export default function ProducerLane({
         >
           <Sprite sprite="🔒" className="pl-leader-sprite" />
         </button>
-        <div className="pl-info">
-          <div className="pl-name pl-name-locked">??? Locked</div>
-          <div className="pl-meta">Unlocks at realm {minRealm}</div>
+        <div className="pl-body">
+          <div className="pl-caption">
+            <span className="pl-name pl-name-locked">??? Locked</span>
+            <span className="pl-sep">·</span>
+            <span className="pl-rate">Unlocks at realm {minRealm}</span>
+          </div>
+          <div className="pl-stack pl-stack-empty" aria-hidden="true"></div>
         </div>
-        <div className="pl-stack pl-stack-empty" aria-hidden="true"></div>
         <div className="pl-buy-zone pl-buy-zone-locked">Locked</div>
       </div>
     );
@@ -116,10 +121,11 @@ export default function ProducerLane({
   const totalQiPerSec = owned * producer.startQiPerSec;
   const tierClass = tier ? `pl-tier-${tier.name}` : 'pl-tier-empty';
 
-  // Stack — visible units cap. When owned > MAX_VISIBLE_UNITS, the rest is
-  // surfaced as an overflow chip ("+18", "+198") on the right edge.
+  // Visible-units cap — `overflow: hidden` on .pl-stack clips the right side
+  // when more sprites fit than the row can hold. The always-visible ×N chip
+  // (positioned at the right edge of the stack, z-index above the sprites)
+  // carries the real count regardless of how many fit visually.
   const visible = Math.min(owned, MAX_VISIBLE_UNITS);
-  const overflow = owned - visible;
 
   return (
     <div className={`pl-lane ${tierClass}${celebrating ? ' pl-celebrate' : ''}`}>
@@ -132,29 +138,22 @@ export default function ProducerLane({
         <Sprite sprite={sprite} className="pl-leader-sprite" />
       </button>
 
-      <div className="pl-info">
-        <div className="pl-name">{producer.name}</div>
-        <div className="pl-meta">
-          <span className="pl-owned">×{owned}</span>
+      <div className="pl-body">
+        <div className="pl-caption">
+          <span className="pl-name">{producer.name}</span>
           {owned > 0 && (
             <>
               <span className="pl-sep">·</span>
               <span className="pl-rate">{fmtRate(totalQiPerSec)} Qi/s</span>
             </>
           )}
-          {tier && (
-            <span className={`pl-badge pl-badge-${tier.name}`}>{tier.label}</span>
-          )}
         </div>
-      </div>
-
-      <div className="pl-stack">
-        {Array.from({ length: visible }).map((_, i) => (
-          <Sprite key={i} sprite={sprite} className="pl-unit" />
-        ))}
-        {overflow > 0 && (
-          <div className="pl-overflow">+{overflow}</div>
-        )}
+        <div className="pl-stack">
+          {Array.from({ length: visible }).map((_, i) => (
+            <Sprite key={i} sprite={sprite} className="pl-unit" />
+          ))}
+          {owned > 0 && <div className="pl-total">×{owned}</div>}
+        </div>
       </div>
 
       <button

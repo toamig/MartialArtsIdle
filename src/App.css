@@ -14043,10 +14043,13 @@ body[class*="cf-rung-"] .vfx-qi-tick.vfx-qi-tick-divine .vfx-content {
 
 .pl-lane {
   display: flex;
-  align-items: stretch;      /* children fill the row height — leader spans full lane */
+  /* `center` (not `stretch`) so each child stays at its natural height —
+     the leader doesn't get stretched bigger or fight the body's height.
+     The tallest child (leader) drives lane height, and the lane content
+     area exactly fits it — no gaps top/bottom. */
+  align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  min-height: 92px;          /* lane is taller so the full-height leader has room */
   background: rgba(20, 28, 36, 0.7);
   border: 1px solid rgba(110, 200, 180, 0.18);
   border-radius: 10px;
@@ -14137,8 +14140,9 @@ img.pl-leader-sprite {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 4px;
+  /* Caption pins to the TOP of the body; stack fills the rest. */
+  justify-content: flex-start;
+  gap: 2px;
   position: relative;
 }
 /* Thin caption line: "Name · 340 Qi/s". Sits subtle above the stack so
@@ -14153,7 +14157,7 @@ img.pl-leader-sprite {
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: 0.01em;
-  line-height: 1.15;
+  line-height: 1.05;     /* tight — caption is a slim note, not a strip */
 }
 .pl-caption .pl-name {
   font-size: 11px;
@@ -14189,14 +14193,24 @@ img.pl-leader-sprite {
   position: relative;
   box-sizing: border-box;
   display: flex;
-  align-items: center;
+  /* Bottom-anchored — units sit on the stack floor, leaving the headroom
+     above for the breathing animation (which only translates up). No
+     vertical centering, no crop risk on the top edge. */
+  align-items: flex-end;
   justify-content: flex-start;
   padding: 0;
-  height: 60px;
+  /* Stack height = unit + 8 px headroom above. The 8 px swallows the unit
+     lean (translateY up to -2 px) AND the breathing animation excursion
+     (-2 px translate + ~2 px scale-up since transform-origin is bottom).
+     Leader (88) > body (caption 14 + gap 2 + stack 64 = 80), so leader
+     still drives the lane height. */
+  height: 64px;
+  flex-shrink: 0;
   overflow: hidden;
   min-width: 0;
 }
-.pl-stack-empty { padding-right: 0; }
+/* Locked / empty stack — collapse so the row doesn't reserve dead space. */
+.pl-stack-empty { display: none; }
 
 .pl-unit {
   flex-shrink: 0;
@@ -14253,7 +14267,7 @@ img.pl-unit {
   font-size: 11px;
   font-weight: 800;
   color: #a7f3e8;
-  background: rgba(0, 0, 0, 0.78);
+  background: rgba(0, 0, 0, 0.8);
   padding: 3px 9px;
   border-radius: 999px;
   border: 1px solid rgba(110, 224, 181, 0.55);
@@ -14270,9 +14284,13 @@ img.pl-unit {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  /* Natural height — don't stretch to fill the lane (avoids a tall slab next
+     to the leader). Centered on the cross axis so it lines up with the body. */
+  align-self: center;
   min-width: 80px;
-  padding: 7px 10px;
+  padding: 8px 10px;
   background: linear-gradient(180deg, rgba(196, 158, 100, 0.22), rgba(180, 140, 80, 0.15));
   border: 1px solid rgba(196, 158, 100, 0.65);
   border-radius: 8px;
@@ -14312,18 +14330,23 @@ img.pl-unit {
 
 /* ── Mobile responsiveness ─────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .pl-lane            { gap: 8px; padding: 7px 8px; min-height: 80px; }
-  .pl-leader          { width: 72px; height: 72px; }
-  .pl-leader-sprite   { font-size: 36px; }
-  img.pl-leader-sprite{ width: 62px; height: 62px; }
+  .pl-lane            { gap: 8px; padding: 7px 8px; }
+  /* Slightly smaller leader on mobile to give the body breathing room
+     (a 390 px viewport leaves only ~158 px for the body otherwise).
+     Leader 68 > body (caption 12 + gap 2 + stack 50 = 64) → leader still
+     drives lane height. Stack 50 = unit 42 + 8 px headroom for the
+     animation excursion (avoids top-clip when units scale + translate up). */
+  .pl-leader          { width: 68px; height: 68px; }
+  .pl-leader-sprite   { font-size: 34px; }
+  img.pl-leader-sprite{ width: 58px; height: 58px; }
   .pl-caption         { font-size: 10px; }
   .pl-caption .pl-name{ font-size: 11px; }
   .pl-stack           { height: 50px; }
-  .pl-unit            { font-size: 30px; }
-  img.pl-unit         { width: 46px; height: 46px; }
-  .pl-buy             { min-width: 74px; padding: 7px 10px; }
+  .pl-unit            { font-size: 30px; margin-left: -14px; }
+  img.pl-unit         { width: 42px; height: 42px; }
+  .pl-buy             { min-width: 70px; padding: 8px 10px; }
   .pl-buy-count       { font-size: 11px; }
-  .pl-buy-cost        { font-size: 10px; }
+  .pl-buy-cost        { font-size: 11px; }
   .pl-total           { font-size: 10px; padding: 3px 8px; }
 }
 
