@@ -9,12 +9,19 @@
 import { mergeArrayByIndex } from './config/loader';
 
 const REALMS_RAW = [
-  // 2026-05-18 rebalance — crystal multiplier bumped to +1%/lvl (was +0.3%).
-  // To preserve the 1–2 month casual pacing target, every cost from Qi
-  // Transformation onwards is scaled ×4 from the prior table. Tempered Body
-  // is untouched — early game stays brisk so new players don't bounce.
-  // Audit: `scripts/sim-cultivation.mjs` should land at ~15d optimal-greedy
-  // to OH L6 (≈ 1–2 months casual real-player).
+  // 2026-05-21 rebalance — Dial-3 v4 progressive steepening from Saint Early
+  // (realm 24) onward. Designed to create natural rebirth-loop walls every
+  // ~7 realms so players cycle through 4-5 reincarnations before entering
+  // Open Heaven. Past realm 35 the curve deliberately FLATTENS so the
+  // accumulated Eternal Tree mult pulls the player through into the OH
+  // plateau, which is the "infinite endgame" zone where future content
+  // (sprite-tier bonuses, click mini-games, OH L7+) lands.
+  //
+  // 2026-05-18 prior rebalance — crystal multiplier bumped to +1%/lvl (was
+  // +0.3%). Every cost from Qi Transformation onwards is scaled ×4 from the
+  // prior table. Tempered Body untouched — early game stays brisk.
+  // Audit: `scripts/sim-multilife.mjs` should land at 4-5 rebirths reaching
+  // Emperor 1st / OH L1 at hardcore pacing.
   // ── Tempered Body (10 Layers) — onboarding, unchanged ──────────────────────
   { name: 'Tempered Body',    stage: 'Layer 1',      cost: 50 },
   { name: 'Tempered Body',    stage: 'Layer 2',      cost: 100 },
@@ -49,48 +56,52 @@ const REALMS_RAW = [
   { name: 'Immortal Ascension', stage: '2nd Stage',   cost: 165_000_000 },
   { name: 'Immortal Ascension', stage: '3rd Stage',   cost: 300_000_000 },
 
-  // ── Saint (3 Stages) ───────────────────────────────────────────────────────
-  { name: 'Saint',              stage: 'Early Stage',  cost: 500_000_000 },
-  { name: 'Saint',              stage: 'Middle Stage', cost: 880_000_000 },
-  { name: 'Saint',              stage: 'Late Stage',   cost: 1_500_000_000 },
+  // ── Saint (3 Stages) — Dial-3 v4 steepening starts here (×1.3 → ×2.0) ──
+  //    Life 1 walls land in this band — see `scripts/sim-multilife.mjs`.
+  { name: 'Saint',              stage: 'Early Stage',  cost: 650_000_000 },
+  { name: 'Saint',              stage: 'Middle Stage', cost: 1_400_000_000 },
+  { name: 'Saint',              stage: 'Late Stage',   cost: 3_000_000_000 },
 
-  // ── Saint King (3 Stages) ──────────────────────────────────────────────────
-  { name: 'Saint King',         stage: '1st Stage',   cost: 2_550_000_000 },
-  { name: 'Saint King',         stage: '2nd Stage',   cost: 4_300_000_000 },
-  { name: 'Saint King',         stage: '3rd Stage',   cost: 7_600_000_000 },
+  // ── Saint King (3 Stages) — Dial-3 v4 (×2.5 → ×3.5) ────────────────────────
+  { name: 'Saint King',         stage: '1st Stage',   cost: 6_400_000_000 },
+  { name: 'Saint King',         stage: '2nd Stage',   cost: 13_000_000_000 },
+  { name: 'Saint King',         stage: '3rd Stage',   cost: 27_000_000_000 },
 
-  // ── Origin Returning (3 Stages) ────────────────────────────────────────────
-  { name: 'Origin Returning',   stage: '1st Stage',   cost: 12_500_000_000 },
-  { name: 'Origin Returning',   stage: '2nd Stage',   cost: 22_000_000_000 },
-  { name: 'Origin Returning',   stage: '3rd Stage',   cost: 36_000_000_000 },
+  // ── Origin Returning (3 Stages) — Dial-3 v4 (×4.0 → ×4.8) ──────────────────
+  { name: 'Origin Returning',   stage: '1st Stage',   cost: 50_000_000_000 },
+  { name: 'Origin Returning',   stage: '2nd Stage',   cost: 95_000_000_000 },
+  { name: 'Origin Returning',   stage: '3rd Stage',   cost: 175_000_000_000 },
 
-  // ── Origin King (3 Stages) ─────────────────────────────────────────────────
-  { name: 'Origin King',        stage: '1st Stage',   cost: 62_000_000_000 },
-  { name: 'Origin King',        stage: '2nd Stage',   cost: 105_000_000_000 },
-  { name: 'Origin King',        stage: '3rd Stage',   cost: 185_000_000_000 },
+  // ── Origin King (3 Stages) — Dial-3 v4 (×5.1 → ×5.4) — peak of the wall ──
+  { name: 'Origin King',        stage: '1st Stage',   cost: 320_000_000_000 },
+  { name: 'Origin King',        stage: '2nd Stage',   cost: 560_000_000_000 },
+  { name: 'Origin King',        stage: '3rd Stage',   cost: 1_000_000_000_000 },
 
-  // ── Void King (3 Stages) ───────────────────────────────────────────────────
-  { name: 'Void King',          stage: '1st Stage',   cost: 305_000_000_000 },
-  { name: 'Void King',          stage: '2nd Stage',   cost: 515_000_000_000 },
-  { name: 'Void King',          stage: '3rd Stage',   cost: 860_000_000_000 },
+  // ── Void King (3 Stages) — Dial-3 v4 (×5.0 → ×4.0, curve flattens) ─────────
+  //    Past realm 35, the curve relaxes so accumulated tree-mult carries
+  //    the player through into Open Heaven.
+  { name: 'Void King',          stage: '1st Stage',   cost: 1_525_000_000_000 },
+  { name: 'Void King',          stage: '2nd Stage',   cost: 2_320_000_000_000 },
+  { name: 'Void King',          stage: '3rd Stage',   cost: 3_440_000_000_000 },
 
-  // ── Dao Source (3 Stages) ──────────────────────────────────────────────────
-  { name: 'Dao Source',         stage: '1st Stage',   cost: 1_500_000_000_000 },
-  { name: 'Dao Source',         stage: '2nd Stage',   cost: 2_450_000_000_000 },
-  { name: 'Dao Source',         stage: '3rd Stage',   cost: 4_150_000_000_000 },
+  // ── Dao Source (3 Stages) — Dial-3 v4 (×3.5 → ×2.5) ────────────────────────
+  { name: 'Dao Source',         stage: '1st Stage',   cost: 5_250_000_000_000 },
+  { name: 'Dao Source',         stage: '2nd Stage',   cost: 7_350_000_000_000 },
+  { name: 'Dao Source',         stage: '3rd Stage',   cost: 10_400_000_000_000 },
 
-  // ── Emperor Realm (3 Stages) ───────────────────────────────────────────────
-  { name: 'Emperor Realm',      stage: '1st Stage',   cost: 6_900_000_000_000 },
-  { name: 'Emperor Realm',      stage: '2nd Stage',   cost: 12_000_000_000_000 },
-  { name: 'Emperor Realm',      stage: '3rd Stage',   cost: 20_000_000_000_000 },
+  // ── Emperor Realm (3 Stages) — Dial-3 v4 (×2.2 → ×1.8) ─────────────────────
+  { name: 'Emperor Realm',      stage: '1st Stage',   cost: 15_200_000_000_000 },
+  { name: 'Emperor Realm',      stage: '2nd Stage',   cost: 24_000_000_000_000 },
+  { name: 'Emperor Realm',      stage: '3rd Stage',   cost: 36_000_000_000_000 },
 
-  // ── Open Heaven (6 Layers) ─────────────────────────────────────────────────
-  { name: 'Open Heaven',        stage: 'Layer 1',     cost: 34_000_000_000_000 },   // Low-Rank
-  { name: 'Open Heaven',        stage: 'Layer 2',     cost: 57_000_000_000_000 },   // Low-Rank
-  { name: 'Open Heaven',        stage: 'Layer 3',     cost: 91_500_000_000_000 },   // Low-Rank
-  { name: 'Open Heaven',        stage: 'Layer 4',     cost: 157_000_000_000_000 },  // Mid-Rank
-  { name: 'Open Heaven',        stage: 'Layer 5',     cost: 264_000_000_000_000 },  // Mid-Rank
-  { name: 'Open Heaven',        stage: 'Layer 6',     cost: 448_500_000_000_000 },  // High-Rank
+  // ── Open Heaven (6 Layers) — Dial-3 v4 (×1.5, post-loop plateau zone) ──
+  //    The "Cookie Clicker endgame" — gentle climb, future mechanics drop here.
+  { name: 'Open Heaven',        stage: 'Layer 1',     cost: 51_000_000_000_000 },   // Low-Rank
+  { name: 'Open Heaven',        stage: 'Layer 2',     cost: 85_500_000_000_000 },   // Low-Rank
+  { name: 'Open Heaven',        stage: 'Layer 3',     cost: 137_250_000_000_000 },  // Low-Rank
+  { name: 'Open Heaven',        stage: 'Layer 4',     cost: 235_500_000_000_000 },  // Mid-Rank
+  { name: 'Open Heaven',        stage: 'Layer 5',     cost: 396_000_000_000_000 },  // Mid-Rank
+  { name: 'Open Heaven',        stage: 'Layer 6',     cost: 672_750_000_000_000 },  // High-Rank
 ];
 
 const REALMS = mergeArrayByIndex(REALMS_RAW, 'realms');
