@@ -566,6 +566,7 @@ function CharacterEvolutionOverlay({ event, onDone }) {
       aria-live="assertive"
       style={stageStyle}
     >
+      <div className="che-backdrop" />
       <div className="che-flash" />
       <div className="che-stage">
         <div className="che-stack">

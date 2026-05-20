@@ -14837,11 +14837,17 @@ button.pl-leader.pl-leader-clickable:focus-visible {
 
 /* Hide the in-scene cultivator while the overlay holds it. Same trick as the
    crystal anchor lift — animations would otherwise drift across the ~4 s
-   hold and the reveal would pop to a different breathing phase. */
+   hold and the reveal would pop to a different breathing phase. The VFX
+   layer is hidden alongside so qi-tick "+N" floaters don't pop into empty
+   space behind the cinematic. The qi accumulation itself keeps running. */
 .home-fighter-stage-lifted .home-cultivator-sprite,
 .home-fighter-stage-lifted .home-cultivator-aura {
   opacity: 0;
   animation-play-state: paused;
+}
+.home-fighter-stage-lifted .vfx-layer {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .char-evolve-overlay {
@@ -14855,6 +14861,35 @@ button.pl-leader.pl-leader-clickable:focus-visible {
   justify-content: center;
 }
 .che-phase-settled { pointer-events: auto; cursor: pointer; }
+
+/* Dark vignette backdrop — sits behind the flash and stage so the new tier
+   reveal lands against a calm, focused stage instead of the busy home scene.
+   Subtle violet tint at the edges keeps it consistent with the cinematic's
+   golden→violet palette. */
+.che-backdrop {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 45%,
+      rgba(20, 10, 32, 0.55) 0%,
+      rgba(12,  6, 24, 0.78) 55%,
+      rgba(6,   3, 14, 0.92) 100%);
+  opacity: 0;
+  pointer-events: none;
+  animation: cheBackdrop 4.2s ease-out forwards;
+}
+.che-phase-returning .che-backdrop {
+  animation: cheBackdropOut 0.5s ease-in forwards;
+}
+@keyframes cheBackdrop {
+  0%   { opacity: 0; }
+  18%  { opacity: 0.95; }
+  100% { opacity: 0.95; }
+}
+@keyframes cheBackdropOut {
+  0%   { opacity: 0.95; }
+  100% { opacity: 0; }
+}
 
 .che-flash {
   position: fixed;
