@@ -1187,7 +1187,7 @@ function releaseSparkAttention(id) {
  * Single orb: self-destructs after `windowMs`; notifies parent on collect/expire.
  * Phases: 'alive' → 'expiring' (last 3s) → 'collected' | 'expired'
  */
-function DivineQiOrb({ orb, onResolve, spawnVFX, rateRef }) {
+function DivineQiOrb({ orb, onResolve, onSpawnFloater, rateRef }) {
   const [phase, setPhase] = useState('alive');
   const phaseRef = useRef('alive');
 
@@ -1222,22 +1222,15 @@ function DivineQiOrb({ orb, onResolve, spawnVFX, rateRef }) {
     phaseRef.current = 'collected';
     setPhase('collected');
     try { AudioManager.playSfx('divine_qi_collect'); } catch {}
-    // Spawn "+N Qi" floater at the orb's screen position, offset into
-    // fighter-stage coordinates (where the VFX layer lives).
-    if (spawnVFX && rateRef) {
-      try {
-        const orbRect   = e.currentTarget.getBoundingClientRect();
-        const stageEl   = document.querySelector('.home-fighter-stage');
-        if (stageEl) {
-          const sr = stageEl.getBoundingClientRect();
-          const x  = (orbRect.left + orbRect.width  / 2) - sr.left;
-          const y  = (orbRect.top  + orbRect.height / 2) - sr.top;
-          const reward = orb.burstSeconds * (rateRef.current ?? 1);
-          const fmt = fmtDelta;
-          spawnVFX({ type: 'qi-tick', className: 'vfx-qi-tick-divine', x, y, content: fmt(reward), duration: 1500,
-            style: { '--qi-drift-x': '0px' } });
-        }
-      } catch {}
+    // Spawn the "+N qi" floater as a SIBLING of the orb (not via the
+    // fighter-stage vfx-layer) so it shares the orb's stacking context.
+    // `.home-fighter-stage` is a stacking context at z-index 2 — anything
+    // rendered inside it (including the vfx-layer) is trapped below the
+    // orb (z-index 60) in the parent context. Rendering the floater
+    // alongside the orb lets a simple z-index > 60 sit it above.
+    if (onSpawnFloater && rateRef) {
+      const reward = orb.burstSeconds * (rateRef.current ?? 1);
+      onSpawnFloater({ x: orb.x, y: orb.y, content: fmtDelta(reward) });
     }
   };
 
@@ -1262,7 +1255,11 @@ function DivineQiOrb({ orb, onResolve, spawnVFX, rateRef }) {
  */
 function useDivineQi({ activeSparks, rateRef, qiRef, spawnVFX }) {
   const [orbs, setOrbs] = useState([]);
+  // Pickup floaters render alongside the orbs (NOT via the fighter-stage
+  // vfx-layer) so they share the orb's stacking context. See spawnFloater.
+  const [floaters, setFloaters] = useState([]);
   const nextIdRef = useRef(0);
+  const nextFloaterIdRef = useRef(0);
 
   // Find the active divine_qi card — activeSparks items store only { sparkId, ... };
   // the kind/mechanicId fields live on the card object in QI_SPARK_BY_ID.
@@ -1370,7 +1367,21 @@ function useDivineQi({ activeSparks, rateRef, qiRef, spawnVFX }) {
     }
   }, [rateRef, qiRef]);
 
-  return { orbs, collectOrb };
+  /**
+   * Push a pickup floater (gold "+N qi" text) into render state. Lives
+   * 1500ms then self-removes. x/y are percentages within the same
+   * containing block as the orbs themselves, so a freshly-spawned floater
+   * lands exactly where the orb was when tapped.
+   */
+  const spawnFloater = useCallback(({ x, y, content }) => {
+    const id = ++nextFloaterIdRef.current;
+    setFloaters(prev => [...prev, { id, x, y, content }]);
+    setTimeout(() => {
+      setFloaters(prev => prev.filter(f => f.id !== id));
+    }, 1500);
+  }, []);
+
+  return { orbs, floaters, collectOrb, spawnFloater };
 }
 
 /** Flowing qi-particle stream — energy pours from the crystal and
@@ -1689,7 +1700,12 @@ function HomeScreen({
   const cultivationAd = useRewardedAd(onCultivationReward, 30 * 60 * 1000, 'mai_ad_cd_cultivation');
 
   // ── Divine Qi — golden orb mechanic ─────────────────────────────────────
-  const { orbs: divineOrbs, collectOrb } = useDivineQi({
+  const {
+    orbs:         divineOrbs,
+    floaters:     divineFloaters,
+    collectOrb,
+    spawnFloater: spawnDivineFloater,
+  } = useDivineQi({
     activeSparks,
     rateRef:   cultivation.rateRef,
     qiRef:     cultivation.qiRef,
@@ -2043,7 +2059,19 @@ function HomeScreen({
 
           {/* Divine Qi orbs — float over the scene at random positions */}
           {divineOrbs.map(orb => (
-            <DivineQiOrb key={orb.id} orb={orb} onResolve={collectOrb} spawnVFX={spawnVFX} rateRef={cultivation.rateRef} />
+            <DivineQiOrb key={orb.id} orb={orb} onResolve={collectOrb} onSpawnFloater={spawnDivineFloater} rateRef={cultivation.rateRef} />
+          ))}
+          {/* Pickup floaters — siblings of the orbs (NOT inside the
+              fighter-stage vfx-layer) so a simple z-index sits them above
+              the orb. See useDivineQi.spawnFloater. */}
+          {divineFloaters.map(f => (
+            <div
+              key={f.id}
+              className="divine-qi-floater"
+              style={{ left: `${f.x}%`, top: `${f.y}%` }}
+            >
+              {f.content}
+            </div>
           ))}
 
           {/* Pattern Clicking opt-in prompt — small spark the player can tap to

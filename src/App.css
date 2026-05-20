@@ -5558,6 +5558,32 @@ body[class*="cf-rung-"] .vfx-qi-tick.vfx-qi-tick-divine .vfx-content {
     0 -1px 0 rgba(0, 0, 0, 0.75);
 }
 
+/* Divine Qi pickup floater — rendered as a sibling of .divine-qi-orb so it
+   shares the orb's parent stacking context, instead of being trapped
+   inside the fighter-stage vfx-layer (which is a child of .home-fighter-
+   stage at z-index 2, below the orb at z-index 60). A simple z-index 80
+   here sits the floater above the orb without needing to lift the
+   fighter-stage or restructure the vfx-layer. Reuses vfx-qi-tick-anim. */
+.divine-qi-floater {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 80;
+  font-size: 1.85rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: #ffd76a;
+  text-shadow:
+    0 0 8px  rgba(243, 181, 34, 0.95),
+    0 0 18px rgba(180, 120, 0, 0.55),
+    0 2px 0 rgba(0, 0, 0, 0.85),
+    1px 0 0 rgba(0, 0, 0, 0.75),
+    -1px 0 0 rgba(0, 0, 0, 0.75),
+    0 -1px 0 rgba(0, 0, 0, 0.75);
+  animation: vfx-qi-tick-anim 1500ms cubic-bezier(.22, .61, .36, 1) forwards;
+}
+
 /* VFX: Burst ring */
 .vfx-burst {
   width: 60px;
