@@ -3200,7 +3200,10 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 220;
+  /* Above .top-bar (z-700) so the backdrop covers the whole viewport and the
+     tap-hint at the top isn't hidden behind the currency HUD. The cinematic
+     is the dominant visual moment — full-screen takeover is intentional. */
+  z-index: 800;
   pointer-events: none;
   gap: 18px;
 }
@@ -14942,7 +14945,10 @@ button.pl-leader.pl-leader-clickable:focus-visible {
 .char-evolve-overlay {
   position: fixed;
   inset: 0;
-  z-index: 240;
+  /* Above .top-bar (z-700) so the backdrop covers the whole viewport and the
+     tap-hint at the top isn't hidden behind the currency HUD. Cinematic = full
+     takeover for the duration of the major-realm beat. */
+  z-index: 810;
   pointer-events: none;
   display: flex;
   flex-direction: column;
