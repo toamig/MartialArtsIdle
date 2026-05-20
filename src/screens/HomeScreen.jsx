@@ -50,6 +50,26 @@ const CULTIVATOR_TIER_NAMES = [
 // that isn't in this set see the highest done tier below their realm.
 const CULTIVATOR_DONE_TIERS = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
 
+// Cultivator tier display names — mirrors the `name` field in
+// scripts/cultivator_prompts.py TIERS. Shown as the sub-line in the major-
+// breakthrough cinematic so the player has a recognisable "title" for the
+// new form (the realm name above it is the gameplay identifier).
+const CULTIVATOR_TIER_DISPLAY_NAMES = [
+  'Novice Disciple',          // T0
+  'Inner Sect Disciple',      // T1
+  'True-Element Cultivator',  // T2
+  'Sect Adept',               // T3
+  'Ascending Immortal',       // T4
+  'Sect Master',              // T5
+  'Saint King',               // T6
+  'Immortal Sage',            // T7
+  'Origin King',              // T8
+  'Divine Sovereign',         // T9
+  'Dao Source Cultivator',    // T10
+  'Dao Emperor',              // T11
+  'Heavenly Sovereign',       // T12
+];
+
 function getCultivatorTier(realmIndex) {
   let t = 0;
   if (realmIndex >= 10) t = 1;
@@ -479,6 +499,102 @@ function CrystalEvolutionOverlay({ event, onDone }) {
   );
 }
 
+/**
+ * Full-screen cinematic for MAJOR realm-name changes (every 1 of 13 over the
+ * full ladder; peak-stage transitions inside the same realm still use the
+ * lightweight BreakthroughBanner above). Mirrors CrystalEvolutionOverlay's
+ * lift-and-return rhythm: home cultivator hides → overlay flies to centre →
+ * old sprite glows, light pillar rises, old dissolves into the pillar → new
+ * tier sprite descends from above, lands with a shockwave → realm-name banner
+ * appears → tap to continue → overlay returns to anchor, home cultivator
+ * reveals as the new tier.
+ *
+ * Player must tap to continue (no auto-dismiss) — the game keeps farming qi
+ * in the background while the player savours the moment.
+ */
+const CES_CHAR_STAGE_SIZE = 256;  // cultivator sprites are 256×256
+const CES_CHAR_PLAY_MS    = 4200;
+const CES_CHAR_RETURN_MS  = 500;
+
+function CharacterEvolutionOverlay({ event, onDone }) {
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+  const [phase, setPhase] = useState('playing');
+
+  useEffect(() => {
+    if (!event || phase !== 'playing') return undefined;
+    try { AudioManager.playSfx('cult_breakthrough'); } catch {}
+    const id = setTimeout(() => setPhase('settled'), CES_CHAR_PLAY_MS);
+    return () => clearTimeout(id);
+  }, [event, phase]);
+
+  useEffect(() => {
+    if (phase !== 'settled') return undefined;
+    const handler = () => setPhase('returning');
+    window.addEventListener('pointerdown', handler, { once: true });
+    return () => window.removeEventListener('pointerdown', handler);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== 'returning') return undefined;
+    const id = setTimeout(() => onDoneRef.current?.(), CES_CHAR_RETURN_MS);
+    return () => clearTimeout(id);
+  }, [phase]);
+
+  if (!event) return null;
+  const oldSrc = `${BASE}sprites/cultivator/${event.oldTier}_normal.png`;
+  const newSrc = `${BASE}sprites/cultivator/${event.newTier}_normal.png`;
+
+  // Match the crystal overlay's origin-x/y/scale geometry. Cultivator sprites
+  // are square (256×256) so no letterbox compensation is needed — uniform
+  // scale aligns the centred sprite with the home rect.
+  const originX     = event.origin?.x ?? (typeof window !== 'undefined' ? window.innerWidth  / 2 - CES_CHAR_STAGE_SIZE / 2 : 0);
+  const originY     = event.origin?.y ?? (typeof window !== 'undefined' ? window.innerHeight / 2 - CES_CHAR_STAGE_SIZE / 2 : 0);
+  const originScale = event.origin?.w ? event.origin.w / CES_CHAR_STAGE_SIZE : 1;
+
+  const stageStyle = {
+    '--origin-x':     `${originX}px`,
+    '--origin-y':     `${originY}px`,
+    '--origin-scale': originScale,
+  };
+
+  const kicker = event.isFinal ? 'Final Ascension' : 'Breakthrough';
+
+  return (
+    <div
+      className={`char-evolve-overlay che-phase-${phase}`}
+      aria-live="assertive"
+      style={stageStyle}
+    >
+      <div className="che-flash" />
+      <div className="che-stage">
+        <div className="che-stack">
+          <img src={oldSrc} className="che-old" alt="" draggable="false" />
+          <div className="che-pillar" />
+          {/* Five ascension motes rising along the pillar */}
+          {Array.from({ length: 5 }, (_, i) => (
+            <span
+              key={i}
+              className="che-mote"
+              style={{ '--mote-delay': `${i * 0.10}s`, '--mote-x': `${(i - 2) * 14}px` }}
+            />
+          ))}
+          <div className="che-shockwave" />
+          <img src={newSrc} className="che-new" alt="" draggable="false" />
+        </div>
+      </div>
+      <div className="char-evolve-card">
+        <div className="char-evolve-kicker">{kicker}</div>
+        <div className="char-evolve-name">{event.realmName}</div>
+        {event.tierName && <div className="char-evolve-sub">{event.tierName}</div>}
+      </div>
+      {phase === 'settled' && (
+        <div className="ces-tap-hint">Tap to continue</div>
+      )}
+    </div>
+  );
+}
+
 // Glow and particle colors per visual tier.
 // glowA = inner/bright,  glowB = outer/dim,
 // textName = deeper saturated tier hue used for the evolution name/kicker,
@@ -589,8 +705,11 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
       onClick={handleCrystalTap}
     >
       <div className="home-crystal-float" style={{ '--cg-a': glowA, '--cg-b': glowB }}>
-        <span className="home-crystal-tag">Qi Crystal</span>
-        <span className="home-crystal-evolve">Lv {level}</span>
+        <span className="home-crystal-tag">
+          Qi Crystal
+          <span className="home-crystal-tag-divider">·</span>
+          <span className="home-crystal-tag-level">Lv {level}</span>
+        </span>
         <div className="home-crystal-img-wrap">
           <img
             src={`${BASE}crystals/crystal_${tier}.png`}
@@ -612,9 +731,10 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
               disabled={!canAffordRefine}
               aria-label={`Refine Qi Crystal to level ${level + 1} for ${fmtNum(refineCost)} qi`}
             >
-              <span className="home-crystal-refine-icon">◆</span>
+              <span className="home-crystal-refine-icon">▲</span>
               <span className="home-crystal-refine-label">
-                <span className="home-crystal-refine-lv">Lv {level + 1}</span>
+                <span className="home-crystal-refine-verb">Refine</span>
+                <span className="home-crystal-refine-sep">·</span>
                 <span className="home-crystal-refine-cost">{fmtNum(refineCost)} Qi</span>
               </span>
             </button>
@@ -1660,6 +1780,37 @@ function HomeScreen({
     return () => window.removeEventListener('mai:crystal-evolve', handler);
   }, [handleCrystalEvolve]);
 
+  // Debug bridge — gd.charEvolve / window.dispatchEvent('mai:char-evolve')
+  // lets the major-breakthrough cinematic be demoed without grinding qi.
+  // Detail shape: { newRealmIndex, realmName, isFinal? }.
+  useEffect(() => {
+    const handler = (e) => {
+      const d = e.detail ?? {};
+      const newIdx = Math.max(0, Number(d.newRealmIndex ?? 0));
+      const oldIdx = Math.max(0, newIdx - 1);
+      const newTierIdx = getCultivatorTier(newIdx);
+      const oldTierIdx = getCultivatorTier(oldIdx);
+      let origin = null;
+      if (typeof document !== 'undefined') {
+        const el = document.querySelector('.home-cultivator-sprite');
+        if (el) {
+          const r = el.getBoundingClientRect();
+          origin = { x: r.left, y: r.top, w: r.width, h: r.height };
+        }
+      }
+      enqueue('character-evolution', {
+        oldTier:    CULTIVATOR_TIER_NAMES[oldTierIdx],
+        newTier:    CULTIVATOR_TIER_NAMES[newTierIdx],
+        realmName:  d.realmName ?? 'Ascension',
+        tierName:   CULTIVATOR_TIER_DISPLAY_NAMES[newTierIdx],
+        isFinal:    !!d.isFinal,
+        origin,
+      }, { priority: 'high' });
+    };
+    window.addEventListener('mai:char-evolve', handler);
+    return () => window.removeEventListener('mai:char-evolve', handler);
+  }, [enqueue]);
+
   // ── Inline crystal refine (replaces the v1 feed modal) ───────────────────
   // The crystal exposes `feedQi(amount, spendFn)`; under the v1 Cookie-Clicker
   // pivot, 1 qi == 1 RQI, so spending exactly `requiredForNext - refinedQi`
@@ -1680,14 +1831,46 @@ function HomeScreen({
     }
   }, [crystal, isCrystalUnlocked, cultivation, handleCrystalEvolve]);
 
-  // ── Breakthrough banner — enqueue when majorBreakthrough state appears ──
+  // ── Breakthrough — peak-stage entries use the lightweight text banner,
+  //    major realm-name changes (and the final ascension) pop the cinematic
+  //    Character Evolution overlay so the player gets a real emotional beat
+  //    every time their cultivator's appearance changes.
   const enqueuedBreakthroughIdRef = useRef(null);
   useEffect(() => {
-    if (majorBreakthrough && enqueuedBreakthroughIdRef.current !== majorBreakthrough.id) {
-      enqueuedBreakthroughIdRef.current = majorBreakthrough.id;
+    if (!majorBreakthrough || enqueuedBreakthroughIdRef.current === majorBreakthrough.id) return;
+    enqueuedBreakthroughIdRef.current = majorBreakthrough.id;
+    if (majorBreakthrough.isPeak) {
+      // Sub-realm peak — same realm name, same cultivator tier, no new
+      // visual identity. Lightweight 2.6 s text banner is right.
       enqueue('breakthrough', majorBreakthrough);
+      return;
     }
-  }, [majorBreakthrough, enqueue]);
+    // Major realm change (or final ascension) — cultivator tier sprite WILL
+    // change. Lift the home cultivator into a cinematic centred ascension
+    // and reveal the new tier when the player taps to continue.
+    const newRealmIndex = cultivation.realmIndex;
+    const oldRealmIndex = Math.max(0, newRealmIndex - 1);
+    const newTierIdx = getCultivatorTier(newRealmIndex);
+    const oldTierIdx = getCultivatorTier(oldRealmIndex);
+    // Measure the home cultivator's on-screen rect so the overlay lifts
+    // from there and returns to it (matches the crystal-evolution pattern).
+    let origin = null;
+    if (typeof document !== 'undefined') {
+      const el = document.querySelector('.home-cultivator-sprite');
+      if (el) {
+        const r = el.getBoundingClientRect();
+        origin = { x: r.left, y: r.top, w: r.width, h: r.height };
+      }
+    }
+    enqueue('character-evolution', {
+      oldTier:    CULTIVATOR_TIER_NAMES[oldTierIdx],
+      newTier:    CULTIVATOR_TIER_NAMES[newTierIdx],
+      realmName:  majorBreakthrough.label,
+      tierName:   CULTIVATOR_TIER_DISPLAY_NAMES[newTierIdx],
+      isFinal:    !!majorBreakthrough.isFinal,
+      origin,
+    }, { priority: 'high' });
+  }, [majorBreakthrough, enqueue, cultivation.realmIndex]);
 
   // ── Offline earnings — render via queue. App.jsx is already enqueueing. ─
   // (Render condition below combines queue head with cultivation state.)
@@ -1895,7 +2078,7 @@ function HomeScreen({
               </div>
             )}
             <div
-              className={`fighter-stage home-fighter-stage${boosting ? ' stage-boosted' : ''}${adBoostActive ? ' stage-ad-boosted' : ''}`}
+              className={`fighter-stage home-fighter-stage${boosting ? ' stage-boosted' : ''}${adBoostActive ? ' stage-ad-boosted' : ''}${currentEvent?.kind === 'character-evolution' ? ' home-fighter-stage-lifted' : ''}`}
               style={{ width: `${128 * spriteScale}px`, height: `${128 * spriteScale}px` }}
               onPointerDown={handlePointerDown}
               onPointerUp={handlePointerUp}
@@ -2017,6 +2200,16 @@ function HomeScreen({
       {/* Crystal evolution celebration — fires on visual-tier change. */}
       {currentEvent?.kind === 'crystal-evolution' && (
         <CrystalEvolutionOverlay
+          key={currentEvent.id}
+          event={currentEvent.payload}
+          onDone={() => dismiss(currentEvent.id)}
+        />
+      )}
+
+      {/* Character evolution cinematic — fires on major realm-name changes
+          (every cultivator-tier visual transition). Tap-to-continue. */}
+      {currentEvent?.kind === 'character-evolution' && (
+        <CharacterEvolutionOverlay
           key={currentEvent.id}
           event={currentEvent.payload}
           onDone={() => dismiss(currentEvent.id)}
