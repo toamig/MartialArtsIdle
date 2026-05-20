@@ -2710,6 +2710,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   max-width: 450px;
   padding: 4px 16px 6px;
   margin: 0 auto;
+  position: relative;
 }
 
 /* Live Qi/s readout — lives under the QI progress bar text. Rate number is
@@ -14561,13 +14562,23 @@ button.pl-leader.pl-leader-clickable:focus-visible {
    spark-offer + character-evolution chain (the rituals players were missing
    when breakthroughs auto-fired off-screen). */
 .home-major-breakthrough-btn {
+  /* Absolute-positioned over the realm bar so spawning the button doesn't
+     push the bar (and everything below it) down. Top/bottom match the wrap
+     padding; width is 95% of the wrap's CONTENT area so the button matches
+     .realm-bar exactly. At >=900px the bar is full-width — handled below. */
+  position: absolute;
+  top: 4px;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc((100% - 32px) * 0.95);
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 14px;
-  width: 100%;
-  padding: 12px 18px;
-  margin: 0 0 10px;
+  padding: 6px 18px;
+  margin: 0;
   border: 1px solid rgba(255, 215, 130, 0.7);
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(95, 60, 28, 0.95), rgba(45, 28, 14, 0.95));
@@ -14641,13 +14652,21 @@ button.pl-leader.pl-leader-clickable:focus-visible {
 
 @media (max-width: 480px) {
   .home-major-breakthrough-btn {
-    padding: 10px 12px;
+    padding: 4px 12px;
     gap: 10px;
-    margin: 0 0 8px;
+    margin: 0;
   }
   .home-mb-icon { font-size: 18px; }
   .home-mb-cta  { font-size: 13px; letter-spacing: 0.12em; }
   .home-mb-next { font-size: 10px; }
+}
+
+/* At PC widths the realm-bar drops its 95% rule and goes full-width. Match
+   the button so it still overlays the bar exactly. */
+@media (min-width: 900px) {
+  .home-major-breakthrough-btn {
+    width: calc(100% - 32px);
+  }
 }
 
 /* ─── Cultivator sprite + heavenly aura (2026-05-19) ───────────────────────
