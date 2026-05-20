@@ -3292,9 +3292,13 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 .crystal-evolve-name {
-  font-size: 2.2rem;
+  /* clamp keeps the title bold on PC but shrinks for narrow phones so long
+     crystal tier names fit on one line at 390-wide viewports. */
+  font-size: clamp(1.55rem, 5.8vw, 2.2rem);
   font-weight: 900;
   letter-spacing: 0.03em;
+  line-height: 1.1;
+  text-wrap: balance;
   color: var(--ce-text-name, #ffffff);
   text-shadow:
     0 0 16px var(--ce-a, rgba(136, 0, 221, 0.9)),
@@ -3418,14 +3422,20 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 /* Settled phase accepts taps anywhere on the overlay. */
 .ces-phase-settled { pointer-events: auto; cursor: pointer; }
 
-/* Tap hint — pulses gently above the evolved crystal during the settled
-   hold. Stage is 220px tall and centred at 50vh, so the crystal's top edge
-   sits at 50vh - 110px; place the hint ~40px above that and clamp with a
-   max() floor so very short viewports don't push it under the top bar. */
+/* Tap hint — pulses below the evolution card as the bottom-most cue,
+   reading sprite → title → "tap to continue" top-to-bottom. Anchored to
+   the bottom of the viewport (rather than 50vh - 180px above the sprite,
+   which on shorter phones sat awkwardly between the top chrome and the
+   sprite, disconnected from the rest of the cluster). */
 .ces-tap-hint {
   position: fixed;
   left: 50%;
-  top: max(40px, calc(50vh - 180px));
+  /* Sits below the evolution card, clamped so very short viewports keep
+     ~30 px breathing room from the screen bottom and very tall viewports
+     don't strand the hint far below the cluster. Centre offset matches the
+     lifted stage anchor (50vh - 60) plus card height + gap. */
+  top: min(calc(100vh - 50px), calc(50vh + 230px));
+  bottom: auto;
   transform: translateX(-50%);
   color: rgba(255, 255, 255, 0.78);
   font-family: inherit;
@@ -3449,13 +3459,19 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 
 /* Evolution card — pinned below the centred crystal so it never overlaps
    the stage (fixed, lands at screen centre). Appears with the new crystal,
-   holds through the settled phase, fades only when the player dismisses. */
+   holds through the settled phase, fades only when the player dismisses.
+   Width budget — same reasoning as .char-evolve-card; gives long crystal
+   names a real horizontal allowance instead of shrink-wrapping to the
+   kicker's letter-spaced width. */
 .crystal-evolve-overlay-shatter .crystal-evolve-card {
   position: fixed;
   left: 50%;
-  top: calc(50vh + 140px);
+  /* Anchored to the lifted stage centre (50vh - 60). Stage is 220 px tall so
+     its bottom sits at 50vh + 50; card lands 30 px below for breathing room. */
+  top: calc(50vh + 80px);
   transform: translateX(-50%);
   opacity: 0;
+  width: min(92vw, 440px);
 }
 
 .ces-phase-playing  .crystal-evolve-card,
@@ -3569,13 +3585,13 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 /* Play phase: lift from origin (0%), arrive at centre (15%), hold till tap. */
 @keyframes cesStagePlay {
   0%   { transform: translate(var(--origin-x), var(--origin-y)) scale(var(--origin-scale)); }
-  15%  { transform: translate(calc(50vw - 110px), calc(50vh - 110px)) scale(1); }
-  100% { transform: translate(calc(50vw - 110px), calc(50vh - 110px)) scale(1); }
+  15%  { transform: translate(calc(50vw - 110px), calc(50vh - 170px)) scale(1); }
+  100% { transform: translate(calc(50vw - 110px), calc(50vh - 170px)) scale(1); }
 }
 
 /* Return phase (tap): shrink back to the original anchor position. */
 @keyframes cesStageReturn {
-  0%   { transform: translate(calc(50vw - 110px), calc(50vh - 110px)) scale(1); }
+  0%   { transform: translate(calc(50vw - 110px), calc(50vh - 170px)) scale(1); }
   100% { transform: translate(var(--origin-x), var(--origin-y)) scale(var(--origin-scale)); }
 }
 
@@ -14979,13 +14995,17 @@ button.pl-leader.pl-leader-clickable:focus-visible {
   animation: cheStageReturn 0.5s cubic-bezier(.5, .2, .3, 1) forwards;
 }
 
+/* Vertical anchor for the cinematic centre. Lifts the sprite up from a
+   strict 50vh so the sprite + card + tap-hint cluster reads as visually
+   centred on the page (otherwise the card and hint below the sprite push
+   the centre of mass low). 60 px works for both phones and tablets. */
 @keyframes cheStagePlay {
   0%   { transform: translate(var(--origin-x), var(--origin-y)) scale(var(--origin-scale)); }
-  15%  { transform: translate(calc(50vw - 128px), calc(50vh - 128px)) scale(1); }
-  100% { transform: translate(calc(50vw - 128px), calc(50vh - 128px)) scale(1); }
+  15%  { transform: translate(calc(50vw - 128px), calc(50vh - 188px)) scale(1); }
+  100% { transform: translate(calc(50vw - 128px), calc(50vh - 188px)) scale(1); }
 }
 @keyframes cheStageReturn {
-  0%   { transform: translate(calc(50vw - 128px), calc(50vh - 128px)) scale(1); }
+  0%   { transform: translate(calc(50vw - 128px), calc(50vh - 188px)) scale(1); }
   100% { transform: translate(var(--origin-x), var(--origin-y)) scale(var(--origin-scale)); }
 }
 
@@ -15099,11 +15119,20 @@ button.pl-leader.pl-leader-clickable:focus-visible {
 .char-evolve-card {
   position: fixed;
   left: 50%;
-  top: calc(50vh + 150px);
+  /* Anchored to the lifted sprite centre (50vh - 60). Sprite bottom sits at
+     50vh + 68 (centre + 128 half-height − 60 lift); the card lands 22 px
+     below for breathing room. */
+  top: calc(50vh + 90px);
   transform: translateX(-50%);
   text-align: center;
   opacity: 0;
   isolation: isolate;
+  /* Width budget — without this the card shrink-wraps to the widest line,
+     which on long realm names ("Separation & Reunion", "Immortal Ascension")
+     forces the title to wrap to 3+ lines inside a column that's only ~220px
+     wide. Constraining the card gives the title a real horizontal allowance
+     so wrapping stays at 1–2 lines. */
+  width: min(92vw, 440px);
 }
 .che-phase-playing .char-evolve-card,
 .che-phase-settled .char-evolve-card {
@@ -15153,9 +15182,14 @@ button.pl-leader.pl-leader-clickable:focus-visible {
   margin-bottom: 6px;
 }
 .char-evolve-name {
-  font-size: 2.4rem;
+  /* clamp keeps the title big on tablet/PC but shrinks gracefully on narrow
+     phones — at 390px the long realm names ("Separation & Reunion", etc.)
+     no longer wrap to 3 lines. */
+  font-size: clamp(1.7rem, 6.4vw, 2.4rem);
   font-weight: 900;
   letter-spacing: 0.03em;
+  line-height: 1.1;
+  text-wrap: balance;
   color: #ffffff;
   text-shadow:
     0 0 18px rgba(255, 215, 140, 0.9),
