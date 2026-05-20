@@ -469,6 +469,7 @@ function CrystalEvolutionOverlay({ event, onDone }) {
         aria-live="assertive"
         style={stageStyle}
       >
+        <div className="ces-backdrop" />
         <div className="ces-flash" />
         <div className="ces-stage">
           <div className="ces-stack">

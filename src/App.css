@@ -3205,6 +3205,35 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   gap: 18px;
 }
 
+/* Dark vignette backdrop — same role as .che-backdrop on the character
+   cinematic. Calms the busy home scene behind the evolution so the new
+   crystal lands against a focused stage. Subtle violet tint at the edges
+   keeps it in the cinematic's purple palette. */
+.ces-backdrop {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 45%,
+      rgba(18, 8, 32, 0.55) 0%,
+      rgba(10, 4, 24, 0.78) 55%,
+      rgba(6, 2, 16, 0.92) 100%);
+  opacity: 0;
+  pointer-events: none;
+  animation: cesBackdrop 3.8s ease-out forwards;
+}
+.ces-phase-returning .ces-backdrop {
+  animation: cesBackdropOut 0.5s ease-in forwards;
+}
+@keyframes cesBackdrop {
+  0%   { opacity: 0; }
+  18%  { opacity: 0.95; }
+  100% { opacity: 0.95; }
+}
+@keyframes cesBackdropOut {
+  0%   { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+
 .crystal-evolve-flash {
   position: absolute;
   inset: 0;
