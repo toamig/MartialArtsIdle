@@ -721,27 +721,28 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
           {mechanicOn && (
             <div ref={fillBarRef} className="home-crystal-reservoir-fill" style={{ opacity: 0 }} />
           )}
-          {/* Inline refine — behaves like an upgrade buy. Absolutely positioned
-              below the crystal so it does not push surrounding layout. Click
-              spends qi, the crystal levels up, and if the visual tier changes,
-              the existing evolve overlay fires from HomeScreen. */}
-          {onRefine && refineCost > 0 && (
-            <button
-              className={`home-crystal-refine-btn${canAffordRefine ? '' : ' home-crystal-refine-btn-disabled'}`}
-              onClick={handleRefineClick}
-              disabled={!canAffordRefine}
-              aria-label={`Refine Qi Crystal to level ${level + 1} for ${fmtNum(refineCost)} qi`}
-            >
-              <span className="home-crystal-refine-icon">▲</span>
-              <span className="home-crystal-refine-label">
-                <span className="home-crystal-refine-verb">Refine</span>
-                <span className="home-crystal-refine-sep">·</span>
-                <span className="home-crystal-refine-cost">{fmtNum(refineCost)} Qi</span>
-              </span>
-            </button>
-          )}
         </div>
       </div>
+      {/* Refine lives OUTSIDE .home-crystal-float so it stays anchored while
+          the crystal sprite bobs above it. The anchor is the nearest
+          positioned ancestor; its height matches the float's resting height
+          (transform doesn't reflow), so `top: 100%` lands the button at the
+          exact spot the float's bottom edge sits at rest. */}
+      {onRefine && refineCost > 0 && (
+        <button
+          className={`home-crystal-refine-btn${canAffordRefine ? '' : ' home-crystal-refine-btn-disabled'}`}
+          onClick={handleRefineClick}
+          disabled={!canAffordRefine}
+          aria-label={`Refine Qi Crystal to level ${level + 1} for ${fmtNum(refineCost)} qi`}
+        >
+          <span className="home-crystal-refine-icon">▲</span>
+          <span className="home-crystal-refine-label">
+            <span className="home-crystal-refine-verb">Refine</span>
+            <span className="home-crystal-refine-sep">·</span>
+            <span className="home-crystal-refine-cost">{fmtNum(refineCost)} Qi</span>
+          </span>
+        </button>
+      )}
       {/* QiParticles intentionally not rendered in v1.5+ — we're rebuilding the
           crystal→player particle stream with pixel-art assets. The component
           definition stays in this file for now so the new system can reuse the
