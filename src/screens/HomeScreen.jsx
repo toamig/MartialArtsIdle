@@ -1872,13 +1872,11 @@ function HomeScreen({
   // ratio jumps to ~3 and the stream visibly accelerates. CSS owns motion
   // and fade-on-arrival; this rAF only governs spawn cadence.
   const qiFlowLayerRef = useRef(null);
-  // Mirror the current event kind into a ref so the rAF tick can halt
-  // spawning during cultivator-centric overlays (breakthrough banner,
-  // character evolution) without re-mounting the loop on every event change.
+  // Ref populated below (after useEventQueue destructure) — declared up
+  // front so the rAF effect can close over it. Starting value null means
+  // the rAF won't halt on first frame; the mirror effect populates it as
+  // soon as currentEvent is destructured downstream.
   const currentEventKindRef = useRef(null);
-  useEffect(() => {
-    currentEventKindRef.current = currentEvent?.kind ?? null;
-  }, [currentEvent]);
   useEffect(() => {
     let raf;
     let lastSpawn = 0;
@@ -1991,6 +1989,16 @@ function HomeScreen({
   // Spontaneous popups (offline earnings, breakthrough banner, level-up cards,
   // crystal evolution) all flow through one FIFO queue so they don't stack.
   const { enqueue, currentEvent, dismiss } = useEventQueue();
+
+  // Mirror currentEvent.kind into the ref declared above so the qi-flow
+  // rAF can halt spawning during cultivator-takeover overlays (breakthrough
+  // banner, character evolution) without re-mounting the loop on every
+  // event change. Lives down here because currentEvent is destructured
+  // from useEventQueue() on the previous line — moving the destructure up
+  // would shuffle a lot of unrelated wiring.
+  useEffect(() => {
+    currentEventKindRef.current = currentEvent?.kind ?? null;
+  }, [currentEvent]);
 
   // ── Crystal feed modal (v1: inlined into the crystal sprite) ────────────
   // Replaced by the inline refine button rendered inside <KeyCrystal>. The
