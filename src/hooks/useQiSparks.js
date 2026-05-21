@@ -642,14 +642,26 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
 
   /**
    * Discard the current offer without picking. Used by the modal's auto-
-   * timeout when the player ignores the choice.
+   * timeout when the player ignores the choice. Auto-resolves to the
+   * LEFTMOST card so the player isn't punished for ignoring.
+   *
+   * 2026-05-21 bug-fix: fires a `mai:spark-auto-picked` window event so the
+   * UI can surface a toast — previously the modal would just disappear and
+   * the player wouldn't know which spark they got.
    */
   const skip = useCallback(() => {
     setPendingOffer(prev => {
       if (!prev) return null;
-      // Auto-resolve to leftmost so the player isn't punished for ignoring
       const leftmostId = prev.cards?.[0];
-      if (leftmostId) applySparkChoice(leftmostId);
+      if (leftmostId) {
+        applySparkChoice(leftmostId);
+        // Notify UI so a toast can confirm the auto-pick.
+        try {
+          window.dispatchEvent(new CustomEvent('mai:spark-auto-picked', {
+            detail: { sparkId: leftmostId },
+          }));
+        } catch {}
+      }
       return null;
     });
   }, [applySparkChoice]);

@@ -816,6 +816,22 @@ function AppInner() {
     return () => window.removeEventListener('mai:crystal-tier-crossed', handler);
   }, [qiSparks, notifications]);
 
+  // 2026-05-21 bug-fix: surface a toast when the spark modal auto-picks the
+  // leftmost card on inactivity timeout. Previously the modal would silently
+  // vanish and the player wouldn't know which spark they got.
+  useEffect(() => {
+    const handler = (e) => {
+      const { sparkId } = e.detail ?? {};
+      const card = QI_SPARK_BY_ID[sparkId];
+      notifications.addToast({
+        message: `⌛ Auto-selected: ${card?.name ?? 'spark'} (modal timed out)`,
+        duration: 7000,
+      });
+    };
+    window.addEventListener('mai:spark-auto-picked', handler);
+    return () => window.removeEventListener('mai:spark-auto-picked', handler);
+  }, [notifications]);
+
   // Round 3 — one-shot backfill for combat-alpha saves whose crystal is
   // already past a mechanic-grant threshold but who never rolled the rare
   // spark (now retired). Walks 0→currentTier through CRYSTAL_TIER_GRANTS;

@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { QI_SPARK_BY_ID, SPARK_RARITY, SPARK_COPY } from '../data/qiSparks';
 
 const BASE = import.meta.env.BASE_URL;
-const CHOICE_TIMEOUT_MS = 30_000;
+// Inactivity timeout — modal auto-resolves (picks leftmost) if the player
+// doesn't interact for this long. Bumped 30s → 60s 2026-05-21 after
+// playtest report: 30s was too tight when rerolling + reading detail
+// panels. Now ANY interaction (click, reroll, detail open) resets the
+// timer, so an engaged player effectively never times out.
+const CHOICE_TIMEOUT_MS = 60_000;
 
 // Map markdown-ish `**bold**` to <strong>. Tiny renderer so we don't pull in
 // a markdown lib — the only formatting we use in effectText is bold.
@@ -213,11 +218,25 @@ function QiSparkChoiceModal({
   // reset on every render of the parent.
   const onSkipRef = useRef(onSkip);
   onSkipRef.current = onSkip;
+
+  // 2026-05-21 BUG-FIX: timer was previously keyed on `offer?.id` alone, but
+  // rerollCard mutates offer.cards while keeping the same id — so a player
+  // mid-reroll would silently time out and have the leftmost card auto-picked
+  // without any feedback. Now we bump `activityNonce` on every interaction
+  // (reroll, detail open, card hover, etc.) which re-arms the timer. An
+  // engaged player effectively never times out; an AFK player still auto-
+  // resolves after 60s of inactivity.
+  const [activityNonce, setActivityNonce] = useState(0);
+  const bumpActivity = () => setActivityNonce(n => n + 1);
+
   useEffect(() => {
     if (!offer) return;
     const id = setTimeout(() => onSkipRef.current?.(), CHOICE_TIMEOUT_MS);
     return () => clearTimeout(id);
-  }, [offer?.id]); // re-arm whenever a new offer appears
+  }, [offer?.id, activityNonce]); // re-arm on new offer OR any user interaction
+
+  // Wrap onRerollCard so each reroll counts as activity (resets the timer).
+  const onRerollCardActive = (cardIdx) => { bumpActivity(); onRerollCard?.(cardIdx); };
 
   // Detail panel state — tracks which card the player has tapped open.
   const [detailIdx, setDetailIdx] = useState(null);
@@ -232,6 +251,7 @@ function QiSparkChoiceModal({
   const chancePct       = Math.round(legendaryChance * 100);
 
   const openDetailForIdx = (sparkId) => {
+    bumpActivity(); // opening the detail panel counts as engaged play
     const idx = offer.cards.indexOf(sparkId);
     if (idx >= 0) setDetailIdx(idx);
   };
@@ -255,7 +275,7 @@ function QiSparkChoiceModal({
                 sparkId={sparkId}
                 cardIndex={idx}
                 onPick={onChoose}
-                onRerollCard={onRerollCard}
+                onRerollCard={onRerollCardActive}
                 onOpenDetail={openDetailForIdx}
                 isFreeReroll={isFreeReroll}
                 rerollCost={cost}
@@ -327,7 +347,7 @@ function QiSparkChoiceModal({
               cardIndex={detailIdx}
               onClose={() => setDetailIdx(null)}
               onPick={onChoose}
-              onRerollCard={onRerollCard}
+              onRerollCard={onRerollCardActive}
               isFreeReroll={isFreeReroll}
               rerollCost={cost}
               canAffordReroll={canAfford}
