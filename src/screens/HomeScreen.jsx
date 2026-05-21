@@ -781,9 +781,11 @@ function spawnClickBurst({ parent, x, y, xUnit = 'px', yUnit = 'px', count = 4, 
     img.style.setProperty('--bx-end',  `${bx.toFixed(1)}px`);
     img.style.setProperty('--by-peak', `${byPeak.toFixed(1)}px`);
     img.style.setProperty('--by-land', `${byLand.toFixed(1)}px`);
-    img.style.setProperty('--bscale-0', (0.45 * sizeVar).toFixed(2));
-    img.style.setProperty('--bscale-1', (0.85 * sizeVar).toFixed(2));
-    img.style.setProperty('--bscale-2', (0.65 * sizeVar).toFixed(2));
+    // Scales tuned down ~15% from the first cut so the splash reads as
+    // small bright orbs rather than chunky ones (was 0.45 / 0.85 / 0.65).
+    img.style.setProperty('--bscale-0', (0.38 * sizeVar).toFixed(2));
+    img.style.setProperty('--bscale-1', (0.72 * sizeVar).toFixed(2));
+    img.style.setProperty('--bscale-2', (0.55 * sizeVar).toFixed(2));
     img.addEventListener('animationend', () => img.remove(), { once: true });
     parent.appendChild(img);
   }
