@@ -64,10 +64,12 @@ function computeProducerSparkMult(pid, sparks, owned) {
       if (numPairs > 0) mult *= (1 + numPairs * (eff.mult - 1));
     } else if (eff.type === 'phoenix_reborn' && pid !== 'p_phoenix') {
       // Phoenix Reborn: every major realm transition since this spark was
-      // drawn doubles every OTHER producer's qi/s. Stack counter lives on
-      // the per-instance state (s.phoenixRebornStacks).
+      // drawn adds +50% (Dial-4.1 2026-05-21 — was ×2/stack exponential).
+      // Hard exponential was wildly game-breaking: 10 majors = ×1024 on
+      // every non-Phoenix producer. Additive caps the runaway:
+      //   10 majors = ×6, 20 majors = ×11. Still legendary-tier impact.
       const stacks = s.phoenixRebornStacks ?? 0;
-      if (stacks > 0) mult *= Math.pow(2, stacks);
+      if (stacks > 0) mult *= (1 + 0.5 * stacks);
     }
   }
   return mult;
