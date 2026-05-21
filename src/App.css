@@ -15723,16 +15723,19 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
 }
 
 /* Cookie-Clicker "teaser" silhouette — locked producer shows its real
-   sprite shape painted as a TRUE black cutout. brightness(0) crushes
-   every colour to black, contrast(2) sharpens the alpha edge so semi-
-   transparent sprite pixels stay opaque, drop-shadow gives a dark halo
-   so the silhouette stays grounded against the lane background. No
-   opacity dim — the silhouette is the mystery, it should pop. */
+   sprite shape as a TRUE BLACK HARD-EDGED cutout. Uses the inline SVG
+   filter defined in App.jsx (#mai-silhouette): feColorMatrix crushes
+   every RGB channel to 0, feComponentTransfer snaps every non-zero alpha
+   to 1 so the anti-aliased PNG edges become opaque black instead of the
+   grey halo that pure-CSS brightness(0) leaves behind.
+
+   The drop-shadow after the SVG filter ADDs a soft dark glow around the
+   cutout so it reads against the lane background — without it the pure
+   black silhouette can disappear into the dark navy bg. */
 .pl-leader-silhouette {
   filter:
-    brightness(0)
-    contrast(2)
-    drop-shadow(0 0 6px rgba(0, 0, 0, 0.8));
+    url(#mai-silhouette)
+    drop-shadow(0 0 5px rgba(0, 0, 0, 0.7));
 }
 
 /* ── Tier styling — escalates with owned count ─────────────────────────── */

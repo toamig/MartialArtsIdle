@@ -1255,6 +1255,25 @@ function AppInner() {
 
   return (
     <div className="app" style={{ '--screen-bg-url': `url(${BASE}backgrounds/ui_screens.png)` }}>
+      {/* Inline SVG filter — referenced by .pl-leader-silhouette (Cookie-
+          Clicker producer-teaser). feColorMatrix crushes RGB to 0 (black);
+          feComponentTransfer's discrete alpha table snaps every non-zero
+          alpha to 1, killing the anti-aliased grey halo on the PNG edges
+          so the silhouette comes out as a hard-edged true-black cutout. */}
+      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
+        <filter id="mai-silhouette" colorInterpolationFilters="sRGB">
+          <feColorMatrix
+            type="matrix"
+            values="0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 1 0"
+          />
+          <feComponentTransfer>
+            <feFuncA type="discrete" tableValues="0 1 1 1 1 1 1 1 1 1 1" />
+          </feComponentTransfer>
+        </filter>
+      </svg>
       {currentScreen !== 'home' && (
         <>
           <div
