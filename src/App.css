@@ -13173,17 +13173,33 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
 
 .js-current .js-cost { color: rgba(var(--ui-purple-strong-rgb), 0.5); }
 
+/* Cost group — pairs the spark marker (left, fixed-width slot) with the
+   qi cost (right). The fixed slot is reserved on rows WITHOUT a spark too
+   so every qi number lines up in the same vertical column across the
+   roadmap. */
+.js-cost-group {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 /* Qi Spark reward marker — stages whose incoming BT gives a Qi Spark
-   choice show a small jade star at the end of the row. Past stages
-   fade so they don't visually compete with the future targets. */
+   choice show a small jade star. Width is fixed (12px) so the qi-cost
+   column stays aligned whether the marker is present or not. Past
+   stages fade so they don't visually compete with future targets. */
 .js-spark-mark {
+  display: inline-block;
+  width: 12px;
+  text-align: center;
   font-size: 12px;
   line-height: 1;
   color: rgba(167, 139, 250, 0.85);
   flex-shrink: 0;
-  margin-left: 4px;
   filter: drop-shadow(0 0 4px rgba(167, 139, 250, 0.45));
 }
+/* Placeholder slot for non-spark rows — reserved width, no visible glyph. */
+.js-spark-empty { filter: none; }
 .js-past .js-spark-mark { opacity: 0.25; filter: none; }
 .js-current .js-spark-mark { color: var(--ui-purple-light); }
 

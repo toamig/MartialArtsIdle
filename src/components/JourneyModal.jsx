@@ -116,15 +116,23 @@ function JourneyModal({ realmIndex, onClose }) {
                           </div>
                           <div className="js-body">
                             <span className="js-label">{entry.stage}</span>
-                            <span className="js-cost">{fmtQi(entry.cost)} Qi</span>
+                            {/* Cost group: a fixed-width spark slot sits to
+                                the LEFT of the qi value so every row's qi
+                                number lines up in the same column whether
+                                or not it rewards a spark. */}
+                            <span className="js-cost-group">
+                              {hasSpark ? (
+                                <span
+                                  className="js-spark-mark"
+                                  title="Breaking through to this stage rewards a Qi Spark"
+                                  aria-label="Qi Spark reward"
+                                >✦</span>
+                              ) : (
+                                <span className="js-spark-mark js-spark-empty" aria-hidden="true" />
+                              )}
+                              <span className="js-cost">{fmtQi(entry.cost)} Qi</span>
+                            </span>
                           </div>
-                          {hasSpark && (
-                            <span
-                              className="js-spark-mark"
-                              title="Breaking through to this stage rewards a Qi Spark"
-                              aria-label="Qi Spark reward"
-                            >✦</span>
-                          )}
                         </div>
                       );
                     })}
