@@ -27,7 +27,18 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
       setTab(initialTab);
     }
   }, [initialTab]);
-  const [buyMode, setBuyMode] = useState(1);             // 1 | 10 | 'max'
+  // Buy mode — 1 | 10 | 100. Player's last pick is persisted across
+  // sessions so they don't have to re-toggle on every load.
+  const [buyMode, setBuyMode] = useState(() => {
+    try {
+      const v = Number(localStorage.getItem('mai_producer_buy_mode'));
+      if (v === 1 || v === 10 || v === 100) return v;
+    } catch {}
+    return 1;
+  });
+  useEffect(() => {
+    try { localStorage.setItem('mai_producer_buy_mode', String(buyMode)); } catch {}
+  }, [buyMode]);
   const [qi, setQi]           = useState(() => cultivation.qiRef?.current ?? 0);
   const [rate, setRate]       = useState(() => cultivation.rateRef?.current ?? 0);
   // Producer detail modal — opens when the player taps a lane's leader sprite.
@@ -77,19 +88,8 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
     }
   }, [producers.owned, enqueue]);
 
-  // Auto-promote the default buy chip to ×10 once the player owns 10+ of any
-  // producer they can currently afford — kills thumb-tendinitis at scale.
-  // Only fires the FIRST time the threshold is crossed; the player can still
-  // override their pick afterwards.
-  const [autoPromoted, setAutoPromoted] = useState(false);
-  useEffect(() => {
-    if (autoPromoted || buyMode !== 1) return;
-    const anyTen = PRODUCERS.some(p => (producers.getOwned(p.id) ?? 0) >= 10);
-    if (anyTen) {
-      setBuyMode(10);
-      setAutoPromoted(true);
-    }
-  }, [autoPromoted, buyMode, producers]);
+  // Auto-promote removed — player's saved buyMode (above) is the source
+  // of truth. They control which mode is active; we never override.
 
   // 2026-05-21 Dial-9 — Tinker's Bargain (uncommon, charges-kind spark). When
   // active, the next 5 producer purchase TRANSACTIONS cost -30% (one ×1 or
@@ -220,9 +220,9 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
               onClick={() => setBuyMode(10)}
             >×10</button>
             <button
-              className={`cs-buy-mode-chip${buyMode === 'max' ? ' cs-buy-mode-chip-active' : ''}`}
-              onClick={() => setBuyMode('max')}
-            >Max</button>
+              className={`cs-buy-mode-chip${buyMode === 100 ? ' cs-buy-mode-chip-active' : ''}`}
+              onClick={() => setBuyMode(100)}
+            >×100</button>
           </div>
           <div className="cs-list">
             {(() => {

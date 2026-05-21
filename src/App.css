@@ -19,6 +19,33 @@ html, body, * {
   display: none !important;
 }
 
+/* ── Cinematic event lock ─────────────────────────────────────────────────
+   While a breakthrough banner, character-evolution overlay, or crystal-
+   evolution overlay is showing, block every interaction outside the
+   overlay itself. Prevents the player from tapping nav tabs, top-bar
+   buttons, the cultivator, the crystal, etc. while a cinematic animation
+   is in flight (which would race state changes against the animation
+   sequencing and cause visual glitches / dropped events).
+   The body class is toggled by an effect in App.jsx whenever the event
+   queue's currentEvent.kind matches one of the three blocking kinds. */
+body.event-cinematic .top-bar,
+body.event-cinematic .nav-bar,
+body.event-cinematic .home-cultivation-zone .home-fighter-stage,
+body.event-cinematic .home-crystal-anchor,
+body.event-cinematic .home-pc-left,
+body.event-cinematic .cs-list,
+body.event-cinematic .modal-overlay,
+body.event-cinematic .home-scene-bottom,
+body.event-cinematic .home-chips-tl {
+  pointer-events: none !important;
+}
+/* The overlays themselves stay tappable so the player can dismiss them. */
+body.event-cinematic .home-breakthrough-overlay,
+body.event-cinematic .crystal-evolve-overlay,
+body.event-cinematic .char-evolve-overlay {
+  pointer-events: auto !important;
+}
+
 .vfx-disabled .home-crystal-float {
   animation: none !important;
 }
@@ -5558,6 +5585,39 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
   align-items: center;
   justify-content: center;
 }
+
+/* Crystal-tap "+N Qi" floater — spawned as a direct child of the crystal
+   wrap (DOM-managed, not through vfx-layer) so it lives in the crystal's
+   own stacking context. Sits above the crystal sprite, sparks, and burst
+   orbs via z-index 100. Animation mirrors the vfx-qi-tick float pattern. */
+.home-crystal-tap-floater {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 100;
+  font-weight: 900;
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+  color: var(--qi-text-color, #b3eeff);
+  text-shadow:
+    0 0 8px var(--qi-text-glow, rgba(92, 216, 255, 0.95)),
+    0 0 18px var(--qi-text-deep, rgba(30, 170, 230, 0.55)),
+    0 2px 0 rgba(0, 0, 0, 0.85),
+    1px 0 0 rgba(0, 0, 0, 0.75),
+    -1px 0 0 rgba(0, 0, 0, 0.75),
+    0 -1px 0 rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: home-crystal-tap-float 1500ms cubic-bezier(.22, .61, .36, 1) forwards;
+  will-change: transform, opacity;
+}
+@keyframes home-crystal-tap-float {
+  0%   { transform: translate(-50%, -50%) scale(0.4);  opacity: 0; }
+  12%  { transform: translate(-50%, -80%) scale(1.25); opacity: 1; }
+  28%  { transform: translate(-50%, -110%) scale(1.0); opacity: 1; }
+  100% { transform: translate(-50%, -230%) scale(0.9); opacity: 0; }
+}
+.vfx-disabled .home-crystal-tap-floater { display: none; }
 
 /* Golden glow that grows from invisible → visible as the reservoir fills.
    Opacity is driven by the rAF loop in KeyCrystal.

@@ -188,6 +188,22 @@ function AppInner() {
     document.body.classList.add(cls);
     return () => document.body.classList.remove(cls);
   }, [crystal?.level]);
+
+  // Cinematic lock — while a breakthrough banner, character-evolution, or
+  // crystal-evolution overlay is on screen, block every other interaction
+  // (top bar, nav bar tabs, hold-to-focus, crystal/divine taps). The user
+  // shouldn't be able to navigate away mid-animation or trigger a side
+  // effect that fights the cinematic for screen real estate. CSS does the
+  // actual gating via `body.event-cinematic` rules in App.css.
+  useEffect(() => {
+    const kind = currentEvent?.kind;
+    const lock = kind === 'breakthrough'
+              || kind === 'character-evolution'
+              || kind === 'crystal-evolution';
+    if (!lock) return undefined;
+    document.body.classList.add('event-cinematic');
+    return () => document.body.classList.remove('event-cinematic');
+  }, [currentEvent]);
   const producers       = useProducers();
   const upgrades        = useUpgrades();
   const { clearedRegions, clearRegion } = useClearedRegions();

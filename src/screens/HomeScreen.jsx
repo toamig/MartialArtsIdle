@@ -2005,18 +2005,21 @@ function HomeScreen({
     if (granted <= 0) return;
     const wasFull = !!document.querySelector('.home-crystal-img.home-crystal-overcharged');
     try { AudioManager.playSfx(wasFull ? 'crystal_tap_max' : 'crystal_tap'); } catch {}
-    // Spawn a "+N Qi" floater at the crystal's screen position, offset into
-    // fighter-stage coordinates (where the VFX layer lives).
+    // Spawn the "+N Qi" floater DIRECTLY into the crystal-img-wrap (DOM-
+    // managed, like the click-burst orbs). Previously routed through the
+    // fighter-stage's vfx-layer, but in a layout where the crystal sits
+    // above the fighter-stage subtree the floater rendered behind both
+    // the crystal sprite and the burst orbs. Spawning into the crystal's
+    // own stacking context with a high z-index keeps it on top of every
+    // crystal-area VFX.
     try {
       const crystalEl = document.querySelector('.home-crystal-img-wrap');
-      const stageEl   = document.querySelector('.home-fighter-stage');
-      if (crystalEl && stageEl) {
-        const cr = crystalEl.getBoundingClientRect();
-        const sr = stageEl.getBoundingClientRect();
-        const x  = (cr.left + cr.width  / 2) - sr.left;
-        const y  = (cr.top  + cr.height / 2) - sr.top;
-        spawnVFX({ type: 'qi-tick', x, y, content: fmtDelta(granted), duration: 1600,
-          style: { '--qi-drift-x': '0px' } });
+      if (crystalEl) {
+        const f = document.createElement('div');
+        f.className = 'home-crystal-tap-floater';
+        f.textContent = '+' + fmtDelta(granted);
+        f.addEventListener('animationend', () => f.remove(), { once: true });
+        crystalEl.appendChild(f);
       }
       // Click-burst orbs — jump up + fall, count scales with reservoir fill
       // (1 for an empty-tap floor, up to ~5 for a fully-overcharged collect).

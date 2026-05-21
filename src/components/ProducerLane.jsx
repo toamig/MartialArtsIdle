@@ -81,12 +81,14 @@ export default function ProducerLane({
     prevTierNameRef.current = next;
   }, [tier?.name]);
 
-  // Resolve the effective buy count for the active mode.
+  // Resolve the effective buy count for the active mode (1 | 10 | 100).
+  // All-or-nothing: the buy succeeds only if the player can afford every
+  // unit in the batch. Affordability is enforced by the button-enable
+  // check below; this resolver just returns the count.
   const resolvedCount = useMemo(() => {
     if (!unlocked) return 0;
-    if (buyMode === 'max') return producers.getMaxAffordable(producer.id, qi);
     return buyMode;
-  }, [buyMode, qi, producer.id, producers, unlocked]);
+  }, [buyMode, unlocked]);
 
   const displayCost = useMemo(() => {
     if (!unlocked) return 0;
@@ -176,11 +178,7 @@ export default function ProducerLane({
         onClick={() => onBuy(producer.id, resolvedCount)}
         disabled={!affordable}
       >
-        <span className="pl-buy-count">
-          {buyMode === 'max'
-            ? (resolvedCount > 0 ? `×${resolvedCount}` : '×0')
-            : `×${buyMode}`}
-        </span>
+        <span className="pl-buy-count">×{buyMode}</span>
         <span className="pl-buy-cost">{fmt(displayCost)} Qi</span>
       </button>
     </div>
