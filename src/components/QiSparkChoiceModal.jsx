@@ -24,6 +24,25 @@ function CardIcon({ icon }) {
   return <span className="qs-card-icon-emoji" aria-hidden="true">{icon}</span>;
 }
 
+/**
+ * Resolve the display icon for a spark id. Priority:
+ *   1. SPARK_COPY[id].icon — explicit override (producer sprite for
+ *      legendaries, themed emoji for common/uncommon)
+ *   2. mechanic-tier cards reuse the same medallion icon the upgrades
+ *      shop already shows (ui/upgrade_<mechanicId>.png — Crystal
+ *      Reservoir, Divine Qi, etc.)
+ *   3. fallback to ✦
+ */
+function iconFor(sparkId) {
+  const copy = SPARK_COPY[sparkId];
+  if (copy?.icon) return copy.icon;
+  const card = QI_SPARK_BY_ID[sparkId];
+  if (card?.kind === 'mechanic' && card.mechanicId) {
+    return `/ui/upgrade_${card.mechanicId}.png`;
+  }
+  return '✦';
+}
+
 // ── Vertical-stack card ─────────────────────────────────────────────────────
 
 function SparkCard({
@@ -43,7 +62,7 @@ function SparkCard({
   // Effect text falls back to the legacy `description` field for any card
   // that hasn't been migrated to plain-English copy yet.
   const effectText = copy?.effectText ?? card.description ?? '';
-  const icon       = copy?.icon ?? '✦';
+  const icon       = iconFor(sparkId);
 
   return (
     <div
@@ -99,7 +118,7 @@ function DetailPanel({ sparkId, onClose, onPick, onRerollCard, cardIndex, isFree
   if (!card) return null;
   const rarity = SPARK_RARITY[card.rarity] ?? SPARK_RARITY.common;
   const copy   = SPARK_COPY[sparkId];
-  const icon   = copy?.icon ?? '✦';
+  const icon   = iconFor(sparkId);
   const effectText  = copy?.effectText  ?? card.description ?? '';
   const exampleHtml = copy?.exampleText ?? null;
   const loreHtml    = copy?.loreText    ?? null;

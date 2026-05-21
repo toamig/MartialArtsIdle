@@ -39,6 +39,25 @@ function Icon({ icon, fallback = '✦', className = 'st-icon-img' }) {
   return <span className={className.replace('-img', '-emoji')} aria-hidden="true">{ic}</span>;
 }
 
+/**
+ * Resolve the display icon for a spark id. Priority:
+ *   1. SPARK_COPY[id].icon — explicit override (producer sprite for
+ *      legendaries, themed emoji for common/uncommon)
+ *   2. mechanic-tier cards reuse the same medallion icon the upgrades
+ *      shop already shows (ui/upgrade_<mechanicId>.png — Crystal
+ *      Reservoir, Divine Qi, etc.)
+ *   3. fallback to ✦
+ */
+function iconFor(sparkId) {
+  const copy = SPARK_COPY[sparkId];
+  if (copy?.icon) return copy.icon;
+  const card = QI_SPARK_BY_ID[sparkId];
+  if (card?.kind === 'mechanic' && card.mechanicId) {
+    return `/ui/upgrade_${card.mechanicId}.png`;
+  }
+  return '✦';
+}
+
 /** Tiny markdown-ish bold parser for **strong** → <strong>. */
 function renderRich(text) {
   if (!text) return null;
@@ -135,7 +154,7 @@ function SparkBlock({ spark, ctx, isTrinityActive, onOpen }) {
   const card = QI_SPARK_BY_ID[spark.sparkId];
   if (!card) return null;
   const rarity = SPARK_RARITY[card.rarity] ?? SPARK_RARITY.common;
-  const copy   = SPARK_COPY[spark.sparkId];
+  const icon   = iconFor(spark.sparkId);
   const isTrinityPiece = card.trinityPiece === true;
 
   // Timer for timed sparks
@@ -161,7 +180,7 @@ function SparkBlock({ spark, ctx, isTrinityActive, onOpen }) {
       aria-label={`${card.name} — tap for details`}
     >
       <div className="st-block-icon-wrap">
-        <Icon icon={copy?.icon} className="st-block-icon-img" />
+        <Icon icon={icon} className="st-block-icon-img" />
         {isTrinityPiece && <span className="st-block-trinity-badge">✦</span>}
         {showStackBadge && <span className="st-block-stack-badge">×{stacks}</span>}
       </div>
@@ -187,7 +206,7 @@ function SparkDetailPanel({ spark, ctx, isTrinityActive, onClose }) {
   if (!card) return null;
   const rarity = SPARK_RARITY[card.rarity] ?? SPARK_RARITY.common;
   const copy   = SPARK_COPY[spark.sparkId];
-  const icon   = copy?.icon ?? '✦';
+  const icon   = iconFor(spark.sparkId);
   const effectText  = copy?.effectText  ?? card.description ?? '';
   const exampleHtml = copy?.exampleText ?? null;
   const loreHtml    = copy?.loreText    ?? null;
