@@ -3,6 +3,7 @@ import PRODUCERS from '../data/producers';
 import ProducerLane from '../components/ProducerLane';
 import ProducerDetailModal from '../components/ProducerDetailModal';
 import UpgradeCard, { OwnedUpgradeChip } from '../components/UpgradeCard';
+import SparksTab from '../components/SparksTab';
 import { fmt, fmtRate } from '../utils/format';
 
 /**
@@ -12,8 +13,16 @@ import { fmt, fmtRate } from '../utils/format';
  * Sticky header shows live qi + qi/s readouts (polled from refs to avoid
  * triggering useCultivation re-renders).
  */
-export default function CultivationScreen({ cultivation, producers, upgrades, crystal, qiSparks }) {
-  const [tab, setTab]         = useState('producers');     // 'producers' | 'upgrades'
+export default function CultivationScreen({ cultivation, producers, upgrades, crystal, qiSparks, initialTab, legendaryPoolInfo }) {
+  // Default tab is 'producers' unless App.jsx navigated here with a specific
+  // target ('sparks' from the home buff-chip's "View all sparks →" link).
+  const [tab, setTab]         = useState(() => (initialTab === 'upgrades' || initialTab === 'sparks') ? initialTab : 'producers');
+  // If navigation changes initialTab while mounted, honour it.
+  useEffect(() => {
+    if (initialTab === 'producers' || initialTab === 'upgrades' || initialTab === 'sparks') {
+      setTab(initialTab);
+    }
+  }, [initialTab]);
   const [buyMode, setBuyMode] = useState(1);             // 1 | 10 | 'max'
   const [qi, setQi]           = useState(() => cultivation.qiRef?.current ?? 0);
   const [rate, setRate]       = useState(() => cultivation.rateRef?.current ?? 0);
@@ -133,6 +142,10 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
           className={`cs-tab${tab === 'upgrades' ? ' cs-tab-active' : ''}`}
           onClick={() => setTab('upgrades')}
         >Upgrades</button>
+        <button
+          className={`cs-tab${tab === 'sparks' ? ' cs-tab-active' : ''}`}
+          onClick={() => setTab('sparks')}
+        >Sparks</button>
       </div>
 
       {tab === 'producers' && (
@@ -218,6 +231,10 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
             )}
           </div>
         )
+      )}
+
+      {tab === 'sparks' && (
+        <SparksTab qiSparks={qiSparks} producers={producers} cultivation={cultivation} />
       )}
     </div>
   );

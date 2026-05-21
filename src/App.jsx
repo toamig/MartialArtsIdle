@@ -977,6 +977,17 @@ function AppInner() {
     try { trackScreenView(target); } catch {}
   };
 
+  // Cross-component nav events — keeps callsites (like the home sparks chip)
+  // decoupled from prop-drilling the navigate fn. ActiveSparksBar dispatches
+  // `mai:nav-sparks` when the player taps "View all sparks →"; route them
+  // to Cultivation > Sparks tab here.
+  useEffect(() => {
+    const handler = () => navigate('cultivation', 'sparks');
+    window.addEventListener('mai:nav-sparks', handler);
+    return () => window.removeEventListener('mai:nav-sparks', handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleReincarnate = useCallback(() => {
     // Safety net — the button is already disabled below Saint, but we
     // refuse here too so any future callsite can't bypass the gate.
@@ -1103,7 +1114,7 @@ function AppInner() {
       ? <ProductionScreen inventory={inventory} pills={pills} tree={tree} />
       : null,
     // The qi-investment shop — main loop of v1, always visible.
-    cultivation: <CultivationScreen cultivation={cultivation} producers={producers} upgrades={upgrades} crystal={crystal} qiSparks={qiSparks} />,
+    cultivation: <CultivationScreen cultivation={cultivation} producers={producers} upgrades={upgrades} crystal={crystal} qiSparks={qiSparks} initialTab={typeof screenParam === 'string' ? screenParam : null} legendaryPoolInfo={legendaryPoolInfo} />,
     settings:   null,
     reincarnation: <EternalTreeScreen
                      karma={karma.karma}
