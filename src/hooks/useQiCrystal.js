@@ -80,36 +80,40 @@ export function getCrystalQiMult(level) {
 /**
  * Refined QI required to reach the given level.
  *
- * 2026-05-21 Dial-6: base 30 → 200 (~6.7× harder cumulative). Paired with
- * the 10-tier evolution redistribution above so each evolution feels like
- * a real milestone, AND L100 (max) is no longer reachable on the first run
- * — it now requires multiple reincarnations to crystallise fully. The
- * cube curve is unchanged, so early levels still feel like a brisk tutorial,
- * but the cumulative climb past mid-game lengthens significantly.
+ * 2026-05-21 Dial-6.1 — split formula (cube + quartic):
  *
- * Sample progression (each tier evolution at L10/20/30/.../80/100):
- *   L1   = 200 qi        (instant)
- *   L5   = 25K qi        (first few min)
- *   L10  = 200K qi       (T2 — Crystal Reservoir unlock)
- *   L20  = 1.6M qi       (T3 — Consecutive Focus)
- *   L30  = 5.4M qi       (T4 — Divine Qi)
- *   L40  = 12.8M qi      (T5 — Pattern Click)
- *   L50  = 25M qi        (T6 — purely visual)
- *   L60  = 43M qi        (T7)
- *   L70  = 69M qi        (T8)
- *   L80  = 102M qi       (T9)
- *   L100 = 200M qi       (T10 + Max — multi-run goal)
+ *   cost(n) = 10·n³ + 2·n⁴
  *
- * Cumulative L0→L100 ≈ 5.1B qi — Saint Late realm cost is ~3B, so this is
- * a multi-rebirth grind. Players should see T8/T9 in their first long run
- * and crystallise to T10 across 2+ reincarnations.
+ * The cubic term dominates EARLY levels so T1→T2 (L10) lands at 30K qi,
+ * matching the Dial-5 pacing where T2 coincided with the player finishing
+ * Tempered Body / hitting their first major breakthrough. The quartic
+ * term dominates LATE levels so each evolution past mid-game feels
+ * noticeably heavier, and L100 (max) cumulatively requires ~4.25B qi —
+ * multi-rebirth territory, not first-run-completable.
+ *
+ * Sample progression (tiers evolve at L10/20/30/.../80/100):
+ *   L1   = 12 qi          (instant)
+ *   L5   = 2.5K qi        (first few minutes)
+ *   L10  = 30K qi         (T2 — Crystal Reservoir; ~end of Tempered Body)
+ *   L20  = 400K qi        (T3 — Consecutive Focus)
+ *   L30  = 1.9M qi        (T4 — Divine Qi)
+ *   L40  = 5.8M qi        (T5 — Pattern Click)
+ *   L50  = 13.75M qi      (T6 — purely visual)
+ *   L60  = 28M qi         (T7)
+ *   L70  = 51M qi         (T8)
+ *   L80  = 87M qi         (T9)
+ *   L100 = 210M qi        (T10 + Max — multi-rebirth goal)
+ *
+ * Cumulative L0→L100 ≈ 4.25B qi. Strong first runs should reach T8/T9
+ * (L70-L80) around Saint Late; T10 unlocks across 2+ reincarnations.
  *
  * Targets above MAX_CRYSTAL_LEVEL still compute a cost (used by UI to
  * show "max reached") — actual level-up logic clamps the cap.
  */
 export function getRequiredRefinedQi(targetLevel) {
   if (targetLevel < 1) return 0;
-  const raw = 200 * Math.pow(targetLevel, 3.00);
+  const n = targetLevel;
+  const raw = 10 * Math.pow(n, 3) + 2 * Math.pow(n, 4);
   // Round to a clean step that scales with magnitude (keeps ~2 significant digits)
   const step = Math.pow(10, Math.max(1, Math.floor(Math.log10(raw)) - 1));
   return Math.round(raw / step) * step;
