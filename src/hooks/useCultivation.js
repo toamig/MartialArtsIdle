@@ -398,6 +398,21 @@ export default function useCultivation() {
   const indexRef   = useRef(savedIndex);
   // Live cultivation rate (qi/s) — updated every tick for the HUD readout.
   const rateRef    = useRef(0);
+  // Baseline rate (qi/s) — `rateRef` divided by transient short-term boosts
+  // (focus hold, consecutive-focus rungs, divine-qi buff, pattern-click buff).
+  // Used by visuals that should NOT shift when the player toggles focus —
+  // e.g. the crystal-reservoir fill % drives the spark spawn-rate, and we
+  // don't want sparks dropping out the moment the player starts boosting.
+  // Includes everything ad-boost related (those last 30 min so they're
+  // effectively "base" for the player's current session).
+  const baseRateRef = useRef(0);
+  // Monotone counter of qi accrued ONLY by the cultivation tick (not by
+  // crystal collects, divine-qi rewards, pattern clicks, etc.). The
+  // "+N Qi" floaters on the cultivator read deltas from this so a crystal
+  // tap doesn't spike the next floater. Reset cycles (reincarnation,
+  // breakthrough leftover) don't matter — the floater tracks against its
+  // own snapshot of this counter, not the absolute value.
+  const passiveQiAccruedRef = useRef(0);
   // When the player is qi-capped waiting for enough qi/s to ascend between
   // MAJOR realms, this holds { required, current }. Null otherwise. Read by
   // the UI via rAF to render the gate indicator without React re-renders.
@@ -521,19 +536,32 @@ export default function useCultivation() {
       const producerFlat = producerRateRef.current * upgradeProducerMultRef.current * treeProducerOutputMultRef.current;
       // 2026-05-17 — crystalQiBonusRef now holds a MULTIPLIER (1 + level × 0.003).
       // Multiplies the base-rate sum so it applies to every flat source equally.
-      const rate = (BASE_RATE + sparkQiFlatRef.current + producerFlat) * crystalQiBonusRef.current * lawMult * qiUniqueMult *
+      // Split: baseRate excludes transient short-term boosts (focus hold, CF
+      // rung, divine qi, pattern click). rate is baseRate × transientMult.
+      // baseRateRef is read by visuals that should stay stable across boost
+      // toggles (e.g. the crystal reservoir VFX spark-rate).
+      const baseRate =
+        (BASE_RATE + sparkQiFlatRef.current + producerFlat) *
+        crystalQiBonusRef.current * lawMult * qiUniqueMult *
         artefactQiMultRef.current *
-        boostMult * consecutiveMult *
         adBoostRef.current * heavenlyTree * heavenlyArt *
         pillQiMultRef.current * sparkQiMultRef.current *
         treeQiMultRef.current * rebirthCultBuffRef.current *
-        divineQiMultRef.current *
-        patternClickMultRef.current *
         sparkLegendaryGlobalMultRef.current *
         debugQiMultRef.current;
-      rateRef.current = rate;
+      const transientMult =
+        boostMult * consecutiveMult *
+        divineQiMultRef.current *
+        patternClickMultRef.current;
+      const rate = baseRate * transientMult;
+      baseRateRef.current = baseRate;
+      rateRef.current     = rate;
       const dQi = rate * dt;
       qiRef.current += dQi;
+      // Passive-only accrual counter — used by the cultivator "+N Qi"
+      // floaters so one-shot grants (crystal taps, divine-qi rewards,
+      // pattern clicks) don't spike a floater on the next interval.
+      passiveQiAccruedRef.current += dQi;
       // Realm meter (Cookie-Clicker pivot) — fills with cumulative income
       // for this realm; never decreases via spending.
       qiEarnedThisRealmRef.current += dQi;
@@ -870,6 +898,8 @@ export default function useCultivation() {
     costRef,
     indexRef,
     rateRef,
+    baseRateRef,
+    passiveQiAccruedRef,
     gateRef,
     majorBreakthrough,
     clearMajorBreakthrough: () => setMajorBreakthrough(null),

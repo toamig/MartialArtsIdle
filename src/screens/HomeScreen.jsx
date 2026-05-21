@@ -1685,6 +1685,10 @@ function HomeScreen({
     realmStage,
     nextRealmName,
     qiRef,
+    // Monotone counter of qi accrued ONLY by the cultivation tick (no
+    // crystal/divine-qi/pattern-click grants). Used by the cultivator
+    // floater so one-shot grants don't spike the next "+N Qi" pop.
+    passiveQiAccruedRef,
     // Cookie-Clicker pivot — realm progress meter (cumulative qi earned this
     // realm). Drives the progress-bar fill and the "X / cost" numerator.
     // qiRef stays as the spendable balance display.
@@ -1734,13 +1738,19 @@ function HomeScreen({
   // cadence so passive ticking reads as visible progress. Reuses the existing
   // vfx-float-up effect; gated off while qi is capped at a major-realm gate
   // or the run is finished without ascension.
-  const lastFloaterQiRef = useRef(qiRef.current);
+  // Reads from `passiveQiAccruedRef` (monotone passive-only counter) instead
+  // of `qiRef`. Otherwise one-shot grants (crystal collect, divine-qi
+  // reward, pattern click) would inflate the next floater by their full
+  // payout, making the cultivator briefly show a value much larger than
+  // the actual passive tick rate.
+  const passiveRef = passiveQiAccruedRef ?? qiRef;
+  const lastFloaterQiRef = useRef(passiveRef.current);
   useEffect(() => {
-    lastFloaterQiRef.current = qiRef.current;
+    lastFloaterQiRef.current = passiveRef.current;
     const id = setInterval(() => {
       if (maxed && !ascended)   return;
-      if (gateRef?.current)    { lastFloaterQiRef.current = qiRef.current; return; }
-      const now   = qiRef.current;
+      if (gateRef?.current)    { lastFloaterQiRef.current = passiveRef.current; return; }
+      const now   = passiveRef.current;
       const delta = now - lastFloaterQiRef.current;
       // Breakthrough drained qi to a leftover — reseed the tracker and
       // skip this tick so floaters resume cleanly on the next one.
@@ -1761,7 +1771,7 @@ function HomeScreen({
       });
     }, 500);
     return () => clearInterval(id);
-  }, [qiRef, gateRef, maxed, ascended, spawnVFX, spriteScale]);
+  }, [passiveRef, gateRef, maxed, ascended, spawnVFX, spriteScale]);
 
   // ── Rewarded ad ─────────────────────────────────────────────────────────
   const onCultivationReward = useCallback(() => {
@@ -2203,7 +2213,7 @@ function HomeScreen({
             cfRung={cfRung}
             reservoirRef={crystalReservoirRef}
             crystalClickCapMinRef={crystalClickCapMinRef}
-            rateRef={cultivation.rateRef}
+            rateRef={cultivation.baseRateRef ?? cultivation.rateRef}
             onCollect={handleCrystalCollect}
             qiRef={cultivation.qiRef}
             onRefine={handleCrystalRefine}
