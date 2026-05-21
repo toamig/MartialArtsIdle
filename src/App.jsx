@@ -215,18 +215,30 @@ function AppInner() {
   const legendaryPoolInfo = useMemo(() => {
     const allLegendary = QI_SPARKS.filter(c => c.rarity === 'legendary');
     const total        = allLegendary.length;
-    const eligible     = allLegendary.filter(c =>
-      (c.requiresProducers ?? []).every(pid => producers.isUnlocked(pid, cultivation.realmIndex))
+    // Already-owned legendary ids — these are UNIQUE, the pool can't draw
+    // them again, so they shouldn't be counted as "available" to the player.
+    // The footer label was reading "X of Y unlocked" including owned ones,
+    // making rerolls feel like they had a real shot when in fact zero
+    // legendaries were left to draw.
+    const ownedIds = new Set(
+      (qiSparks?.activeSparks ?? [])
+        .filter(s => QI_SPARK_BY_ID[s.sparkId]?.rarity === 'legendary')
+        .map(s => s.sparkId)
     );
+    const eligible = allLegendary.filter(c => {
+      if (ownedIds.has(c.id)) return false; // already owned, can't draw again
+      return (c.requiresProducers ?? []).every(pid => producers.isUnlocked(pid, cultivation.realmIndex));
+    });
     let nextUnlock = null;
-    if (eligible.length < total) {
-      // For each ineligible legendary, find the BLOCKER producer with the
-      // highest unlock-realm requirement (that's what gates it). Then find
-      // the legendary whose blocker comes up SOONEST — that's the next
-      // unlock the player will see when they progress.
+    if (eligible.length < total - ownedIds.size) {
+      // For each ineligible+unowned legendary, find the BLOCKER producer
+      // with the highest unlock-realm requirement (that's what gates it).
+      // Then find the legendary whose blocker comes up SOONEST — that's
+      // the next unlock the player will see when they progress.
       let bestRealm = Infinity;
       let bestProducer = null;
       for (const card of allLegendary) {
+        if (ownedIds.has(card.id)) continue;
         if ((card.requiresProducers ?? []).every(pid => producers.isUnlocked(pid, cultivation.realmIndex))) continue;
         let highestRealm = -1;
         let highestProducer = null;
@@ -246,8 +258,14 @@ function AppInner() {
         nextUnlock = { producerName: bestProducer.name, realmIndex: bestRealm };
       }
     }
-    return { eligibleCount: eligible.length, totalCount: total, nextUnlock };
-  }, [producers, cultivation.realmIndex]);
+    // totalCount now reports remaining draws (total - owned), matching
+    // what the footer label needs to show "X of Y available" honestly.
+    return {
+      eligibleCount: eligible.length,
+      totalCount:    total - ownedIds.size,
+      nextUnlock,
+    };
+  }, [producers, cultivation.realmIndex, qiSparks?.activeSparks]);
 
   // Record every new realm reached so karma awards are first-time-only.
   useEffect(() => {

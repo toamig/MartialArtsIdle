@@ -322,8 +322,13 @@ function QiSparkChoiceModal({
             );
           }
           // 1+ eligible — show chance, pool progress, and pity together.
+          // Pool readout is "available" (eligible AND not yet owned) over
+          // remaining draws (total minus already-claimed) — see App.jsx's
+          // legendaryPoolInfo memo for the math. Reads as "X of Y available"
+          // so a player rerolling doesn't expect cards they've already
+          // claimed (legendaries are unique).
           const poolText = (total > 0 && eligible < total)
-            ? `${eligible} of ${total} unlocked`
+            ? `${eligible} of ${total} available`
             : 'full pool';
           return (
             <div className={`qs-footer-meta${pityImminent ? ' qs-footer-meta-pity-soon' : ''}${pityGuaranteed ? ' qs-footer-meta-pity-now' : ''}`}>
