@@ -7253,7 +7253,10 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
 /* VFX: Burst ring */
 /* Cultivator-tap ring — pixel-art ring sprite replacing the old CSS
    border-circle. Tint cascades from body.crystal-tier-N so the ring
-   always matches the active crystal colour. */
+   always matches the active crystal colour.
+   (No image-rendering rule — the global Settings → Rendering toggle
+   owns that; hard-coding pixelated here would override the player's
+   choice and bypass smooth-scale playback at high zoom.) */
 .vfx-burst {
   width: 60px;
   height: 60px;
@@ -7261,7 +7264,6 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  image-rendering: pixelated;
   filter: hue-rotate(var(--spark-hue, 0deg)) saturate(var(--spark-sat, 1));
   animation: vfx-burst-anim 0.55s ease-out forwards;
   will-change: transform, opacity;
@@ -16429,7 +16431,7 @@ button.pl-leader.pl-leader-clickable:focus-visible {
 .home-qi-flow-p {
   position: absolute;
   pointer-events: none;
-  image-rendering: pixelated;
+  /* image-rendering follows the global Settings → Rendering toggle */
   filter: hue-rotate(var(--spark-hue, 0deg)) saturate(var(--spark-sat, 1));
   animation: home-qi-flow-pop var(--qf-life, 2000ms) ease-in forwards;
   will-change: transform, opacity;
@@ -16498,7 +16500,7 @@ button.pl-leader.pl-leader-clickable:focus-visible {
 .home-click-burst-p {
   position: absolute;
   pointer-events: none;
-  image-rendering: pixelated;
+  /* image-rendering follows the global Settings → Rendering toggle */
   z-index: 12;
   animation: home-click-burst 900ms cubic-bezier(0.3, 0.45, 0.55, 1) forwards;
   filter: hue-rotate(var(--spark-hue, 0deg)) saturate(var(--spark-sat, 1));
