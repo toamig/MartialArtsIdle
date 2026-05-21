@@ -103,7 +103,7 @@ body.crystal-tier-2 {
   --spark-hue:       0deg;
   --spark-sat:       0.90;
 }
-/* T3 — cyan. Mirrors CRYSTAL_COLORS[3] = #00bbcc */
+/* T3 — cyan. Stays as the bridge between pale blue and deep blue. */
 body.crystal-tier-3 {
   --qi-aura-core:    rgba(  0, 187, 204, 0.62);
   --qi-aura-fringe:  rgba(  0, 130, 150, 0.34);
@@ -117,31 +117,37 @@ body.crystal-tier-3 {
   --spark-hue:       -15deg;
   --spark-sat:       1.10;
 }
-/* T4 — deep sapphire. Mirrors CRYSTAL_COLORS[4] = #1155cc */
+/* T4 — DEEP BLUE. 2026-05-21 tone fix: pulled red out of every channel so
+   the tier reads as pure blue (no violet lean). Was reading as bluish-purple
+   on the qi bar + floaters because the prior bright (#1155cc) had R=17.
+   New brights: R=0 across the bright bar + glow. */
 body.crystal-tier-4 {
-  --qi-aura-core:    rgba( 80, 140, 240, 0.66);
-  --qi-aura-fringe:  rgba( 20,  70, 200, 0.38);
-  --qi-text-color:   #b8d0ff;
-  --qi-text-glow:    rgba( 80, 140, 255, 0.95);
-  --qi-text-deep:    rgba( 20,  70, 200, 0.55);
-  --qi-bar-edge:     #1a3a90;
-  --qi-bar-mid:      #5588dd;
-  --qi-bar-edge-bri: #1155cc;
-  --qi-bar-core-bri: #dceaff;
+  --qi-aura-core:    rgba(  0, 110, 235, 0.66);
+  --qi-aura-fringe:  rgba(  0,  50, 180, 0.38);
+  --qi-text-color:   #a8c8ff;
+  --qi-text-glow:    rgba(  0, 120, 255, 0.95);
+  --qi-text-deep:    rgba(  0,  50, 180, 0.55);
+  --qi-bar-edge:     #002470;
+  --qi-bar-mid:      #2266dd;
+  --qi-bar-edge-bri: #0055dd;
+  --qi-bar-core-bri: #d0e0ff;
   --spark-hue:       10deg;
   --spark-sat:       1.10;
 }
-/* T5 — navy. Mirrors CRYSTAL_COLORS[5] = #2233aa */
+/* T5 — DARK BLUE / NAVY. 2026-05-21 tone fix: pulled red out too. The
+   bridge between deep blue (T4) and violet (T6 max) should still feel like
+   a blue, not indigo. Prior (#2233aa) had R=34 G=51 (red > green) → purple
+   read. New keeps it true navy with R=0. */
 body.crystal-tier-5 {
-  --qi-aura-core:    rgba( 80,  95, 220, 0.68);
-  --qi-aura-fringe:  rgba( 30,  40, 170, 0.40);
-  --qi-text-color:   #b8c0f8;
-  --qi-text-glow:    rgba(100, 120, 240, 0.95);
-  --qi-text-deep:    rgba( 30,  40, 170, 0.55);
-  --qi-bar-edge:     #1a2070;
-  --qi-bar-mid:      #5560cc;
-  --qi-bar-edge-bri: #2233aa;
-  --qi-bar-core-bri: #d0d8ff;
+  --qi-aura-core:    rgba(  0,  70, 220, 0.68);
+  --qi-aura-fringe:  rgba(  0,  30, 170, 0.40);
+  --qi-text-color:   #a8b8f8;
+  --qi-text-glow:    rgba(  0,  80, 230, 0.95);
+  --qi-text-deep:    rgba(  0,  30, 170, 0.55);
+  --qi-bar-edge:     #001460;
+  --qi-bar-mid:      #2244cc;
+  --qi-bar-edge-bri: #0033aa;
+  --qi-bar-core-bri: #c8d8ff;
   --spark-hue:       20deg;
   --spark-sat:       1.15;
 }

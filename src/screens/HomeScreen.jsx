@@ -753,8 +753,10 @@ const CRYSTAL_COLORS = {
   1:      { glowA: 'rgba(136,153,187,0.9)',glowB: 'rgba(100,120,160,0.5)',textName: '#c8d4e4', particles: ['#8899bb','#aabbcc','#99aacc','#778899','#bbccdd'] },
   2:      { glowA: 'rgba(68,136,187,1)',   glowB: 'rgba(50,100,150,0.55)',textName: '#8fc2e6', particles: ['#4488bb','#88bbdd','#66aacc','#3377aa','#99ccee'] },
   3:      { glowA: 'rgba(0,187,204,1)',    glowB: 'rgba(0,150,160,0.55)', textName: '#6ee0e8', particles: ['#00bbcc','#aaffee','#00ccdd','#00aaaa','#88eeff'] },
-  4:      { glowA: 'rgba(17,85,204,1)',    glowB: 'rgba(10,60,160,0.55)', textName: '#8ab1f2', particles: ['#1155cc','#55ddff','#2266dd','#0044bb','#66ccff'] },
-  5:      { glowA: 'rgba(34,51,170,1)',    glowB: 'rgba(20,40,140,0.55)', textName: '#9aa2ed', particles: ['#2233aa','#6699ff','#3344cc','#1122bb','#7788ff'] },
+  // 2026-05-21 tone fix — pulled red out of T4/T5 so the "blue family"
+  // stays solidly blue. Was reading as bluish-purple on glow/particles.
+  4:      { glowA: 'rgba(0,85,221,1)',     glowB: 'rgba(0,50,170,0.55)',  textName: '#7ab0ff', particles: ['#0055dd','#3388ee','#1166dd','#0044bb','#66bbff'] },
+  5:      { glowA: 'rgba(0,51,170,1)',     glowB: 'rgba(0,30,140,0.55)',  textName: '#7a8cff', particles: ['#0033aa','#2266dd','#1144cc','#0022aa','#5588ff'] },
   6:      { glowA: 'rgba(102,0,204,1)',    glowB: 'rgba(80,0,160,0.55)',  textName: '#be92f0', particles: ['#6600cc','#9966ff','#7711dd','#5500bb','#aa88ff'] },
   7:      { glowA: 'rgba(136,0,221,1)',    glowB: 'rgba(100,0,180,0.55)', textName: '#d094f5', particles: ['#8800dd','#aaddff','#9911ee','#7700cc','#bbaaff'] },
   8:      { glowA: 'rgba(204,153,255,1)',  glowB: 'rgba(170,100,240,0.55)',textName: '#e0c0ff', particles: ['#cc99ff','#eeddff','#bb88ee','#aa77dd','#ddbfff'] },
