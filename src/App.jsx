@@ -37,7 +37,6 @@ import useArtefacts   from './hooks/useArtefacts';
 import usePills       from './hooks/usePills';
 import useQiCrystal  from './hooks/useQiCrystal';
 import useProducers  from './hooks/useProducers';
-import useTierUpResonance from './hooks/useTierUpResonance';
 import useUpgrades   from './hooks/useUpgrades';
 import useAutoFarm    from './hooks/useAutoFarm';
 import WORLDS         from './data/worlds';
@@ -190,13 +189,6 @@ function AppInner() {
     return () => document.body.classList.remove(cls);
   }, [crystal?.level]);
   const producers       = useProducers();
-  // Plan B V1 — Tier-Up Resonance. Reads producers.owned to track the
-  // highest sprite tier reached per producer this run, then exposes a
-  // per-producer flat qi/s bonus folded into the producer rate calc below.
-  // Tree wiring (V1.4) replaces the placeholder `tree` arg with the real
-  // new tree once that lands. For now the bonus value defaults to 0 and is
-  // only non-zero via `gd.setTierUpBonus(...)` for debug testing.
-  const tierUpResonance = useTierUpResonance({ producers, tree: null });
   const upgrades        = useUpgrades();
   const { clearedRegions, clearRegion } = useClearedRegions();
   const selections      = useLawOffers({ cultivation });
@@ -413,16 +405,11 @@ function AppInner() {
     const ownedMap = producers.owned;
     const perProducer = (pid) =>
       upgrades.getProducerMult(pid) * qiSparks.getProducerSparkMult(pid, ownedMap);
-    // Per-producer flat qi/s composed from two sources:
-    //   - Sect Discipline (Dial-9): global timed spark, applies to all producers
-    //   - Tier-Up Resonance (Plan B V1): per-producer permanent bonus based on
-    //     highest sprite tier reached this run
-    // Both add inside `(p.startQiPerSec + flat) × per-producer-mult` so they
-    // compose naturally with everything downstream.
-    const sectDisciplineFlat = qiSparks.producerFlatPerUnitRef?.current ?? 0;
-    const flatPerUnit = (pid) => {
-      return sectDisciplineFlat + (tierUpResonance?.getTierUpBonus?.(pid) ?? 0);
-    };
+    // 2026-05-21 Dial-9 — Sect Discipline (common timed spark) adds +N to
+    // every producer's per-unit qi/s while active. Read from the spark ref
+    // (default 0). The bonus flows through per-producer mults and all
+    // downstream global mults the same way the producer's own base does.
+    const flatPerUnit = qiSparks.producerFlatPerUnitRef?.current ?? 0;
     const effective = producers.getRate(perProducer, flatPerUnit);
     cultivation.producerRateRef.current = effective;
     // Trinity Convergence + producer_pair_global_mult — global multipliers
@@ -1118,7 +1105,7 @@ function AppInner() {
 
   // Keep a live ref to all hooks so debug commands always see fresh state.
   const hooksRef = useRef({});
-  hooksRef.current = { cultivation, inventory, techniques, combat, artefacts, pills, autoFarm, crystal, qiSparks, producers, tierUpResonance };
+  hooksRef.current = { cultivation, inventory, techniques, combat, artefacts, pills, autoFarm, crystal, qiSparks };
   useEffect(() => { initDebug(hooksRef); }, []);
 
   // Audio unlock: browsers block the AudioContext until a user gesture.

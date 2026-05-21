@@ -85,66 +85,6 @@ export function initDebug(hooksRef) {
       console.log('[debug] Tutorial seen-set cleared. Reload the page to re-fire launch-time cards.');
     },
 
-    // ── Plan B V1: Tier-Up Resonance ───────────────────────────────────────
-
-    /**
-     * Force a producer's highest reached sprite tier to the given level.
-     * Lets you test the Tier-Up Resonance bonus without grinding to 100
-     * of each producer manually. The bonus applies the next time the
-     * producer rate effect re-runs (any owned-count change, or call
-     * `gd.refreshRate()` if added later).
-     *
-     * @param {string} producerId  e.g. 'p_disciple', 'p_herb_garden'
-     * @param {string} tierName    'bronze' | 'silver' | 'gold' | 'mythic'
-     */
-    simulateTierUp(producerId, tierName) {
-      const res = g().tierUpResonance;
-      if (!res) return console.warn('[debug] Tier-Up Resonance hook not ready');
-      const ok = res.debugSetTier(producerId, tierName);
-      if (!ok) {
-        console.warn(`[debug] Unknown tier '${tierName}'. Use bronze/silver/gold/mythic.`);
-        return;
-      }
-      console.log(`[debug] ${producerId} highest tier → ${tierName}`);
-    },
-
-    /**
-     * Override the Tier-Up Resonance bonus values that would normally
-     * come from the new Eternal Tree (V1.4). Lets us validate the
-     * mechanic end-to-end before the tree wiring lands.
-     *
-     * @param {number} base                Baseline per-tier-up (all producers)
-     * @param {Object<string,number>} [perProducer]   Per-producer amplifier
-     *
-     * Example: gd.setTierUpBonus(0.5, { p_disciple: 5 })
-     *   → every producer gets +0.5 qi/s per tier reached
-     *   → disciples additionally get +5 qi/s per tier reached
-     *   → so a Mythic disciple (4 tiers reached) = +(0.5+5) × 4 = +22 qi/s per disciple
-     */
-    setTierUpBonus(base = 0, perProducer = {}) {
-      const res = g().tierUpResonance;
-      if (!res) return console.warn('[debug] Tier-Up Resonance hook not ready');
-      res.debugSetBonus(base, perProducer);
-      console.log(`[debug] Tier-Up bonus set: base=${base}, perProducer=`, perProducer);
-    },
-
-    /** Print the current Tier-Up Resonance state (highest tiers + debug bonuses). */
-    readTierUpState() {
-      const res = g().tierUpResonance;
-      if (!res) return console.warn('[debug] Tier-Up Resonance hook not ready');
-      const state = res.debugReadState();
-      console.log('[debug] Tier-Up Resonance state:', state);
-      return state;
-    },
-
-    /** Reset the per-run Tier-Up Resonance state (preserves debug bonus overrides). */
-    resetTierUpResonance() {
-      const res = g().tierUpResonance;
-      if (!res) return console.warn('[debug] Tier-Up Resonance hook not ready');
-      res.clearAll();
-      console.log('[debug] Tier-Up Resonance state cleared (highest tier per producer wiped).');
-    },
-
     /**
      * Print every multiplier currently feeding the qi/s rate formula. Use
      * this to diagnose "why is my starting qi/s not 1.0" — every entry shows

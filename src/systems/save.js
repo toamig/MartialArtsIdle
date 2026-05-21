@@ -107,10 +107,6 @@ export function wipeSave() {
   // alongside Blood Lotus + cosmetics so a wipe-save doesn't lose
   // tutorial completion for legitimate players who reset on purpose.
   localStorage.removeItem('mai_tutorial_seen');
-  // Plan B V1 — Tier-Up Resonance per-run state (highest sprite tier
-  // reached per producer). Wiped on both factory reset AND reincarnation
-  // (the latter via reload after wipeReincarnation calls wipeSave).
-  localStorage.removeItem('mai_tier_up_resonance');
   // mai_blood_lotus is intentionally NOT wiped — paid currency survives a save reset
   // mai_lang is intentionally NOT wiped — language preference survives a save reset
   // mai_save_version is intentionally NOT wiped — version marker survives
