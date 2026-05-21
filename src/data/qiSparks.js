@@ -672,6 +672,202 @@ export const QI_SPARKS = mergeRecordArray(QI_SPARKS_RAW, 'qiSparks', 'id');
 
 export const QI_SPARK_BY_ID = Object.fromEntries(QI_SPARKS.map(s => [s.id, s]));
 
+// ── Display copy + icons — used by QiSparkChoiceModal ───────────────────────
+//
+// Plain-English game copy split into three views:
+//   `effectText`  — short summary shown ON the card (used in-place of `description`)
+//   `exampleText` — concrete numerical example shown in the detail panel
+//                   (HTML allowed for <strong>)
+//   `loreText`    — flavor quote shown italicised in the detail panel
+//   `icon`        — sprite path for legendary cards (producer mythic art),
+//                   or a single-char emoji for common/uncommon
+//
+// Falls back gracefully: a card with no SPARK_COPY entry still renders using
+// the existing `description` field — old common/uncommon designs aren't broken
+// if anything slips through. New design treats this map as canonical.
+const PROD_SPRITE = (id) => `/sprites/producers/${id}_mythic.png`;
+export const SPARK_COPY = {
+  // ── Common ─────────────────────────────────────────────────────────────
+  quick_burst: {
+    icon: '⚡',
+    effectText: 'Gain a burst of qi worth **30 seconds** of your current qi/s, instantly.',
+    exampleText: 'If your qi/s is currently <strong>1.2M</strong>, picking this spark adds <strong>36M qi</strong> to your balance.',
+    loreText: 'A breath drawn quick — and the world tilts toward you.',
+  },
+  surging_stream: {
+    icon: '🌊',
+    effectText: 'Your qi/s is boosted by **+50%** for the next 30 seconds.',
+    exampleText: 'At <strong>1M qi/s</strong> baseline, this temporarily raises you to <strong>1.5M qi/s</strong> for half a minute.',
+    loreText: 'The current rises. The river forgets its banks.',
+  },
+  steady_stream: {
+    icon: '💧',
+    effectText: 'Your qi/s is boosted by **+20%** for the next full minute.',
+    exampleText: 'A steady +20% for 60 seconds gives you roughly <strong>12 seconds of bonus production</strong>.',
+    loreText: 'Slow flame. Long burn. The mountain wears down the rain.',
+  },
+  inner_calm: {
+    icon: '🧘',
+    effectText: 'Your qi/s is boosted by **+10%** until your next layer breakthrough.',
+    exampleText: 'Best used right before a long sub-stage push — the boost lasts the entire climb.',
+    loreText: 'The mind quiets, and the world tells its secrets.',
+  },
+  focus_surge: {
+    icon: '🎯',
+    effectText: 'Your **Focus multiplier** is increased by +30% for the next minute. Only matters while you hold Focus.',
+    exampleText: 'If Focus normally gives ×3.0, this boosts it to <strong>×3.9</strong> for 60 seconds. Hold Focus for full value.',
+    loreText: 'When the breath sharpens, the dao listens harder.',
+  },
+  lingering_focus: {
+    icon: '🪷',
+    effectText: 'For the next 60 seconds, releasing Focus doesn\'t immediately end the boost — your qi/s continues at **half-Focus** for 5 seconds after each release.',
+    exampleText: 'Tap-and-release Focus rapidly during the 60s window — the residual 5-second tail covers idle moments without holding.',
+    loreText: 'Even after the breath releases, the meridians remember.',
+  },
+  echo_of_insight: {
+    icon: '✨',
+    effectText: 'Your qi/s is boosted by **+5%** for your next **3 layer breakthroughs**, then expires.',
+    exampleText: 'If you cross layers quickly, this can persist for most of a sub-realm push — a small but reliable tailwind.',
+    loreText: 'One realisation echoes through three lifetimes.',
+  },
+
+  // ── Uncommon ───────────────────────────────────────────────────────────
+  steady_cultivation: {
+    icon: '🌱',
+    effectText: 'Permanently gain **+1 base qi/s** for the rest of this run. Stacks if drawn again.',
+    exampleText: 'Drawn three times → <strong>+3 base qi/s</strong>. This flat bonus is then multiplied by crystal, focus, law, and other multipliers — endgame impact can be huge.',
+    loreText: 'One breath at dawn, one at dusk. The thousandth breath is the same as the first, and that is the whole secret.',
+  },
+  sharper_focus: {
+    icon: '🔍',
+    effectText: 'Permanently adds **+5%** to your Focus multiplier for the rest of this run. Stacks if drawn again.',
+    exampleText: 'Three stacks → Focus is <strong>+15% stronger</strong>. Especially powerful if you Focus often.',
+    loreText: 'The blade is sharpened on the same stone, every morning.',
+  },
+  enduring_stream: {
+    icon: '🏞️',
+    effectText: 'Permanently boosts your qi/s by **+2%** for the rest of this run. Stacks if drawn again.',
+    exampleText: 'Five stacks compounds to roughly <strong>+10% total qi/s</strong>. Small but reliable, never expires.',
+    loreText: 'The river that never stops becomes the sea.',
+  },
+  patience_of_stone: {
+    icon: '🗿',
+    effectText: 'Reduces your major-realm qi/s gate requirement by **5%** for the rest of this run. Stacks (up to 80% reduction).',
+    exampleText: 'Useful for breaking through walls — five stacks shaves <strong>25% off every major gate</strong>.',
+    loreText: 'The stone weathers, but it does not hurry.',
+  },
+  heavens_bond: {
+    icon: '☁️',
+    effectText: 'Permanently increases your offline qi gain rate by **+10%** for the rest of this run. Stacks if drawn again.',
+    exampleText: 'Base offline rate is 20%. Three stacks → <strong>50% offline rate</strong> — your sect cultivates harder while you sleep.',
+    loreText: 'The heavens do not require your attention. Only your alignment.',
+  },
+  resonant_soul: {
+    icon: '🔔',
+    effectText: 'Permanently gain **+0.5% qi/s** for each layer breakthrough you reach AFTER drawing this spark. Stacks if drawn again.',
+    exampleText: 'After 50 breakthroughs with this active, one stack gives <strong>+25% qi/s</strong>. Draw early for biggest payoff.',
+    loreText: 'Every breakthrough leaves a tone. The soul gathers them like bells in a temple.',
+  },
+
+  // ── Legendary — Pair synergies (A) ─────────────────────────────────────
+  legendary_a1_smoke_petal: {
+    icon: PROD_SPRITE('p_herb_garden'),
+    effectText: 'Pair your **Spirit Herb Gardens** with **Meridian Furnaces**. Each pair multiplies BOTH producers by ×2.',
+    exampleText: 'Own <strong>3 gardens + 5 furnaces</strong> → 3 pairs → each garden\'s AND each furnace\'s qi/s is multiplied by <strong>×4</strong> (1 + 3 × 1).',
+    loreText: 'The garden\'s jade leaves curl in the furnace smoke and bloom twice as fast; the furnace tastes the spirit-herb breath and burns hotter.',
+  },
+  legendary_a2_hall_ten_thousand: {
+    icon: PROD_SPRITE('p_sect_followers'),
+    effectText: 'Pair your **Body Tempering Disciples** with **Mortal Sect Followers**. Each pair multiplies BOTH producers by ×2.5.',
+    exampleText: 'Own <strong>10 disciples + 4 sect followers</strong> → 4 pairs → each producer\'s qi/s is multiplied by <strong>×7</strong> (1 + 4 × 1.5).',
+    loreText: 'A single disciple becomes a focal point; ten thousand pilgrims bow toward them. The pilgrim sees the disciple; the disciple feels the weight.',
+  },
+  legendary_a3_pearl_pendant: {
+    icon: PROD_SPRITE('p_dragon'),
+    effectText: 'Pair your **Slumbering Spirit Dragons** with **Ancestral Treasures**. Each pair multiplies BOTH producers by ×3.',
+    exampleText: 'Own <strong>2 dragons + 5 treasures</strong> → 2 pairs → each producer\'s qi/s is multiplied by <strong>×5</strong> (1 + 2 × 2).',
+    loreText: 'The dragon\'s slumber-pearl recognises a relic carried by your ancestors. They were never separated. They were always going to find each other again.',
+  },
+  legendary_a4_climbing_beasts: {
+    icon: PROD_SPRITE('p_beast_pact'),
+    effectText: 'Each **Spirit Beast Pact + Heavenly Pillar** pair adds **+20% global qi/s**. Affects EVERYTHING you produce.',
+    exampleText: 'Own <strong>5 beast pacts + 8 pillars</strong> → 5 pairs → <strong>+100% global qi/s</strong> (doubles ALL your production).',
+    loreText: 'The tigers climb the heavenly pillar at midnight to drink directly. They don\'t tell the foxes. The foxes find out.',
+  },
+  legendary_a5_void_garden: {
+    icon: PROD_SPRITE('p_void'),
+    effectText: 'Pair your **Void Conduits** with **Spirit Herb Gardens**. Each pair multiplies BOTH producers by ×4.',
+    exampleText: 'Own <strong>3 void conduits + 10 gardens</strong> → 3 pairs → each producer\'s qi/s is multiplied by <strong>×10</strong> (1 + 3 × 3).',
+    loreText: 'The void\'s bleed carries seeds from another world; the garden devours them, blooms in colors no eye has named.',
+  },
+  legendary_a6_phoenix_pillar: {
+    icon: PROD_SPRITE('p_phoenix'),
+    effectText: 'Pair your **Sovereign Phoenixes** with **Heavenly Pillars**. Each pair multiplies BOTH producers by ×5.',
+    exampleText: 'Own <strong>1 phoenix + 10 pillars</strong> → 1 pair → both producers\' qi/s is multiplied by <strong>×5</strong>. Adding a 2nd phoenix would yield 2 pairs and ×9 each.',
+    loreText: 'The Fenghuang lands only on a perch tall enough. Each pillar is one more step closer to heaven.',
+  },
+
+  // ── Legendary — Unidirectional (B) ─────────────────────────────────────
+  legendary_b1_dragon_hoard: {
+    icon: PROD_SPRITE('p_dragon'),
+    effectText: 'Your **Slumbering Spirit Dragon** grows **60% stronger** for every Ancestral Treasure you own.',
+    exampleText: 'Own <strong>1 dragon + 5 treasures</strong> → dragon\'s qi/s is <strong>×4</strong> (1 + 5 × 0.60). At 10 treasures, ×7.',
+    loreText: 'The dragon\'s pearl is whatever you offered it. Every relic you\'ve kept, it has folded into itself.',
+  },
+  legendary_b3_beast_tribute: {
+    icon: PROD_SPRITE('p_beast_pact'),
+    effectText: 'Your **Spirit Beast Pact** grows **25% stronger** for every Spirit Herb Garden you own.',
+    exampleText: 'Own <strong>10 beast pacts + 8 gardens</strong> → each beast pact\'s qi/s is <strong>×3</strong> (1 + 8 × 0.25).',
+    loreText: 'Tigers eat the spirit herbs you grow. They return larger, faster, sharper.',
+  },
+  legendary_b4_furnace_sect: {
+    icon: PROD_SPRITE('p_meridian_furnace'),
+    effectText: 'Your **Meridian Furnace** grows **8% stronger** for every Body Tempering Disciple you own.',
+    exampleText: 'Own <strong>5 furnaces + 25 disciples</strong> → each furnace\'s qi/s is <strong>×3</strong> (1 + 25 × 0.08).',
+    loreText: 'Every apprentice\'s breath stokes the bronze legs a little brighter. The furnace was always a sect\'s effort.',
+  },
+  legendary_b5_heavens_bend: {
+    icon: PROD_SPRITE('p_pillar'),
+    effectText: 'Your **Heavenly Pillar** produces **triple qi/s** as long as you own at least 1 Void Conduit.',
+    exampleText: 'Own <strong>10 pillars + 1 void</strong> → each pillar\'s qi/s is <strong>×3</strong>. Owning more voids doesn\'t increase the bonus further.',
+    loreText: 'When reality is already torn, heaven stops resisting.',
+  },
+  legendary_b6_phoenix_garden: {
+    icon: PROD_SPRITE('p_phoenix'),
+    effectText: 'Your **Sovereign Phoenix** grows **10% stronger** for every Spirit Herb Garden you own.',
+    exampleText: 'Own <strong>1 phoenix + 20 gardens</strong> → phoenix\'s qi/s is <strong>×3</strong> (1 + 20 × 0.10).',
+    loreText: 'Fenghuang nests only where the soil is medicine. A hundred gardens, a hundred reasons to stay.',
+  },
+
+  // ── Legendary — Temporal (E) ───────────────────────────────────────────
+  legendary_e2_phoenix_reborn: {
+    icon: PROD_SPRITE('p_phoenix'),
+    effectText: 'Every major realm breakthrough resets your **Phoenix count to zero**, but permanently **doubles every other producer\'s qi/s** for this run.',
+    exampleText: 'Cross <strong>3 major realms</strong> with this active → every non-phoenix producer ends at <strong>×8 their normal output</strong> (2 × 2 × 2). You lose all phoenixes, but the rest of your sect is transformed.',
+    loreText: 'Fenghuang is reborn from its own ashes — to bless the sect of its hearth.',
+  },
+
+  // ── Legendary — The Three Beasts (F) ───────────────────────────────────
+  legendary_f1_storm_tiger: {
+    icon: PROD_SPRITE('p_beast_pact'),
+    effectText: 'Your **Spirit Beast Pact** produces **triple qi/s**. One of the Three Beasts — collect all three for Trinity Convergence (+500% global qi/s).',
+    exampleText: 'Own <strong>10 beast pacts</strong> → combined qi/s is <strong>tripled</strong>. With the Dragon and Phoenix sparks also active, Trinity Convergence adds <strong>+500% global qi/s</strong> on top of every producer.',
+    loreText: 'The tiger paces, ears flat. It will not roar until a dragon dreams its name and a phoenix sings it back. Until then, the storm in its fur only mutters.',
+  },
+  legendary_f2_pearl_dragon: {
+    icon: PROD_SPRITE('p_dragon'),
+    effectText: 'Your **Slumbering Spirit Dragon** produces **triple qi/s**. One of the Three Beasts — collect all three for Trinity Convergence (+500% global qi/s).',
+    exampleText: 'Own <strong>1 dragon</strong> → its qi/s is <strong>tripled</strong>. With the Tiger and Phoenix sparks also active, Trinity Convergence adds <strong>+500% global qi/s</strong> on top of every producer.',
+    loreText: 'The pearl warms when the dragon hears two distant sounds — a tiger pacing, a phoenix folding its rainbow wings. Only then does the dream finish.',
+  },
+  legendary_f3_rainbow_phoenix: {
+    icon: PROD_SPRITE('p_phoenix'),
+    effectText: 'Your **Sovereign Phoenix** produces **triple qi/s**. One of the Three Beasts — collect all three for Trinity Convergence (+500% global qi/s).',
+    exampleText: 'Own <strong>1 phoenix</strong> → its qi/s is <strong>tripled</strong>. With the Tiger and Dragon sparks also active, Trinity Convergence adds <strong>+500% global qi/s</strong> on top of every producer.',
+    loreText: 'The Fenghuang\'s cry has three notes. Alone it sings one — somewhere a tiger paces, somewhere a dragon dreams. When all three sound, the heavens bend down.',
+  },
+};
+
 // ── Rarity config ───────────────────────────────────────────────────────────
 
 export const SPARK_RARITY = {
