@@ -18,6 +18,7 @@ import { pickRandomArtefact } from '../data/artefactDrops';
 import { QI_SPARKS, QI_SPARK_BY_ID } from '../data/qiSparks';
 import { runDropDistributionTest } from './dropDistributionTest';
 import { runPlaythroughSim, runCombinedProposalSim } from './playthroughSim';
+import { clearAllTutorialsSeen } from '../systems/tutorialSeen';
 
 const ITEMS_BY_ID = { ...ALL_MATERIALS, ...PILLS_BY_ID };
 
@@ -71,6 +72,17 @@ export function initDebug(hooksRef) {
       } else {
         console.log(`[debug] Qi rate ×${mult} (call gd.setQiRate(1) to reset)`);
       }
+    },
+
+    /**
+     * Wipe the Tier-A tutorial "seen" set so the onboarding cards fire
+     * again on the next eligible trigger. Useful for re-testing the
+     * first-run flow without a full save wipe. Page reload required for
+     * launch-time cards (Welcome) to fire again.
+     */
+    resetTutorials() {
+      clearAllTutorialsSeen();
+      console.log('[debug] Tutorial seen-set cleared. Reload the page to re-fire launch-time cards.');
     },
 
     /**

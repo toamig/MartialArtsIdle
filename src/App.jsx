@@ -58,6 +58,8 @@ import { FEATURES } from './data/featureFlags';
 import { sparksToGrantOnEvolution } from './data/crystalMechanicGrants';
 import { QI_SPARK_BY_ID, QI_SPARKS } from './data/qiSparks';
 import { PRODUCERS_BY_ID } from './data/producers';
+import { fireTutorialOnce } from './systems/fireTutorial';
+import { TUTORIAL_IDS } from './data/tutorialCards';
 
 // Which screens are hidden by which build-time feature flag. Routes to a
 // blocked screen are silently rewritten to `home` by navigate() below, so
@@ -471,6 +473,81 @@ function AppInner() {
       cultivation.sparkCrystalClickCapMinRef.current = qiSparks.crystalClickCapMinRef.current;
     }
   }, [qiSparks.activeSparks]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Tier-A jade tutorial cards (2026-05-21) ─────────────────────────────
+  // Five of the eight cards fire from App-level state (welcome, hold-to-
+  // focus, first layer breakthrough, first spark offer, first Saint Realm).
+  // The other three (Producers tab opened, first producer bought, first
+  // major-realm gate appearing) live next to their trigger events in
+  // CultivationScreen + HomeScreen so we read fresh state without
+  // ferrying it back up through props. Each effect uses
+  // `fireTutorialOnce` — idempotent, marks-then-enqueues, no-op if
+  // already seen this account.
+
+  // #1 Welcome — first ever app launch with no save state. Defer one
+  // animation frame so Home renders the world before the modal slides in.
+  useEffect(() => {
+    const hasSave = !!localStorage.getItem('mai_save');
+    if (hasSave) return undefined;
+    const id = window.setTimeout(() => {
+      fireTutorialOnce(TUTORIAL_IDS.WELCOME, enqueue);
+    }, 1500);
+    return () => window.clearTimeout(id);
+  }, [enqueue]);
+
+  // #2 Hold to Focus — player has accumulated some idle qi but never held
+  // Focus. We poll cultivation.qiRef and boostStartTimeRef every 2 seconds;
+  // when qi ≥ 15 AND boost has never started AND we're still in realm 0,
+  // fire the card. Interval clears itself once the card fires.
+  useEffect(() => {
+    if (cultivation.realmIndex > 0) return undefined;
+    const tick = () => {
+      const qi    = cultivation.qiRef?.current ?? 0;
+      const ever  = (cultivation.boostStartTimeRef?.current ?? 0) > 0;
+      if (qi >= 15 && !ever) {
+        if (fireTutorialOnce(TUTORIAL_IDS.HOLD_TO_FOCUS, enqueue)) {
+          window.clearInterval(intervalId);
+        }
+      }
+    };
+    const intervalId = window.setInterval(tick, 2000);
+    return () => window.clearInterval(intervalId);
+  }, [enqueue, cultivation.realmIndex, cultivation.qiRef, cultivation.boostStartTimeRef]);
+
+  // #5 First layer breakthrough — track previous realmIndex; on first
+  // increment, fire once. Skip if the player loaded a save mid-progression
+  // (they've already broken through; no point teaching the basics).
+  const prevRealmForTutorialRef = useRef(cultivation.realmIndex);
+  useEffect(() => {
+    const prev = prevRealmForTutorialRef.current;
+    const curr = cultivation.realmIndex;
+    prevRealmForTutorialRef.current = curr;
+    if (curr > prev && prev === 0) {
+      // Only fire from realm 0 → 1 transition so a returning player past
+      // that point doesn't get the "first breakthrough" copy.
+      fireTutorialOnce(TUTORIAL_IDS.FIRST_LAYER_BT, enqueue);
+    }
+  }, [cultivation.realmIndex, enqueue]);
+
+  // #7 First spark offer — fires the first time pendingOffer becomes
+  // non-null after launch. Uses `_currentlyShowing` so a stale offer
+  // restored from a previous session also counts (the player still needs
+  // the explanation if it's their first time seeing one).
+  useEffect(() => {
+    if (qiSparks.pendingOffer) {
+      fireTutorialOnce(TUTORIAL_IDS.FIRST_SPARK_OFFER, enqueue);
+    }
+  }, [qiSparks.pendingOffer, enqueue]);
+
+  // #8 First Saint Realm — reincarnation gate. realmIndex 24 is the Saint
+  // entry per the game data; fire the card the moment the player crosses
+  // it for the first time. Guard with > 0 prev so a save-load straight
+  // into Saint doesn't fire on every render.
+  useEffect(() => {
+    if (cultivation.realmIndex >= 24) {
+      fireTutorialOnce(TUTORIAL_IDS.FIRST_SAINT, enqueue);
+    }
+  }, [cultivation.realmIndex, enqueue]);
 
   // Consecutive Focus rung escalation — toggle body classes that CSS keys
   // off to drive per-rung aura/glow/tint + a brief upward "pop" burst.

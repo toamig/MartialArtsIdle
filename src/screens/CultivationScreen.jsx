@@ -5,6 +5,9 @@ import ProducerDetailModal from '../components/ProducerDetailModal';
 import UpgradeCard, { OwnedUpgradeChip } from '../components/UpgradeCard';
 import SparksTab from '../components/SparksTab';
 import { fmt, fmtRate } from '../utils/format';
+import { useEventQueue } from '../contexts/EventQueueContext';
+import { fireTutorialOnce } from '../systems/fireTutorial';
+import { TUTORIAL_IDS } from '../data/tutorialCards';
 
 /**
  * The qi-investment shop. Cookie-Clicker model — producers are stackable
@@ -41,6 +44,32 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
     }, 100);
     return () => clearInterval(id);
   }, [cultivation.qiRef, cultivation.rateRef]);
+
+  // ── Tier-A tutorial cards (2026-05-21) ─────────────────────────────────
+  // Two cards fire from this screen: "Producers" tab introduction (when
+  // the player lands on the producers tab for the first time) and "first
+  // producer purchase" (after their first successful buy). Both go via
+  // the shared event queue + fireTutorialOnce idempotency.
+  const { enqueue } = useEventQueue();
+  // #3 Producers tab — fire shortly after we render the producers tab the
+  // first time. Small delay so the tab transition lands first.
+  useEffect(() => {
+    if (tab !== 'producers') return undefined;
+    const id = window.setTimeout(() => {
+      fireTutorialOnce(TUTORIAL_IDS.PRODUCERS_TAB, enqueue);
+    }, 400);
+    return () => window.clearTimeout(id);
+  }, [tab, enqueue]);
+  // #4 First producer purchase — derive from the owned map. If the sum of
+  // all owned counts is ≥ 1 the player has bought at least one producer
+  // (this run or any previous). Fires once and short-circuits forever via
+  // the seen-set.
+  useEffect(() => {
+    const total = Object.values(producers.owned ?? {}).reduce((s, n) => s + (n || 0), 0);
+    if (total >= 1) {
+      fireTutorialOnce(TUTORIAL_IDS.FIRST_PRODUCER, enqueue);
+    }
+  }, [producers.owned, enqueue]);
 
   // Auto-promote the default buy chip to ×10 once the player owns 10+ of any
   // producer they can currently afford — kills thumb-tendinitis at scale.

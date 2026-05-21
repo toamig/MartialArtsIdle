@@ -14,6 +14,8 @@ import { useEventQueue } from '../contexts/EventQueueContext';
 import { QI_SPARK_BY_ID } from '../data/qiSparks';
 import { sparksToGrantOnEvolution } from '../data/crystalMechanicGrants';
 import TutorialModal from '../components/TutorialModal';
+import { fireTutorialOnce } from '../systems/fireTutorial';
+import { TUTORIAL_IDS } from '../data/tutorialCards';
 import WORLDS from '../data/worlds';
 import AudioManager from '../audio/AudioManager';
 const BASE = import.meta.env.BASE_URL;
@@ -2155,6 +2157,15 @@ function HomeScreen({
     window.addEventListener('mai:crystal-evolve', handler);
     return () => window.removeEventListener('mai:crystal-evolve', handler);
   }, [handleCrystalEvolve]);
+
+  // #6 First major-realm gate (Tier-A tutorial). The BREAKTHROUGH button
+  // appears when cultivation.pendingMajorBreakthrough flips true — that's
+  // the qi/s gate moment we want to explain. Fires once per account.
+  useEffect(() => {
+    if (cultivation.pendingMajorBreakthrough) {
+      fireTutorialOnce(TUTORIAL_IDS.FIRST_MAJOR_GATE, enqueue);
+    }
+  }, [cultivation.pendingMajorBreakthrough, enqueue]);
 
   // Debug bridge — gd.charEvolve / window.dispatchEvent('mai:char-evolve')
   // lets the major-breakthrough cinematic be demoed without grinding qi.

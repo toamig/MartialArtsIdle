@@ -101,6 +101,12 @@ export function wipeSave() {
   // and restores these separately when they belong to the new life.
   localStorage.removeItem('mai_banked_rerolls');
   localStorage.removeItem('mai_rebirth_cult_buff_until');
+  // Tier-A tutorial card "seen" set (2026-05-21). Wipe-save = factory
+  // reset = the player should re-experience the onboarding cards from
+  // scratch. Future cloud-login pass will move this to the account tier
+  // alongside Blood Lotus + cosmetics so a wipe-save doesn't lose
+  // tutorial completion for legitimate players who reset on purpose.
+  localStorage.removeItem('mai_tutorial_seen');
   // mai_blood_lotus is intentionally NOT wiped — paid currency survives a save reset
   // mai_lang is intentionally NOT wiped — language preference survives a save reset
   // mai_save_version is intentionally NOT wiped — version marker survives
