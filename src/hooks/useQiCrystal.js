@@ -37,14 +37,19 @@ export const MAX_CRYSTAL_LEVEL = 100;
 
 /**
  * Visual tier thresholds — the level at which the crystal evolves to a new
- * sprite. Re-distributed for the L100 cap (Dial-5):
- *   T1 = L1, T2 = L10, T3 = L25, T4 = L50, T5 = L75, T6 = L100.
+ * sprite. 10-tier distribution (2026-05-21 Dial-6): evolutions every 10
+ * levels, with the final T10 evolution stretched to L100 so the last step
+ * feels like a real "you maxed the crystal" milestone.
+ *
+ *   T1 = L1,  T2 = L10, T3 = L20, T4 = L30, T5 = L40,
+ *   T6 = L50, T7 = L60, T8 = L70, T9 = L80, T10 = L100.
+ *
  * T2-T5 grant mechanic-tier sparks (see crystalMechanicGrants.js).
- * T6 is the "max crystal" visual milestone — no spark grant, just glow.
+ * T6-T9 are purely visual evolutions (no spark grant), T10 = max.
  * Kept in sync with the copies in HomeScreen.jsx and CrystalFeedModal.jsx.
  */
-const CRYSTAL_TIER_THRESHOLDS = [100, 75, 50, 25, 10, 1];
-const CRYSTAL_TIER_VALUES     = [  6,  5,  4,  3,  2, 1];
+const CRYSTAL_TIER_THRESHOLDS = [100, 80, 70, 60, 50, 40, 30, 20, 10, 1];
+const CRYSTAL_TIER_VALUES     = [ 10,  9,  8,  7,  6,  5,  4,  3,  2, 1];
 
 /** Visual tier for a given crystal level. Level 0 returns 0. */
 export function getCrystalTier(level) {
@@ -75,30 +80,36 @@ export function getCrystalQiMult(level) {
 /**
  * Refined QI required to reach the given level.
  *
- * 2026-05-21 Dial-5.1: base 100 → 30. Playtest feedback was that early
- * crystal levels felt too costly relative to producer-spend marginal value
- * (player was at L7 around 20-25 min mark — first mechanic still gated).
- * Lowering base 70% makes the L1-L15 stretch feel like a brisk tutorial
- * rather than a slog, while keeping L100 (max) reachable around Saint
- * Early/Middle (cumulative ~765M qi).
+ * 2026-05-21 Dial-6: base 30 → 200 (~6.7× harder cumulative). Paired with
+ * the 10-tier evolution redistribution above so each evolution feels like
+ * a real milestone, AND L100 (max) is no longer reachable on the first run
+ * — it now requires multiple reincarnations to crystallise fully. The
+ * cube curve is unchanged, so early levels still feel like a brisk tutorial,
+ * but the cumulative climb past mid-game lengthens significantly.
  *
- * Sample progression:
- *   L1   = 30 qi         (instant)
- *   L5   = 3.75K qi      (first 5 min, ~QT Early)
- *   L10  = 30K qi        (Crystal Reservoir unlock — ~first major BT)
- *   L25  = 469K qi       (Consecutive Focus — ~True Element)
- *   L50  = 3.75M qi      (Divine Qi — ~Separation/IA)
- *   L75  = 12.7M qi      (Tracing Meridians — ~Immortal Ascension)
- *   L100 = 30M qi        (Max — ~Saint Early/Middle)
+ * Sample progression (each tier evolution at L10/20/30/.../80/100):
+ *   L1   = 200 qi        (instant)
+ *   L5   = 25K qi        (first few min)
+ *   L10  = 200K qi       (T2 — Crystal Reservoir unlock)
+ *   L20  = 1.6M qi       (T3 — Consecutive Focus)
+ *   L30  = 5.4M qi       (T4 — Divine Qi)
+ *   L40  = 12.8M qi      (T5 — Pattern Click)
+ *   L50  = 25M qi        (T6 — purely visual)
+ *   L60  = 43M qi        (T7)
+ *   L70  = 69M qi        (T8)
+ *   L80  = 102M qi       (T9)
+ *   L100 = 200M qi       (T10 + Max — multi-run goal)
  *
- * Cumulative L0→L100 ≈ 765M qi (~Saint Early realm cost 650M).
+ * Cumulative L0→L100 ≈ 5.1B qi — Saint Late realm cost is ~3B, so this is
+ * a multi-rebirth grind. Players should see T8/T9 in their first long run
+ * and crystallise to T10 across 2+ reincarnations.
  *
  * Targets above MAX_CRYSTAL_LEVEL still compute a cost (used by UI to
  * show "max reached") — actual level-up logic clamps the cap.
  */
 export function getRequiredRefinedQi(targetLevel) {
   if (targetLevel < 1) return 0;
-  const raw = 30 * Math.pow(targetLevel, 3.00);
+  const raw = 200 * Math.pow(targetLevel, 3.00);
   // Round to a clean step that scales with magnitude (keeps ~2 significant digits)
   const step = Math.pow(10, Math.max(1, Math.floor(Math.log10(raw)) - 1));
   return Math.round(raw / step) * step;

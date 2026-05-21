@@ -163,14 +163,17 @@ function AppInner() {
   const crystal         = useQiCrystal({ getQuantity: inventory.getQuantity, removeItem: inventory.removeItem });
   // Mirror current crystal tier into a body class so the qi-VFX colour
   // bundle (--qi-aura-*, --qi-text-*, --qi-bar-*) cascades from there.
-  // App.css `body.crystal-tier-{1..6}` blocks set the palette; aura,
+  // App.css `body.crystal-tier-{1..10}` blocks set the palette; aura,
   // floaters, and Qi-bar fill all read from those vars.
   //
-  // Tier mapping mirrors useQiCrystal.js (2026-05-21 Dial-5, cap L100):
-  //   T1 = L1, T2 = L10, T3 = L25, T4 = L50, T5 = L75, T6 = L100.
+  // Tier mapping mirrors useQiCrystal.js (2026-05-21 Dial-6, 10 tiers,
+  // evolutions every 10 levels, T10 at L100):
+  //   T1=L1, T2=L10, T3=L20, T4=L30, T5=L40,
+  //   T6=L50, T7=L60, T8=L70, T9=L80, T10=L100.
   useEffect(() => {
     const TIERS = [
-      [100, 6], [75, 5], [50, 4], [25, 3], [10, 2], [1, 1],
+      [100, 10], [80, 9], [70, 8], [60, 7], [50, 6],
+      [40, 5],   [30, 4], [20, 3], [10, 2], [1, 1],
     ];
     const level = crystal?.level ?? 0;
     let tier = 1;

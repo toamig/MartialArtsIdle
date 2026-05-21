@@ -6,9 +6,10 @@ import { fmt as fmtQi } from '../utils/format';
 
 const BASE = import.meta.env.BASE_URL;
 
-// 2026-05-21 Dial-5: capped at L100. Mirrors useQiCrystal.js + HomeScreen.jsx.
-const TIER_THRESHOLDS = [100, 75, 50, 25, 10, 1];
-const TIER_VALUES     = [  6,  5,  4,  3,  2, 1];
+// 2026-05-21 Dial-6: 10 visual tiers, evolutions every 10 levels (T10 at L100).
+// Mirrors useQiCrystal.js + HomeScreen.jsx — keep in sync.
+const TIER_THRESHOLDS = [100, 80, 70, 60, 50, 40, 30, 20, 10, 1];
+const TIER_VALUES     = [ 10,  9,  8,  7,  6,  5,  4,  3,  2, 1];
 const RARITY_ORDER    = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
 
 function getCrystalTier(level) {
