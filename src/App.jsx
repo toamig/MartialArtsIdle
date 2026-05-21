@@ -35,7 +35,7 @@ import useTechniques  from './hooks/useTechniques';
 import useCombat      from './hooks/useCombat';
 import useArtefacts   from './hooks/useArtefacts';
 import usePills       from './hooks/usePills';
-import useQiCrystal, { getCrystalTier as getQiCrystalTier } from './hooks/useQiCrystal';
+import useQiCrystal  from './hooks/useQiCrystal';
 import useProducers  from './hooks/useProducers';
 import useUpgrades   from './hooks/useUpgrades';
 import useAutoFarm    from './hooks/useAutoFarm';
