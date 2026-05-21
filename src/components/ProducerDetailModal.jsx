@@ -3,19 +3,23 @@ import { getSpriteTier, SPRITE_TIERS } from '../data/producers';
 
 const BASE = import.meta.env.BASE_URL;
 
-/** Render the leader sprite at large size for the modal header. */
-function HeroSprite({ sprite }) {
+/** Render the leader sprite at large size for the modal header. When
+ *  `silhouette` is true, the sprite renders as a hard-edged black cutout
+ *  via the inline SVG filter — preserves the "what's coming next?" tease
+ *  even when the player taps a locked producer to read its unlock info. */
+function HeroSprite({ sprite, silhouette }) {
+  const cls = `pdm-hero-sprite${silhouette ? ' pdm-hero-silhouette' : ''}`;
   if (typeof sprite === 'string' && sprite.startsWith('/')) {
     return (
       <img
         src={`${BASE}${sprite.replace(/^\//, '')}`}
         alt=""
-        className="pdm-hero-sprite"
+        className={cls}
         draggable={false}
       />
     );
   }
-  return <span className="pdm-hero-sprite pdm-hero-emoji" aria-hidden="true">{sprite}</span>;
+  return <span className={`${cls} pdm-hero-emoji`} aria-hidden="true">{sprite}</span>;
 }
 
 /**
@@ -59,7 +63,7 @@ export default function ProducerDetailModal({
         <button className="journey-close" onClick={onClose} aria-label="Close">✕</button>
 
         <div className="pdm-hero">
-          <HeroSprite sprite={sprite} />
+          <HeroSprite sprite={sprite} silhouette={!unlocked} />
           {tier && (
             <span className={`pdm-tier-badge pdm-badge-${tier.name}`}>
               {tier.label}
@@ -67,7 +71,12 @@ export default function ProducerDetailModal({
           )}
         </div>
 
-        <div className="pdm-name">{producer.name}</div>
+        {/* Spoiler-free name for locked producers — the silhouette + "???"
+            keeps the Cookie-Clicker mystery; the unlock-realm hint below
+            tells the player when to expect it without revealing what. */}
+        <div className={`pdm-name${!unlocked ? ' pdm-name-locked' : ''}`}>
+          {unlocked ? producer.name : '???'}
+        </div>
 
         {!unlocked ? (
           <div className="pdm-locked">
