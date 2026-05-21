@@ -1814,12 +1814,20 @@ function HomeScreen({
 
   // Sprite scales with the rendered background height so the character stays
   // proportional to the art across every screen shape.
-  const [spriteScale, setSpriteScale] = useState(1);
+  // Lazy init so the FIRST render already paints the fighter-stage at its
+  // final size. Without this the layer would render at 128px on mount, then
+  // immediately re-render at the viewport-derived size — and any qi-flow
+  // particles spawned in that first frame would aim at the wrong centre
+  // (looked like orbs drifting toward the top-left for ~1.5s after every
+  // navigation back to Home).
+  const computeSpriteScale = () => {
+    if (typeof window === 'undefined') return 1;
+    const s = Math.max(window.innerWidth / HOME_BG_W, window.innerHeight / HOME_BG_H);
+    return (HOME_BG_H * s * 0.21) / 128;
+  };
+  const [spriteScale, setSpriteScale] = useState(computeSpriteScale);
   useEffect(() => {
-    const update = () => {
-      const scale = Math.max(window.innerWidth / HOME_BG_W, window.innerHeight / HOME_BG_H);
-      setSpriteScale((HOME_BG_H * scale * 0.21) / 128);
-    };
+    const update = () => setSpriteScale(computeSpriteScale());
     update();
     window.addEventListener('resize', update);
     window.addEventListener('orientationchange', update);
