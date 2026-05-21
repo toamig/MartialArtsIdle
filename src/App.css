@@ -15732,7 +15732,10 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
    The drop-shadow after the SVG filter ADDs a soft dark glow around the
    cutout so it reads against the lane background — without it the pure
    black silhouette can disappear into the dark navy bg. */
-.pl-leader-silhouette {
+/* Higher specificity (.pl-locked + .pl-leader-silhouette) so this wins
+   over the legacy `.pl-locked .pl-leader-sprite { filter: grayscale(1) }`
+   rule further down the file. */
+.pl-locked .pl-leader-silhouette {
   filter:
     url(#mai-silhouette)
     drop-shadow(0 0 5px rgba(0, 0, 0, 0.7));
@@ -15798,9 +15801,14 @@ img.pl-leader-sprite {
 }
 .pl-locked .pl-leader {
   background: rgba(30, 30, 30, 0.4);
-  opacity: 0.6;
+  /* Full opacity so the silhouette renders at true black — the dimming
+     used to live here, but the silhouette IS the tease and needs to pop. */
+  opacity: 1;
 }
-.pl-locked .pl-leader-sprite {
+/* Legacy locked grayscale — kept for any non-silhouette leader sprite the
+   locked state might render (defensive); the silhouette rule below wins on
+   any element with both classes via higher specificity. */
+.pl-locked .pl-leader-sprite:not(.pl-leader-silhouette) {
   filter: grayscale(1);
 }
 
