@@ -188,6 +188,7 @@ function QiSparkChoiceModal({
   pityCounter = 0,
   pityThreshold = 17,
   legendaryChance = 0.03,
+  legendaryPoolInfo = null,
 }) {
   // Auto-skip after timeout — captures onSkip via ref so the timer doesn't
   // reset on every render of the parent.
@@ -245,19 +246,56 @@ function QiSparkChoiceModal({
           })}
         </div>
 
-        <div className={`qs-footer-meta${pityImminent ? ' qs-footer-meta-pity-soon' : ''}${pityGuaranteed ? ' qs-footer-meta-pity-now' : ''}`}>
-          <span className="qsfm-chance">
-            ✦ <strong>{chancePct}%</strong> legendary chance per card
-          </span>
-          <span className="qsfm-sep">·</span>
-          <span className="qsfm-pity">
-            {pityGuaranteed
-              ? <>⚡ <strong>Next breakthrough: guaranteed legendary</strong></>
-              : pityImminent
-                ? <>⚡ Legendary guaranteed in <strong>{pityRemaining}</strong> {pityRemaining === 1 ? 'realm' : 'realms'}</>
-                : <>Pity in <strong>{pityRemaining}</strong> realms</>}
-          </span>
-        </div>
+        {(() => {
+          // Context-aware footer — protects players from spending Lotus
+          // when no legendaries are reachable, AND shows the pool growing
+          // as new producers unlock.
+          const eligible = legendaryPoolInfo?.eligibleCount ?? 0;
+          const total    = legendaryPoolInfo?.totalCount    ?? 0;
+          const next     = legendaryPoolInfo?.nextUnlock;
+
+          if (eligible === 0 && next) {
+            return (
+              <div className="qs-footer-meta qs-footer-meta-locked">
+                <span>🔒 Legendary sparks unlock with <strong>{next.producerName}</strong></span>
+              </div>
+            );
+          }
+          if (eligible === 0) {
+            // Fallback when legendaryPoolInfo isn't threaded (e.g. tests) —
+            // fall back to the original chance + pity readout.
+            return (
+              <div className={`qs-footer-meta${pityImminent ? ' qs-footer-meta-pity-soon' : ''}${pityGuaranteed ? ' qs-footer-meta-pity-now' : ''}`}>
+                <span className="qsfm-chance">✦ <strong>{chancePct}%</strong> legendary chance per card</span>
+                <span className="qsfm-sep">·</span>
+                <span className="qsfm-pity">
+                  {pityGuaranteed
+                    ? <>⚡ <strong>Next breakthrough: guaranteed legendary</strong></>
+                    : pityImminent
+                      ? <>⚡ Legendary guaranteed in <strong>{pityRemaining}</strong> {pityRemaining === 1 ? 'realm' : 'realms'}</>
+                      : <>Pity in <strong>{pityRemaining}</strong> realms</>}
+                </span>
+              </div>
+            );
+          }
+          // 1+ eligible — show chance, pool progress, and pity together.
+          const poolText = (total > 0 && eligible < total)
+            ? `${eligible} of ${total} unlocked`
+            : 'full pool';
+          return (
+            <div className={`qs-footer-meta${pityImminent ? ' qs-footer-meta-pity-soon' : ''}${pityGuaranteed ? ' qs-footer-meta-pity-now' : ''}`}>
+              <span className="qsfm-chance">✦ <strong>{chancePct}%</strong> legendary · <span className="qsfm-pool">{poolText}</span></span>
+              <span className="qsfm-sep">·</span>
+              <span className="qsfm-pity">
+                {pityGuaranteed
+                  ? <>⚡ <strong>Next breakthrough: guaranteed legendary</strong></>
+                  : pityImminent
+                    ? <>⚡ Pity in <strong>{pityRemaining}</strong> {pityRemaining === 1 ? 'realm' : 'realms'}</>
+                    : <>Pity in <strong>{pityRemaining}</strong> realms</>}
+              </span>
+            </div>
+          );
+        })()}
 
         {detailIdx !== null && (() => {
           const sparkId      = offer.cards[detailIdx];

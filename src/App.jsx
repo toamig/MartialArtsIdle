@@ -56,7 +56,8 @@ import useFeatureFlags from './hooks/useFeatureFlags';
 import useAchievements from './hooks/useAchievements';
 import { FEATURES } from './data/featureFlags';
 import { sparksToGrantOnEvolution } from './data/crystalMechanicGrants';
-import { QI_SPARK_BY_ID } from './data/qiSparks';
+import { QI_SPARK_BY_ID, QI_SPARKS } from './data/qiSparks';
+import { PRODUCERS_BY_ID } from './data/producers';
 
 // Which screens are hidden by which build-time feature flag. Routes to a
 // blocked screen are silently rewritten to `home` by navigate() below, so
@@ -180,6 +181,47 @@ function AppInner() {
     [producers, cultivation.realmIndex],
   );
   const qiSparks        = useQiSparks({ cultivation, isFeatureUnlocked, producerUnlocked });
+
+  // Legendary-pool transparency for the choice modal: tells the player how
+  // much of the legendary pool is currently in reach AND what to chase next
+  // when the pool is partial. Recomputes on realm changes so progress is
+  // reflected the instant a producer unlocks.
+  const legendaryPoolInfo = useMemo(() => {
+    const allLegendary = QI_SPARKS.filter(c => c.rarity === 'legendary');
+    const total        = allLegendary.length;
+    const eligible     = allLegendary.filter(c =>
+      (c.requiresProducers ?? []).every(pid => producers.isUnlocked(pid, cultivation.realmIndex))
+    );
+    let nextUnlock = null;
+    if (eligible.length < total) {
+      // For each ineligible legendary, find the BLOCKER producer with the
+      // highest unlock-realm requirement (that's what gates it). Then find
+      // the legendary whose blocker comes up SOONEST — that's the next
+      // unlock the player will see when they progress.
+      let bestRealm = Infinity;
+      let bestProducer = null;
+      for (const card of allLegendary) {
+        if ((card.requiresProducers ?? []).every(pid => producers.isUnlocked(pid, cultivation.realmIndex))) continue;
+        let highestRealm = -1;
+        let highestProducer = null;
+        for (const pid of card.requiresProducers ?? []) {
+          if (!producers.isUnlocked(pid, cultivation.realmIndex)) {
+            const p = PRODUCERS_BY_ID[pid];
+            const r = p?.unlock?.minRealmIndex ?? 0;
+            if (r > highestRealm) { highestRealm = r; highestProducer = p; }
+          }
+        }
+        if (highestRealm >= 0 && highestRealm < bestRealm) {
+          bestRealm = highestRealm;
+          bestProducer = highestProducer;
+        }
+      }
+      if (bestProducer) {
+        nextUnlock = { producerName: bestProducer.name, realmIndex: bestRealm };
+      }
+    }
+    return { eligibleCount: eligible.length, totalCount: total, nextUnlock };
+  }, [producers, cultivation.realmIndex]);
 
   // Record every new realm reached so karma awards are first-time-only.
   useEffect(() => {
@@ -1163,6 +1205,7 @@ function AppInner() {
           pityCounter={qiSparks.pityCounter}
           pityThreshold={qiSparks.pityThreshold}
           legendaryChance={qiSparks.legendaryChance}
+          legendaryPoolInfo={legendaryPoolInfo}
         />
       )}
       {activeModal === 'settings'     && <SettingsScreen onClose={() => setActiveModal(null)} />}

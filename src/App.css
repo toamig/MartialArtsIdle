@@ -1924,6 +1924,27 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   text-shadow: 0 0 8px rgba(255, 215, 100, 0.95);
 }
 
+/* Locked state — shown when 0 legendaries are eligible at the player's
+   current realm. No chance %, no pity countdown — just a hint about which
+   producer the player should chase to unlock the first legendary. */
+.qs-footer-meta-locked {
+  background: rgba(40, 40, 50, 0.5);
+  border-color: rgba(180, 180, 200, 0.18);
+  color: rgba(220, 220, 230, 0.75);
+}
+.qs-footer-meta-locked strong {
+  color: rgba(167, 139, 250, 0.95);
+  font-weight: 700;
+}
+
+/* Pool-progress tag inside the footer (e.g. "4 of 15 unlocked") — small
+   de-emphasised text so it doesn't compete with the chance %. */
+.qs-footer-meta .qsfm-pool {
+  font-weight: 500;
+  color: rgba(230, 235, 240, 0.7);
+  font-size: 0.92em;
+}
+
 @media (max-width: 480px) {
   .qs-footer-meta {
     flex-wrap: wrap;
