@@ -16337,6 +16337,67 @@ button.pl-leader.pl-leader-clickable:focus-visible {
   50%      { transform: scale(1.015); }
 }
 
+/* ── Qi flow VFX — orbs drift from a ring around the cultivator inward ───
+   Layer overlays the fighter-stage. Sized inset:0 (matches the 128×scale
+   stage) but particles spawn at radii > stage half-width — overflow:visible
+   lets them render outside the layer's box. Sits BEHIND the cultivator
+   sprite via document order (earlier sibling + low z-index).
+   Particle motion + fade is CSS-only; see spawnQiFlowOrb in HomeScreen.jsx.
+
+   Per-orb CSS vars (set inline by the spawner):
+     --qf-dx, --qf-dy        delta (px) from spawn to absorption target
+     --qf-life               animation duration in ms (matches dist/speed)
+     --qf-scale-start, --qf-scale-end
+   Particles also inherit --spark-hue / --spark-sat from body.crystal-tier-N
+   so they take the active crystal's colour family automatically. */
+.home-cultivator-qi-flow-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 0;  /* below the cultivator sprite (no explicit z) and aura (z:1) */
+}
+
+.home-qi-flow-p {
+  position: absolute;
+  pointer-events: none;
+  image-rendering: pixelated;
+  filter: hue-rotate(var(--spark-hue, 0deg)) saturate(var(--spark-sat, 1));
+  animation: home-qi-flow-pop var(--qf-life, 2000ms) ease-in forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes home-qi-flow-pop {
+  0% {
+    transform: translate(0, 0) translate(-50%, -50%) scale(var(--qf-scale-start, 0.4));
+    opacity: 0;
+  }
+  12% {
+    transform:
+      translate(calc(var(--qf-dx) * 0.12), calc(var(--qf-dy) * 0.12))
+      translate(-50%, -50%)
+      scale(calc(var(--qf-scale-start, 0.4) * 1.15));
+    opacity: 1;
+  }
+  75% {
+    transform:
+      translate(calc(var(--qf-dx) * 0.75), calc(var(--qf-dy) * 0.75))
+      translate(-50%, -50%)
+      scale(var(--qf-scale-end, 0.78));
+    opacity: 1;
+  }
+  100% {
+    transform:
+      translate(var(--qf-dx), var(--qf-dy))
+      translate(-50%, -50%)
+      scale(var(--qf-scale-end, 0.78));
+    opacity: 0;
+  }
+}
+
+/* Respect the vfx-disabled pref. */
+.vfx-disabled .home-cultivator-qi-flow-layer { display: none; }
+
 /* Heavenly aura — 120% size so the flames extend past the cultivator's
    silhouette, anchored to center. Pulses opacity gently for an alive feel
    on top of the 4-frame loop. */

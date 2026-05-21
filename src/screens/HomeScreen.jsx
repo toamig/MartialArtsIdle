@@ -683,6 +683,71 @@ function spawnCrystalSpark(layer, intensity) {
   layer.appendChild(img);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Qi-flow VFX — orbs drift from a ring around the cultivator into the centre.
+//
+// Density + inflow speed scale with the effective rate multiplier
+//   (rateRef / baseRateRef) — i.e. the live transient boost (focus hold,
+//   consecutive-focus rungs, divine-qi buff, pattern-click buff). At
+//   baseline (eff ≈ 1) it's a calm ambient stream; focus tripling the rate
+//   visibly accelerates the inflow.
+//
+// CSS owns the per-particle motion: an orb is positioned on a ring,
+// CSS animates it inward via translate(--qf-dx, --qf-dy) over a duration
+// matched to dist/speed, with a fade tail in the last 25% so the orb is
+// fully invisible at the moment it hits the cultivator centre (= absorption).
+// No per-particle JS — a single rAF only handles spawn cadence.
+// ─────────────────────────────────────────────────────────────────────────────
+const QI_FLOW_ORB_POOL    = ['orb_small', 'orb_medium', 'orb_bright', 'orb_faint'];
+const QI_FLOW_RING_MIN_PX = 110;
+const QI_FLOW_RING_MAX_PX = 180;
+const QI_FLOW_BASE_RATE   = 1.5;  // particles/sec at effective ×1
+const QI_FLOW_RATE_K      = 3.0;  // sqrt(eff-1) coefficient — sub-linear ramp
+const QI_FLOW_BASE_SPEED  = 60;   // px/s baseline inflow
+const QI_FLOW_SPEED_K     = 24;   // sqrt(eff) coefficient on speed
+
+function spawnQiFlowOrb(layer, eff) {
+  const w = layer.clientWidth;
+  const h = layer.clientHeight;
+  const cx = w / 2;
+  const cy = h / 2;
+
+  const angle = Math.random() * Math.PI * 2;
+  const ringR = QI_FLOW_RING_MIN_PX
+    + Math.random() * (QI_FLOW_RING_MAX_PX - QI_FLOW_RING_MIN_PX);
+  const sx = cx + Math.cos(angle) * ringR;
+  const sy = cy + Math.sin(angle) * ringR;
+  // Small target jitter so paths spread out rather than all converging on
+  // the exact pixel centre.
+  const dx = (cx - sx) + (Math.random() - 0.5) * 24;
+  const dy = (cy - sy) + (Math.random() - 0.5) * 24;
+  const dist = Math.hypot(dx, dy);
+
+  const speed = QI_FLOW_BASE_SPEED + Math.sqrt(eff) * QI_FLOW_SPEED_K;
+  const life  = Math.max(700, Math.round((dist / speed) * 1000));
+
+  const orbKey = QI_FLOW_ORB_POOL[
+    Math.floor(Math.random() * QI_FLOW_ORB_POOL.length)
+  ];
+  const img = document.createElement('img');
+  img.className = 'home-qi-flow-p';
+  img.src = `${BASE}sprites/vfx/qi_particles/qi_${orbKey}.png`;
+  img.alt = '';
+  img.draggable = false;
+  img.style.left = `${sx}px`;
+  img.style.top  = `${sy}px`;
+  img.style.setProperty('--qf-dx',   `${dx}px`);
+  img.style.setProperty('--qf-dy',   `${dy}px`);
+  img.style.setProperty('--qf-life', `${life}ms`);
+  // Per-orb size variation so the inflow reads as a mix of small glints
+  // and larger orbs rather than uniform pops.
+  const sizeVar = 0.65 + Math.random() * 0.35;
+  img.style.setProperty('--qf-scale-start', (0.40 * sizeVar).toFixed(2));
+  img.style.setProperty('--qf-scale-end',   (0.78 * sizeVar).toFixed(2));
+  img.addEventListener('animationend', () => img.remove(), { once: true });
+  layer.appendChild(img);
+}
+
 const CRYSTAL_COLORS = {
   locked: { glowA: 'rgba(80,80,100,0)',    glowB: 'rgba(50,50,70,0)',     textName: '#aaaabb', particles: ['#555566','#444455','#666677','#333344','#777788'] },
   1:      { glowA: 'rgba(136,153,187,0.9)',glowB: 'rgba(100,120,160,0.5)',textName: '#c8d4e4', particles: ['#8899bb','#aabbcc','#99aacc','#778899','#bbccdd'] },
@@ -1792,6 +1857,35 @@ function HomeScreen({
     return () => clearInterval(id);
   }, [passiveRef, gateRef, maxed, ascended, spawnVFX, spriteScale]);
 
+  // ── Qi flow VFX — orbs drift in from a ring around the cultivator ─────
+  // Density + inflow speed scale with the effective transient multiplier
+  // (rateRef / baseRateRef). At baseline ≈ 1 spawn/sec; under focus the
+  // ratio jumps to ~3 and the stream visibly accelerates. CSS owns motion
+  // and fade-on-arrival; this rAF only governs spawn cadence.
+  const qiFlowLayerRef = useRef(null);
+  useEffect(() => {
+    let raf;
+    let lastSpawn = 0;
+    const tick = (now) => {
+      const layer = qiFlowLayerRef.current;
+      if (layer) {
+        const baseRate = cultivation.baseRateRef?.current ?? 0;
+        const rate     = cultivation.rateRef?.current     ?? 0;
+        const eff = baseRate > 0 ? Math.max(1, rate / baseRate) : 1;
+        const spawnRate = QI_FLOW_BASE_RATE
+          + Math.sqrt(Math.max(0, eff - 1)) * QI_FLOW_RATE_K;
+        const interval = 1000 / Math.max(0.1, spawnRate);
+        if (now - lastSpawn > interval) {
+          spawnQiFlowOrb(layer, eff);
+          lastSpawn = now;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [cultivation.rateRef, cultivation.baseRateRef]);
+
   // ── Rewarded ad ─────────────────────────────────────────────────────────
   const onCultivationReward = useCallback(() => {
     activateAdBoost(AD_BOOST_DURATION_MS);
@@ -2257,6 +2351,16 @@ function HomeScreen({
               onPointerCancel={handlePointerUp}
             >
               {vfxLayer}
+              {/* Qi flow — orbs drift from a ring around the cultivator
+                  inward to the centre. Sits BEFORE the cultivator sprite +
+                  aura in JSX so it stacks behind them (later siblings render
+                  on top). Density + inflow speed scale with the effective
+                  transient multiplier — see spawnQiFlowOrb above. */}
+              <div
+                ref={qiFlowLayerRef}
+                className="home-cultivator-qi-flow-layer"
+                aria-hidden="true"
+              />
               {/* Heavenly aura — only rendered when the rewarded-ad boost is
                   active. 4-frame loop at 6 fps. Sits BEHIND the cultivator
                   via z-index; alpha-zero center lets the character show
