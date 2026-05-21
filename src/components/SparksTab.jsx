@@ -257,12 +257,13 @@ function SparkDetailPanel({ spark, ctx, isTrinityActive, onClose }) {
 
 // ── Section wrapper ────────────────────────────────────────────────────────
 
-function Section({ label, count, children }) {
+function Section({ label, count, tone, sublabel, children }) {
   if (!count) return null;
   return (
-    <section className="st-section">
+    <section className={`st-section st-section-${tone}`}>
       <header className="st-section-header">
         <span className="st-section-label">{label}</span>
+        {sublabel && <span className="st-section-sublabel">{sublabel}</span>}
         <span className="st-section-count">{count}</span>
       </header>
       <div className="st-grid">{children}</div>
@@ -349,25 +350,45 @@ export default function SparksTab({ qiSparks, producers, cultivation }) {
         </div>
       )}
 
-      <Section label="Timed buffs" count={groups.timed.length}>
+      <Section
+        label="Active buffs"
+        sublabel="time-limited"
+        count={groups.timed.length}
+        tone="timed"
+      >
         {groups.timed.map(s => (
           <SparkBlock key={s.instanceId} spark={s} ctx={ctx} isTrinityActive={isTrinityActive} onOpen={setOpenSpark} />
         ))}
       </Section>
 
-      <Section label="Legendary" count={groups.legendary.length}>
+      <Section
+        label="Legendary"
+        sublabel="producer synergies"
+        count={groups.legendary.length}
+        tone="legendary"
+      >
         {groups.legendary.map(s => (
           <SparkBlock key={s.instanceId} spark={s} ctx={ctx} isTrinityActive={isTrinityActive} onOpen={setOpenSpark} />
         ))}
       </Section>
 
-      <Section label="Permanent" count={groups.uncommon.length}>
+      <Section
+        label="Permanent"
+        sublabel="lasts this run"
+        count={groups.uncommon.length}
+        tone="uncommon"
+      >
         {groups.uncommon.map(s => (
           <SparkBlock key={s.instanceId} spark={s} ctx={ctx} isTrinityActive={isTrinityActive} onOpen={setOpenSpark} />
         ))}
       </Section>
 
-      <Section label="Mechanics" count={groups.mechanic.length}>
+      <Section
+        label="Mechanics"
+        sublabel="from crystal evolution"
+        count={groups.mechanic.length}
+        tone="mechanic"
+      >
         {groups.mechanic.map(s => (
           <SparkBlock key={s.instanceId} spark={s} ctx={ctx} isTrinityActive={isTrinityActive} onOpen={setOpenSpark} />
         ))}
