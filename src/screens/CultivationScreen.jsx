@@ -160,7 +160,9 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
   //
   // Buyables sort by cost ascending so the cheapest next thing always lives
   // in slot 0 — the player can spam-click the same screen position to buy
-  // in price order without moving the cursor.
+  // in price order without moving the cursor. Locked (unmet prereq) upgrades
+  // ALWAYS sit after every unlocked one, regardless of price — price only
+  // matters when the player can actually buy it.
   const { availableUpgrades, ownedUpgrades } = useMemo(() => {
     const available = [];
     const owned     = [];
@@ -168,9 +170,14 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
       if (upgrades.isOwned(u.id)) owned.push(u);
       else available.push(u);
     }
-    available.sort((a, b) => a.cost - b.cost);
+    available.sort((a, b) => {
+      const aLocked = !upgrades.checkUnlocked(a, upgradeCtx);
+      const bLocked = !upgrades.checkUnlocked(b, upgradeCtx);
+      if (aLocked !== bLocked) return aLocked ? 1 : -1;
+      return a.cost - b.cost;
+    });
     return { availableUpgrades: available, ownedUpgrades: owned };
-  }, [visibleUpgrades, upgrades]);
+  }, [visibleUpgrades, upgrades, upgradeCtx]);
 
   return (
     <div className="cultivation-screen">
