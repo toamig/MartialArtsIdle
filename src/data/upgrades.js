@@ -38,8 +38,16 @@ import PRODUCERS from './producers';
 
 // ── A. Producer doubling (2 per producer) ────────────────────────────────────
 
+// 2026-05-21 Dial-10 producer-double pricing — t1 multiplier cut 250 → 40
+// (~6.25× cheaper across the board). Old ratio was 37× worse than Cookie
+// Clicker's Reinforced Index Finger pattern (cursor base 15, upgrade 100,
+// ratio ~6.67×). Disciple T1 used to demand 63 min of pure self-payback at
+// 10 owned; now ~10 min, matching CC's early-mid upgrade feel.
+// T2 keeps the T1 × 5 ratio (mirrors CC's "Carpal Tunnel Prevention" jump),
+// so the relative shape of the upgrade ladder is preserved — only the
+// absolute prices come down.
 const PRODUCER_DOUBLES = PRODUCERS.flatMap(p => {
-  const t1Cost = Math.ceil(p.startCost * 250);
+  const t1Cost = Math.ceil(p.startCost * 40);
   const t2Cost = Math.ceil(t1Cost * 5);
   return [
     {
