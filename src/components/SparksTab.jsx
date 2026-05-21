@@ -143,6 +143,28 @@ function describeContribution(spark, card, ctx) {
         ? `${phStacks} rebirth${phStacks > 1 ? 's' : ''} → others ×${Math.pow(2, phStacks)}`
         : `Waiting on next major realm`;
     }
+    // ── Dial-9 additions ────────────────────────────────────────────
+    case 'producer_flat_per_unit':
+      return `+${eff.value} per-unit qi/s on every producer (timed)`;
+    case 'qi_mult_per_focus_second_per_stack': {
+      // Read the run-level focus-seconds counter mirrored to localStorage
+      // by useQiSparks (same key). Falls back to 0 cleanly.
+      let focusSeconds = 0;
+      try {
+        const v = Number(JSON.parse(localStorage.getItem('mai_qi_sparks_focus_seconds_run')));
+        if (Number.isFinite(v)) focusSeconds = v;
+      } catch {}
+      const perStack = Math.min(eff.perStackCap ?? Infinity, (eff.value ?? 0) * focusSeconds);
+      const totalPct = Math.round(perStack * stacks * 100);
+      return `${focusSeconds}s held → +${totalPct}% qi/s${stacks > 1 ? ` (${stacks} stacks)` : ''}`;
+    }
+    case 'producer_cost_discount': {
+      const charges = spark.chargesRemaining ?? 0;
+      const pct = Math.round((eff.fraction ?? 0) * 100);
+      return charges > 0
+        ? `−${pct}% producer cost · ${charges} purchase${charges > 1 ? 's' : ''} left`
+        : `Bargain spent`;
+    }
     default:
       return null;
   }

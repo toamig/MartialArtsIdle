@@ -110,6 +110,10 @@ const PITY_KEY             = 'mai_qi_sparks_pity';
 // Mirrored to localStorage so the offline qi calc (which runs in a useState
 // initializer before React mounts) can pick up the Heaven's Bond bonus.
 const OFFLINE_SNAPSHOT_KEY = 'mai_qi_sparks_offline_snapshot';
+// Master's Patience — cumulative focus-seconds held this run. Persisted so a
+// reload mid-run doesn't reset the bonus. Reset to 0 on reincarnation via
+// clearAll(). Independent of activeSparks; the spark instance only reads it.
+const FOCUS_SECONDS_KEY    = 'mai_qi_sparks_focus_seconds_run';
 
 // Cap on the major-realm gate reduction from Patience of Stone stacks.
 // Keeps the gate from collapsing entirely with extreme stacking.
@@ -155,7 +159,18 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
     const loaded = loadJSON(ACTIVE_KEY, []);
     return loaded.map(s => ({ ...s, instanceId: ++instanceCounter }));
   });
-  const [pendingOffer, setPendingOffer] = useState(() => loadJSON(PENDING_KEY, null));
+  const [pendingOffer, setPendingOffer] = useState(() => {
+    // Filter pending-offer cards through QI_SPARK_BY_ID so a save migration
+    // that retires a card (Dial-9 dropped inner_calm / focus_surge / etc.)
+    // doesn't leave the modal staring at undefined card ids. Drops the offer
+    // entirely if both cards have been retired.
+    const raw = loadJSON(PENDING_KEY, null);
+    if (!raw || !Array.isArray(raw.cards)) return raw;
+    const filtered = raw.cards.filter(id => !!QI_SPARK_BY_ID[id]);
+    if (filtered.length === 0) return null;
+    if (filtered.length === raw.cards.length) return raw;
+    return { ...raw, cards: filtered };
+  });
   const [pityCounter,  setPityCounter]  = useState(() => loadJSON(PITY_KEY, 0));
   const [bloodLotusBalance, setBloodLotusBalance] = useState(() => {
     try { return getBloodLotusBalance(); } catch { return 0; }
@@ -187,6 +202,23 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
   // Both are 0 when the mechanic isn't unlocked.
   const crystalClickRateRef       = useRef(0);
   const crystalClickCapMinRef     = useRef(0);
+  // 2026-05-21 Dial-9 — Sect Discipline (common timed) adds this many qi/s
+  // per-unit to every producer's base rate while active. Read by App.jsx
+  // when composing the producer rate. Default 0 (no spark active).
+  const producerFlatPerUnitRef    = useRef(0);
+  // 2026-05-21 Dial-9 — Master's Patience cumulative focus-seconds held this
+  // run. Ticks every second when cultivation.boosting is true. Reset on
+  // clearAll(). Persisted across reloads so the bonus survives F5.
+  const focusSecondsThisRunRef    = useRef(
+    (() => { const v = Number(loadJSON(FOCUS_SECONDS_KEY, 0)); return Number.isFinite(v) ? v : 0; })()
+  );
+  // Mirror of cultivation.boosting (a state, not a ref) so the 1-second
+  // interval below can read the latest value without re-subscribing every
+  // time the player taps Focus on/off.
+  const cultivationBoostingRef    = useRef(!!cultivation?.boosting);
+  useEffect(() => {
+    cultivationBoostingRef.current = !!cultivation?.boosting;
+  }, [cultivation?.boosting]);
 
   const prevRealmIndexRef = useRef(cultivation.realmIndex);
   // 2026-05-21 Dial-8: spark offers happen every-other sub-stage BT to halve
@@ -238,7 +270,15 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
     // Crystal Click — highest active tier drives rate + cap.
     let crystalClickRate   = 0;
     let crystalClickCapMin = 0;
+    // 2026-05-21 Dial-9 — Sect Discipline accumulates +per-unit qi/s additively
+    // across simultaneously-active instances (rare but legal; refresh-in-place
+    // by applySparkChoice means we usually have one instance).
+    let producerFlatPerUnit = 0;
     const now = Date.now();
+    // 2026-05-21 Dial-9 — Master's Patience reads run-level focus-seconds for
+    // every stack. Capture once outside the loop so all instances see the
+    // same value within this recompute.
+    const focusSecondsThisRun = focusSecondsThisRunRef.current;
     for (const s of sparks) {
       if (s.expiresAt && s.expiresAt <= now) continue;
       const card = QI_SPARK_BY_ID[s.sparkId];
@@ -280,12 +320,28 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
           // by the breakthrough effect below.
           permQiMultBonus += eff.value * stacks * (s.breakthroughsAccrued ?? 0);
         }
+        if (eff.type === 'qi_mult_per_focus_second_per_stack') {
+          // Master's Patience: each stack contributes
+          //   min(perStackCap, value × focusSecondsThisRun)
+          // The cap is per-stack, so multiple stacks scale linearly past it.
+          const perStack = Math.min(
+            eff.perStackCap ?? Infinity,
+            (eff.value ?? 0) * focusSecondsThisRun,
+          );
+          permQiMultBonus += perStack * stacks;
+        }
         continue;
       }
+      // 'charges' kind (Tinker's Bargain) doesn't affect any rate ref directly
+      // — the discount is consumed by CultivationScreen.handleBuy via
+      // consumeProducerCostDiscount() and the instance stays in activeSparks
+      // until exhausted. recomputeRefs just skips it.
+      if (card.kind === 'charges') continue;
       const eff = card.effect;
       if (!eff) continue;
-      if (eff.type === 'qi_mult')         qiMult     *= (1 + eff.value);
-      if (eff.type === 'focus_mult_bonus') focusBonus += eff.value;
+      if (eff.type === 'qi_mult')              qiMult     *= (1 + eff.value);
+      if (eff.type === 'focus_mult_bonus')      focusBonus += eff.value;
+      if (eff.type === 'producer_flat_per_unit') producerFlatPerUnit += eff.value ?? 0;
     }
     // Permanents stack additively with each other; the combined permanent
     // bonus then multiplies with the temp-buff product.
@@ -319,6 +375,10 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
     // reservoir each tick without caring about spark internals.
     crystalClickRateRef.current   = crystalClickRate;
     crystalClickCapMinRef.current = crystalClickCapMin;
+    // 2026-05-21 Dial-9 — Sect Discipline per-unit qi/s additive. App.jsx
+    // reads this when composing the producer rate via producers.getRate(...,
+    // flatPerUnit). 0 when no Sect Discipline is active.
+    producerFlatPerUnitRef.current = producerFlatPerUnit;
     // Offline calc runs before React mounts, so mirror its inputs to
     // localStorage every time the spark set changes.
     saveJSON(OFFLINE_SNAPSHOT_KEY, { offlineQiMult: 1 + permOfflineMult });
@@ -342,9 +402,28 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
   }), []);
 
   // ── Expiry tick — runs every second to prune timed sparks ───────────────
+  // Also handles Master's Patience focus-second accumulation (Dial-9). The
+  // run-level counter ticks +1 every second cultivation.boosting is true and
+  // recomputeRefs is re-invoked so the qiMult bonus updates live without
+  // forcing a setState churn on activeSparks.
   useEffect(() => {
     const id = setInterval(() => {
       const now = Date.now();
+      // Master's Patience focus-second counter — increments when Focus is held.
+      // Use the latest cultivation.boosting via a closure-captured ref so the
+      // interval doesn't need to re-subscribe when boost toggles.
+      if (cultivationBoostingRef.current) {
+        focusSecondsThisRunRef.current += 1;
+        saveJSON(FOCUS_SECONDS_KEY, focusSecondsThisRunRef.current);
+        // Master's Patience changes live based on this counter — re-derive
+        // refs from the current spark set so qiMultRef picks up the bump.
+        // Only worth the recompute when at least one MP instance is active.
+        const hasMP = activeSparksRef.current.some(s => {
+          const c = QI_SPARK_BY_ID[s.sparkId];
+          return c?.effect?.type === 'qi_mult_per_focus_second_per_stack';
+        });
+        if (hasMP) recomputeRefs(activeSparksRef.current);
+      }
       setActiveSparks(prev => {
         const filtered = prev.filter(s => !s.expiresAt || s.expiresAt > now);
         if (filtered.length === prev.length) return prev;
@@ -357,7 +436,7 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
       });
     }, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [recomputeRefs]);
 
   // ── Layer breakthrough hooks ────────────────────────────────────────────
   // Fires on every realmIndex change. Decrements event_count sparks,
@@ -573,6 +652,30 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
       return;
     }
 
+    // 2026-05-21 Dial-9 — Tinker's Bargain ('charges' kind). Refreshes any
+    // existing instance back to full charges if drawn again (rather than
+    // stacking past the original 5-charge cap), matching the design intent
+    // of "a fresh bargain, not a bonus on top of one already running."
+    if (card.kind === 'charges') {
+      const startingCharges = card.effect?.charges ?? 0;
+      setActiveSparks(prev => {
+        const existing = prev.find(p => p.sparkId === card.id);
+        if (existing) {
+          return prev.map(p => (
+            p.instanceId === existing.instanceId
+              ? { ...p, chargesRemaining: startingCharges }
+              : p
+          ));
+        }
+        return [...prev, {
+          instanceId:       ++instanceCounter,
+          sparkId:          card.id,
+          chargesRemaining: startingCharges,
+        }];
+      });
+      return;
+    }
+
     // Fallback for any future kinds
     setActiveSparks(prev => [...prev, {
       instanceId: ++instanceCounter,
@@ -685,7 +788,53 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
     // Reset the mirrored offline-qi multiplier so the next run starts at 1×
     // even if the page is reloaded before any new permanent draws.
     saveJSON(OFFLINE_SNAPSHOT_KEY, { offlineQiMult: 1 });
+    // 2026-05-21 Dial-9 — Master's Patience counter is run-scoped; reset on
+    // reincarnation so the per-stack bonus starts over.
+    focusSecondsThisRunRef.current = 0;
+    saveJSON(FOCUS_SECONDS_KEY, 0);
   }, []);
+
+  // 2026-05-21 Dial-9 — Tinker's Bargain charge consumer. Called by
+  // CultivationScreen.handleBuy after a successful producer purchase.
+  // Decrements the active 'charges'-kind spark; removes the instance when
+  // depleted. No-op if no Tinker's Bargain is active.
+  const consumeProducerCostDiscount = useCallback(() => {
+    setActiveSparks(prev => {
+      let touched = false;
+      const next = [];
+      for (const s of prev) {
+        const card = QI_SPARK_BY_ID[s.sparkId];
+        const isDiscount = card?.kind === 'charges'
+          && card?.effect?.type === 'producer_cost_discount';
+        if (!isDiscount || touched) { next.push(s); continue; }
+        // Consume one charge from the first matching instance.
+        const remaining = (s.chargesRemaining ?? 0) - 1;
+        touched = true;
+        if (remaining > 0) next.push({ ...s, chargesRemaining: remaining });
+        // remaining ≤ 0 → drop the instance (spark expired).
+      }
+      return touched ? next : prev;
+    });
+  }, []);
+
+  /**
+   * Inspect (without consuming) the currently-active Tinker's Bargain
+   * discount, if any. Returns `{ fraction, charges }` or null. Used by the
+   * cultivation/buy UI to compute the discounted display cost and decide
+   * whether to call `consumeProducerCostDiscount()` after a successful buy.
+   */
+  const getProducerCostDiscount = useCallback(() => {
+    for (const s of activeSparks) {
+      const card = QI_SPARK_BY_ID[s.sparkId];
+      const eff  = card?.effect;
+      if (card?.kind === 'charges'
+          && eff?.type === 'producer_cost_discount'
+          && (s.chargesRemaining ?? 0) > 0) {
+        return { fraction: eff.fraction ?? 0, charges: s.chargesRemaining ?? 0 };
+      }
+    }
+    return null;
+  }, [activeSparks]);
 
   // Listen for painless-consumed event from useCultivation. Removes the
   // active painless spark so a fresh card is needed for the next free
@@ -717,6 +866,15 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
     consecutiveFocusDeepRef,
     crystalClickRateRef,
     crystalClickCapMinRef,
+    // 2026-05-21 Dial-9 — Sect Discipline (common timed) per-unit qi/s bonus.
+    // App.jsx composes this into the producer rate via producers.getRate(...,
+    // flatPerUnit). 0 when no Sect Discipline is active.
+    producerFlatPerUnitRef,
+    // 2026-05-21 Dial-9 — Tinker's Bargain helpers. CultivationScreen reads
+    // the discount fraction + remaining charges to display the discounted
+    // price and consumes one charge per successful producer purchase.
+    getProducerCostDiscount,
+    consumeProducerCostDiscount,
     choose,
     rerollOffer,                  // 2026-05-21 tier-locked redesign
     rerollCard: rerollOffer,      // legacy alias — old consumers fall through

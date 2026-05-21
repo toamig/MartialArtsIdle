@@ -83,15 +83,20 @@ export default function useProducers() {
    * useUpgrades.getProducerMult. Passing nothing returns the un-modified
    * producer sum (used by the offline-rate snapshot, which intentionally
    * excludes mutable upgrade state).
+   *
+   * Optional `flatPerUnit` is added to EVERY producer's per-unit qi/s
+   * before the per-producer mult applies. Used by Sect Discipline (Dial-9
+   * common timed spark) to temporarily boost every producer's base rate
+   * by +1. Defaults to 0 → identity behaviour.
    */
-  const getRate = useCallback((extraMult) => {
+  const getRate = useCallback((extraMult, flatPerUnit = 0) => {
     const mult = typeof extraMult === 'function' ? extraMult : null;
     let rate = 0;
     for (const p of PRODUCERS) {
       const o = owned[p.id] ?? 0;
       if (o > 0) {
         const m = mult ? mult(p.id) : 1;
-        rate += o * p.startQiPerSec * m;
+        rate += o * (p.startQiPerSec + flatPerUnit) * m;
       }
     }
     return rate;

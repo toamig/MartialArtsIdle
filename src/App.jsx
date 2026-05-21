@@ -383,7 +383,12 @@ function AppInner() {
     const ownedMap = producers.owned;
     const perProducer = (pid) =>
       upgrades.getProducerMult(pid) * qiSparks.getProducerSparkMult(pid, ownedMap);
-    const effective = producers.getRate(perProducer);
+    // 2026-05-21 Dial-9 — Sect Discipline (common timed spark) adds +N to
+    // every producer's per-unit qi/s while active. Read from the spark ref
+    // (default 0). The bonus flows through per-producer mults and all
+    // downstream global mults the same way the producer's own base does.
+    const flatPerUnit = qiSparks.producerFlatPerUnitRef?.current ?? 0;
+    const effective = producers.getRate(perProducer, flatPerUnit);
     cultivation.producerRateRef.current = effective;
     // Trinity Convergence + producer_pair_global_mult — global multipliers
     // from legendary sparks, folded into the rate calc downstream.

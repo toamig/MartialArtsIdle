@@ -56,19 +56,36 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
     }
   }, [autoPromoted, buyMode, producers]);
 
+  // 2026-05-21 Dial-9 — Tinker's Bargain (uncommon, charges-kind spark). When
+  // active, the next 5 producer purchase TRANSACTIONS cost -30% (one ×1 or
+  // one ×10 buy each consume one charge). Read the active discount from the
+  // spark hook (returns null when no Bargain is active) and apply it to both
+  // the displayed cost and the qi-spend amount.
+  const producerCostDiscount = qiSparks?.getProducerCostDiscount?.() ?? null;
+  const producerCostDiscountFrac = producerCostDiscount?.fraction ?? 0;
+
   const handleBuy = useMemo(() => (id, count) => {
     if (!Number.isFinite(count) || count <= 0) return;
-    const cost = producers.getCost(id, count);
-    if (cost <= 0) return;
+    const rawCost = producers.getCost(id, count);
+    if (rawCost <= 0) return;
+    // Apply Tinker's Bargain discount if a charge is available.
+    const cost = producerCostDiscountFrac > 0
+      ? Math.max(1, Math.ceil(rawCost * (1 - producerCostDiscountFrac)))
+      : rawCost;
     // Atomic: spendQi succeeds only if the player can afford it. Producer
     // count is incremented only on a successful spend.
     if (cultivation.spendQi(cost)) {
       producers.buy(id, count);
+      // Consume one Tinker's Bargain charge on a successful transaction.
+      // If no Bargain is active (frac === 0) the call is a no-op.
+      if (producerCostDiscountFrac > 0) {
+        qiSparks?.consumeProducerCostDiscount?.();
+      }
       // Refresh the local qi display so the buy button's "affordable" state
       // updates immediately (the 100 ms poll would lag the click).
       setQi(cultivation.qiRef.current);
     }
-  }, [cultivation, producers]);
+  }, [cultivation, producers, qiSparks, producerCostDiscountFrac]);
 
   // Shared upgrade evaluation context — both visibility filter and unlock
   // check read the same shape. Memoised on realm/crystal/producer/mechanic
@@ -177,6 +194,7 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
                 producers={producers}
                 onBuy={handleBuy}
                 onShowDetail={setDetailProducer}
+                costDiscount={producerCostDiscountFrac}
               />
             ))}
           </div>

@@ -49,6 +49,11 @@ export default function ProducerLane({
   producers,
   onBuy,
   onShowDetail,
+  // 2026-05-21 Dial-9 — Tinker's Bargain (uncommon spark) gives -30% on the
+  // next 5 producer purchases. CultivationScreen passes the active discount
+  // fraction (0..1) so the displayed cost matches what spendQi will actually
+  // bill. Defaults to 0 → identity / no discount.
+  costDiscount = 0,
 }) {
   // Resolve current tier + sprite. Tier null when 0 owned.
   const tier = unlocked ? getSpriteTier(owned) : null;
@@ -86,8 +91,14 @@ export default function ProducerLane({
   const displayCost = useMemo(() => {
     if (!unlocked) return 0;
     const n = Math.max(1, resolvedCount);
-    return producers.getCost(producer.id, n);
-  }, [producer.id, producers, resolvedCount, unlocked]);
+    const raw = producers.getCost(producer.id, n);
+    if (costDiscount > 0) {
+      // Match the rounding used in CultivationScreen.handleBuy so the shown
+      // cost matches what spendQi will actually deduct on click.
+      return Math.max(1, Math.ceil(raw * (1 - costDiscount)));
+    }
+    return raw;
+  }, [producer.id, producers, resolvedCount, unlocked, costDiscount]);
 
   // Locked state — keep the leader as a tap target so the player can still
   // open the details modal and read what they're working toward. Unlock hint

@@ -21,6 +21,9 @@
  *     duration: number (ms)
  *     effect: { type: 'qi_mult', value }                  — adds value to qi/s multiplier
  *           | { type: 'focus_mult_bonus', value }         — adds value to focus multiplier (additive %)
+ *           | { type: 'producer_flat_per_unit', value }   — +value to every producer's per-unit qi/s (Sect Discipline)
+ *   'charges'                  — active until N producer purchases consume it
+ *     effect: { type: 'producer_cost_discount', fraction, charges } — fraction of qi cost saved per buy (Tinker's Bargain)
  *   'until_breakthrough'       — active until next layer breakthrough fires
  *     effect: { type: 'qi_mult', value }
  *   'event_count'              — active for N breakthroughs
@@ -40,6 +43,7 @@
  *           | { type: 'gate_reduction_per_stack',           value }   — reduces major-realm gate qi/s requirement
  *           | { type: 'offline_qi_mult_per_stack',          value }   — multiplies offline qi accrual
  *           | { type: 'qi_mult_per_breakthrough_per_stack', value }   — qi/s mult that grows with breakthroughs accrued
+ *           | { type: 'qi_mult_per_focus_second_per_stack', value, perStackCap } — qi/s mult that grows with focus-seconds held this run, capped per stack (Master's Patience)
  *   'mechanic'                 — rare-tier mechanic unlock or upgrade. One
  *                                active spark per mechanicId; picking a higher
  *                                tier replaces the lower one in place.
@@ -79,23 +83,6 @@ const QI_SPARKS_RAW = [
     duration:    60_000,
     effect:      { type: 'qi_mult', value: 0.2 },
   },
-  {
-    id:          'inner_calm',
-    rarity:      'common',
-    name:        'Inner Calm',
-    description: '+10% qi/s until your next breakthrough.',
-    kind:        'until_breakthrough',
-    effect:      { type: 'qi_mult', value: 0.1 },
-  },
-  {
-    id:          'focus_surge',
-    rarity:      'common',
-    name:        'Focus Surge',
-    description: '+30% Focus multiplier for 60 seconds.',
-    kind:        'timed',
-    duration:    60_000,
-    effect:      { type: 'focus_mult_bonus', value: 0.3 },
-  },
   // RETIRED — Cookie-Clicker pivot (v1 Polish P2b). Breakthroughs no longer
   // drain qi balance, so this spark would be a no-op. Removing from the
   // offer pool prevents new instances; existing pending/active sparks of
@@ -109,24 +96,27 @@ const QI_SPARKS_RAW = [
   //   kind:        'next_breakthrough_flag',
   //   flag:        'painless_breakthrough',
   // },
+  // 2026-05-21 Dial-9 spark roster overhaul. Removed cards (kept here as a
+  // breadcrumb for any save-migration concerns; active spark instances of
+  // these ids will keep working until they expire because resolution still
+  // goes through QI_SPARK_BY_ID — they just stop appearing in fresh offers):
+  //   - inner_calm        (common, until_breakthrough +10%)  — too small to feel
+  //   - focus_surge       (common, timed +30% focus mult)    — overlapped Sharper Focus
+  //   - lingering_focus   (common, lingering_focus_flag)     — niche, hard to explain
+  //   - echo_of_insight   (common, event_count +5% × 3 BT)   — too small to feel
+  //   - patience_of_stone (uncommon, gate_reduction)         — trivialises the
+  //                                                            grindy gates that
+  //                                                            drive ad-watch monetisation
+  // Replacements added below: Sect Discipline (common timed), Master's
+  // Patience (uncommon permanent stack), Tinker's Bargain (uncommon charges).
   {
-    id:          'lingering_focus',
+    id:          'sect_discipline',
     rarity:      'common',
-    name:        'Lingering Focus',
-    description: 'For 60 seconds, your qi/s continues at 50% for 5 seconds after you release Focus.',
-    kind:        'lingering_focus_flag',
-    duration:    60_000,
-    residualMult:        0.5,
-    residualDurationMs:  5_000,
-  },
-  {
-    id:          'echo_of_insight',
-    rarity:      'common',
-    name:        'Echo of Insight',
-    description: '+5% qi/s for the next 3 layer breakthroughs.',
-    kind:        'event_count',
-    breakthroughs: 3,
-    effect:      { type: 'qi_mult', value: 0.05 },
+    name:        'Sect Discipline',
+    description: 'For 90 seconds, every producer gains +1 per-unit qi/s. Disciples breathe in time.',
+    kind:        'timed',
+    duration:    90_000,
+    effect:      { type: 'producer_flat_per_unit', value: 1 },
   },
 
   // ── Uncommon (permanent run buffs, additive stacking) ───────────────────
@@ -158,13 +148,31 @@ const QI_SPARKS_RAW = [
     kind:        'permanent',
     effect:      { type: 'qi_mult_per_stack', value: 0.015 },
   },
+  // 2026-05-21 Dial-9: replaces `patience_of_stone`. Where Patience of Stone
+  // shortened gate qi/s requirements (trivialising the grindy moments that
+  // drive ad-watch monetisation), Master's Patience rewards the player for
+  // ACTIVELY engaging Focus mode — a power floor that depends on play, not a
+  // passive gate-shaver. Per-stack cap (+20%) limits runaway stacking; the
+  // counter resets on reincarnation along with all other run state.
   {
-    id:          'patience_of_stone',
+    id:          'masters_patience',
     rarity:      'uncommon',
-    name:        'Patience of Stone',
-    description: 'Major-realm gate qi/s requirement reduced 5% for the rest of this run. Stacks.',
+    name:        "Master's Patience",
+    description: 'Each second held in Focus this run gives +0.1% qi/s. Stacks. Per-stack cap +20%.',
     kind:        'permanent',
-    effect:      { type: 'gate_reduction_per_stack', value: 0.05 },
+    effect:      { type: 'qi_mult_per_focus_second_per_stack', value: 0.001, perStackCap: 0.20 },
+  },
+  // 2026-05-21 Dial-9: Tinker's Bargain — uncommon, charge-based discount on
+  // the next 5 producer purchase TRANSACTIONS (×1 ✕ or ×10 both consume 1
+  // charge). Persists across reload while charges remain. Doesn't stack — a
+  // second draw refreshes to 5 charges.
+  {
+    id:          'tinkers_bargain',
+    rarity:      'uncommon',
+    name:        "Tinker's Bargain",
+    description: 'Your next 5 producer purchases cost -30% qi. The bargain favours the early bird.',
+    kind:        'charges',
+    effect:      { type: 'producer_cost_discount', fraction: 0.30, charges: 5 },
   },
   // 2026-05-21 Dial-4.1: per-stack values cut for both. With 65/35 rarity
   // weights players accumulate 3-5 stacks of any given uncommon over a run
@@ -729,29 +737,14 @@ export const SPARK_COPY = {
     exampleText: 'A steady +20% for 60 seconds gives you roughly <strong>12 seconds of bonus production</strong>.',
     loreText: 'Slow flame. Long burn. The mountain wears down the rain.',
   },
-  inner_calm: {
-    icon: '🧘',
-    effectText: 'Your qi/s is boosted by **+10%** until your next layer breakthrough.',
-    exampleText: 'Best used right before a long sub-stage push — the boost lasts the entire climb.',
-    loreText: 'The mind quiets, and the world tells its secrets.',
-  },
-  focus_surge: {
-    icon: '🎯',
-    effectText: 'Your **Focus multiplier** is increased by +30% for the next minute. Only matters while you hold Focus.',
-    exampleText: 'If Focus normally gives ×3.0, this boosts it to <strong>×3.9</strong> for 60 seconds. Hold Focus for full value.',
-    loreText: 'When the breath sharpens, the dao listens harder.',
-  },
-  lingering_focus: {
-    icon: '🪷',
-    effectText: 'For the next 60 seconds, releasing Focus doesn\'t immediately end the boost — your qi/s continues at **half-Focus** for 5 seconds after each release.',
-    exampleText: 'Tap-and-release Focus rapidly during the 60s window — the residual 5-second tail covers idle moments without holding.',
-    loreText: 'Even after the breath releases, the meridians remember.',
-  },
-  echo_of_insight: {
-    icon: '✨',
-    effectText: 'Your qi/s is boosted by **+5%** for your next **3 layer breakthroughs**, then expires.',
-    exampleText: 'If you cross layers quickly, this can persist for most of a sub-realm push — a small but reliable tailwind.',
-    loreText: 'One realisation echoes through three lifetimes.',
+  // 2026-05-21 Dial-9: cut SPARK_COPY for retired commons (inner_calm,
+  // focus_surge, lingering_focus, echo_of_insight). Their card defs are gone
+  // from QI_SPARKS_RAW too. New common added below: Sect Discipline.
+  sect_discipline: {
+    icon: '⚔',
+    effectText: 'For 90 seconds, every producer you own gains **+1 base qi/s per unit**. The boost flows through your crystal, focus, law and global multipliers.',
+    exampleText: 'Own <strong>20 disciples</strong> (base 0.1 qi/s each) → each disciple temporarily produces 1.1 qi/s (×11) for 90s. Late game with 100+ mythic producers, the +1 is small but applies to every unit you own.',
+    loreText: 'Ten thousand disciples bow at once. The hall remembers what one breath, multiplied, can do.',
   },
 
   // ── Uncommon ───────────────────────────────────────────────────────────
@@ -773,11 +766,19 @@ export const SPARK_COPY = {
     exampleText: 'Five stacks compounds to roughly <strong>+7.5% total qi/s</strong>. Small but reliable, never expires.',
     loreText: 'The river that never stops becomes the sea.',
   },
-  patience_of_stone: {
-    icon: '🗿',
-    effectText: 'Reduces your major-realm qi/s gate requirement by **5%** for the rest of this run. Stacks (up to 80% reduction).',
-    exampleText: 'Useful for breaking through walls — five stacks shaves <strong>25% off every major gate</strong>.',
-    loreText: 'The stone weathers, but it does not hurry.',
+  // 2026-05-21 Dial-9: patience_of_stone retired (trivialised gates that drive
+  // ad-watch monetisation). Replaced by Master's Patience + Tinker's Bargain.
+  masters_patience: {
+    icon: '🕰',
+    effectText: 'For every second you hold Focus this run, your qi/s gains **+0.1%**. Stacks. Each stack caps at **+20%** (i.e. saturates after 200 seconds held).',
+    exampleText: 'Hold Focus a total of <strong>2 minutes (120s)</strong> over the run → 1 stack gives +12% qi/s. Three stacks → <strong>+36% qi/s</strong> until you reincarnate. Saturates at 200s/stack.',
+    loreText: 'The longest breath is the slowest. A master can rest inside a single inhale for an hour.',
+  },
+  tinkers_bargain: {
+    icon: '🪙',
+    effectText: 'Your next **5 producer purchases** cost **-30% qi**. A purchase is one buy click — ×1 or ×10 both consume one charge. Charges persist across reloads until spent.',
+    exampleText: 'Buying a tier-4 producer that normally costs <strong>1.2M qi</strong> → costs <strong>840k qi</strong> with the discount applied. Best saved for an expensive tier you\'re short on.',
+    loreText: 'The tinker counts coins by lamplight. "Five favours," he says. "Spend them where the price hurts most."',
   },
   heavens_bond: {
     icon: '☁️',
