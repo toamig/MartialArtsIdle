@@ -157,6 +157,51 @@ export function isPeakTransition(fromIndex) {
 }
 
 /**
+ * 0-based position of REALMS[stageIndex] within its realm name group.
+ * E.g. Tempered Body L1 → 0, L2 → 1, ..., L10 → 9.
+ * Returns 0 for the first stage of any realm (or an out-of-range index).
+ */
+export function getRealmStageOrdinal(stageIndex) {
+  const s = REALMS[stageIndex];
+  if (!s) return 0;
+  let ord = 0;
+  for (let i = stageIndex - 1; i >= 0; i--) {
+    if (REALMS[i]?.name !== s.name) break;
+    ord++;
+  }
+  return ord;
+}
+
+/**
+ * True iff the breakthrough INTO `stageIndex` rewards a Qi Spark selection.
+ *
+ * Rule (Dial-12, deterministic by stage index):
+ *   - Major transition (entering a new realm name): YES.
+ *   - Sub-stage at an even realm-internal ordinal (2, 4, 6, …): YES, UNLESS
+ *     `stageIndex` is the last stage of its realm (in which case the immediate
+ *     next BT will be the major and gives the spark; we don't double-up).
+ *   - Everything else (1st, 3rd, 5th... sub-stage, plus stage 0 of the entire
+ *     game which has no incoming BT): NO.
+ *
+ * Replaces the old global-counter approach in useQiSparks (which wasn't
+ * persisted across reloads and so couldn't be visualised on the roadmap).
+ */
+export function stageHasSpark(stageIndex) {
+  if (stageIndex <= 0) return false;          // first stage of the game has no incoming BT
+  const prev = REALMS[stageIndex - 1];
+  const curr = REALMS[stageIndex];
+  if (!prev || !curr) return false;
+  // Major transition: always spark.
+  if (prev.name !== curr.name) return true;
+  // Sub-stage: even ordinal AND not the realm's last stage.
+  const ord = getRealmStageOrdinal(stageIndex);
+  if (ord <= 0 || ord % 2 !== 0) return false;
+  const next = REALMS[stageIndex + 1];
+  const isLastInRealm = !next || next.name !== curr.name;
+  return !isLastInRealm;
+}
+
+/**
  * Returns the 0-based ordinal of the major transition starting from `fromIndex`
  * (i.e. how many major transitions precede this one), or -1 if the transition
  * is not a major one.

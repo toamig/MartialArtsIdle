@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import REALMS from '../data/realms';
+import REALMS, { stageHasSpark } from '../data/realms';
 
 const REALM_ICONS = {
   'Tempered Body':          '💪',
@@ -97,7 +97,12 @@ function JourneyModal({ realmIndex, onClose }) {
                     {group.entries.map((entry, i) => {
                       const isCurrent = entry.index === realmIndex;
                       const isPast    = entry.index < realmIndex;
-                      const cls = `journey-stage${i === 0 ? ' js-first' : ''}${isCurrent ? ' js-current' : ''}${isPast ? ' js-past' : ''}`;
+                      // Does the breakthrough INTO this stage reward a Qi
+                      // Spark? Computed deterministically from realms.js
+                      // (Dial-12). The marker shows on the row whose BT
+                      // grants the spark, i.e. the destination stage.
+                      const hasSpark  = stageHasSpark(entry.index);
+                      const cls = `journey-stage${i === 0 ? ' js-first' : ''}${isCurrent ? ' js-current' : ''}${isPast ? ' js-past' : ''}${hasSpark ? ' js-spark' : ''}`;
 
                       return (
                         <div
@@ -113,6 +118,13 @@ function JourneyModal({ realmIndex, onClose }) {
                             <span className="js-label">{entry.stage}</span>
                             <span className="js-cost">{fmtQi(entry.cost)} Qi</span>
                           </div>
+                          {hasSpark && (
+                            <span
+                              className="js-spark-mark"
+                              title="Breaking through to this stage rewards a Qi Spark"
+                              aria-label="Qi Spark reward"
+                            >✦</span>
+                          )}
                         </div>
                       );
                     })}

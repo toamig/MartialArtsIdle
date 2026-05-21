@@ -34,7 +34,7 @@ import {
   LEGENDARY_PER_CARD_CHANCE,      // legacy alias of PER_OFFER — kept for back-compat
   LEGENDARY_PITY_THRESHOLD,
 } from '../data/qiSparks';
-import { isMajorTransition } from '../data/realms';
+import { isMajorTransition, stageHasSpark } from '../data/realms';
 import { spendBloodLotus, getBloodLotusBalance } from '../systems/bloodLotus';
 import { trackSparkPicked, trackSparkRerolled, trackSparkExpired } from '../analytics';
 
@@ -221,12 +221,10 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
   }, [cultivation?.boosting]);
 
   const prevRealmIndexRef = useRef(cultivation.realmIndex);
-  // 2026-05-21 Dial-8: spark offers happen every-other sub-stage BT to halve
-  // the per-run draw count (was ~50, now ~25-30). Major-realm transitions
-  // ALWAYS get a spark (preserves the "celebrate the BT with a spark" beat
-  // at the moments that matter most). Counter is non-persisted ref — if a
-  // player saves and reloads mid-run it resets harmlessly.
-  const subStageSparkCounterRef = useRef(0);
+  // Dial-8 used a non-persisted global counter to gate sub-stage sparks
+  // every-other BT. Dial-12 replaced that with `stageHasSpark(curr)`
+  // (data/realms.js) — same rough cadence but stable per stage index, so
+  // the roadmap can mark which BTs reward a spark. The counter ref is gone.
 
   // Persist
   useEffect(() => { saveJSON(ACTIVE_KEY,  activeSparks); }, [activeSparks]);
@@ -492,19 +490,13 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
       return next;
     });
 
-    // 2026-05-21 Dial-8: gate the spark draw.
-    //   - Major-realm transitions (name change) ALWAYS draw a spark.
-    //   - Sub-stage breakthroughs draw every OTHER one (counter % 2 === 0).
-    // Halves the per-run spark count while keeping the dramatic "you broke
-    // through to a new realm name, here's a spark" moment intact.
-    const isMajor = isMajorTransition(prev);
-    let shouldDrawSpark = false;
-    if (isMajor) {
-      shouldDrawSpark = true;
-    } else {
-      subStageSparkCounterRef.current += 1;
-      shouldDrawSpark = (subStageSparkCounterRef.current % 2 === 0);
-    }
+    // 2026-05-21 Dial-12: spark eligibility is now deterministic per stage
+    // index, computed by `stageHasSpark(curr)` in data/realms.js. Replaces
+    // the Dial-8 global counter that wasn't persisted across reloads and
+    // couldn't be surfaced on the roadmap. Same rough rate (~half of
+    // sub-stage BTs + every major) but now stable: the same stage always
+    // does or doesn't give a spark, so JourneyModal can mark them.
+    const shouldDrawSpark = stageHasSpark(curr);
     if (!shouldDrawSpark) return;  // skip the draw entirely this BT
 
     // Roll a new offer if none is pending. If one is pending (player took too

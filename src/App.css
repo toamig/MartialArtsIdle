@@ -13173,6 +13173,20 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
 
 .js-current .js-cost { color: rgba(var(--ui-purple-strong-rgb), 0.5); }
 
+/* Qi Spark reward marker — stages whose incoming BT gives a Qi Spark
+   choice show a small jade star at the end of the row. Past stages
+   fade so they don't visually compete with the future targets. */
+.js-spark-mark {
+  font-size: 12px;
+  line-height: 1;
+  color: rgba(167, 139, 250, 0.85);
+  flex-shrink: 0;
+  margin-left: 4px;
+  filter: drop-shadow(0 0 4px rgba(167, 139, 250, 0.45));
+}
+.js-past .js-spark-mark { opacity: 0.25; filter: none; }
+.js-current .js-spark-mark { color: var(--ui-purple-light); }
+
 /* In-flow close button for journey / achievements headers */
 .journey-close {
   flex-shrink: 0;
