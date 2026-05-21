@@ -5542,16 +5542,18 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 /* One spark element. Position is set inline (left/top in px). Hue + sat
-   cascade from .home-crystal-img-wrap → tints sparks to match the crystal. */
+   cascade from .home-crystal-img-wrap → tints sparks to match the crystal.
+   Longer fade (560ms) + larger initial scale + subtle ±20° wobble keep the
+   pop feeling deliberate rather than frenetic. */
 @keyframes home-crystal-spark-pop {
   0%   {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(var(--sscale-start, 0.4)) rotate(0deg);
+    transform: translate(-50%, -50%) scale(var(--sscale-start, 0.5)) rotate(0deg);
   }
-  12%  { opacity: 1; }
+  18%  { opacity: 1; }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(var(--sscale-end, 0.7)) rotate(var(--srot, 0deg));
+    transform: translate(-50%, -50%) scale(var(--sscale-end, 0.85)) rotate(var(--srot, 0deg));
   }
 }
 .home-crystal-vfx-p {
@@ -5560,27 +5562,33 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   image-rendering: pixelated;
   width: auto; height: auto;
   filter: hue-rotate(var(--spark-hue, 0deg)) saturate(var(--spark-sat, 1));
-  animation: home-crystal-spark-pop 360ms ease-out forwards;
+  animation: home-crystal-spark-pop 560ms ease-out forwards;
 }
 
-/* Overcharged hue pulse on the crystal sprite. Halved hue angle (30deg) for
-   a subtle warm tilt; 1.8s breathe; gold drop-shadow + slight brightness +
-   saturate lift. Overrides the base .home-crystal-img animation so the glow
-   keyframes cleanly pause while overcharged. */
+/* Overcharged hue pulse on the crystal sprite.
+   Tuned for visibility (not subtlety): 2.2s slow breathe so the eye registers
+   each phase, +6% scale "inhale", wide gold drop-shadow swing (6px → 22px)
+   so the glow visibly blooms and recedes. Hue stays at the subtle 30°
+   the user previously approved — the *halo* and *breathe* do the heavy
+   lifting on the "overcharged" cue.
+   Overrides the base .home-crystal-img glow animation while active. */
 @keyframes home-crystal-overcharge-pulse {
   0%, 100% {
     filter:
       brightness(1.05) saturate(1.05) hue-rotate(0deg)
-      drop-shadow(0 0 6px rgba(122, 220, 196, 0.55));
+      drop-shadow(0 0 6px rgba(122, 220, 196, 0.45));
+    transform: scale(1);
   }
   50% {
     filter:
-      brightness(1.18) saturate(1.30) hue-rotate(30deg)
-      drop-shadow(0 0 12px rgba(245, 175, 20, 0.85));
+      brightness(1.22) saturate(1.45) hue-rotate(30deg)
+      drop-shadow(0 0 22px rgba(245, 175, 20, 1));
+    transform: scale(1.06);
   }
 }
 .home-crystal-img.home-crystal-overcharged {
-  animation: home-crystal-overcharge-pulse 1.8s ease-in-out infinite;
+  animation: home-crystal-overcharge-pulse 2.2s ease-in-out infinite;
+  transform-origin: center;
 }
 
 /* ── Divine Qi — golden orb ─────────────────────────────────────────────── */

@@ -638,10 +638,12 @@ const CRYSTAL_VFX_TIER_TINT = {
 // (CAP_PCT): linear ramp from MAX_MS → MIN_MS interval. Above 75% (incl. 100%+
 // overcharged): rate stays at MIN_MS. No extra particles when overcharged —
 // the hue-pulse on the crystal sprite is the only additional cue.
+// Rate kept deliberately calm — this is an idle cultivation game, not a
+// fireworks display. ~3 sparks/sec at peak feels alive without being frenetic.
 const CRYSTAL_VFX_CAP_PCT      = 0.75;
 const CRYSTAL_VFX_OVER_PCT     = 1.00;
-const CRYSTAL_VFX_SPARK_MIN_MS = 90;
-const CRYSTAL_VFX_SPARK_MAX_MS = 1100;
+const CRYSTAL_VFX_SPARK_MIN_MS = 350;
+const CRYSTAL_VFX_SPARK_MAX_MS = 1500;
 
 // Spawn one spark on the crystal surface. CSS owns the pop animation +
 // hue-tint cascade; this just appends a positioned <img> and removes it on
@@ -667,9 +669,10 @@ function spawnCrystalSpark(layer, intensity) {
   img.style.top  = `${cy + Math.sin(angle) * r}px`;
   // CSS reads --srot for the end-of-pop rotation; --sscale-start scales the
   // initial pop size with current intensity (less punchy when filling slowly).
-  img.style.setProperty('--srot', `${(Math.random() - 0.5) * 360}deg`);
-  img.style.setProperty('--sscale-start', (0.35 + intensity * 0.35).toFixed(2));
-  img.style.setProperty('--sscale-end',   (0.55 + intensity * 0.30).toFixed(2));
+  // Rotation kept to a subtle ±20° wobble — sparks should *pop*, not spin.
+  img.style.setProperty('--srot', `${(Math.random() - 0.5) * 40}deg`);
+  img.style.setProperty('--sscale-start', (0.45 + intensity * 0.25).toFixed(2));
+  img.style.setProperty('--sscale-end',   (0.70 + intensity * 0.20).toFixed(2));
   img.addEventListener('animationend', () => img.remove(), { once: true });
   layer.appendChild(img);
 }
