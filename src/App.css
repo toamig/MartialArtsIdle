@@ -15711,18 +15711,28 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
 .pl-locked {
   background: rgba(15, 20, 26, 0.55);
   border-style: dashed;
+  /* No lane-wide opacity — the silhouette below needs to render at full
+     strength to read as a TRUE black tease (not a grey wash). The dashed
+     border + dark bg + dimmed text already signal "locked". */
+}
+.pl-locked .pl-caption,
+.pl-locked .pl-buy-zone-locked {
+  /* Mute the text/buy-zone independently so removing the lane opacity
+     doesn't make the locked row read as fully active. */
   opacity: 0.55;
 }
 
 /* Cookie-Clicker "teaser" silhouette — locked producer shows its real
-   sprite shape but stripped of detail. brightness(0) blackens the
-   colours, drop-shadow gives a subtle outline so the silhouette doesn't
-   disappear into the lane background. */
+   sprite shape painted as a TRUE black cutout. brightness(0) crushes
+   every colour to black, contrast(2) sharpens the alpha edge so semi-
+   transparent sprite pixels stay opaque, drop-shadow gives a dark halo
+   so the silhouette stays grounded against the lane background. No
+   opacity dim — the silhouette is the mystery, it should pop. */
 .pl-leader-silhouette {
   filter:
     brightness(0)
-    opacity(0.75)
-    drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+    contrast(2)
+    drop-shadow(0 0 6px rgba(0, 0, 0, 0.8));
 }
 
 /* ── Tier styling — escalates with owned count ─────────────────────────── */
