@@ -5559,7 +5559,7 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 .home-crystal-vfx-p {
   position: absolute;
   pointer-events: none;
-  image-rendering: pixelated;
+  /* image-rendering follows the global Settings → Rendering toggle */
   width: auto; height: auto;
   filter: hue-rotate(var(--spark-hue, 0deg)) saturate(var(--spark-sat, 1));
   animation: home-crystal-spark-pop 560ms ease-out forwards;
@@ -9116,7 +9116,7 @@ body[class*="cf-rung-"] .vfx-qi-tick.vfx-qi-tick-divine .vfx-content {
   width: 100%;
   height: 100%;
   object-fit: fill;
-  image-rendering: pixelated;
+  /* image-rendering follows the global Settings → Rendering toggle */
   pointer-events: none;
   z-index: 10;
 }
