@@ -48,6 +48,7 @@ export function wipeSave() {
   localStorage.removeItem(TECH_KEY);
   localStorage.removeItem(OWNED_TECH_KEY);
   localStorage.removeItem('mai_artefacts');
+  localStorage.removeItem('mai_artefact_offline_snapshot');
   localStorage.removeItem('mai_inventory');
   localStorage.removeItem('mai_owned_laws');
   localStorage.removeItem('mai_active_law');
@@ -68,6 +69,8 @@ export function wipeSave() {
   localStorage.removeItem('mai_qi_sparks_pending');
   localStorage.removeItem('mai_qi_sparks_pity');
   localStorage.removeItem('mai_qi_sparks_offline_snapshot');
+  // Master's Patience focus-seconds counter (Dial-9).
+  localStorage.removeItem('mai_qi_sparks_focus_seconds_run');
   localStorage.removeItem('mai_cleared_regions');
   localStorage.removeItem('mai_seen_features');
   localStorage.removeItem('mai_auto_farm');
@@ -86,51 +89,74 @@ export function wipeSave() {
   // Per-pill consumption counter that drives diminishing returns. Lives
   // alongside permanentStats — both are per-incarnation, both wipe together.
   localStorage.removeItem('mai_pills_consumed');
+  // 2026-05-21 — Settings > "Wipe save" is a true factory reset. Karma +
+  // Eternal Tree are part of the player's progression and DO get wiped here.
+  // `wipeReincarnation()` below is the prestige-only path that preserves
+  // them — it snapshots karma + tree BEFORE calling wipeSave() and restores
+  // them after, so the prestige loop still works as designed.
+  localStorage.removeItem('mai_reincarnation');
+  localStorage.removeItem('mai_reincarnation_tree');
+  // Rebirth-carryover state — also part of the prestige loop and gets
+  // wiped here for parity with karma + tree. wipeReincarnation snapshots
+  // and restores these separately when they belong to the new life.
+  localStorage.removeItem('mai_banked_rerolls');
+  localStorage.removeItem('mai_rebirth_cult_buff_until');
   // mai_blood_lotus is intentionally NOT wiped — paid currency survives a save reset
   // mai_lang is intentionally NOT wiped — language preference survives a save reset
-  // mai_reincarnation + mai_reincarnation_tree also survive — karma and
-  // Eternal Tree persist through a full wipe.
+  // mai_save_version is intentionally NOT wiped — version marker survives
+  //   so we don't re-trigger one-shot migrations on the fresh save
 }
 
 /**
- * Wipe for reincarnation. Preserves karma + tree (those keys are outside
- * the wipeSave list), the **entire** owned-laws library, and the alchemy
- * meta-progression (discovered pill recipes + pinned recipes) — but
- * clears the active law so the reborn character must re-choose which
- * manual to cultivate. The library + recipe codex are permanent identity
- * across lives; the active choice is the fresh start.
+ * Wipe for reincarnation. Preserves karma + Eternal Tree purchases (the
+ * prestige progression), the **entire** owned-laws library, the alchemy
+ * meta-progression (discovered pill recipes + pinned recipes), and the
+ * banked-reroll / rebirth-cult-buff carryovers driven by tree nodes —
+ * but clears the active law so the reborn character must re-choose
+ * which manual to cultivate. The library + recipe codex are permanent
+ * identity across lives; the active choice is the fresh start.
+ *
+ * 2026-05-21 — refactored to snapshot-then-restore for every prestige
+ * key. Previously these keys were simply omitted from `wipeSave`'s
+ * removal list, which made "Settings > Wipe save" leave the player on
+ * a non-zero `treeQiMult` (the karma + tree carried over silently).
+ * Now wipeSave is a true factory reset; this function explicitly
+ * preserves what should survive a reincarnation.
  */
 export function wipeReincarnation() {
-  // Snapshot persistent meta-progression BEFORE the wipe so we can re-seed it.
-  let ownedLaws = [];
-  let discoveredPills = null;
-  let pinnedRecipes = null;
-  try {
-    const ownedRaw = localStorage.getItem('mai_owned_laws');
-    ownedLaws = ownedRaw ? JSON.parse(ownedRaw) : [];
-  } catch {}
-  try {
-    discoveredPills = localStorage.getItem('mai_discovered_pills');
-  } catch {}
-  try {
-    pinnedRecipes = localStorage.getItem('mai_pinned_recipes');
-  } catch {}
+  // Snapshot every key that survives a reincarnation BEFORE wipeSave
+  // blows it away. Each snapshot is restored after wipeSave returns.
+  const snapshot = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
+  const restore  = (key, val) => { if (val != null) { try { localStorage.setItem(key, val); } catch {} } };
+
+  const karma                 = snapshot('mai_reincarnation');
+  const tree                  = snapshot('mai_reincarnation_tree');
+  const ownedLawsRaw          = snapshot('mai_owned_laws');
+  const discoveredPills       = snapshot('mai_discovered_pills');
+  const pinnedRecipes         = snapshot('mai_pinned_recipes');
+  const bankedRerolls         = snapshot('mai_banked_rerolls');
+  const rebirthCultBuffUntil  = snapshot('mai_rebirth_cult_buff_until');
 
   wipeSave();
 
+  // Re-seed prestige progression — karma, tree, and tree-driven carryovers.
+  restore('mai_reincarnation',          karma);
+  restore('mai_reincarnation_tree',     tree);
+  restore('mai_banked_rerolls',         bankedRerolls);
+  restore('mai_rebirth_cult_buff_until', rebirthCultBuffUntil);
+
   // Re-seed the law library (no active selection — player picks anew).
-  if (ownedLaws.length > 0) {
+  if (ownedLawsRaw) {
     try {
-      localStorage.setItem('mai_owned_laws', JSON.stringify(ownedLaws));
+      const parsed = JSON.parse(ownedLawsRaw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        localStorage.setItem('mai_owned_laws', ownedLawsRaw);
+      }
     } catch {}
   }
   // Re-seed the alchemy codex.
-  if (discoveredPills) {
-    try { localStorage.setItem('mai_discovered_pills', discoveredPills); } catch {}
-  }
-  if (pinnedRecipes) {
-    try { localStorage.setItem('mai_pinned_recipes', pinnedRecipes); } catch {}
-  }
+  restore('mai_discovered_pills', discoveredPills);
+  restore('mai_pinned_recipes',   pinnedRecipes);
   // mai_active_law was removed by wipeSave; leave it absent so activeLaw
   // derives to null on next load.
 }
