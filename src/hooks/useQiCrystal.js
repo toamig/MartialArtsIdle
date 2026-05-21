@@ -72,26 +72,30 @@ export function getCrystalQiMult(level) {
 /**
  * Refined QI required to reach the given level.
  *
- * 2026-05-21 Dial-5: base 100 chosen so total cumulative L0→L100 cost
- * ≈ 2.5B qi (sum of n³ × 100 from 1 to 100 = ~2.55B), pacing the crystal
- * max-out to land around Saint Middle (realm 25, 1.4B cost) → Saint Late
- * (realm 26, 3.0B cost). Players naturally finish the crystal as they
- * approach the rebirth-loop wall.
+ * 2026-05-21 Dial-5.1: base 100 → 30. Playtest feedback was that early
+ * crystal levels felt too costly relative to producer-spend marginal value
+ * (player was at L7 around 20-25 min mark — first mechanic still gated).
+ * Lowering base 70% makes the L1-L15 stretch feel like a brisk tutorial
+ * rather than a slog, while keeping L100 (max) reachable around Saint
+ * Early/Middle (cumulative ~765M qi).
  *
  * Sample progression:
- *   L1 = 100 qi          (instant)
- *   L10 = 100K qi        (~Qi Transform Late, ~Crystal Reservoir unlock)
- *   L25 = 1.56M qi       (~True Element Late, ~Consecutive Focus)
- *   L50 = 12.5M qi       (~Separation 1st, ~Divine Qi)
- *   L75 = 42.2M qi       (~Immortal Ascension, ~Saint Early)
- *   L100 = 100M qi       (~Saint Middle — Tracing Meridians + max)
+ *   L1   = 30 qi         (instant)
+ *   L5   = 3.75K qi      (first 5 min, ~QT Early)
+ *   L10  = 30K qi        (Crystal Reservoir unlock — ~first major BT)
+ *   L25  = 469K qi       (Consecutive Focus — ~True Element)
+ *   L50  = 3.75M qi      (Divine Qi — ~Separation/IA)
+ *   L75  = 12.7M qi      (Tracing Meridians — ~Immortal Ascension)
+ *   L100 = 30M qi        (Max — ~Saint Early/Middle)
+ *
+ * Cumulative L0→L100 ≈ 765M qi (~Saint Early realm cost 650M).
  *
  * Targets above MAX_CRYSTAL_LEVEL still compute a cost (used by UI to
  * show "max reached") — actual level-up logic clamps the cap.
  */
 export function getRequiredRefinedQi(targetLevel) {
   if (targetLevel < 1) return 0;
-  const raw = 100 * Math.pow(targetLevel, 3.00);
+  const raw = 30 * Math.pow(targetLevel, 3.00);
   // Round to a clean step that scales with magnitude (keeps ~2 significant digits)
   const step = Math.pow(10, Math.max(1, Math.floor(Math.log10(raw)) - 1));
   return Math.round(raw / step) * step;

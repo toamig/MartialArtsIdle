@@ -6,14 +6,19 @@
  *
  * Shape rationale: each tier is ~10× the previous in both cost and output,
  * giving identical payback time across tiers (no producer becomes obsolete).
- * 1.15× scaling per owned unit gives roughly:
- *   - 10 owned ≈ 4× cumulative cost / 10× cumulative output (sweet spot)
- *   - 25 owned ≈ 32× cumulative cost / 25× cumulative output (saturation)
  *
- * All numbers are STARTING VALUES — validate via scripts/sim-cultivation.js
- * (TODO Phase F) before locking in. Tweak `startCost` / `startQiPerSec` only;
- * `costScaling` must stay at 1.15 to preserve the curve shape used by the
- * upgrades plan.
+ * 2026-05-21 Dial-5.1: cost scaling bumped 1.15 → 1.18 to address the
+ * playtest "buy 5 of the new tier on unlock" issue. MAI players accumulate
+ * fatter qi reserves than the Cookie Clicker mirror assumes (sparks, crystal,
+ * mechanics), and 1.15× scaling let them blast 5+ units on each new unlock —
+ * flattening the natural descending-staircase count shape. 1.18× tightens:
+ *   - 5 owned ≈ 1.94× start (was 1.75×) — 3rd/4th/5th now feel meaningful
+ *   - 10 owned ≈ 5.23× start (was 4.05×)
+ *   - 25 owned ≈ 62.7× start (was 32.9×)
+ * Equilibrium staircase gaps shrink ~17% (e.g. 18 → 15) but the shape holds.
+ *
+ * All numbers are STARTING VALUES — validate via scripts/sim-cultivation.js.
+ * Tweak `startCost` / `startQiPerSec` only.
  *
  * Unlock conditions reference realm INDEX (0-based) in `data/realms.js`.
  *
@@ -56,7 +61,7 @@ const PRODUCERS = [
     desc:          'An apprentice kneels in your courtyard, breath even, palms warm. The qi they draw from the air is one thin thread. Every thread strengthens the loom.',
     startCost:     15,
     startQiPerSec: 0.1,
-    costScaling:   1.15,
+    costScaling:   1.18,
     unlock:        { type: 'always' },
     sprites:       [
       '/sprites/producers/p_disciple_bronze.png',
@@ -71,7 +76,7 @@ const PRODUCERS = [
     desc:          'Jade leaves uncurl in the dawn and quietly drink the heavens dry. What the spirit herbs cannot use, they offer up to you.',
     startCost:     100,
     startQiPerSec: 1,
-    costScaling:   1.15,
+    costScaling:   1.18,
     unlock:        { type: 'realm', minRealmIndex: 4 },
     sprites:       [
       '/sprites/producers/p_herb_garden_bronze.png',
@@ -86,7 +91,7 @@ const PRODUCERS = [
     desc:          'Bronze legs, sealed lid, a fire that never gutters. Raw qi enters muddy and bitter; what reaches your meridians is denser than gold.',
     startCost:     1100,
     startQiPerSec: 8,
-    costScaling:   1.15,
+    costScaling:   1.18,
     unlock:        { type: 'realm', minRealmIndex: 9 },
     sprites:       [
       '/sprites/producers/p_meridian_furnace_bronze.png',
@@ -101,7 +106,7 @@ const PRODUCERS = [
     desc:          'A jade pendant your ancestors carried for a hundred lifetimes. Every breath they took left a trace, and every trace bleeds back into you now, patient as a tide.',
     startCost:     12000,
     startQiPerSec: 47,
-    costScaling:   1.15,
+    costScaling:   1.18,
     unlock:        { type: 'realm', minRealmIndex: 13 },
     sprites:       [
       '/sprites/producers/p_treasure_bronze.png',
@@ -116,7 +121,7 @@ const PRODUCERS = [
     desc:          'You whistle once and they return from places no mortal could walk. Tigers with qi-storms tangled in their fur. Foxes with starlight on their tongues. They bring the harvest to your door.',
     startCost:     130000,
     startQiPerSec: 260,
-    costScaling:   1.15,
+    costScaling:   1.18,
     unlock:        { type: 'realm', minRealmIndex: 17 },
     sprites:       [
       '/sprites/producers/p_beast_pact_bronze.png',
@@ -131,7 +136,7 @@ const PRODUCERS = [
     desc:          'Carved before your grandfather\'s grandfather, the pillar climbs until the clouds forget it began as stone. Through its length, the heavens themselves bleed down into your dantian.',
     startCost:     1400000,
     startQiPerSec: 1400,
-    costScaling:   1.15,
+    costScaling:   1.18,
     unlock:        { type: 'realm', minRealmIndex: 20 },
     sprites:       [
       '/sprites/producers/p_pillar_bronze.png',
@@ -146,7 +151,7 @@ const PRODUCERS = [
     desc:          'Ten thousand disciples wake at dawn and bow toward the hall that bears your sigil. A grain of rice from each becomes a mountain. A breath of qi from each becomes a river.',
     startCost:     20000000,
     startQiPerSec: 7800,
-    costScaling:   1.15,
+    costScaling:   1.18,
     unlock:        { type: 'realm', minRealmIndex: 23 },
     sprites:       [
       '/sprites/producers/p_sect_followers_bronze.png',
@@ -161,7 +166,7 @@ const PRODUCERS = [
     desc:          'A wound in reality, never closing, never bleeding less. Through it, qi from a world that is not yours pours into a world that is. Another universe is a generous tithe.',
     startCost:     330000000,
     startQiPerSec: 44000,
-    costScaling:   1.15,
+    costScaling:   1.18,
     unlock:        { type: 'realm', minRealmIndex: 29 },
     sprites:       [
       '/sprites/producers/p_void_bronze.png',
@@ -176,7 +181,7 @@ const PRODUCERS = [
     desc:          'It dreams in your dantian, and one of its dreams is you. The pearl it coils around is older than mountains. Each slow exhalation gilds your meridians with cultivation you never had to earn.',
     startCost:     5100000000,
     startQiPerSec: 260000,
-    costScaling:   1.15,
+    costScaling:   1.18,
     unlock:        { type: 'realm', minRealmIndex: 35 },
     sprites:       [
       '/sprites/producers/p_dragon_bronze.png',
@@ -191,7 +196,7 @@ const PRODUCERS = [
     desc:          'The Fenghuang descends only when the cosmos itself agrees. It folds its rainbow wings around your soul. Every feather is a river. Every cry, a sutra older than heaven.',
     startCost:     75000000000,
     startQiPerSec: 1600000,
-    costScaling:   1.15,
+    costScaling:   1.18,
     unlock:        { type: 'realm', minRealmIndex: 44 },
     sprites:       [
       '/sprites/producers/p_phoenix_bronze.png',
