@@ -670,9 +670,13 @@ function spawnCrystalSpark(layer, intensity) {
   // CSS reads --srot for the end-of-pop rotation; --sscale-start scales the
   // initial pop size with current intensity (less punchy when filling slowly).
   // Rotation kept to a subtle ±20° wobble — sparks should *pop*, not spin.
+  // Scale caps at 0.70 with downward variation: smaller sparks mixed in
+  // alongside the larger ones so the surface reads as "alive with little
+  // glints" rather than uniform pops.
   img.style.setProperty('--srot', `${(Math.random() - 0.5) * 40}deg`);
-  img.style.setProperty('--sscale-start', (0.45 + intensity * 0.25).toFixed(2));
-  img.style.setProperty('--sscale-end',   (0.70 + intensity * 0.20).toFixed(2));
+  const sizeVar = 0.65 + Math.random() * 0.35; // 0.65 → 1.00 multiplier
+  img.style.setProperty('--sscale-start', ((0.30 + intensity * 0.25) * sizeVar).toFixed(2));
+  img.style.setProperty('--sscale-end',   ((0.40 + intensity * 0.30) * sizeVar).toFixed(2));
   img.addEventListener('animationend', () => img.remove(), { once: true });
   layer.appendChild(img);
 }

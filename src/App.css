@@ -5566,28 +5566,39 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
 }
 
 /* Overcharged hue pulse on the crystal sprite.
-   Tuned for visibility (not subtlety): 2.2s slow breathe so the eye registers
-   each phase, +6% scale "inhale", wide gold drop-shadow swing (6px → 22px)
-   so the glow visibly blooms and recedes. Hue stays at the subtle 30°
-   the user previously approved — the *halo* and *breathe* do the heavy
-   lifting on the "overcharged" cue.
+   Asymmetric "heartbeat" curve — quick bloom (0 → ~25% of cycle) then slow
+   recovery (rest of the cycle) so the eye reads each beat as a discrete
+   pulse rather than a smooth sine. Cycle 2.6s. Hue 50°, gold halo blooms
+   6 → 24px, +6% scale inhale, brightness +24%, saturate +50%.
    Overrides the base .home-crystal-img glow animation while active. */
 @keyframes home-crystal-overcharge-pulse {
-  0%, 100% {
+  0% {
     filter:
       brightness(1.05) saturate(1.05) hue-rotate(0deg)
       drop-shadow(0 0 6px rgba(122, 220, 196, 0.45));
     transform: scale(1);
   }
-  50% {
+  25% {
     filter:
-      brightness(1.22) saturate(1.45) hue-rotate(30deg)
-      drop-shadow(0 0 22px rgba(245, 175, 20, 1));
+      brightness(1.24) saturate(1.50) hue-rotate(50deg)
+      drop-shadow(0 0 24px rgba(245, 175, 20, 1));
     transform: scale(1.06);
+  }
+  70% {
+    filter:
+      brightness(1.06) saturate(1.08) hue-rotate(2deg)
+      drop-shadow(0 0 8px rgba(160, 200, 180, 0.55));
+    transform: scale(1.005);
+  }
+  100% {
+    filter:
+      brightness(1.05) saturate(1.05) hue-rotate(0deg)
+      drop-shadow(0 0 6px rgba(122, 220, 196, 0.45));
+    transform: scale(1);
   }
 }
 .home-crystal-img.home-crystal-overcharged {
-  animation: home-crystal-overcharge-pulse 2.2s ease-in-out infinite;
+  animation: home-crystal-overcharge-pulse 2.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
   transform-origin: center;
 }
 
