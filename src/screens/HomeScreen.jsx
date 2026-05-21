@@ -13,7 +13,8 @@ import { FEATURE_GATES } from '../data/featureGates';
 import { useEventQueue } from '../contexts/EventQueueContext';
 import { QI_SPARK_BY_ID } from '../data/qiSparks';
 import { sparksToGrantOnEvolution } from '../data/crystalMechanicGrants';
-import TutorialModal from '../components/TutorialModal';
+// TutorialModal render lives in App.jsx so onboarding cards work on every
+// screen, not just Home. Trigger sites here just call fireTutorialOnce.
 import { fireTutorialOnce } from '../systems/fireTutorial';
 import { TUTORIAL_IDS } from '../data/tutorialCards';
 import WORLDS from '../data/worlds';
@@ -2637,22 +2638,10 @@ function HomeScreen({
         />
       )}
 
-      {/* Tutorial popups — queued after celebrations (e.g. new mechanic
-          unlocked by a crystal evolution). Generic; reusable for any future
-          onboarding moment. */}
-      {currentEvent?.kind === 'tutorial' && (
-        <TutorialModal
-          key={currentEvent.id}
-          kicker={currentEvent.payload?.kicker}
-          title={currentEvent.payload?.title}
-          body={currentEvent.payload?.body}
-          iconSrc={currentEvent.payload?.iconSrc}
-          ctaText={currentEvent.payload?.ctaText}
-          glowA={currentEvent.payload?.glowA}
-          glowB={currentEvent.payload?.glowB}
-          onDone={() => dismiss(currentEvent.id)}
-        />
-      )}
+      {/* TutorialModal moved to App.jsx (2026-05-21) so onboarding cards
+          fire on whichever screen the player is currently looking at —
+          e.g. first_producer fires while you're still on the Cultivation
+          tab, not after you navigate back to Home. */}
 
     </div>
   );

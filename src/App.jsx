@@ -60,6 +60,7 @@ import { QI_SPARK_BY_ID, QI_SPARKS } from './data/qiSparks';
 import { PRODUCERS_BY_ID } from './data/producers';
 import { fireTutorialOnce } from './systems/fireTutorial';
 import { TUTORIAL_IDS } from './data/tutorialCards';
+import TutorialModal from './components/TutorialModal';
 
 // Which screens are hidden by which build-time feature flag. Routes to a
 // blocked screen are silently rewritten to `home` by navigate() below, so
@@ -1338,6 +1339,28 @@ function AppInner() {
           pityThreshold={qiSparks.pityThreshold}
           legendaryChance={qiSparks.legendaryChance}
           legendaryPoolInfo={legendaryPoolInfo}
+        />
+      )}
+      {/* Tutorial cards (Tier A onboarding + crystal-tier mechanic unlocks).
+          Rendered at App.jsx level so they fire regardless of active screen
+          — e.g. first_producer triggers while still on Cultivation, not
+          after navigating Home. Suppressed while the spark choice modal or
+          a major-realm breakthrough cinematic is showing so we don't stack
+          modals on top of each other. */}
+      {currentEvent?.kind === 'tutorial'
+        && !qiSparks.pendingOffer
+        && !cultivation.majorBreakthrough
+        && (
+        <TutorialModal
+          key={currentEvent.id}
+          kicker={currentEvent.payload?.kicker}
+          title={currentEvent.payload?.title}
+          body={currentEvent.payload?.body}
+          iconSrc={currentEvent.payload?.iconSrc}
+          ctaText={currentEvent.payload?.ctaText}
+          glowA={currentEvent.payload?.glowA}
+          glowB={currentEvent.payload?.glowB}
+          onDone={() => dismiss(currentEvent.id)}
         />
       )}
       {activeModal === 'settings'     && <SettingsScreen onClose={() => setActiveModal(null)} />}
