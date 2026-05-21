@@ -130,29 +130,33 @@ const QI_SPARKS_RAW = [
   },
 
   // ── Uncommon (permanent run buffs, additive stacking) ───────────────────
+  // 2026-05-21 Dial-8 spark tuning — Steady Cultivation was the worst early-
+  // game offender (+1 base qi/s × multiple stacks when base rate IS 1 =
+  // doubled/tripled production from sparks alone). Cut by half. Sharper
+  // Focus and Enduring Stream slightly trimmed too.
   {
     id:          'steady_cultivation',
     rarity:      'uncommon',
     name:        'Steady Cultivation',
-    description: '+1 base qi/s for the rest of this run. Stacks.',
+    description: '+0.5 base qi/s for the rest of this run. Stacks.',
     kind:        'permanent',
-    effect:      { type: 'qi_flat_per_stack', value: 1 },
+    effect:      { type: 'qi_flat_per_stack', value: 0.5 },
   },
   {
     id:          'sharper_focus',
     rarity:      'uncommon',
     name:        'Sharper Focus',
-    description: '+5% Focus multiplier for the rest of this run. Stacks.',
+    description: '+3% Focus multiplier for the rest of this run. Stacks.',
     kind:        'permanent',
-    effect:      { type: 'focus_mult_bonus_per_stack', value: 0.05 },
+    effect:      { type: 'focus_mult_bonus_per_stack', value: 0.03 },
   },
   {
     id:          'enduring_stream',
     rarity:      'uncommon',
     name:        'Enduring Stream',
-    description: '+2% qi/s for the rest of this run. Stacks.',
+    description: '+1.5% qi/s for the rest of this run. Stacks.',
     kind:        'permanent',
-    effect:      { type: 'qi_mult_per_stack', value: 0.02 },
+    effect:      { type: 'qi_mult_per_stack', value: 0.015 },
   },
   {
     id:          'patience_of_stone',
@@ -753,20 +757,20 @@ export const SPARK_COPY = {
   // ── Uncommon ───────────────────────────────────────────────────────────
   steady_cultivation: {
     icon: '🌱',
-    effectText: 'Permanently gain **+1 base qi/s** for the rest of this run. Stacks if drawn again.',
-    exampleText: 'Drawn three times → <strong>+3 base qi/s</strong>. This flat bonus is then multiplied by crystal, focus, law, and other multipliers — endgame impact can be huge.',
+    effectText: 'Permanently gain **+0.5 base qi/s** for the rest of this run. Stacks if drawn again.',
+    exampleText: 'Drawn three times → <strong>+1.5 base qi/s</strong>. This flat bonus is then multiplied by crystal, focus, law, and other multipliers — endgame impact can be huge.',
     loreText: 'One breath at dawn, one at dusk. The thousandth breath is the same as the first, and that is the whole secret.',
   },
   sharper_focus: {
     icon: '🔍',
-    effectText: 'Permanently adds **+5%** to your Focus multiplier for the rest of this run. Stacks if drawn again.',
-    exampleText: 'Three stacks → Focus is <strong>+15% stronger</strong>. Especially powerful if you Focus often.',
+    effectText: 'Permanently adds **+3%** to your Focus multiplier for the rest of this run. Stacks if drawn again.',
+    exampleText: 'Three stacks → Focus is <strong>+9% stronger</strong>. Especially powerful if you Focus often.',
     loreText: 'The blade is sharpened on the same stone, every morning.',
   },
   enduring_stream: {
     icon: '🏞️',
-    effectText: 'Permanently boosts your qi/s by **+2%** for the rest of this run. Stacks if drawn again.',
-    exampleText: 'Five stacks compounds to roughly <strong>+10% total qi/s</strong>. Small but reliable, never expires.',
+    effectText: 'Permanently boosts your qi/s by **+1.5%** for the rest of this run. Stacks if drawn again.',
+    exampleText: 'Five stacks compounds to roughly <strong>+7.5% total qi/s</strong>. Small but reliable, never expires.',
     loreText: 'The river that never stops becomes the sea.',
   },
   patience_of_stone: {

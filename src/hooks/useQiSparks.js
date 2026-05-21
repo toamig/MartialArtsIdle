@@ -189,6 +189,12 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
   const crystalClickCapMinRef     = useRef(0);
 
   const prevRealmIndexRef = useRef(cultivation.realmIndex);
+  // 2026-05-21 Dial-8: spark offers happen every-other sub-stage BT to halve
+  // the per-run draw count (was ~50, now ~25-30). Major-realm transitions
+  // ALWAYS get a spark (preserves the "celebrate the BT with a spark" beat
+  // at the moments that matter most). Counter is non-persisted ref — if a
+  // player saves and reloads mid-run it resets harmlessly.
+  const subStageSparkCounterRef = useRef(0);
 
   // Persist
   useEffect(() => { saveJSON(ACTIVE_KEY,  activeSparks); }, [activeSparks]);
@@ -406,6 +412,21 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
       }
       return next;
     });
+
+    // 2026-05-21 Dial-8: gate the spark draw.
+    //   - Major-realm transitions (name change) ALWAYS draw a spark.
+    //   - Sub-stage breakthroughs draw every OTHER one (counter % 2 === 0).
+    // Halves the per-run spark count while keeping the dramatic "you broke
+    // through to a new realm name, here's a spark" moment intact.
+    const isMajor = isMajorTransition(prev);
+    let shouldDrawSpark = false;
+    if (isMajor) {
+      shouldDrawSpark = true;
+    } else {
+      subStageSparkCounterRef.current += 1;
+      shouldDrawSpark = (subStageSparkCounterRef.current % 2 === 0);
+    }
+    if (!shouldDrawSpark) return;  // skip the draw entirely this BT
 
     // Roll a new offer if none is pending. If one is pending (player took too
     // long on the previous breakthrough), auto-resolve it to the leftmost so
