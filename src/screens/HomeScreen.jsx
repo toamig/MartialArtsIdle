@@ -1266,18 +1266,35 @@ function usePatternClick({ activeSparks, rateRef, qiRef }) {
 }
 
 // ── Spark coordinator ───────────────────────────────────────────────────────
-// Divine Qi and Pattern Click both demand the player's attention. Letting them
-// fire on top of each other forces context-switching and feels chaotic, so this
-// shared module-level latch ensures only one is active at a time. The losing
-// mechanic simply skips its spawn slot and re-arms on the next interval.
+// Divine Qi and Pattern Click both demand the player's attention. Two layers:
+//
+//  1. ATTENTION LATCH — only one mechanic active at a time. Losing mechanic
+//     skips its spawn slot.
+//  2. POST-EVENT COOLDOWN — after any mechanic resolves, neither can spawn
+//     again for MIN_SPACING_MS. Matches Cookie Clicker's Golden Cookie cadence
+//     (events are RARE and IMPACTFUL, not constant ambient noise). Without
+//     this, two mechanics with overlapping spawn timers fire back-to-back.
+//
+// 2026-05-21 Dial-6: spacing enforced. Per-event rewards bumped up to
+// compensate; net average contribution drops from ~1.6× to ~0.6× background.
 const sparkAttentionRef = { current: null }; // 'divine' | 'pattern' | null
+const sparkCooldownUntilRef = { current: 0 }; // ms timestamp (performance.now)
+const MIN_SPACING_MS = 90_000; // 1.5 min between any two mechanic events
+
 function tryClaimSparkAttention(id) {
   if (sparkAttentionRef.current !== null) return false;
+  // Respect the post-event cooldown so back-to-back spawns can't happen.
+  if (performance.now() < sparkCooldownUntilRef.current) return false;
   sparkAttentionRef.current = id;
   return true;
 }
 function releaseSparkAttention(id) {
-  if (sparkAttentionRef.current === id) sparkAttentionRef.current = null;
+  if (sparkAttentionRef.current === id) {
+    sparkAttentionRef.current = null;
+    // Start the post-event cooldown — next mechanic can't fire until this
+    // expires. Cheap insurance against perfectly-overlapping timers.
+    sparkCooldownUntilRef.current = performance.now() + MIN_SPACING_MS;
+  }
 }
 
 // ── Divine Qi — golden orb mechanic ─────────────────────────────────────────
