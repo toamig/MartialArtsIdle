@@ -81,7 +81,9 @@ const PRODUCERS = [
     startCost:     100,
     startQiPerSec: 1,
     costScaling:   1.22,
-    unlock:        { type: 'realm', minRealmIndex: 4 },
+    // 2026-05-21 Dial-8: realm 4 → 2 (TB L3). Player has ~150-250 qi when
+    // it unlocks instead of 400-600 — can afford 1-2 instead of 4+. Grindy.
+    unlock:        { type: 'realm', minRealmIndex: 2 },
     sprites:       [
       '/sprites/producers/p_herb_garden_bronze.png',
       '/sprites/producers/p_herb_garden_silver.png',
@@ -96,7 +98,9 @@ const PRODUCERS = [
     startCost:     1100,
     startQiPerSec: 8,
     costScaling:   1.22,
-    unlock:        { type: 'realm', minRealmIndex: 9 },
+    // 2026-05-21 Dial-8: realm 9 → 7 (TB L8). Player still grinding through
+    // TB layers when it unlocks — natural "stretch goal" alongside refining.
+    unlock:        { type: 'realm', minRealmIndex: 7 },
     sprites:       [
       '/sprites/producers/p_meridian_furnace_bronze.png',
       '/sprites/producers/p_meridian_furnace_silver.png',
@@ -111,7 +115,8 @@ const PRODUCERS = [
     startCost:     12000,
     startQiPerSec: 47,
     costScaling:   1.22,
-    unlock:        { type: 'realm', minRealmIndex: 13 },
+    // 2026-05-21 Dial-8: realm 13 → 11 (QT Middle instead of QT Peak).
+    unlock:        { type: 'realm', minRealmIndex: 11 },
     sprites:       [
       '/sprites/producers/p_treasure_bronze.png',
       '/sprites/producers/p_treasure_silver.png',
@@ -126,7 +131,8 @@ const PRODUCERS = [
     startCost:     130000,
     startQiPerSec: 260,
     costScaling:   1.22,
-    unlock:        { type: 'realm', minRealmIndex: 17 },
+    // 2026-05-21 Dial-8: realm 17 → 15 (TE Middle instead of TE Peak).
+    unlock:        { type: 'realm', minRealmIndex: 15 },
     sprites:       [
       '/sprites/producers/p_beast_pact_bronze.png',
       '/sprites/producers/p_beast_pact_silver.png',
@@ -141,7 +147,8 @@ const PRODUCERS = [
     startCost:     1400000,
     startQiPerSec: 1400,
     costScaling:   1.22,
-    unlock:        { type: 'realm', minRealmIndex: 20 },
+    // 2026-05-21 Dial-8: realm 20 → 18 (Sep 1st instead of Sep 3rd).
+    unlock:        { type: 'realm', minRealmIndex: 18 },
     sprites:       [
       '/sprites/producers/p_pillar_bronze.png',
       '/sprites/producers/p_pillar_silver.png',
@@ -156,7 +163,8 @@ const PRODUCERS = [
     startCost:     20000000,
     startQiPerSec: 7800,
     costScaling:   1.22,
-    unlock:        { type: 'realm', minRealmIndex: 23 },
+    // 2026-05-21 Dial-8: realm 23 → 21 (IA 1st instead of IA 3rd).
+    unlock:        { type: 'realm', minRealmIndex: 21 },
     sprites:       [
       '/sprites/producers/p_sect_followers_bronze.png',
       '/sprites/producers/p_sect_followers_silver.png',
@@ -171,7 +179,8 @@ const PRODUCERS = [
     startCost:     330000000,
     startQiPerSec: 44000,
     costScaling:   1.22,
-    unlock:        { type: 'realm', minRealmIndex: 29 },
+    // 2026-05-21 Dial-8: realm 29 → 27 (SK 1st instead of SK 3rd).
+    unlock:        { type: 'realm', minRealmIndex: 27 },
     sprites:       [
       '/sprites/producers/p_void_bronze.png',
       '/sprites/producers/p_void_silver.png',
@@ -186,7 +195,8 @@ const PRODUCERS = [
     startCost:     5100000000,
     startQiPerSec: 260000,
     costScaling:   1.22,
-    unlock:        { type: 'realm', minRealmIndex: 35 },
+    // 2026-05-21 Dial-8: realm 35 → 33 (OK 1st instead of OK 3rd).
+    unlock:        { type: 'realm', minRealmIndex: 33 },
     sprites:       [
       '/sprites/producers/p_dragon_bronze.png',
       '/sprites/producers/p_dragon_silver.png',
@@ -201,7 +211,8 @@ const PRODUCERS = [
     startCost:     75000000000,
     startQiPerSec: 1600000,
     costScaling:   1.22,
-    unlock:        { type: 'realm', minRealmIndex: 44 },
+    // 2026-05-21 Dial-8: realm 44 → 42 (Emperor 1st instead of Emperor 3rd).
+    unlock:        { type: 'realm', minRealmIndex: 42 },
     sprites:       [
       '/sprites/producers/p_phoenix_bronze.png',
       '/sprites/producers/p_phoenix_silver.png',
