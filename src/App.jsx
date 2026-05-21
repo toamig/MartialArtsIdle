@@ -35,7 +35,7 @@ import useTechniques  from './hooks/useTechniques';
 import useCombat      from './hooks/useCombat';
 import useArtefacts   from './hooks/useArtefacts';
 import usePills       from './hooks/usePills';
-import useQiCrystal  from './hooks/useQiCrystal';
+import useQiCrystal, { getCrystalTier as getQiCrystalTier } from './hooks/useQiCrystal';
 import useProducers  from './hooks/useProducers';
 import useUpgrades   from './hooks/useUpgrades';
 import useAutoFarm    from './hooks/useAutoFarm';
@@ -161,6 +161,26 @@ function AppInner() {
   const pills           = usePills();
   const totalOwnedPills = Object.values(pills.ownedPills).reduce((s, n) => s + n, 0);
   const crystal         = useQiCrystal({ getQuantity: inventory.getQuantity, removeItem: inventory.removeItem });
+  // Mirror current crystal tier into a body class so the qi-VFX colour
+  // bundle (--qi-aura-*, --qi-text-*, --qi-bar-*) cascades from there.
+  // App.css `body.crystal-tier-{1..6}` blocks set the palette; aura,
+  // floaters, and Qi-bar fill all read from those vars.
+  //
+  // Tier mapping mirrors useQiCrystal.js (2026-05-21 Dial-5, cap L100):
+  //   T1 = L1, T2 = L10, T3 = L25, T4 = L50, T5 = L75, T6 = L100.
+  useEffect(() => {
+    const TIERS = [
+      [100, 6], [75, 5], [50, 4], [25, 3], [10, 2], [1, 1],
+    ];
+    const level = crystal?.level ?? 0;
+    let tier = 1;
+    for (const [thresh, t] of TIERS) {
+      if (level >= thresh) { tier = t; break; }
+    }
+    const cls = `crystal-tier-${tier}`;
+    document.body.classList.add(cls);
+    return () => document.body.classList.remove(cls);
+  }, [crystal?.level]);
   const producers       = useProducers();
   const upgrades        = useUpgrades();
   const { clearedRegions, clearRegion } = useClearedRegions();

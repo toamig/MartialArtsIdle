@@ -6,8 +6,9 @@ import { fmt as fmtQi } from '../utils/format';
 
 const BASE = import.meta.env.BASE_URL;
 
-const TIER_THRESHOLDS = [1000, 750, 500, 350, 200, 100, 50, 25, 10, 1];
-const TIER_VALUES     = [  10,   9,   8,   7,   6,   5,  4,  3,  2, 1];
+// 2026-05-21 Dial-5: capped at L100. Mirrors useQiCrystal.js + HomeScreen.jsx.
+const TIER_THRESHOLDS = [100, 75, 50, 25, 10, 1];
+const TIER_VALUES     = [  6,  5,  4,  3,  2, 1];
 const RARITY_ORDER    = ['Iron', 'Bronze', 'Silver', 'Gold', 'Transcendent'];
 
 function getCrystalTier(level) {

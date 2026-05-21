@@ -332,8 +332,10 @@ function ConsecutiveFocusMeter({ ladder, boostStartTimeRef }) {
   );
 }
 
-const CRYSTAL_TIER_THRESHOLDS = [1000, 750, 500, 350, 200, 100, 50, 25, 10, 1];
-const CRYSTAL_TIER_VALUES     = [  10,   9,   8,   7,   6,   5,  4,  3,  2, 1];
+// 2026-05-21 Dial-5: crystal capped at L100. Tier thresholds redistributed.
+// Mirrors useQiCrystal.js — keep in sync.
+const CRYSTAL_TIER_THRESHOLDS = [100, 75, 50, 25, 10, 1];
+const CRYSTAL_TIER_VALUES     = [  6,  5,  4,  3,  2, 1];
 
 function getCrystalTier(level) {
   for (let i = 0; i < CRYSTAL_TIER_THRESHOLDS.length; i++) {

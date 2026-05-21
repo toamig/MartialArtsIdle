@@ -6,16 +6,20 @@
  * trigger a level-up which raises the multiplier and unlocks mechanic-tier
  * sparks at visual evolutions (L10, L25, L50, L100 — see `crystalMechanicGrants.js`).
  *
- * Multiplier formula:
- *   crystalQiMult = 1 + level × CRYSTAL_MULT_PER_LEVEL  (currently 0.01 → 1% / lvl)
+ * 2026-05-21 Dial-5 rebalance: the crystal is now a CAPPED, COMPLETABLE
+ * subsystem (max L100). Players max it in the Saint band and the long-term
+ * progression moves to Eternal Tree + future content. Eliminates the "1000+
+ * crystal levels of grind" fatigue.
  *
- * Designer intent: the crystal IS the player's primary global qi multiplier.
- * It compounds with every additive source of qi (producers, sparks, base
- * rate, etc.). Levels are the main scaling lever after producer purchases.
+ * Multiplier formula (post-Dial-5):
+ *   crystalQiMult = 1 + level × 0.02         (linear, ×3.0 at L100 cap)
  *
- * No hard level cap — but cost grows cubically (n³) while bonus grows
- * linearly (×1% per level), so marginal qi/s/qi ratio decays fast enough
- * that grinding past ~1000 is uneconomical compared to producer buys.
+ * Cost formula:
+ *   cost(n) = 1000 × n³  rounded to ~2 sig figs
+ *   L1 = 1K, L10 = 1M, L25 = 15.6M, L50 = 125M, L100 = 1B
+ *
+ * L100 is reachable around Saint Middle/Late (650M-3B qi), so the player
+ * naturally maxes the crystal as they approach the rebirth-loop wall.
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -25,14 +29,24 @@ import { trackCrystalFed } from '../analytics';
 const SAVE_KEY = 'mai_qi_crystal';
 
 /**
- * Visual tier thresholds — the level at which the crystal evolves to a new
- * sprite (tier 2 = L10, tier 3 = L25, …). Kept in sync with the copies in
- * HomeScreen.jsx and CrystalFeedModal.jsx.
+ * Hard level cap. Crystal is a capped-completable subsystem (Dial-5).
+ * Once a player hits L100 they've maxed the crystal — no further grind.
+ * Long-term progression continues via Eternal Tree + future content.
  */
-const CRYSTAL_TIER_THRESHOLDS = [1000, 750, 500, 350, 200, 100, 50, 25, 10, 1];
-const CRYSTAL_TIER_VALUES     = [  10,   9,   8,   7,   6,   5,  4,  3,  2, 1];
+export const MAX_CRYSTAL_LEVEL = 100;
 
-/** Visual tier (1–10) for a given crystal level. Level 0 returns 0. */
+/**
+ * Visual tier thresholds — the level at which the crystal evolves to a new
+ * sprite. Re-distributed for the L100 cap (Dial-5):
+ *   T1 = L1, T2 = L10, T3 = L25, T4 = L50, T5 = L75, T6 = L100.
+ * T2-T5 grant mechanic-tier sparks (see crystalMechanicGrants.js).
+ * T6 is the "max crystal" visual milestone — no spark grant, just glow.
+ * Kept in sync with the copies in HomeScreen.jsx and CrystalFeedModal.jsx.
+ */
+const CRYSTAL_TIER_THRESHOLDS = [100, 75, 50, 25, 10, 1];
+const CRYSTAL_TIER_VALUES     = [  6,  5,  4,  3,  2, 1];
+
+/** Visual tier for a given crystal level. Level 0 returns 0. */
 export function getCrystalTier(level) {
   if (level <= 0) return 0;
   for (let i = 0; i < CRYSTAL_TIER_THRESHOLDS.length; i++) {
@@ -41,46 +55,43 @@ export function getCrystalTier(level) {
   return 1;
 }
 
-/** Multiplier per crystal level. Total mult = 1 + level × this. Legacy export
- *  kept for any consumers that read it; the actual formula now lives in
- *  getCrystalQiMult() with diminishing returns past level 200. */
-export const CRYSTAL_MULT_PER_LEVEL = 0.01;
+/** Multiplier per crystal level. Linear +2% per level up to the cap.
+ *  Kept as a named export so any consumers can compute marginal gains. */
+export const CRYSTAL_MULT_PER_LEVEL = 0.02;
 
 /**
  * Total cultivation rate multiplier from owning a crystal at `level`.
- *
- * 2026-05-21 Dial-4 rebalance (multiplier compression):
- *   - Levels   1-200: +1% per level   (linear, +200% at L200 = ×3.0 mult)
- *   - Levels 200+   : +0.3% per level (diminishing — ×6.0 mult at L1000)
- *
- * Previous formula: +1% per level uncapped (×11 at L1000, ×31 at L3000).
- * The compounding crystal mult was the single biggest contributor to the
- * "qi firehose" mid-late game; this softens it without flatlining the
- * crystal as an engagement lever.
+ * Clamped to MAX_CRYSTAL_LEVEL — once you max, the mult is fixed at ×3.0.
  */
 export function getCrystalQiMult(level) {
   if (level <= 0) return 1;
-  if (level <= 200) return 1 + level * 0.01;
-  return 1 + 200 * 0.01 + (level - 200) * 0.003;
+  const clamped = Math.min(level, MAX_CRYSTAL_LEVEL);
+  return 1 + clamped * CRYSTAL_MULT_PER_LEVEL;
 }
 
 /**
  * Refined QI required to reach the given level.
  *
- * Exponent 3.00: cost grows n³ while the multiplier grows linearly. The
- * marginal qi/s gain per qi spent decays ~1/n² so the crystal naturally
- * soft-caps player interest around level 1000-2000 — past that, producer
- * purchases dominate the marginal-return calculation.
+ * 2026-05-21 Dial-5: base 100 chosen so total cumulative L0→L100 cost
+ * ≈ 2.5B qi (sum of n³ × 100 from 1 to 100 = ~2.55B), pacing the crystal
+ * max-out to land around Saint Middle (realm 25, 1.4B cost) → Saint Late
+ * (realm 26, 3.0B cost). Players naturally finish the crystal as they
+ * approach the rebirth-loop wall.
  *
- * Design intent: the crystal is for mechanic discovery (T2-T5 evolutions
- * grant mechanic-tier sparks) + a small global qi mult. NOT a primary qi
- * engine. See sim-cultivation.mjs for the optimal-greedy audit.
+ * Sample progression:
+ *   L1 = 100 qi          (instant)
+ *   L10 = 100K qi        (~Qi Transform Late, ~Crystal Reservoir unlock)
+ *   L25 = 1.56M qi       (~True Element Late, ~Consecutive Focus)
+ *   L50 = 12.5M qi       (~Separation 1st, ~Divine Qi)
+ *   L75 = 42.2M qi       (~Immortal Ascension, ~Saint Early)
+ *   L100 = 100M qi       (~Saint Middle — Tracing Meridians + max)
  *
- * Sample progression: 25, 200, 680, 1600, 3100, 5400, 8600, …
+ * Targets above MAX_CRYSTAL_LEVEL still compute a cost (used by UI to
+ * show "max reached") — actual level-up logic clamps the cap.
  */
 export function getRequiredRefinedQi(targetLevel) {
   if (targetLevel < 1) return 0;
-  const raw = 25 * Math.pow(targetLevel, 3.00);
+  const raw = 100 * Math.pow(targetLevel, 3.00);
   // Round to a clean step that scales with magnitude (keeps ~2 significant digits)
   const step = Math.pow(10, Math.max(1, Math.floor(Math.log10(raw)) - 1));
   return Math.round(raw / step) * step;
@@ -91,10 +102,13 @@ function loadState() {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
       const data = JSON.parse(raw);
-      return {
-        level: data.level ?? 0,
-        refinedQi: data.refinedQi ?? 0,
-      };
+      // 2026-05-21 Dial-5: clamp legacy saves above the new cap. Players
+      // with pre-cap crystals at L1000+ snap to L100 (mult ×3.0). RQI is
+      // also zeroed so the "level up" UI doesn't show progress against a
+      // cap they can't pass.
+      const level     = Math.max(0, Math.min(MAX_CRYSTAL_LEVEL, data.level ?? 0));
+      const refinedQi = level >= MAX_CRYSTAL_LEVEL ? 0 : Math.max(0, data.refinedQi ?? 0);
+      return { level, refinedQi };
     }
   } catch {}
   return { level: 0, refinedQi: 0 };
@@ -119,11 +133,12 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     crystalQiBonusRef.current = getCrystalQiMult(state.level);
   }, [state.level]);
 
-  /** Internal helper — set state, update ref, persist. */
+  /** Internal helper — set state, update ref, persist. Clamps to cap. */
   const applyState = useCallback((newState) => {
+    const level = Math.max(0, Math.min(MAX_CRYSTAL_LEVEL, newState.level));
     const next = {
-      level: Math.max(0, newState.level),
-      refinedQi: Math.max(0, newState.refinedQi),
+      level,
+      refinedQi: level >= MAX_CRYSTAL_LEVEL ? 0 : Math.max(0, newState.refinedQi),
     };
     setState(next);
     crystalQiBonusRef.current = getCrystalQiMult(next.level);
@@ -149,8 +164,8 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
       let { level, refinedQi } = prev;
       refinedQi += actualQty * rqi;
 
-      // Auto-level when threshold crossed (no cap)
-      while (true) {
+      // Auto-level when threshold crossed — clamped at MAX_CRYSTAL_LEVEL.
+      while (level < MAX_CRYSTAL_LEVEL) {
         const needed = getRequiredRefinedQi(level + 1);
         if (refinedQi >= needed) {
           refinedQi -= needed;
@@ -159,9 +174,11 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
           break;
         }
       }
+      // Once at cap, excess RQI is discarded (no point banking it).
+      if (level >= MAX_CRYSTAL_LEVEL) refinedQi = 0;
 
       const next = { level, refinedQi };
-      crystalQiBonusRef.current = (level * (level + 3)) / 2;
+      crystalQiBonusRef.current = getCrystalQiMult(level);
       saveState(next);
       return next;
     });
@@ -206,12 +223,13 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     // Treat locked (tier 0) as tier 1 for evolution purposes — the locked sprite
     // is effectively the tier-1 crystal dimmed, so unlocking isn't a true tier jump.
     const startTier = Math.max(getCrystalTier(level), 1);
-    while (true) {
+    while (level < MAX_CRYSTAL_LEVEL) {
       const needed = getRequiredRefinedQi(level + 1);
       if (refinedQi < needed) break;
       refinedQi -= needed;
       level += 1;
     }
+    if (level >= MAX_CRYSTAL_LEVEL) refinedQi = 0;
     const endTier = getCrystalTier(level);
     const result  = endTier !== startTier
       ? { tierChanged: true, previousTier: startTier, newTier: endTier, newLevel: level }
@@ -246,12 +264,13 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     let level     = state.level;
     let refinedQi = state.refinedQi + amount;
     const startTier = Math.max(getCrystalTier(level), 1);
-    while (true) {
+    while (level < MAX_CRYSTAL_LEVEL) {
       const needed = getRequiredRefinedQi(level + 1);
       if (refinedQi < needed) break;
       refinedQi -= needed;
       level += 1;
     }
+    if (level >= MAX_CRYSTAL_LEVEL) refinedQi = 0;
     const endTier = getCrystalTier(level);
     const result  = endTier !== startTier
       ? { tierChanged: true, previousTier: startTier, newTier: endTier, newLevel: level }
@@ -261,7 +280,10 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     return result;
   }, [state.level, state.refinedQi, applyState]);
 
-  const requiredForNext = getRequiredRefinedQi(state.level + 1);
+  // 2026-05-21 Dial-5: at max level requiredForNext = 0, so the refine UI
+  // (which gates on `cost > 0`) automatically hides the upgrade affordance.
+  const isMaxed = state.level >= MAX_CRYSTAL_LEVEL;
+  const requiredForNext = isMaxed ? 0 : getRequiredRefinedQi(state.level + 1);
 
   // Rebalance (2026-05-17): expose the multiplier directly. Keep the legacy
   // `crystalQiBonus` field name so any UI consumer that hasn't migrated still
@@ -271,6 +293,8 @@ export default function useQiCrystal({ getQuantity, removeItem } = {}) {
     level:            state.level,
     refinedQi:        state.refinedQi,
     requiredForNext,
+    isMaxed,
+    maxLevel:         MAX_CRYSTAL_LEVEL,
     crystalQiMult,
     crystalQiBonus:   crystalQiMult, // legacy alias — soft-deprecated
     crystalQiBonusRef,                // ref now holds the multiplier

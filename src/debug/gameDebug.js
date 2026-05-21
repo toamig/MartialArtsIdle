@@ -471,9 +471,10 @@ export function initDebug(hooksRef) {
     },
 
     crystalEvolve(newTier, previousTier, newLevel, variant) {
-      const TIER_LEVELS = { 1:1, 2:10, 3:25, 4:50, 5:100, 6:200, 7:350, 8:500, 9:750, 10:1000 };
+      // 2026-05-21 Dial-5: crystal capped at L100 → 6 visual tiers.
+      const TIER_LEVELS = { 1: 1, 2: 10, 3: 25, 4: 50, 5: 75, 6: 100 };
       if (!TIER_LEVELS[newTier]) {
-        console.warn(`[debug] Invalid tier ${newTier} — use 1–10`);
+        console.warn(`[debug] Invalid tier ${newTier} — use 1–6`);
         return;
       }
       const prev = previousTier ?? Math.max(0, newTier - 1);

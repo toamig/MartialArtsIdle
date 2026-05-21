@@ -220,16 +220,14 @@ export default function useCultivation() {
 
     // Crystal multiplier — reads `mai_qi_crystal` directly so offline calc
     // applies the global crystal mult without needing React to mount first.
-    // Mirrors the diminishing-returns curve in useQiCrystal.getCrystalQiMult
-    // (2026-05-21 Dial-4): linear +1%/level up to L200, then +0.3%/level past.
+    // Mirrors useQiCrystal.getCrystalQiMult (2026-05-21 Dial-5):
+    //   capped at L100, mult = 1 + min(level, 100) × 0.02.
     let crystalMult = 1;
     try {
       const raw = localStorage.getItem('mai_qi_crystal');
       if (raw) {
         const lvl = JSON.parse(raw).level ?? 0;
-        crystalMult = lvl <= 0      ? 1
-                    : lvl <= 200    ? 1 + lvl * 0.01
-                    :                 1 + 200 * 0.01 + (lvl - 200) * 0.003;
+        crystalMult = lvl <= 0 ? 1 : 1 + Math.min(lvl, 100) * 0.02;
       }
     } catch {}
 
