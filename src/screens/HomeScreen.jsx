@@ -830,8 +830,12 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
       // is display:none'd (vfx-disabled body class), clientWidth=0 makes the
       // spawn-position math collapse to (0,0), and re-enabling vfx would
       // dump those misplaced sparks into the top-left corner.
+      // Also halts while the crystal is "lifted" for an evolution overlay
+      // (`hidden` prop true) — anchor fades to opacity:0 then back; without
+      // this guard, sparks would spawn invisibly through the overlay and
+      // pop into view mid-animation when the crystal returns.
       const layer = vfxLayerRef.current;
-      if (intensity > 0 && layer && layer.clientWidth > 0 && layer.clientHeight > 0) {
+      if (intensity > 0 && !hidden && layer && layer.clientWidth > 0 && layer.clientHeight > 0) {
         const interval = CRYSTAL_VFX_SPARK_MAX_MS
           - (CRYSTAL_VFX_SPARK_MAX_MS - CRYSTAL_VFX_SPARK_MIN_MS) * intensity;
         if (now - lastSpark > interval) {
@@ -844,7 +848,7 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [mechanicOn, reservoirRef, crystalClickCapMinRef, rateRef]);
+  }, [mechanicOn, reservoirRef, crystalClickCapMinRef, rateRef, hidden]);
 
   if (!isUnlocked) {
     return (
@@ -1868,17 +1872,31 @@ function HomeScreen({
   // ratio jumps to ~3 and the stream visibly accelerates. CSS owns motion
   // and fade-on-arrival; this rAF only governs spawn cadence.
   const qiFlowLayerRef = useRef(null);
+  // Mirror the current event kind into a ref so the rAF tick can halt
+  // spawning during cultivator-centric overlays (breakthrough banner,
+  // character evolution) without re-mounting the loop on every event change.
+  const currentEventKindRef = useRef(null);
+  useEffect(() => {
+    currentEventKindRef.current = currentEvent?.kind ?? null;
+  }, [currentEvent]);
   useEffect(() => {
     let raf;
     let lastSpawn = 0;
     const tick = (now) => {
       const layer = qiFlowLayerRef.current;
+      const kind = currentEventKindRef.current;
+      // Halt spawning while the cultivator is being taken over by an
+      // overlay — breakthrough banner shows the realm-up text-blast, and
+      // character-evolution lifts the sprite out for the tier-up reveal.
+      // Letting particles keep spawning during these would dump them into
+      // an empty area (sprite gone) and pop a backlog on the way back.
+      const haltedForEvent = kind === 'breakthrough' || kind === 'character-evolution';
       // Skip when the layer has zero dimensions — happens when .vfx-disabled
       // body class hides it via display:none, or briefly during initial
       // layout. Without this guard, particles would spawn around (0,0) and
       // drift toward (0,0), then pop into view in the top-left corner when
       // the player re-enables particles in Settings.
-      if (layer && layer.clientWidth > 0 && layer.clientHeight > 0) {
+      if (!haltedForEvent && layer && layer.clientWidth > 0 && layer.clientHeight > 0) {
         const baseRate = cultivation.baseRateRef?.current ?? 0;
         const rate     = cultivation.rateRef?.current     ?? 0;
         const eff = baseRate > 0 ? Math.max(1, rate / baseRate) : 1;
