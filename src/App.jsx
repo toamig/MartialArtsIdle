@@ -1247,7 +1247,7 @@ function AppInner() {
           bloodLotusBalance={qiSparks.bloodLotusBalance}
           nextRerollCostFor={qiSparks.nextRerollCost}
           onChoose={qiSparks.choose}
-          onRerollCard={qiSparks.rerollCard}
+          onRerollOffer={qiSparks.rerollOffer}
           onSkip={qiSparks.skip}
           pityCounter={qiSparks.pityCounter}
           pityThreshold={qiSparks.pityThreshold}

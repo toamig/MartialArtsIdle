@@ -27,10 +27,11 @@ import {
   QI_SPARKS,
   QI_SPARK_BY_ID,
   drawOffer,
-  drawSingleCard,
+  drawSingleCard,                 // legacy — no longer used in reroll path
   TRINITY_SPARK_IDS,
   TRINITY_CONVERGENCE_MULT,
-  LEGENDARY_PER_CARD_CHANCE,
+  LEGENDARY_PER_OFFER_CHANCE,
+  LEGENDARY_PER_CARD_CHANCE,      // legacy alias of PER_OFFER — kept for back-compat
   LEGENDARY_PITY_THRESHOLD,
 } from '../data/qiSparks';
 import { isMajorTransition } from '../data/realms';
@@ -435,9 +436,14 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
       return {
         id:                   `qs-offer-${++instanceCounter}-${curr}`,
         cards,
-        // Per-card reroll state: each of the 2 cards gets 1 free reroll
-        // independently, then escalating Lotus costs (tracked per card).
-        cardFreeRerollsLeft:  [1, 1],
+        // 2026-05-21: offer-level reroll state (tier-locked redesign). The
+        // player rerolls the WHOLE pair, not individual cards. 1 free
+        // reroll per offer, then escalating PAID_REROLL_COSTS.
+        offerFreeRerollsLeft: 1,
+        offerPaidRerollsUsed: 0,
+        // Legacy per-card fields kept zeroed so any in-flight UI that
+        // still reads them resolves to "no free rerolls" gracefully.
+        cardFreeRerollsLeft:  [0, 0],
         cardPaidRerollsUsed:  [0, 0],
         rolledAtRealm:        curr,
       };
@@ -565,76 +571,60 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
   }, [applySparkChoice]);
 
   /**
-   * Reroll a single card in the offer (per-card reroll model).
-   *   - First reroll per card is free (per-card `cardFreeRerollsLeft[i]` decrements)
-   *   - Subsequent rerolls cost escalating Blood Lotus (PAID_REROLL_COSTS,
-   *     indexed by the card's own paid-reroll count)
-   *   - Same 3% legendary chance per roll regardless of free/paid
-   *   - Pity counter: if a legendary appears in the new card, pity resets;
-   *     otherwise pity is unchanged (the pity ADVANCE happens on breakthroughs).
-   *   - Returns true if reroll happened, false if blocked by cost / invalid idx.
+   * Reroll the entire offer (tier-locked model, 2026-05-21 redesign).
+   *   - First reroll per offer is free (`offerFreeRerollsLeft` decrements 1→0).
+   *   - Subsequent rerolls cost escalating Blood Lotus (PAID_REROLL_COSTS).
+   *   - Re-rolls the rarity tier — gamble for higher rarity.
+   *   - Pity: if counter has reached threshold, the new offer's tier is
+   *     forced to legendary (drawOffer with forceLegendary=true).
+   *   - Returns true if reroll happened, false if blocked by cost or no draw.
    */
-  const rerollCard = useCallback((cardIndex) => {
+  const rerollOffer = useCallback(() => {
     let result = false;
     setPendingOffer(prev => {
       if (!prev) return prev;
-      if (cardIndex !== 0 && cardIndex !== 1) return prev;
-      const freeLeft = prev.cardFreeRerollsLeft ?? [1, 1];
-      const paidUsed = prev.cardPaidRerollsUsed ?? [0, 0];
-      const isFree = (freeLeft[cardIndex] ?? 0) > 0;
+      const freeLeft = prev.offerFreeRerollsLeft ?? 1;
+      const paidUsed = prev.offerPaidRerollsUsed ?? 0;
+      const isFree = freeLeft > 0;
 
-      if (isFree) {
-        // free roll — decrement and proceed
-      } else {
-        const paidIdx = Math.min(paidUsed[cardIndex] ?? 0, PAID_REROLL_COSTS.length - 1);
+      if (!isFree) {
+        const paidIdx = Math.min(paidUsed, PAID_REROLL_COSTS.length - 1);
         const cost = PAID_REROLL_COSTS[Math.max(0, paidIdx)];
         if (!spendBloodLotus(cost)) return prev;
         try { setBloodLotusBalance(getBloodLotusBalance()); } catch {}
         try { trackSparkRerolled(false, cost); } catch {}
+      } else {
+        try { trackSparkRerolled(true, 0); } catch {}
       }
-      if (isFree) { try { trackSparkRerolled(true, 0); } catch {} }
 
-      // Pity: same as breakthrough-time — if counter has reached threshold,
-      // force this single replacement to be a legendary.
+      // Pity-driven force-legendary still applies on the reroll.
       const pityNow = pityCounterRef.current ?? 0;
       const forceLegendary = pityNow >= LEGENDARY_PITY_THRESHOLD;
-      // Exclude the OTHER card so the reroll never duplicates the offer.
-      const otherId = prev.cards[1 - cardIndex];
-      const newId = drawSingleCard({ ...drawOfferCtx(), forceLegendary }, [otherId]);
-      if (!newId) return prev;
-      // Reset pity if a legendary surfaced — even on a per-card reroll.
-      if (QI_SPARK_BY_ID[newId]?.rarity === 'legendary') {
-        setPityCounter(0);
-      }
+      const newCards = drawOffer(2, { ...drawOfferCtx(), forceLegendary });
+      if (newCards.length === 0) return prev;
+      // Reset pity if any card in the new offer is legendary.
+      const sawLegendary = containsLegendary(newCards);
+      if (sawLegendary) setPityCounter(0);
       result = true;
-      const newCards = [...prev.cards];
-      newCards[cardIndex] = newId;
-      const newFree = [...freeLeft];
-      const newPaid = [...paidUsed];
-      if (isFree) newFree[cardIndex] = newFree[cardIndex] - 1;
-      else        newPaid[cardIndex] = (newPaid[cardIndex] ?? 0) + 1;
       return {
         ...prev,
-        cards:                newCards,
-        cardFreeRerollsLeft:  newFree,
-        cardPaidRerollsUsed:  newPaid,
+        cards:                  newCards,
+        offerFreeRerollsLeft:   isFree ? 0 : freeLeft,
+        offerPaidRerollsUsed:   isFree ? paidUsed : paidUsed + 1,
       };
     });
     return result;
   }, []);
 
   /**
-   * Per-card cost of the next reroll. 0 if a free reroll is available for
-   * the slot, else the escalating BL cost.
+   * Cost of the next reroll (Blood Lotus). 0 if a free reroll is available.
    */
-  const nextRerollCost = useCallback((cardIndex = 0) => {
+  const nextRerollCost = useCallback(() => {
     if (!pendingOffer) return 0;
-    if (cardIndex !== 0 && cardIndex !== 1) return 0;
-    const freeLeft = pendingOffer.cardFreeRerollsLeft ?? [1, 1];
-    const paidUsed = pendingOffer.cardPaidRerollsUsed ?? [0, 0];
-    if ((freeLeft[cardIndex] ?? 0) > 0) return 0;
+    const freeLeft = pendingOffer.offerFreeRerollsLeft ?? 1;
+    if (freeLeft > 0) return 0;
     const paidIdx = Math.min(
-      Math.max(0, paidUsed[cardIndex] ?? 0),
+      Math.max(0, pendingOffer.offerPaidRerollsUsed ?? 0),
       PAID_REROLL_COSTS.length - 1,
     );
     return PAID_REROLL_COSTS[paidIdx];
@@ -707,14 +697,15 @@ export default function useQiSparks({ cultivation, isFeatureUnlocked, producerUn
     crystalClickRateRef,
     crystalClickCapMinRef,
     choose,
-    rerollCard,
+    rerollOffer,                  // 2026-05-21 tier-locked redesign
+    rerollCard: rerollOffer,      // legacy alias — old consumers fall through
     nextRerollCost,
     skip,
     clearAll,
     // Pity counter — exposed so the choice modal can show "Pity in N realms".
     pityCounter,
     pityThreshold: LEGENDARY_PITY_THRESHOLD,
-    legendaryChance: LEGENDARY_PER_CARD_CHANCE,
+    legendaryChance: LEGENDARY_PER_OFFER_CHANCE,
     // Round 3 — bypass the offer flow entirely. `grant` is used by:
     //   - crystal evolution (HomeScreen.handleCrystalEvolve) to unlock
     //     mechanic T1s when the crystal crosses a visual tier

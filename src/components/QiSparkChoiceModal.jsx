@@ -98,19 +98,6 @@ function SparkCard({
         >
           Pick
         </button>
-        <button
-          type="button"
-          className={`qs-btn qs-btn-reroll${isFreeReroll ? ' qs-btn-reroll-free' : ''}${!canAffordReroll ? ' qs-btn-reroll-locked' : ''}`}
-          disabled={!canAffordReroll}
-          onClick={() => onRerollCard?.(cardIndex)}
-          title={
-            isFreeReroll       ? 'Reroll this card — free!'
-            : !canAffordReroll ? `Need ${rerollCost} Blood Lotus to reroll`
-            :                    `Reroll this card — ${rerollCost} Blood Lotus`
-          }
-        >
-          ↺ {isFreeReroll ? 'Free reroll' : `${rerollCost} BL`}
-        </button>
       </div>
     </div>
   );
@@ -118,7 +105,7 @@ function SparkCard({
 
 // ── Detail panel — opens when card body is tapped ───────────────────────────
 
-function DetailPanel({ sparkId, onClose, onPick, onRerollCard, cardIndex, isFreeReroll, rerollCost, canAffordReroll }) {
+function DetailPanel({ sparkId, onClose, onPick }) {
   const card = QI_SPARK_BY_ID[sparkId];
   if (!card) return null;
   const rarity = SPARK_RARITY[card.rarity] ?? SPARK_RARITY.common;
@@ -165,14 +152,6 @@ function DetailPanel({ sparkId, onClose, onPick, onRerollCard, cardIndex, isFree
             >
               Pick this spark
             </button>
-            <button
-              type="button"
-              className={`qs-btn qs-btn-reroll${isFreeReroll ? ' qs-btn-reroll-free' : ''}${!canAffordReroll ? ' qs-btn-reroll-locked' : ''}`}
-              disabled={!canAffordReroll}
-              onClick={() => { onRerollCard?.(cardIndex); onClose(); }}
-            >
-              ↺ {isFreeReroll ? 'Free reroll' : `${rerollCost} BL`}
-            </button>
           </div>
         </div>
       </div>
@@ -207,25 +186,25 @@ function QiSparkChoiceModal({
   bloodLotusBalance,
   nextRerollCostFor,
   onChoose,
+  onRerollOffer,
+  // Legacy prop name — still accepted, treated as the offer-level reroll.
   onRerollCard,
   onSkip,
   pityCounter = 0,
   pityThreshold = 17,
-  legendaryChance = 0.03,
+  legendaryChance = 0.06,
   legendaryPoolInfo = null,
 }) {
+  // 2026-05-21 redesign: tier-locked offers, single reroll for the pair.
+  const rerollFn = onRerollOffer ?? onRerollCard;
+
   // Auto-skip after timeout — captures onSkip via ref so the timer doesn't
   // reset on every render of the parent.
   const onSkipRef = useRef(onSkip);
   onSkipRef.current = onSkip;
 
-  // 2026-05-21 BUG-FIX: timer was previously keyed on `offer?.id` alone, but
-  // rerollCard mutates offer.cards while keeping the same id — so a player
-  // mid-reroll would silently time out and have the leftmost card auto-picked
-  // without any feedback. Now we bump `activityNonce` on every interaction
-  // (reroll, detail open, card hover, etc.) which re-arms the timer. An
-  // engaged player effectively never times out; an AFK player still auto-
-  // resolves after 60s of inactivity.
+  // Activity nonce bumps on user interaction → resets the auto-timeout.
+  // Prevents the modal from vanishing mid-reroll or while reading details.
   const [activityNonce, setActivityNonce] = useState(0);
   const bumpActivity = () => setActivityNonce(n => n + 1);
 
@@ -233,10 +212,10 @@ function QiSparkChoiceModal({
     if (!offer) return;
     const id = setTimeout(() => onSkipRef.current?.(), CHOICE_TIMEOUT_MS);
     return () => clearTimeout(id);
-  }, [offer?.id, activityNonce]); // re-arm on new offer OR any user interaction
+  }, [offer?.id, activityNonce]);
 
-  // Wrap onRerollCard so each reroll counts as activity (resets the timer).
-  const onRerollCardActive = (cardIdx) => { bumpActivity(); onRerollCard?.(cardIdx); };
+  // Wrap reroll so it counts as activity (resets the timer).
+  const onRerollActive = () => { bumpActivity(); rerollFn?.(); };
 
   // Detail panel state — tracks which card the player has tapped open.
   const [detailIdx, setDetailIdx] = useState(null);
@@ -244,7 +223,20 @@ function QiSparkChoiceModal({
 
   if (!offer) return null;
 
-  const freeLeftPerCard = offer.cardFreeRerollsLeft ?? [1, 1];
+  // 2026-05-21: tier-locked redesign. Offer carries one reroll cost (no
+  // per-card variant). Accept both new (no-arg) and legacy (cardIndex) callers.
+  const rerollCost  = typeof nextRerollCostFor === 'function'
+    ? (nextRerollCostFor(0) ?? 0)  // legacy signature falls back cleanly
+    : 0;
+  const freeLeft    = offer.offerFreeRerollsLeft ?? 0;
+  const isFreeReroll = freeLeft > 0;
+  const canAffordReroll = isFreeReroll || (bloodLotusBalance ?? 0) >= rerollCost;
+
+  // Offer rarity — all cards in a tier-locked offer share the same rarity.
+  const firstCard = offer.cards?.[0] ? QI_SPARK_BY_ID[offer.cards[0]] : null;
+  const offerRarity = firstCard?.rarity ?? 'common';
+  const offerRarityLabel = SPARK_RARITY[offerRarity]?.label ?? '';
+
   const pityRemaining   = Math.max(0, pityThreshold - pityCounter);
   const pityImminent    = pityRemaining <= 3;
   const pityGuaranteed  = pityRemaining === 0;
@@ -261,28 +253,40 @@ function QiSparkChoiceModal({
       <div className="qs-modal" onClick={e => e.stopPropagation()}>
         <div className="qs-header">
           <h2 className="qs-title">Qi Spark</h2>
-          <p className="qs-subtitle">A spark of dao reaches you. Choose one.</p>
+          <p className="qs-subtitle">
+            <span className={`qs-offer-tier qs-rt-${offerRarity}`}>{offerRarityLabel}</span>
+            {' '}offer — choose one of two.
+          </p>
         </div>
 
         <div className="qs-vstack">
-          {offer.cards.map((sparkId, idx) => {
-            const cost         = nextRerollCostFor?.(idx) ?? 0;
-            const isFreeReroll = (freeLeftPerCard[idx] ?? 0) > 0;
-            const canAfford    = isFreeReroll || (bloodLotusBalance ?? 0) >= cost;
-            return (
+          {offer.cards.map((sparkId, idx) => (
               <SparkCard
                 key={`${sparkId}-${idx}`}
                 sparkId={sparkId}
                 cardIndex={idx}
                 onPick={onChoose}
-                onRerollCard={onRerollCardActive}
                 onOpenDetail={openDetailForIdx}
-                isFreeReroll={isFreeReroll}
-                rerollCost={cost}
-                canAffordReroll={canAfford}
               />
-            );
-          })}
+            ))}
+        </div>
+
+        {/* Offer-level reroll — 1 free per offer, then escalating Lotus. Re-rolls
+            the tier AND both cards (tier-locked redesign 2026-05-21). */}
+        <div className="qs-offer-reroll-row">
+          <button
+            type="button"
+            className={`qs-btn qs-btn-reroll qs-btn-reroll-offer${isFreeReroll ? ' qs-btn-reroll-free' : ''}${!canAffordReroll ? ' qs-btn-reroll-locked' : ''}`}
+            disabled={!canAffordReroll}
+            onClick={onRerollActive}
+            title={
+              isFreeReroll       ? 'Reroll both cards — free!'
+              : !canAffordReroll ? `Need ${rerollCost} Blood Lotus to reroll`
+              :                    `Reroll both cards — ${rerollCost} Blood Lotus`
+            }
+          >
+            ↺ Reroll pair {isFreeReroll ? '(free)' : `· ${rerollCost} BL`}
+          </button>
         </div>
 
         {(() => {
@@ -337,20 +341,12 @@ function QiSparkChoiceModal({
         })()}
 
         {detailIdx !== null && (() => {
-          const sparkId      = offer.cards[detailIdx];
-          const cost         = nextRerollCostFor?.(detailIdx) ?? 0;
-          const isFreeReroll = (freeLeftPerCard[detailIdx] ?? 0) > 0;
-          const canAfford    = isFreeReroll || (bloodLotusBalance ?? 0) >= cost;
+          const sparkId = offer.cards[detailIdx];
           return (
             <DetailPanel
               sparkId={sparkId}
-              cardIndex={detailIdx}
               onClose={() => setDetailIdx(null)}
               onPick={onChoose}
-              onRerollCard={onRerollCardActive}
-              isFreeReroll={isFreeReroll}
-              rerollCost={cost}
-              canAffordReroll={canAfford}
             />
           );
         })()}

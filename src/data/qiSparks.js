@@ -922,16 +922,28 @@ export const SPARK_RARITY_WEIGHTS = {
   legendary: 0,
 };
 
-/** Per-card-slot chance of a legendary appearing. Tuned for ~3 legendaries
- *  per full run (50 breakthroughs × 2 cards = 100 slots → ~3 expected).
- *  Pity counter (17 breakthroughs without a legendary → next breakthrough
- *  guaranteed) sets the floor at 3 per run for the most unlucky player. */
-export const LEGENDARY_PER_CARD_CHANCE = 0.03;
-/** Pity threshold: this many breakthroughs without a legendary appearing
- *  in any offer slot → next breakthrough's offer guarantees one slot is
- *  legendary. Counter resets to 0 whenever a legendary appears in an offer
- *  (drawn OR rerolled into view), even if the player doesn't pick it. */
+/**
+ * Per-OFFER chance of a legendary tier roll (2026-05-21 redesign).
+ *
+ * The offer is now tier-locked: both cards in a single offer share the same
+ * rarity tier (Common / Uncommon / Legendary). Used to be a per-card slot
+ * roll at 3% each (independent), giving P(any legendary) = 1 − 0.97² ≈ 5.9%
+ * per offer. The single-roll version below preserves the same effective
+ * legendary appearance rate (~6%) — pull rate per run is unchanged.
+ *
+ * Player experience change: when a legendary appears, BOTH cards are
+ * legendary. Player picks between two different legendaries instead of
+ * "legendary or trash" (which was never a real choice).
+ */
+export const LEGENDARY_PER_OFFER_CHANCE = 0.06;
+/** Pity threshold: this many breakthroughs without a legendary offer → next
+ *  breakthrough's offer guarantees legendary tier. Counter resets to 0 whenever
+ *  a legendary offer surfaces (drawn OR rerolled into view), even if the
+ *  player doesn't pick it. */
 export const LEGENDARY_PITY_THRESHOLD = 17;
+// Legacy alias — older code paths read this name. Kept so we don't have to
+// chase down every import in the same pass.
+export const LEGENDARY_PER_CARD_CHANCE = LEGENDARY_PER_OFFER_CHANCE;
 
 // ── Drawing ─────────────────────────────────────────────────────────────────
 
@@ -1017,65 +1029,95 @@ function pickWeightedNonLegendary(cards) {
 }
 
 /**
- * Roll a single card slot. Each slot independently rolls for legendary at
- * LEGENDARY_PER_CARD_CHANCE — on success, pick a random eligible legendary;
- * on failure, fall through to the weighted non-legendary pool.
+ * Roll the rarity tier for a tier-locked offer (2026-05-21 redesign).
  *
- * @param {object} pool        Eligible pool (output of eligiblePool).
- * @param {Set} excludeIds     Card ids already drawn this offer (no duplicates).
- * @param {boolean} forceLegendary  If true, skip the chance roll and pick legendary.
- * @returns {string|null} Card id, or null if no eligible card.
+ * Process:
+ *   1. If `forceLegendary` (pity active) AND legendaries are eligible → legendary.
+ *   2. Else roll LEGENDARY_PER_OFFER_CHANCE → legendary if hit AND eligible.
+ *   3. Else weighted roll between non-legendary tiers (common/uncommon).
+ *
+ * Falls back to the next-available tier when the chosen tier has fewer than
+ * 2 eligible cards (can't fill 2 slots) — prevents the offer from being
+ * empty when, e.g., legendaries are gated by un-unlocked producers.
  */
-function rollSingleSlot(pool, excludeIds, forceLegendary) {
-  const available = pool.filter(c => !excludeIds.has(c.id));
-  const legendaries    = available.filter(c => c.rarity === 'legendary');
-  const nonLegendaries = available.filter(c => c.rarity !== 'legendary');
+function rollOfferTier(pool, forceLegendary) {
+  const byRarity = {
+    common:    pool.filter(c => c.rarity === 'common'),
+    uncommon:  pool.filter(c => c.rarity === 'uncommon'),
+    legendary: pool.filter(c => c.rarity === 'legendary'),
+  };
+  const wantLegendary = forceLegendary || Math.random() < LEGENDARY_PER_OFFER_CHANCE;
 
-  const shouldRollLegendary = forceLegendary
-    ? true
-    : Math.random() < LEGENDARY_PER_CARD_CHANCE;
+  // Try the desired tier first. Fall through gracefully if it can't fill 2 slots.
+  const tryOrder = wantLegendary
+    ? ['legendary', 'uncommon', 'common']
+    : (() => {
+        // Weighted pick between common and uncommon
+        const cw = SPARK_RARITY_WEIGHTS.common ?? 0;
+        const uw = SPARK_RARITY_WEIGHTS.uncommon ?? 0;
+        const total = cw + uw;
+        if (total <= 0) return ['common', 'uncommon'];
+        const pickUncommon = Math.random() < (uw / total);
+        return pickUncommon ? ['uncommon', 'common'] : ['common', 'uncommon'];
+      })();
 
-  if (shouldRollLegendary && legendaries.length > 0) {
-    const pick = legendaries[Math.floor(Math.random() * legendaries.length)];
-    return pick.id;
+  for (const tier of tryOrder) {
+    if (byRarity[tier].length >= 2) return tier;
   }
-
-  const pick = pickWeightedNonLegendary(nonLegendaries);
-  return pick ? pick.id : null;
+  // Last-resort: any tier with at least 1 card (caller will see 1-card offer).
+  for (const tier of tryOrder) {
+    if (byRarity[tier].length >= 1) return tier;
+  }
+  return null;
 }
 
 /**
- * Draw `count` distinct sparks from the eligible pool. Each card slot
- * independently rolls for legendary (LEGENDARY_PER_CARD_CHANCE per slot).
+ * Draw a tier-locked offer of `count` distinct sparks. All cards share the
+ * same rarity tier — the player picks between two SPARKS of equal weight
+ * instead of "obvious legendary vs filler common".
  *
- * @param {number} count
+ * @param {number} count                  Default 2 (the modal shows two cards).
  * @param {object} [ctx]                  Forwarded to eligiblePool.
- * @param {boolean} [ctx.forceLegendary]  If true, force the FIRST slot to be a legendary
- *                                        (pity counter trigger from useQiSparks).
+ * @param {boolean} [ctx.forceLegendary]  Pity counter trigger from useQiSparks.
  */
 export function drawOffer(count = 2, ctx = {}) {
   const pool = eligiblePool(ctx);
   if (pool.length === 0) return [];
 
-  const picked    = [];
-  const usedIds   = new Set();
+  const tier = rollOfferTier(pool, !!ctx.forceLegendary);
+  if (!tier) return [];
+
+  // Filter pool to just the chosen tier, then draw `count` distinct cards.
+  const tierPool = pool.filter(c => c.rarity === tier);
+  if (tierPool.length === 0) return [];
+
+  const picked  = [];
+  const usedIds = new Set();
   for (let i = 0; i < count; i++) {
-    const id = rollSingleSlot(pool, usedIds, i === 0 && !!ctx.forceLegendary);
-    if (!id) break;
-    picked.push(id);
-    usedIds.add(id);
+    const available = tierPool.filter(c => !usedIds.has(c.id));
+    if (available.length === 0) break;
+    // Equal-weight pick within the tier (no in-tier rarity weighting needed).
+    const pick = available[Math.floor(Math.random() * available.length)];
+    picked.push(pick.id);
+    usedIds.add(pick.id);
   }
   return picked;
 }
 
 /**
- * Draw a single replacement card — used by per-card rerolls. Caller passes
- * the ids of cards already in the offer (the other card + the one being
- * replaced) via `excludeIds` so the new draw never duplicates them.
+ * Draw a single replacement card — kept for backward compatibility but no
+ * longer called by the production reroll path (the modal now rerolls the
+ * whole offer via drawOffer). Useful for tests or edge-case code paths.
  */
 export function drawSingleCard(ctx = {}, excludeIds = []) {
   const pool = eligiblePool(ctx);
   if (pool.length === 0) return null;
   const exclude = new Set(excludeIds);
-  return rollSingleSlot(pool, exclude, !!ctx.forceLegendary);
+  const available = pool.filter(c => !exclude.has(c.id));
+  if (available.length === 0) return null;
+  const tier = rollOfferTier(available, !!ctx.forceLegendary);
+  if (!tier) return null;
+  const tierPool = available.filter(c => c.rarity === tier);
+  if (tierPool.length === 0) return null;
+  return tierPool[Math.floor(Math.random() * tierPool.length)].id;
 }

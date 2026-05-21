@@ -1929,6 +1929,30 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
   cursor: not-allowed;
 }
 
+/* 2026-05-21 redesign — single offer-level reroll button that replaces the
+   per-card reroll buttons. Centred under the vstack of cards. */
+.qs-offer-reroll-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+.qs-btn-reroll-offer {
+  padding: 8px 22px;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+}
+
+/* Offer-tier inline badge in the subtitle ("Common offer", "Legendary offer", …). */
+.qs-offer-tier {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.qs-offer-tier.qs-rt-common    { color: #d1d5db; }
+.qs-offer-tier.qs-rt-uncommon  { color: #6ee7b7; }
+.qs-offer-tier.qs-rt-rare      { color: #c4b5fd; }
+.qs-offer-tier.qs-rt-legendary { color: #fcd34d; text-shadow: 0 0 8px rgba(252, 211, 77, 0.4); }
+
 /* Footer (pity + chance — same selectors as old footer-meta for back-compat) */
 .qs-footer-meta {
   margin-top: 12px;
