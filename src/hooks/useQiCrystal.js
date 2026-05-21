@@ -41,13 +41,27 @@ export function getCrystalTier(level) {
   return 1;
 }
 
-/** Multiplier per crystal level. Total mult = 1 + level × this. */
+/** Multiplier per crystal level. Total mult = 1 + level × this. Legacy export
+ *  kept for any consumers that read it; the actual formula now lives in
+ *  getCrystalQiMult() with diminishing returns past level 200. */
 export const CRYSTAL_MULT_PER_LEVEL = 0.01;
 
-/** Total cultivation rate multiplier from owning a crystal at `level`. */
+/**
+ * Total cultivation rate multiplier from owning a crystal at `level`.
+ *
+ * 2026-05-21 Dial-4 rebalance (multiplier compression):
+ *   - Levels   1-200: +1% per level   (linear, +200% at L200 = ×3.0 mult)
+ *   - Levels 200+   : +0.3% per level (diminishing — ×6.0 mult at L1000)
+ *
+ * Previous formula: +1% per level uncapped (×11 at L1000, ×31 at L3000).
+ * The compounding crystal mult was the single biggest contributor to the
+ * "qi firehose" mid-late game; this softens it without flatlining the
+ * crystal as an engagement lever.
+ */
 export function getCrystalQiMult(level) {
   if (level <= 0) return 1;
-  return 1 + level * CRYSTAL_MULT_PER_LEVEL;
+  if (level <= 200) return 1 + level * 0.01;
+  return 1 + 200 * 0.01 + (level - 200) * 0.003;
 }
 
 /**

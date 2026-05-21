@@ -25,7 +25,7 @@ function loadOwnedLaws() {
 
 const BASE_RATE       = 1; // qi per second at 1x
 const BOOST_MULTIPLIER = 3; // legacy fallback when focusMult ref isn't wired
-const AD_BOOST_MULT   = 2; // rewarded-ad cultivation boost
+const AD_BOOST_MULT   = 1.5; // rewarded-ad cultivation boost (Dial-4 2026-05-21: 2→1.5)
 const MIN_OFFLINE_SEC = 5 * 60; // only show offline popup after 5 min away
 
 // Crystal Click tap policy.
@@ -218,15 +218,18 @@ export default function useCultivation() {
       if (raw) producerOfflineRate = JSON.parse(raw).rate ?? 0;
     } catch {}
 
-    // Crystal multiplier (2026-05-17) — reads `mai_qi_crystal` directly so
-    // offline calc applies the global crystal mult without needing React to
-    // mount first. Mirrors the online rate formula structure.
+    // Crystal multiplier — reads `mai_qi_crystal` directly so offline calc
+    // applies the global crystal mult without needing React to mount first.
+    // Mirrors the diminishing-returns curve in useQiCrystal.getCrystalQiMult
+    // (2026-05-21 Dial-4): linear +1%/level up to L200, then +0.3%/level past.
     let crystalMult = 1;
     try {
       const raw = localStorage.getItem('mai_qi_crystal');
       if (raw) {
         const lvl = JSON.parse(raw).level ?? 0;
-        crystalMult = 1 + lvl * 0.01;
+        crystalMult = lvl <= 0      ? 1
+                    : lvl <= 200    ? 1 + lvl * 0.01
+                    :                 1 + 200 * 0.01 + (lvl - 200) * 0.003;
       }
     } catch {}
 
