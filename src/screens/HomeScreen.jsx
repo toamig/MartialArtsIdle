@@ -16,6 +16,7 @@ import { sparksToGrantOnEvolution } from '../data/crystalMechanicGrants';
 // TutorialModal render lives in App.jsx so onboarding cards work on every
 // screen, not just Home. Trigger sites here just call fireTutorialOnce.
 import { fireTutorialOnce } from '../systems/fireTutorial';
+import { hasSeenTutorial } from '../systems/tutorialSeen';
 import { TUTORIAL_IDS } from '../data/tutorialCards';
 import WORLDS from '../data/worlds';
 import AudioManager from '../audio/AudioManager';
@@ -2159,14 +2160,32 @@ function HomeScreen({
     return () => window.removeEventListener('mai:crystal-evolve', handler);
   }, [handleCrystalEvolve]);
 
-  // #6 First major-realm gate (Tier-A tutorial). The BREAKTHROUGH button
-  // appears when cultivation.pendingMajorBreakthrough flips true — that's
-  // the qi/s gate moment we want to explain. Fires once per account.
+  // #6 First major-realm gate (Tier-A tutorial). Fires the moment the
+  // player hits the cost cap on a major-realm transition — either while
+  // CAPPED waiting on the qi/s gate (gateRef.current non-null), or after
+  // the rate already cleared and the BREAKTHROUGH button has appeared
+  // (pendingMajorBreakthrough). Previously the trigger only fired on the
+  // latter, so a player stuck under the rate gate saw the warning AFTER
+  // they'd already beaten it instead of when it would actually help.
+  //
+  // gateRef is a ref (no React state mirror), so we poll at 500ms.
+  // fireTutorialOnce is idempotent — first match wins, interval clears.
   useEffect(() => {
-    if (cultivation.pendingMajorBreakthrough) {
-      fireTutorialOnce(TUTORIAL_IDS.FIRST_MAJOR_GATE, enqueue);
-    }
-  }, [cultivation.pendingMajorBreakthrough, enqueue]);
+    if (hasSeenTutorial(TUTORIAL_IDS.FIRST_MAJOR_GATE)) return undefined;
+    const id = window.setInterval(() => {
+      if (hasSeenTutorial(TUTORIAL_IDS.FIRST_MAJOR_GATE)) {
+        window.clearInterval(id);
+        return;
+      }
+      const atGate  = !!cultivation.gateRef?.current;
+      const pending = cultivation.pendingMajorBreakthrough;
+      if (atGate || pending) {
+        fireTutorialOnce(TUTORIAL_IDS.FIRST_MAJOR_GATE, enqueue);
+        window.clearInterval(id);
+      }
+    }, 500);
+    return () => window.clearInterval(id);
+  }, [enqueue, cultivation.gateRef, cultivation.pendingMajorBreakthrough]);
 
   // Debug bridge — gd.charEvolve / window.dispatchEvent('mai:char-evolve')
   // lets the major-breakthrough cinematic be demoed without grinding qi.

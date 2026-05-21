@@ -66,6 +66,7 @@ import { sparksToGrantOnEvolution } from './data/crystalMechanicGrants';
 import { QI_SPARK_BY_ID, QI_SPARKS } from './data/qiSparks';
 import { PRODUCERS_BY_ID } from './data/producers';
 import { fireTutorialOnce } from './systems/fireTutorial';
+import { hasSeenTutorial, markTutorialSeen } from './systems/tutorialSeen';
 import { TUTORIAL_IDS } from './data/tutorialCards';
 import TutorialModal from './components/TutorialModal';
 
@@ -550,6 +551,43 @@ function AppInner() {
     const intervalId = window.setInterval(tick, 2000);
     return () => window.clearInterval(intervalId);
   }, [enqueue, cultivation.realmIndex, cultivation.qiRef, cultivation.boostStartTimeRef]);
+
+  // #3b PRODUCERS_HINT — proactive nudge toward the Cultivation tab. Polls
+  // every 2s for the first moment the player ever holds focus, then waits
+  // 90s and fires the lore-toned hint if they still haven't visited the
+  // Cultivation tab. Mutually exclusive with PRODUCERS_TAB — voluntary
+  // visit marks both seen (see CultivationScreen), so a player who
+  // explores on their own NEVER sees this card.
+  const producersHintStartedRef = useRef(false);
+  useEffect(() => {
+    if (hasSeenTutorial(TUTORIAL_IDS.PRODUCERS_TAB) || hasSeenTutorial(TUTORIAL_IDS.PRODUCERS_HINT)) {
+      return undefined;
+    }
+    let timeoutId = null;
+    const intervalId = window.setInterval(() => {
+      if (hasSeenTutorial(TUTORIAL_IDS.PRODUCERS_TAB) || hasSeenTutorial(TUTORIAL_IDS.PRODUCERS_HINT)) {
+        window.clearInterval(intervalId);
+        if (timeoutId) window.clearTimeout(timeoutId);
+        return;
+      }
+      if (producersHintStartedRef.current) return;
+      const boostNow = (cultivation.boostStartTimeRef?.current ?? 0) > 0;
+      if (boostNow) {
+        producersHintStartedRef.current = true;
+        timeoutId = window.setTimeout(() => {
+          if (hasSeenTutorial(TUTORIAL_IDS.PRODUCERS_TAB) || hasSeenTutorial(TUTORIAL_IDS.PRODUCERS_HINT)) return;
+          if (fireTutorialOnce(TUTORIAL_IDS.PRODUCERS_HINT, enqueue)) {
+            markTutorialSeen(TUTORIAL_IDS.PRODUCERS_TAB);
+          }
+        }, 90 * 1000);
+        window.clearInterval(intervalId);
+      }
+    }, 2000);
+    return () => {
+      window.clearInterval(intervalId);
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [enqueue, cultivation.boostStartTimeRef]);
 
   // #5 First layer breakthrough — track previous realmIndex; on first
   // increment, fire once. Skip if the player loaded a save mid-progression

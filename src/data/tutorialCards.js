@@ -32,6 +32,10 @@ export const TUTORIAL_IDS = Object.freeze({
   WELCOME:            'welcome',
   HOLD_TO_FOCUS:      'hold_to_focus',
   PRODUCERS_TAB:      'producers_tab',
+  // Proactive nudge — fires only when the player has been focusing for a
+  // while without ever opening the Cultivation tab. Mutually exclusive
+  // with PRODUCERS_TAB (whichever fires first marks both seen).
+  PRODUCERS_HINT:     'producers_hint',
   FIRST_PRODUCER:     'first_producer',
   FIRST_LAYER_BT:     'first_layer_bt',
   FIRST_MAJOR_GATE:   'first_major_gate',
@@ -62,6 +66,12 @@ const CARDS = {
     title:   'Producers',
     body:    'Producers gather qi for you in the background, even when you\'re not tapping. Each one raises your qi/s permanently for the rest of this life. Their price creeps up after every purchase, but each new tier outclasses the last. Spend your qi the moment you can afford one.',
     ctaText: 'Got it',
+  },
+  [TUTORIAL_IDS.PRODUCERS_HINT]: {
+    kicker:  'A whisper from the path',
+    title:   'You do not climb alone',
+    body:    'Your breath alone fills the meridians slowly. Other hands can draw the heavens down with you. Visit the Cultivation hall to gather disciples, raise gardens, and shape the sources that gather qi while you sit still.',
+    ctaText: 'Show me',
   },
   [TUTORIAL_IDS.FIRST_PRODUCER]: {
     kicker:  'First disciple',

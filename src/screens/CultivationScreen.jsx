@@ -7,6 +7,7 @@ import SparksTab from '../components/SparksTab';
 import { fmt, fmtRate } from '../utils/format';
 import { useEventQueue } from '../contexts/EventQueueContext';
 import { fireTutorialOnce } from '../systems/fireTutorial';
+import { markTutorialSeen } from '../systems/tutorialSeen';
 import { TUTORIAL_IDS } from '../data/tutorialCards';
 
 /**
@@ -53,10 +54,15 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
   const { enqueue } = useEventQueue();
   // #3 Producers tab — fire shortly after we render the producers tab the
   // first time. Small delay so the tab transition lands first.
+  // Also marks PRODUCERS_HINT seen so the proactive "you do not climb
+  // alone" nudge (App.jsx) doesn't fire later — the two are mutually
+  // exclusive: voluntary visit OR proactive nudge, never both.
   useEffect(() => {
     if (tab !== 'producers') return undefined;
     const id = window.setTimeout(() => {
-      fireTutorialOnce(TUTORIAL_IDS.PRODUCERS_TAB, enqueue);
+      if (fireTutorialOnce(TUTORIAL_IDS.PRODUCERS_TAB, enqueue)) {
+        markTutorialSeen(TUTORIAL_IDS.PRODUCERS_HINT);
+      }
     }, 400);
     return () => window.clearTimeout(id);
   }, [tab, enqueue]);
