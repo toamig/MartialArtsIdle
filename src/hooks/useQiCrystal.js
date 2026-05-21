@@ -55,13 +55,16 @@ export function getCrystalTier(level) {
   return 1;
 }
 
-/** Multiplier per crystal level. Linear +2% per level up to the cap.
- *  Kept as a named export so any consumers can compute marginal gains. */
-export const CRYSTAL_MULT_PER_LEVEL = 0.02;
+/** Multiplier per crystal level. Linear +1.5% per level up to the cap.
+ *  2026-05-21 Dial-7: reduced 0.02 → 0.015. Max crystal mult at L100 was
+ *  ×3.0, now ×2.5. Combined with focus + scaling cuts in same Dial, brings
+ *  the late-game effective rate stack down ~25-30% so top-tier producers
+ *  feel CC-priced ("hours to afford 1-2", not "seconds"). */
+export const CRYSTAL_MULT_PER_LEVEL = 0.015;
 
 /**
  * Total cultivation rate multiplier from owning a crystal at `level`.
- * Clamped to MAX_CRYSTAL_LEVEL — once you max, the mult is fixed at ×3.0.
+ * Clamped to MAX_CRYSTAL_LEVEL — once you max, the mult is fixed at ×2.5.
  */
 export function getCrystalQiMult(level) {
   if (level <= 0) return 1;

@@ -121,7 +121,7 @@ function QiRateReadout({ rateRef, focusMultRef, sparkFocusMultBonusRef, sparkCon
         textRef.current.textContent = `+${fmtRateNum(r)} Qi/s`;
       }
       if (boostRef.current && focusMultRef) {
-        const baseMult  = (focusMultRef.current ?? 300) / 100;
+        const baseMult  = (focusMultRef.current ?? 250) / 100;
         const sparkBonus = sparkFocusMultBonusRef?.current ?? 0;
         // Consecutive Focus folds in multiplicatively on top of the focus
         // mult — same shape as the rate calc, so the badge matches reality.

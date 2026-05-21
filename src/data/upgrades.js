@@ -95,11 +95,15 @@ const CRYSTAL_TAP = [
 
 // ── C. Boost / focus mult (4 tiers) ──────────────────────────────────────────
 
+// 2026-05-21 Dial-7: per-tier focus_mult bonuses cut to reduce the active-
+// play rate stack. With the base also cut 300→250, maxed focus is now
+//   250 + 35+35+35+75 = 430 (×4.30) — was 550 (×5.50).
+// Net active-rate cut ~22% at maxed upgrades.
 const FOCUS_MULT = [
-  { id: 'u_focus_1', name: 'Deeper Breath I',   cost:           5_000, realm:  9, add: 50  },
-  { id: 'u_focus_2', name: 'Deeper Breath II',  cost:         100_000, realm: 17, add: 50  },
-  { id: 'u_focus_3', name: 'Deeper Breath III', cost:       2_000_000, realm: 29, add: 50  },
-  { id: 'u_focus_4', name: 'Deeper Breath IV',  cost: 100_000_000_000, realm: 44, add: 100 },
+  { id: 'u_focus_1', name: 'Deeper Breath I',   cost:           5_000, realm:  9, add: 35  },
+  { id: 'u_focus_2', name: 'Deeper Breath II',  cost:         100_000, realm: 17, add: 35  },
+  { id: 'u_focus_3', name: 'Deeper Breath III', cost:       2_000_000, realm: 29, add: 35  },
+  { id: 'u_focus_4', name: 'Deeper Breath IV',  cost: 100_000_000_000, realm: 44, add: 75  },
 ].map(u => ({
   id:        u.id,
   category:  'focus_mult',

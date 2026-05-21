@@ -220,14 +220,14 @@ export default function useCultivation() {
 
     // Crystal multiplier — reads `mai_qi_crystal` directly so offline calc
     // applies the global crystal mult without needing React to mount first.
-    // Mirrors useQiCrystal.getCrystalQiMult (2026-05-21 Dial-5):
-    //   capped at L100, mult = 1 + min(level, 100) × 0.02.
+    // Mirrors useQiCrystal.getCrystalQiMult (2026-05-21 Dial-7):
+    //   capped at L100, mult = 1 + min(level, 100) × 0.015 (max ×2.5).
     let crystalMult = 1;
     try {
       const raw = localStorage.getItem('mai_qi_crystal');
       if (raw) {
         const lvl = JSON.parse(raw).level ?? 0;
-        crystalMult = lvl <= 0 ? 1 : 1 + Math.min(lvl, 100) * 0.02;
+        crystalMult = lvl <= 0 ? 1 : 1 + Math.min(lvl, 100) * 0.015;
       }
     } catch {}
 
@@ -374,9 +374,11 @@ export default function useCultivation() {
   // no rungs met). UI reads it to fold into the multiplier badge.
   const sparkConsecutiveCurrentBonusRef = useRef(0);
   // Hold-to-cultivate boost multiplier (qi_focus_mult stat, expressed as %).
-  // Default 300% = the legacy 3× behavior; App.jsx writes the player's actual
-  // focus mult into this ref each second.
-  const focusMultRef = useRef(300);
+  // 2026-05-21 Dial-7: base 300 → 250 (×3.0 → ×2.5). With focus_mult upgrades
+  // each cut 50→35 (and final 100→75), the maxed-stack now caps at:
+  //   250 + 35+35+35+75 = 430 (×4.30) — was 550 (×5.5).
+  // Active-play rate stack drops ~22% at max upgrades.
+  const focusMultRef = useRef(250);
   const boostRef    = useRef(false);
   const adBoostRef  = useRef(
     (saved?.adBoostEndsAt ?? 0) > Date.now() ? AD_BOOST_MULT : 1
@@ -455,7 +457,7 @@ export default function useCultivation() {
       }
       // Boost multiplier: focusMult is in %, fall back to legacy 3× if unset.
       // Qi Spark "Focus Surge" cards layer additively on top via sparkFocusMultBonusRef.
-      const baseFocusMult = (focusMultRef.current ?? 300) / 100;
+      const baseFocusMult = (focusMultRef.current ?? 250) / 100;
       const focusMultWithSpark = baseFocusMult * (1 + sparkFocusMultBonusRef.current);
 
       // Record every focus release time. Cheap, and lets Lingering Focus

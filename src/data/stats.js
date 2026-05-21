@@ -100,7 +100,7 @@ export function computeAllStats(qi, law, realmIndex, modifiers = {}) {
 
   // ── Activity ───────────────────────────────────────────────────────────────
   const qiSpeed      = QI_BASE_RATE * (law?.cultivationSpeedMult ?? 1);
-  const focusMult    = Math.round(computeStat(300, mods('qi_focus_mult')));
+  const focusMult    = Math.round(computeStat(250, mods('qi_focus_mult'))); // 2026-05-21 Dial-7: 300 → 250
   const harvestSpeed = Math.max(1, Math.floor(computeStat(1, mods('harvest_speed'))));
   const harvestLuck  = Math.floor(computeStat(0, mods('harvest_luck')));
   const miningSpeed  = Math.max(1, Math.floor(computeStat(1, mods('mining_speed'))));
