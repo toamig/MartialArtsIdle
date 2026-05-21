@@ -826,11 +826,16 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
         ? 0
         : Math.min(1, (fill - 0.05) / (CRYSTAL_VFX_CAP_PCT - 0.05));
 
-      if (intensity > 0 && vfxLayerRef.current) {
+      // Same zero-dimensions guard as the qi-flow spawner — when the layer
+      // is display:none'd (vfx-disabled body class), clientWidth=0 makes the
+      // spawn-position math collapse to (0,0), and re-enabling vfx would
+      // dump those misplaced sparks into the top-left corner.
+      const layer = vfxLayerRef.current;
+      if (intensity > 0 && layer && layer.clientWidth > 0 && layer.clientHeight > 0) {
         const interval = CRYSTAL_VFX_SPARK_MAX_MS
           - (CRYSTAL_VFX_SPARK_MAX_MS - CRYSTAL_VFX_SPARK_MIN_MS) * intensity;
         if (now - lastSpark > interval) {
-          spawnCrystalSpark(vfxLayerRef.current, intensity);
+          spawnCrystalSpark(layer, intensity);
           lastSpark = now;
         }
       }
@@ -1868,7 +1873,12 @@ function HomeScreen({
     let lastSpawn = 0;
     const tick = (now) => {
       const layer = qiFlowLayerRef.current;
-      if (layer) {
+      // Skip when the layer has zero dimensions — happens when .vfx-disabled
+      // body class hides it via display:none, or briefly during initial
+      // layout. Without this guard, particles would spawn around (0,0) and
+      // drift toward (0,0), then pop into view in the top-left corner when
+      // the player re-enables particles in Settings.
+      if (layer && layer.clientWidth > 0 && layer.clientHeight > 0) {
         const baseRate = cultivation.baseRateRef?.current ?? 0;
         const rate     = cultivation.rateRef?.current     ?? 0;
         const eff = baseRate > 0 ? Math.max(1, rate / baseRate) : 1;
@@ -1879,6 +1889,10 @@ function HomeScreen({
           spawnQiFlowOrb(layer, eff);
           lastSpawn = now;
         }
+      } else {
+        // Hidden / not yet laid out — reset spawn timer so we don't dump a
+        // backlog the moment the layer becomes visible again.
+        lastSpawn = now;
       }
       raf = requestAnimationFrame(tick);
     };
