@@ -5378,6 +5378,12 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
+  /* Stacks above .home-fighter-stage (sibling, no z-index) so the refine
+     chip and crystal stay on top of qi-flow particles that drift up from
+     the cultivator. Without this, document order put .home-fighter-stage's
+     subtree above .home-crystal-anchor's regardless of the refine btn's
+     z:30 (different stacking-context parents). */
+  z-index: 10;
 }
 
 /* ── Qi Crystal tooltip ── */
