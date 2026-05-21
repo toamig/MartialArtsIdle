@@ -6,7 +6,7 @@ import {
   TRINITY_SPARK_IDS,
   TRINITY_CONVERGENCE_MULT,
 } from '../data/qiSparks';
-import PRODUCERS, { PRODUCERS_BY_ID } from '../data/producers';
+import { PRODUCERS_BY_ID } from '../data/producers';
 import { fmtRate } from '../utils/format';
 
 const BASE = import.meta.env.BASE_URL;
@@ -17,53 +17,59 @@ const BASE = import.meta.env.BASE_URL;
  * chip now ONLY surfaces TIMED buffs (time-pressure UI) and routes here
  * for the full view.
  *
- * Each spark card shows live contribution math derived from current
- * producer counts + rate refs:
- *   - Timed sparks: a countdown bar + secs left
- *   - Stacked permanent: stack count + per-stack effect math
- *   - Legendary producer-synergy: which producer is affected + current ×N
- *   - Mechanic tiers (Crystal Click etc.): tier + key stat
+ * Layout: grid of compact BLOCK cards (similar visual language to
+ * UpgradeCard / .cs-up-grid). Each block shows icon + name + rarity +
+ * one-line contribution; tap to open a detail panel with the full
+ * effect / example / lore + live contribution math.
  *
- * Sections (top to bottom) — newest urgency first:
+ * Sections (top to bottom):
  *   1. Trinity Convergence banner (if all 3 beasts active)
- *   2. Timed buffs (countdown — time-pressure)
- *   3. Legendary (the chase tier — strongest effects, shown second)
- *   4. Uncommon permanent (the steady build)
- *   5. Mechanic (Crystal Click / Divine Qi / Pattern / Consecutive Focus)
+ *   2. Timed buffs (countdown bar — time-pressure)
+ *   3. Legendary (the chase tier)
+ *   4. Permanent (uncommon stack buffs)
+ *   5. Mechanics (Crystal Click / Divine Qi / Pattern / Consecutive Focus)
  */
 
-/** Render an icon: sprite if path, else emoji. */
-function Icon({ icon, fallback = '✦' }) {
+/** Sprite-or-emoji icon. */
+function Icon({ icon, fallback = '✦', className = 'st-icon-img' }) {
   const ic = icon ?? fallback;
   if (typeof ic === 'string' && ic.startsWith('/')) {
-    return <img className="st-card-icon-img" src={`${BASE}${ic.replace(/^\//, '')}`} alt="" draggable={false} />;
+    return <img className={className} src={`${BASE}${ic.replace(/^\//, '')}`} alt="" draggable={false} />;
   }
-  return <span className="st-card-icon-emoji" aria-hidden="true">{ic}</span>;
+  return <span className={className.replace('-img', '-emoji')} aria-hidden="true">{ic}</span>;
+}
+
+/** Tiny markdown-ish bold parser for **strong** → <strong>. */
+function renderRich(text) {
+  if (!text) return null;
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((p, i) =>
+    p.startsWith('**') && p.endsWith('**')
+      ? <strong key={i}>{p.slice(2, -2)}</strong>
+      : <span key={i}>{p}</span>
+  );
 }
 
 /**
  * Compute a one-line "Currently: …" string describing the live contribution
- * of a spark. Returns null if there's nothing meaningful to show (e.g. the
- * Focus Surge spark, which only contributes while Focus is held).
+ * of a spark. Returns null if there's nothing meaningful to show.
  */
 function describeContribution(spark, card, ctx) {
   const eff = card?.effect;
   if (!eff) return null;
-  const { ownedMap, qiSparks, rate } = ctx;
+  const { ownedMap, rate } = ctx;
   const stacks = spark.stacks ?? 1;
   const pname = (pid) => PRODUCERS_BY_ID[pid]?.name ?? pid;
 
   switch (eff.type) {
     // ── Timed / event-count common buffs ────────────────────────────
     case 'qi_mult': {
-      // Surging Stream / Steady Stream — multiplicative bonus on qi/s.
       const bonus = eff.value;
       const extra = rate * bonus;
-      return `+${Math.round(bonus * 100)}% qi/s → ≈ ${fmtRate(extra)} qi/s extra right now`;
+      return `+${Math.round(bonus * 100)}% qi/s → ≈ ${fmtRate(extra)} qi/s extra`;
     }
     case 'focus_mult_bonus':
-      return `+${Math.round(eff.value * 100)}% on your Focus multiplier (active while holding Focus)`;
-
+      return `+${Math.round(eff.value * 100)}% Focus multiplier (active while holding Focus)`;
     // ── Permanent stacked uncommons ─────────────────────────────────
     case 'qi_flat_per_stack':
       return `+${eff.value * stacks} base qi/s${stacks > 1 ? ` (${stacks} stacks)` : ''}`;
@@ -72,27 +78,26 @@ function describeContribution(spark, card, ctx) {
     case 'focus_mult_bonus_per_stack':
       return `+${Math.round(eff.value * stacks * 100)}% Focus multiplier${stacks > 1 ? ` (${stacks} stacks)` : ''}`;
     case 'gate_reduction_per_stack':
-      return `−${Math.round(eff.value * stacks * 100)}% on major-realm gate cost${stacks > 1 ? ` (${stacks} stacks)` : ''}`;
+      return `−${Math.round(eff.value * stacks * 100)}% major-realm gate cost${stacks > 1 ? ` (${stacks} stacks)` : ''}`;
     case 'offline_qi_mult_per_stack':
       return `+${Math.round(eff.value * stacks * 100)}% offline qi accrual${stacks > 1 ? ` (${stacks} stacks)` : ''}`;
     case 'qi_mult_per_breakthrough_per_stack': {
       const accrued = spark.breakthroughsAccrued ?? 0;
       const totalPct = Math.round(eff.value * stacks * accrued * 100);
-      return `+${totalPct}% qi/s (${stacks} stack${stacks > 1 ? 's' : ''} × ${accrued} breakthroughs since pick)`;
+      return `+${totalPct}% qi/s (${stacks}× × ${accrued} breakthroughs)`;
     }
-
     // ── Legendary producer-synergy ──────────────────────────────────
     case 'producer_self_mult':
-      return `${pname(eff.target)} producing ×${eff.mult} qi/s`;
+      return `${pname(eff.target)} producing ×${eff.mult}`;
     case 'producer_count_mult': {
       const src = ownedMap[eff.source] ?? 0;
       const mult = 1 + src * eff.perEach;
-      return `${src} × ${pname(eff.source)} → ${pname(eff.target)} producing ×${mult.toFixed(2)}`;
+      return `${src} × ${pname(eff.source)} → ${pname(eff.target)} ×${mult.toFixed(2)}`;
     }
     case 'producer_count_threshold_mult': {
       const src = ownedMap[eff.source] ?? 0;
       return src >= eff.threshold
-        ? `Active (you own ${src} × ${pname(eff.source)}) → ${pname(eff.target)} producing ×${eff.mult}`
+        ? `Active → ${pname(eff.target)} ×${eff.mult}`
         : `Dormant — need ${eff.threshold} × ${pname(eff.source)} (you have ${src})`;
     }
     case 'producer_pair_synergy': {
@@ -101,8 +106,8 @@ function describeContribution(spark, card, ctx) {
       const pairs = Math.min(a, b);
       const mult = 1 + pairs * (eff.mult - 1);
       return pairs > 0
-        ? `${pairs} pair${pairs > 1 ? 's' : ''} → both ${pname(eff.producerA)} & ${pname(eff.producerB)} producing ×${mult.toFixed(2)}`
-        : `No pairs yet (own ≥1 of each to activate)`;
+        ? `${pairs} pair${pairs > 1 ? 's' : ''} → both ×${mult.toFixed(2)}`
+        : `No pairs (need ≥1 of each)`;
     }
     case 'producer_pair_global_mult': {
       const a = ownedMap[eff.producerA] ?? 0;
@@ -111,22 +116,22 @@ function describeContribution(spark, card, ctx) {
       const totalPct = Math.round(pairs * (eff.mult - 1) * 100);
       return pairs > 0
         ? `${pairs} pair${pairs > 1 ? 's' : ''} → +${totalPct}% global qi/s`
-        : `No pairs yet (need ≥1 ${pname(eff.producerA)} + 1 ${pname(eff.producerB)})`;
+        : `No pairs (need ≥1 of each)`;
     }
     case 'phoenix_reborn': {
       const phStacks = spark.phoenixRebornStacks ?? 0;
       return phStacks > 0
-        ? `${phStacks} rebirth${phStacks > 1 ? 's' : ''} accrued → every other producer ×${Math.pow(2, phStacks)}`
-        : `Waiting for next major realm breakthrough to trigger first rebirth`;
+        ? `${phStacks} rebirth${phStacks > 1 ? 's' : ''} → others ×${Math.pow(2, phStacks)}`
+        : `Waiting on next major realm`;
     }
-
     default:
       return null;
   }
 }
 
-/** A single spark card. */
-function SparkCard({ spark, ctx, isTrinityActive }) {
+// ── Compact block (grid item) ─────────────────────────────────────────────
+
+function SparkBlock({ spark, ctx, isTrinityActive, onOpen }) {
   const card = QI_SPARK_BY_ID[spark.sparkId];
   if (!card) return null;
   const rarity = SPARK_RARITY[card.rarity] ?? SPARK_RARITY.common;
@@ -143,36 +148,114 @@ function SparkCard({ spark, ctx, isTrinityActive }) {
 
   const contribution = describeContribution(spark, card, ctx);
 
+  // Show stack count badge on stacked permanents (>1)
+  const stacks = spark.stacks ?? 1;
+  const showStackBadge = card.kind === 'permanent' && stacks > 1;
+
+  return (
+    <button
+      type="button"
+      className={`st-block st-block-${card.rarity}${isTrinityPiece ? ' st-block-trinity-piece' : ''}${isTrinityPiece && isTrinityActive ? ' st-block-trinity-active' : ''}`}
+      style={{ '--rarity-color': rarity.color }}
+      onClick={() => onOpen(spark)}
+      aria-label={`${card.name} — tap for details`}
+    >
+      <div className="st-block-icon-wrap">
+        <Icon icon={copy?.icon} className="st-block-icon-img" />
+        {isTrinityPiece && <span className="st-block-trinity-badge">✦</span>}
+        {showStackBadge && <span className="st-block-stack-badge">×{stacks}</span>}
+      </div>
+      <div className="st-block-name">{card.name}</div>
+      <div className={`st-block-rarity-tag st-rt-${card.rarity}`}>{rarity.label}</div>
+      {contribution && <div className="st-block-line">{contribution}</div>}
+      {isTimed && (
+        <div className="st-block-timer">
+          <div className="st-block-timer-bar">
+            <div className="st-block-timer-fill" style={{ '--p': progress }} />
+          </div>
+          <span className="st-block-timer-text">{secsLeft}s</span>
+        </div>
+      )}
+    </button>
+  );
+}
+
+// ── Detail panel (opens on block tap) ─────────────────────────────────────
+
+function SparkDetailPanel({ spark, ctx, isTrinityActive, onClose }) {
+  const card = QI_SPARK_BY_ID[spark?.sparkId];
+  if (!card) return null;
+  const rarity = SPARK_RARITY[card.rarity] ?? SPARK_RARITY.common;
+  const copy   = SPARK_COPY[spark.sparkId];
+  const icon   = copy?.icon ?? '✦';
+  const effectText  = copy?.effectText  ?? card.description ?? '';
+  const exampleHtml = copy?.exampleText ?? null;
+  const loreHtml    = copy?.loreText    ?? null;
+  const contribution = describeContribution(spark, card, ctx);
+
+  // Timer for timed sparks (live)
+  const now = ctx.now;
+  const isTimed     = !!spark.expiresAt;
+  const remainingMs = isTimed ? Math.max(0, spark.expiresAt - now) : null;
+  const totalMs     = card.duration ?? 1;
+  const progress    = isTimed ? Math.max(0, Math.min(1, remainingMs / totalMs)) : null;
+  const secsLeft    = isTimed ? Math.max(0, Math.ceil(remainingMs / 1000)) : null;
+
   return (
     <div
-      className={`st-card st-card-${card.rarity}${isTrinityPiece ? ' st-card-trinity-piece' : ''}${isTrinityPiece && isTrinityActive ? ' st-card-trinity-active' : ''}`}
-      style={{ '--rarity-color': rarity.color }}
+      className="st-detail-overlay"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="st-card-icon">
-        <Icon icon={copy?.icon} />
-        {isTrinityPiece && <span className="st-trinity-badge">✦</span>}
-      </div>
-      <div className="st-card-body">
-        <div className="st-card-head">
-          <span className="st-card-name">{card.name}</span>
-          <span className={`st-card-rarity-tag st-rt-${card.rarity}`}>{rarity.label}</span>
+      <div className={`st-detail-panel st-detail-r-${card.rarity}`} style={{ '--rarity-color': rarity.color }}>
+        <button type="button" className="st-detail-close" onClick={onClose} aria-label="Close">✕</button>
+        <div className="st-detail-hero">
+          <Icon icon={icon} className="st-detail-hero-img" />
+          <div className={`st-detail-rarity-banner st-rt-${card.rarity}`}>{rarity.label}</div>
         </div>
-        {(copy?.effectText ?? card.description) && (
-          <div className="st-card-effect">{copy?.effectText ?? card.description}</div>
-        )}
-        {contribution && <div className="st-card-contribution">Currently: <strong>{contribution}</strong></div>}
-        {isTimed && (
-          <div className="st-card-timer">
-            <div className="st-card-timer-bar">
-              <div className="st-card-timer-fill" style={{ '--p': progress }} />
+        <div className="st-detail-body">
+          <div className="st-detail-name">{card.name}</div>
+          {isTimed && (
+            <div className="st-detail-timer">
+              <div className="st-detail-timer-bar">
+                <div className="st-detail-timer-fill" style={{ '--p': progress }} />
+              </div>
+              <span className="st-detail-timer-text">{secsLeft}s remaining</span>
             </div>
-            <span className="st-card-timer-text">{secsLeft}s left</span>
+          )}
+          <div className="st-detail-section">
+            <div className="st-detail-section-label">Effect</div>
+            <div className="st-detail-effect-text">{renderRich(effectText)}</div>
           </div>
-        )}
+          {contribution && (
+            <div className="st-detail-section">
+              <div className="st-detail-section-label">Currently</div>
+              <div className="st-detail-contribution"><strong>{contribution}</strong></div>
+            </div>
+          )}
+          {exampleHtml && (
+            <div className="st-detail-section">
+              <div className="st-detail-section-label">Example</div>
+              <div className="st-detail-example" dangerouslySetInnerHTML={{ __html: exampleHtml }} />
+            </div>
+          )}
+          {loreHtml && (
+            <div className="st-detail-section">
+              <div className="st-detail-section-label">Lore</div>
+              <div className="st-detail-lore">{loreHtml}</div>
+            </div>
+          )}
+          {isTrinityActive && card.trinityPiece && (
+            <div className="st-detail-trinity-note">
+              ✦ Trinity Convergence active — +{Math.round((TRINITY_CONVERGENCE_MULT - 1) * 100)}% global qi/s
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
+// ── Section wrapper ────────────────────────────────────────────────────────
 
 function Section({ label, count, children }) {
   if (!count) return null;
@@ -182,16 +265,18 @@ function Section({ label, count, children }) {
         <span className="st-section-label">{label}</span>
         <span className="st-section-count">{count}</span>
       </header>
-      <div className="st-section-list">{children}</div>
+      <div className="st-grid">{children}</div>
     </section>
   );
 }
 
+// ── Tab root ───────────────────────────────────────────────────────────────
+
 export default function SparksTab({ qiSparks, producers, cultivation }) {
-  // Tick at 250ms to drive countdown bars + live rate-based contribution.
-  // Cheap: re-renders only this tab when it's the active one.
   const [now, setNow] = useState(Date.now());
   const [rate, setRate] = useState(() => cultivation?.rateRef?.current ?? 0);
+  const [openSpark, setOpenSpark] = useState(null);
+
   useEffect(() => {
     const id = setInterval(() => {
       setNow(Date.now());
@@ -200,8 +285,15 @@ export default function SparksTab({ qiSparks, producers, cultivation }) {
     return () => clearInterval(id);
   }, [cultivation?.rateRef]);
 
+  // Close detail panel on Escape
+  useEffect(() => {
+    if (!openSpark) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setOpenSpark(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [openSpark]);
+
   const activeSparks = qiSparks?.activeSparks ?? [];
-  // Hide expired timed sparks even if the cleanup tick hasn't run yet.
   const live = activeSparks.filter(s => !s.expiresAt || s.expiresAt > now);
 
   // Group by lifecycle / rarity
@@ -214,9 +306,7 @@ export default function SparksTab({ qiSparks, producers, cultivation }) {
     else if (card.kind === 'mechanic')    groups.mechanic.push(s);
     else                                   groups.uncommon.push(s);
   }
-  // Sort timed by soonest expiry first
   groups.timed.sort((a, b) => a.expiresAt - b.expiresAt);
-  // Sort legendary so trinity pieces cluster together (canonical Tiger → Dragon → Phoenix order)
   groups.legendary.sort((a, b) => {
     const ai = TRINITY_SPARK_IDS.indexOf(a.sparkId);
     const bi = TRINITY_SPARK_IDS.indexOf(b.sparkId);
@@ -227,14 +317,7 @@ export default function SparksTab({ qiSparks, producers, cultivation }) {
   });
 
   const isTrinityActive = TRINITY_SPARK_IDS.every(id => live.some(s => s.sparkId === id));
-
-  // Context for contribution calc
-  const ctx = {
-    now,
-    rate,
-    ownedMap: producers?.owned ?? {},
-    qiSparks,
-  };
+  const ctx = { now, rate, ownedMap: producers?.owned ?? {}, qiSparks };
 
   if (live.length === 0) {
     return (
@@ -249,6 +332,12 @@ export default function SparksTab({ qiSparks, producers, cultivation }) {
     );
   }
 
+  // Currently-open spark — re-resolve from `live` so timer/contribution
+  // stay synced as the parent re-renders.
+  const openSparkLive = openSpark
+    ? live.find(s => s.instanceId === openSpark.instanceId) ?? null
+    : null;
+
   return (
     <div className="st-root">
       {isTrinityActive && (
@@ -261,20 +350,37 @@ export default function SparksTab({ qiSparks, producers, cultivation }) {
       )}
 
       <Section label="Timed buffs" count={groups.timed.length}>
-        {groups.timed.map(s => <SparkCard key={s.instanceId} spark={s} ctx={ctx} isTrinityActive={isTrinityActive} />)}
+        {groups.timed.map(s => (
+          <SparkBlock key={s.instanceId} spark={s} ctx={ctx} isTrinityActive={isTrinityActive} onOpen={setOpenSpark} />
+        ))}
       </Section>
 
       <Section label="Legendary" count={groups.legendary.length}>
-        {groups.legendary.map(s => <SparkCard key={s.instanceId} spark={s} ctx={ctx} isTrinityActive={isTrinityActive} />)}
+        {groups.legendary.map(s => (
+          <SparkBlock key={s.instanceId} spark={s} ctx={ctx} isTrinityActive={isTrinityActive} onOpen={setOpenSpark} />
+        ))}
       </Section>
 
       <Section label="Permanent" count={groups.uncommon.length}>
-        {groups.uncommon.map(s => <SparkCard key={s.instanceId} spark={s} ctx={ctx} isTrinityActive={isTrinityActive} />)}
+        {groups.uncommon.map(s => (
+          <SparkBlock key={s.instanceId} spark={s} ctx={ctx} isTrinityActive={isTrinityActive} onOpen={setOpenSpark} />
+        ))}
       </Section>
 
       <Section label="Mechanics" count={groups.mechanic.length}>
-        {groups.mechanic.map(s => <SparkCard key={s.instanceId} spark={s} ctx={ctx} isTrinityActive={isTrinityActive} />)}
+        {groups.mechanic.map(s => (
+          <SparkBlock key={s.instanceId} spark={s} ctx={ctx} isTrinityActive={isTrinityActive} onOpen={setOpenSpark} />
+        ))}
       </Section>
+
+      {openSparkLive && (
+        <SparkDetailPanel
+          spark={openSparkLive}
+          ctx={ctx}
+          isTrinityActive={isTrinityActive}
+          onClose={() => setOpenSpark(null)}
+        />
+      )}
     </div>
   );
 }
