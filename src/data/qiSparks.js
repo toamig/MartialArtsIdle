@@ -120,47 +120,55 @@ const QI_SPARKS_RAW = [
   },
 
   // ── Uncommon (permanent run buffs, additive stacking) ───────────────────
-  // 2026-05-21 Dial-8 spark tuning — Steady Cultivation was the worst early-
-  // game offender (+1 base qi/s × multiple stacks when base rate IS 1 =
-  // doubled/tripled production from sparks alone). Cut by half. Sharper
-  // Focus and Enduring Stream slightly trimmed too.
+  // 2026-05-21 Dial-11 — every stacking uncommon trimmed ~33% to address
+  // the mid/late "session-off pile buys every upgrade" feedback. The
+  // shape of the roster is preserved (each card still has the same job);
+  // only the magnitudes come down. See also Dial-8 history below.
+  //
+  // Dial-8 history (kept as an audit trail): Steady Cultivation was the
+  // worst early-game offender at +1 → cut to +0.5 then. Sharper Focus
+  // and Enduring Stream slightly trimmed then. Dial-11 takes another
+  // pass on the same axes after the producer-double price cut (Dial-10)
+  // shifted the late-game shopping window.
   {
     id:          'steady_cultivation',
     rarity:      'uncommon',
     name:        'Steady Cultivation',
-    description: '+0.5 base qi/s for the rest of this run. Stacks.',
+    description: '+0.3 base qi/s for the rest of this run. Stacks.',
     kind:        'permanent',
-    effect:      { type: 'qi_flat_per_stack', value: 0.5 },
+    effect:      { type: 'qi_flat_per_stack', value: 0.3 },
   },
   {
     id:          'sharper_focus',
     rarity:      'uncommon',
     name:        'Sharper Focus',
-    description: '+3% Focus multiplier for the rest of this run. Stacks.',
+    description: '+2% Focus multiplier for the rest of this run. Stacks.',
     kind:        'permanent',
-    effect:      { type: 'focus_mult_bonus_per_stack', value: 0.03 },
+    effect:      { type: 'focus_mult_bonus_per_stack', value: 0.02 },
   },
   {
     id:          'enduring_stream',
     rarity:      'uncommon',
     name:        'Enduring Stream',
-    description: '+1.5% qi/s for the rest of this run. Stacks.',
+    description: '+1% qi/s for the rest of this run. Stacks.',
     kind:        'permanent',
-    effect:      { type: 'qi_mult_per_stack', value: 0.015 },
+    effect:      { type: 'qi_mult_per_stack', value: 0.01 },
   },
   // 2026-05-21 Dial-9: replaces `patience_of_stone`. Where Patience of Stone
   // shortened gate qi/s requirements (trivialising the grindy moments that
   // drive ad-watch monetisation), Master's Patience rewards the player for
   // ACTIVELY engaging Focus mode — a power floor that depends on play, not a
-  // passive gate-shaver. Per-stack cap (+20%) limits runaway stacking; the
-  // counter resets on reincarnation along with all other run state.
+  // passive gate-shaver. Per-stack cap limits runaway stacking; the counter
+  // resets on reincarnation along with all other run state.
+  // Dial-11: per-stack cap trimmed 20% → 12%. At full saturation (200s+
+  // focus held) 5 stacks now yields +60% qi/s instead of +100%.
   {
     id:          'masters_patience',
     rarity:      'uncommon',
     name:        "Master's Patience",
-    description: 'Each second held in Focus this run gives +0.1% qi/s. Stacks. Per-stack cap +20%.',
+    description: 'Each second held in Focus this run gives +0.1% qi/s. Stacks. Per-stack cap +12%.',
     kind:        'permanent',
-    effect:      { type: 'qi_mult_per_focus_second_per_stack', value: 0.001, perStackCap: 0.20 },
+    effect:      { type: 'qi_mult_per_focus_second_per_stack', value: 0.001, perStackCap: 0.12 },
   },
   // 2026-05-21 Dial-9: Tinker's Bargain — uncommon, charge-based discount on
   // the next 5 producer purchase TRANSACTIONS (×1 ✕ or ×10 both consume 1
@@ -174,24 +182,27 @@ const QI_SPARKS_RAW = [
     kind:        'charges',
     effect:      { type: 'producer_cost_discount', fraction: 0.30, charges: 5 },
   },
-  // 2026-05-21 Dial-4.1: per-stack values cut for both. With 65/35 rarity
-  // weights players accumulate 3-5 stacks of any given uncommon over a run
-  // and these two compound especially hard (offline pile-up + per-BT growth).
+  // Dial-4.1 → 11 history: these two compound especially hard (Heaven's
+  // Bond multiplies the offline pile, Resonant Soul grows with every
+  // breakthrough × stack). Cut again in Dial-11 since "easy after a
+  // session off" feedback directly implicates the offline path.
+  //   Heaven's Bond:  10%  → 5%   (Dial-4.1) → 3%   (Dial-11)
+  //   Resonant Soul:  0.5% → 0.3% (Dial-4.1) → 0.2% (Dial-11)
   {
     id:          'heavens_bond',
     rarity:      'uncommon',
     name:        "Heaven's Bond",
-    description: '+5% offline qi accrual for the rest of this run. Stacks.',
+    description: '+3% offline qi accrual for the rest of this run. Stacks.',
     kind:        'permanent',
-    effect:      { type: 'offline_qi_mult_per_stack', value: 0.05 },
+    effect:      { type: 'offline_qi_mult_per_stack', value: 0.03 },
   },
   {
     id:          'resonant_soul',
     rarity:      'uncommon',
     name:        'Resonant Soul',
-    description: '+0.3% qi/s for every layer breakthrough you reach this run. Stacks.',
+    description: '+0.2% qi/s for every layer breakthrough you reach this run. Stacks.',
     kind:        'permanent',
-    effect:      { type: 'qi_mult_per_breakthrough_per_stack', value: 0.003 },
+    effect:      { type: 'qi_mult_per_breakthrough_per_stack', value: 0.002 },
   },
 
   // ── Rare — Mechanic: Crystal Click ─────────────────────────────────────
@@ -750,28 +761,29 @@ export const SPARK_COPY = {
   // ── Uncommon ───────────────────────────────────────────────────────────
   steady_cultivation: {
     icon: '🌱',
-    effectText: 'Permanently gain **+0.5 base qi/s** for the rest of this run. Stacks if drawn again.',
-    exampleText: 'Drawn three times → <strong>+1.5 base qi/s</strong>. This flat bonus is then multiplied by crystal, focus, law, and other multipliers — endgame impact can be huge.',
+    effectText: 'Permanently gain **+0.3 base qi/s** for the rest of this run. Stacks if drawn again.',
+    exampleText: 'Drawn three times gives <strong>+0.9 base qi/s</strong>. The flat bonus is multiplied by crystal, focus, law, and other multipliers, so it matters most in the early game.',
     loreText: 'One breath at dawn, one at dusk. The thousandth breath is the same as the first, and that is the whole secret.',
   },
   sharper_focus: {
     icon: '🔍',
-    effectText: 'Permanently adds **+3%** to your Focus multiplier for the rest of this run. Stacks if drawn again.',
-    exampleText: 'Three stacks → Focus is <strong>+9% stronger</strong>. Especially powerful if you Focus often.',
+    effectText: 'Permanently adds **+2%** to your Focus multiplier for the rest of this run. Stacks if drawn again.',
+    exampleText: 'Three stacks make your Focus <strong>+6% stronger</strong>. Especially useful if you Focus often.',
     loreText: 'The blade is sharpened on the same stone, every morning.',
   },
   enduring_stream: {
     icon: '🏞️',
-    effectText: 'Permanently boosts your qi/s by **+1.5%** for the rest of this run. Stacks if drawn again.',
-    exampleText: 'Five stacks compounds to roughly <strong>+7.5% total qi/s</strong>. Small but reliable, never expires.',
+    effectText: 'Permanently boosts your qi/s by **+1%** for the rest of this run. Stacks if drawn again.',
+    exampleText: 'Five stacks compound to roughly <strong>+5% total qi/s</strong>. Small but reliable, never expires.',
     loreText: 'The river that never stops becomes the sea.',
   },
   // 2026-05-21 Dial-9: patience_of_stone retired (trivialised gates that drive
   // ad-watch monetisation). Replaced by Master's Patience + Tinker's Bargain.
+  // Dial-11: per-stack cap trimmed 20% → 12% (saturates at 120s/stack now).
   masters_patience: {
     icon: '🕰',
-    effectText: 'For every second you hold Focus this run, your qi/s gains **+0.1%**. Stacks. Each stack caps at **+20%** (i.e. saturates after 200 seconds held).',
-    exampleText: 'Hold Focus a total of <strong>2 minutes (120s)</strong> over the run → 1 stack gives +12% qi/s. Three stacks → <strong>+36% qi/s</strong> until you reincarnate. Saturates at 200s/stack.',
+    effectText: 'For every second you hold Focus this run, your qi/s gains **+0.1%**. Stacks. Each stack caps at **+12%** (saturates after 120 seconds held).',
+    exampleText: 'Hold Focus a total of <strong>2 minutes (120s)</strong> over the run, and 1 stack gives +12% qi/s at the cap. Three stacks reach <strong>+36% qi/s</strong> until you reincarnate.',
     loreText: 'The longest breath is the slowest. A master can rest inside a single inhale for an hour.',
   },
   tinkers_bargain: {
@@ -782,14 +794,14 @@ export const SPARK_COPY = {
   },
   heavens_bond: {
     icon: '☁️',
-    effectText: 'Permanently increases your offline qi gain rate by **+5%** for the rest of this run. Stacks if drawn again.',
-    exampleText: 'Base offline rate is 20%. Three stacks → <strong>35% offline rate</strong> — your sect cultivates harder while you sleep.',
+    effectText: 'Permanently increases your offline qi gain rate by **+3%** for the rest of this run. Stacks if drawn again.',
+    exampleText: 'Base offline rate is 20%. Three stacks lift it to <strong>29% offline rate</strong>, so your sect cultivates a little harder while you sleep.',
     loreText: 'The heavens do not require your attention. Only your alignment.',
   },
   resonant_soul: {
     icon: '🔔',
-    effectText: 'Permanently gain **+0.3% qi/s** for each layer breakthrough you reach AFTER drawing this spark. Stacks if drawn again.',
-    exampleText: 'After 50 breakthroughs with this active, one stack gives <strong>+15% qi/s</strong>. Draw early for biggest payoff.',
+    effectText: 'Permanently gain **+0.2% qi/s** for each layer breakthrough you reach AFTER drawing this spark. Stacks if drawn again.',
+    exampleText: 'After 50 breakthroughs with this active, one stack gives <strong>+10% qi/s</strong>. Draw early for the biggest payoff.',
     loreText: 'Every breakthrough leaves a tone. The soul gathers them like bells in a temple.',
   },
 
