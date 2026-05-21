@@ -100,11 +100,15 @@ export default function ProducerLane({
     return raw;
   }, [producer.id, producers, resolvedCount, unlocked, costDiscount]);
 
-  // Locked state — keep the leader as a tap target so the player can still
-  // open the details modal and read what they're working toward. Unlock hint
-  // takes the spot where the Qi/s rate normally lives in the caption line.
+  // Locked state — Cookie-Clicker-style "teaser" reveal. Show the actual
+  // producer sprite as a black silhouette so the player sees the shape but
+  // not the detail, paired with a "???" name and an unlock-realm hint.
+  // Falls back to the lock emoji if the producer has no sprite (shouldn't
+  // happen with current data, but defensive). Click still opens the detail
+  // modal so the player can read what they're working toward.
   if (!unlocked) {
     const minRealm = producer.unlock?.minRealmIndex ?? '?';
+    const teaserSprite = producer.sprites?.[0] ?? '🔒';
     return (
       <div className="pl-lane pl-locked" aria-disabled="true">
         <button
@@ -113,7 +117,7 @@ export default function ProducerLane({
           aria-label={`${producer.name} details`}
           type="button"
         >
-          <Sprite sprite="🔒" className="pl-leader-sprite" />
+          <Sprite sprite={teaserSprite} className="pl-leader-sprite pl-leader-silhouette" />
         </button>
         <div className="pl-body">
           <div className="pl-caption">

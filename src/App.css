@@ -15698,6 +15698,17 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
   opacity: 0.55;
 }
 
+/* Cookie-Clicker "teaser" silhouette — locked producer shows its real
+   sprite shape but stripped of detail. brightness(0) blackens the
+   colours, drop-shadow gives a subtle outline so the silhouette doesn't
+   disappear into the lane background. */
+.pl-leader-silhouette {
+  filter:
+    brightness(0)
+    opacity(0.75)
+    drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+}
+
 /* ── Tier styling — escalates with owned count ─────────────────────────── */
 .pl-tier-bronze {
   border-color: rgba(217, 151, 82, 0.55);

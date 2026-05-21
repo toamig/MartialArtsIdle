@@ -212,20 +212,37 @@ export default function CultivationScreen({ cultivation, producers, upgrades, cr
             >Max</button>
           </div>
           <div className="cs-list">
-            {PRODUCERS.map(p => (
-              <ProducerLane
-                key={p.id}
-                producer={p}
-                owned={producers.getOwned(p.id)}
-                unlocked={producers.isUnlocked(p.id, realmIndex)}
-                buyMode={buyMode}
-                qi={qi}
-                producers={producers}
-                onBuy={handleBuy}
-                onShowDetail={setDetailProducer}
-                costDiscount={producerCostDiscountFrac}
-              />
-            ))}
+            {(() => {
+              // Cookie-Clicker reveal pattern — show every unlocked producer
+              // plus a single silhouetted "teaser" for the next locked one.
+              // Everything past the first locked stays hidden until each
+              // unlocks in turn. Inline so the list isn't snapshotted as a
+              // stale memo when realmIndex / owned counts change.
+              const list = [];
+              let teaserShown = false;
+              for (const p of PRODUCERS) {
+                if (producers.isUnlocked(p.id, realmIndex)) {
+                  list.push(p);
+                } else if (!teaserShown) {
+                  list.push(p);
+                  teaserShown = true;
+                }
+              }
+              return list.map(p => (
+                <ProducerLane
+                  key={p.id}
+                  producer={p}
+                  owned={producers.getOwned(p.id)}
+                  unlocked={producers.isUnlocked(p.id, realmIndex)}
+                  buyMode={buyMode}
+                  qi={qi}
+                  producers={producers}
+                  onBuy={handleBuy}
+                  onShowDetail={setDetailProducer}
+                  costDiscount={producerCostDiscountFrac}
+                />
+              ));
+            })()}
           </div>
         </>
       )}
