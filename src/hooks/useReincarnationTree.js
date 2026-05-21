@@ -1,39 +1,17 @@
 /**
- * useReincarnationTree — Plan B V1 hook (2026-05-21).
+ * useReincarnationTree.js — purchased node set + derived modifier bundle.
  *
- * Sits on top of the new tree data structure in `src/data/reincarnationTree.js`.
- * In V1 there is only one branch (Producer Evolution); the hook walks every
- * purchased node, sums their effects, and exposes the result through two
- * shapes:
+ * Purchases persist in 'mai_reincarnation_tree' and survive reincarnation.
  *
- *   modifiers         — the legacy interface consumed across the codebase
- *                       (cultivSpeedMult, crystalTapMult, offlineCapHours,
- *                        combat flags, ...). In V1 every legacy modifier
- *                       defaults to its identity value (1 / 0 / false / 8h)
- *                       because no V1 nodes touch them. Future branches
- *                       (Cultivation, Combat, Offline...) will set them.
- *
- *                       The V1-NEW modifier keys are also exposed here:
- *                         tierUpResonanceBase           (number)
- *                         tierUpResonancePerProducer    ({ [pid]: number })
- *                       Consumed by useTierUpResonance.
- *
- *   Compatibility methods — canBuy / buy / isAvailable / isPurchased —
- *   preserved 1:1 from the old hook so the EXISTING `EternalTreeScreen.jsx`
- *   keeps compiling/rendering in V1.2. The screen itself is replaced in
- *   V1.3 with an Idle Slayer-inspired layout.
- *
- *   New API for V1.3 — same methods exposed under modern names too:
- *     purchase(id) / isUnlocked(id)
- *
- * Save key: `mai_reincarnation_tree`. Stored as JSON array of purchased
- * node ids. Migration from old ids (al_*, md_*, etc.) is handled by
- * `src/systems/treeMigration.js` at module load — wipes old purchases and
- * refunds karma to the player's total earnings.
+ * prereqMode handling:
+ *   'or'       — any one prereq satisfies
+ *   'and'      — every prereq must be satisfied (sequential + cross-branch)
+ *   'yyUnlock' — ≥ 2 of the 4 main keystones must be purchased
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { NODES, NODES_BY_ID, TREE_TOTAL_COST, BRANCHES } from '../data/reincarnationTree';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { NODES, NODES_BY_ID, MAIN_KEYSTONES, RETIRED_NODE_IDS, TREE_TOTAL_COST } from '../data/reincarnationTree';
+import { trackTreeNodePurchased } from '../analytics';
 
 const SAVE_KEY = 'mai_reincarnation_tree';
 
@@ -41,179 +19,236 @@ function loadPurchased() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        // Filter out ids that don't exist in the new tree (defensive — in
-        // case the migration script missed a stray entry).
-        const valid = parsed.filter(id => typeof id === 'string' && !!NODES_BY_ID[id]);
-        return new Set(valid);
-      }
+      const arr = JSON.parse(raw);
+      // One-shot migration: drop any node IDs that no longer exist in the
+      // current tree (e.g. the old `yy_5` 6th-step node, or any legacy
+      // connector that has been removed). Karma is NOT auto-refunded — the
+      // player keeps whatever they spent under the old costs; they get the
+      // new effects on the IDs that still exist for free.
+      return new Set(arr.filter(id => NODES_BY_ID[id] && !RETIRED_NODE_IDS.includes(id)));
     }
-  } catch { /* corrupt — ignore */ }
+  } catch { /* ignore parse errors — start with empty set */ }
   return new Set();
 }
 
-function savePurchased(set) {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(Array.from(set))); } catch {}
+function persist(set) {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify([...set])); }
+  catch { /* localStorage unavailable / quota — non-fatal */ }
 }
 
-/**
- * Build the legacy modifier map. Every key returns its "no tree" identity
- * value in V1 because no V1 nodes touch combat / offline / cultivation
- * modifiers. The Producer Evolution branch only sets two NEW keys
- * (`tierUpResonanceBase` and `tierUpResonancePerProducer`).
- *
- * Future branches re-introduce the legacy modifiers by adding effect types
- * that this function reads — same shape, different data.
- */
-function computeModifiers(purchased) {
-  let tierUpBase = 0;
-  const tierUpPerProducer = {};
-  let karmaSpent = 0;
-
-  for (const id of purchased) {
-    const node = NODES_BY_ID[id];
-    if (!node) continue;
-    karmaSpent += node.cost ?? 0;
-    const eff = node.effect;
-    if (!eff) continue;
-    if (eff.type === 'tier_up_base') {
-      tierUpBase += eff.value ?? 0;
-    } else if (eff.type === 'tier_up_per_producer') {
-      const pid = eff.producerId;
-      if (pid) {
-        tierUpPerProducer[pid] = (tierUpPerProducer[pid] ?? 0) + (eff.value ?? 0);
-      }
-    }
-    // V7+ effect types will be added here as further branches land.
-  }
-
-  return {
-    // ── V1 NEW modifiers ──
-    tierUpResonanceBase:        tierUpBase,
-    tierUpResonancePerProducer: tierUpPerProducer,
-
-    // ── Bookkeeping ──
-    karmaSpent,
-    treeQiMult: 1,           // tracked separately by older code; identity in V1
-    perKarmaQiPct: 0,         // legacy field — formula removed with the rework
-
-    // ── Legacy modifier interface — identity values until future
-    // branches re-introduce these axes. Keeping the keys lets existing
-    // consumers (App.jsx, useCombat, etc.) run without per-call defensive
-    // defaults.
-    cultivSpeedMult:           1,
-    crystalTapMult:            1,
-    producerOutputMult:        1,
-    offlineCapHours:           8,
-    cooldownMult:              1,
-    damageMult:                1,
-    qiOnEveryRealmFrac:        0,
-    hpRegenPerSec:             0,
-    freeCastEvery:             0,
-    gatherMineRarityUpChance:  0,
-    cultBuffOnRebirthSec:      0,
-    bloodLotusOnRebirth:       0,
-    bankedRerollOnRebirth:     0,
-    keepProducerLevelsFrac:    0,
-    extraTechSlot:             false,
-    phaseTechniqueOwned:       false,
-    undyingResolve:            false,
-    killingStride:             false,
-    regionKillBonus:           false,
-    keepRecipes:               false,
-    dualAutoFarm:              false,
-  };
-}
-
-/**
- * @param {object} args
- * @param {number}   args.karma       Current karma balance (from useReincarnationKarma).
- * @param {Function} args.spendKarma  (cost, nodeId) => boolean. Deducts karma on success.
- * @param {number}   [args.lives]     Not used in V1 (was Wisdom of Lives input). Kept
- *                                    in the signature so the existing call site doesn't
- *                                    need to change.
- */
 export default function useReincarnationTree({ karma, spendKarma, lives = 0 } = {}) {
-  const [purchased, setPurchased] = useState(() => loadPurchased());
+  const [purchased, setPurchased] = useState(loadPurchased);
 
-  useEffect(() => { savePurchased(purchased); }, [purchased]);
+  useEffect(() => { persist(purchased); }, [purchased]);
 
-  const modifiers = useMemo(() => computeModifiers(purchased), [purchased]);
-
-  /** Has this node been purchased? */
   const isPurchased = useCallback((id) => purchased.has(id), [purchased]);
 
-  /** Are all prereqs of this node satisfied (i.e. can it be displayed
-   *  as available-to-purchase)? Returns false if already owned. */
   const isAvailable = useCallback((id) => {
     const node = NODES_BY_ID[id];
-    if (!node) return false;
-    if (purchased.has(id)) return false;
-    for (const req of (node.requires ?? [])) {
-      if (!purchased.has(req)) return false;
+    if (!node || purchased.has(id)) return false;
+
+    if (node.prereqMode === 'yyUnlock') {
+      return MAIN_KEYSTONES.filter(k => purchased.has(k)).length >= 2;
     }
-    return true;
+    if (node.prereqs.length === 0) return true;
+    if (node.prereqMode === 'and') {
+      return node.prereqs.every(pid => purchased.has(pid));
+    }
+    return node.prereqs.some(pid => purchased.has(pid));
   }, [purchased]);
 
-  /** Can the player AFFORD this node right now (prereqs + karma)? */
   const canBuy = useCallback((id) => {
     const node = NODES_BY_ID[id];
     if (!node) return false;
-    if (!isAvailable(id)) return false;
-    return (karma ?? 0) >= (node.cost ?? 0);
-  }, [karma, isAvailable]);
+    return isAvailable(id) && karma >= node.cost;
+  }, [isAvailable, karma]);
 
-  /** Attempt to purchase a node. Returns true on success. */
   const buy = useCallback((id) => {
     const node = NODES_BY_ID[id];
-    if (!node) return false;
-    if (!isAvailable(id)) return false;
-    if ((karma ?? 0) < (node.cost ?? 0)) return false;
-    const ok = spendKarma?.(node.cost, id);
+    if (!node || !isAvailable(id)) return false;
+    const ok = spendKarma(node.cost, id);
     if (!ok) return false;
+    try { trackTreeNodePurchased(id, node.cost); } catch {}
     setPurchased(prev => {
       const next = new Set(prev);
       next.add(id);
       return next;
     });
     return true;
-  }, [karma, spendKarma, isAvailable]);
+  }, [isAvailable, spendKarma]);
 
-  /** Refund every owned node. Returns the karma amount that should be
-   *  returned to the player. Caller is responsible for crediting it back
-   *  (we don't have an `addKarma` directly — caller does it via save). */
-  const refund = useCallback(() => {
-    const refundAmount = Array.from(purchased).reduce(
-      (s, id) => s + (NODES_BY_ID[id]?.cost ?? 0),
-      0,
-    );
-    setPurchased(new Set());
-    return refundAmount;
-  }, [purchased]);
+  /**
+   * Derived modifier bundle — consumed by cultivation, combat, autoFarm,
+   * App.jsx getFullStats, and the alchemy / crafting screens.
+   *
+   * Backward-compat names used by App.jsx + useCultivation:
+   *   cultivSpeedMult — fed into cultivation.treeQiMultRef (qi/s `more` mod)
+   *   damageMult      — fed into combat.s.stats.damageMult
+   */
+  const modifiers = useMemo(() => {
+    // Wisdom of Lives — +5% per completed life, capped at +50% (10 lives).
+    const wolStacks = Math.min(10, Math.max(0, lives));
+    const wolMult   = purchased.has('yy_1') ? (1 + 0.05 * wolStacks) : 1;
+
+    // Universal tree qi multiplier (2026-05-03): every karma point spent
+    // contributes proportionally to a multiplier that scales linearly from
+    // ×1 (no nodes) to ×5 (all 143 karma spent). Replaces al_1's hardcoded
+    // +25% — al_1 now contributes only via its karma cost like every other
+    // node.
+    let karmaSpent = 0;
+    for (const id of purchased) {
+      const n = NODES_BY_ID[id];
+      if (n) karmaSpent += n.cost;
+    }
+    const treeQiMult = 1 + 4 * (karmaSpent / TREE_TOTAL_COST);
+
+    return {
+      // ── Tree-wide qi multiplier ───────────────────────────────────
+      // Surfaces both as `cultivSpeedMult` (consumed by useCultivation via
+      // treeQiMultRef — keeps the existing wiring) and as the explicit
+      // `treeQiMult` field for UI to display.
+      karmaSpent,
+      treeQiMult,
+      perKarmaQiPct:      4 / TREE_TOTAL_COST,                // ≈ 0.02797 per karma
+
+      // ── Ancestor's Legacy ─────────────────────────────────────────
+      cultivSpeedMult:    treeQiMult,                         // universal mult (was al_1 1.25)
+      keepRecipes:        purchased.has('al_2'),              // al_2 carry recipes
+      offlineCapHours:    purchased.has('al_3') ? 16 : 8,     // al_3 8→16h
+      bloodLotusOnRebirth: purchased.has('al_4') ? 50 : 0,    // al_4 +50 Blood Lotus
+      bankedRerollOnRebirth: purchased.has('al_4') ? 1 : 0,
+      cultBuffOnRebirthSec:  purchased.has('al_k') ? 3600 : 0, // al_k 1h ×2 buff
+
+      // ── Martial Dao ───────────────────────────────────────────────
+      cooldownMult:       purchased.has('md_1') ? 0.90 : 1,   // md_1 -10% CDs
+      exploitChanceFlat:  purchased.has('md_2') ? 20   : 0,   // md_2 +20% (units: %)
+      extraTechSlot:      purchased.has('md_3'),              // md_3 +1 slot
+      // TODO: redesign — refining removed in 2026-04-26 secret-tech overhaul.
+      // md_4 Veteran's Eye no longer has anywhere to apply (it bumped the
+      // quality of refined techniques; refining is gone). Keep the node
+      // purchasable so saved trees don't break, but the modifier is a no-op
+      // until the node is repurposed.
+      craftedTechQualityBump: 0,
+      killingStride:      purchased.has('md_k'),              // md_k post-kill exploit
+
+      // ── Fate's Path ───────────────────────────────────────────────
+      // fp_1 Lucky Star — still applies to ALCHEMY crafts (chance to bump
+      // the brewed pill's rarity). Refining no longer exists, so the node's
+      // surface area is narrower than originally designed.
+      craftRarityUpChance:purchased.has('fp_1') ? 0.10 : 0,
+      gatherMineRarityUpChance: purchased.has('fp_2') ? 0.10 : 0,
+      // fp_3 is currently a placeholder — no modifier wired.
+      selectionOptionCount: purchased.has('fp_4') ? 4 : 3,
+      dualAutoFarm:       purchased.has('fp_k'),              // fp_k twofold path
+
+      // ── Heavenly Will ─────────────────────────────────────────────
+      // hw_1 / hw_2 / hw_4 / hw_k flow through getStatModifiers below.
+      undyingResolve:     purchased.has('hw_3'),
+      pillEffectMult:     purchased.has('hw_4') ? 1.25 : 1,
+      hwKeystoneMore:     purchased.has('hw_k') ? 1.25 : 1,   // multiplicative more
+
+      // ── Yin Yang ──────────────────────────────────────────────────
+      // yy_1 contributes via wolMult (more on damage_all + health, see stat-mods).
+      damageMult:         wolMult,                            // yy_1 (also pipes into combat)
+      hpMoreFromLives:    wolMult,                            // yy_1 also bumps HP
+      qiOnEveryRealmFrac: purchased.has('yy_2') ? 0.20 : 0,
+      hpRegenPerSec:      purchased.has('yy_3') ? 0.05 : 0,   // yy_3 +5%/s above 50%
+      freeCastEvery:      purchased.has('yy_4') ? 5 : 0,      // yy_4 every 5th free
+      artefactValueMult:  purchased.has('yy_k') ? 1.10 : 1,   // yy_k +10% to all artefact affix values
+
+      // ── Cross-Branch Connectors ───────────────────────────────────
+      // cb_is now contributes via default_attack_damage (see getStatModifiers).
+      regionKillBonus:    purchased.has('cb_ts'),             // cb_ts 10-kill +1 rarity gather/mine
+      phaseTechniqueOwned:purchased.has('cb_pt'),             // cb_pt grants the Phase Technique law
+
+      // ── Cookie-Clicker pivot (v1 — Phase E) ──────────────────────────
+      // New modifier surface for the producer/upgrade shop. Defaults are
+      // pass-throughs (no effect). Wired to a small set of high-impact
+      // existing nodes for v1; full per-node redesign happens when combat
+      // ships in v2 and the dead-code combat-stat modifiers above can be
+      // properly retired.
+      //
+      // producerOutputMult — multiplier on producer flat qi/s (×1 = no bonus).
+      //   yy_k Primordial Balance: piggybacks its existing +10% to also bump
+      //   producer output by +10% in v1 (artefact effect is dead under
+      //   !FEATURES.combat). Stacks with yy_1's wolMult (lives-driven).
+      producerOutputMult:
+        (purchased.has('yy_k') ? 1.10 : 1)
+        * (purchased.has('yy_1') ? wolMult : 1),
+      // producerCostMult — discount on producer purchases (×1 = full price).
+      //   md_1 Steady Hands repurposes: in v1 also cuts producer cost by 10%
+      //   (combat-CD effect is dead under !FEATURES.combat).
+      producerCostMult:   purchased.has('md_1') ? 0.90 : 1,
+      // upgradeCostMult — discount on one-time upgrade purchases.
+      //   md_k Killing Stride repurposes for v1 as a 25% upgrade discount.
+      upgradeCostMult:    purchased.has('md_k') ? 0.75 : 1,
+      // crystalTapMult — multiplier on crystal-tap empty-floor.
+      //   yy_3 HP Regen repurposes for v1 as a 2× crystal-tap multiplier.
+      crystalTapMult:     purchased.has('yy_3') ? 2 : 1,
+      // keepProducerLevelsFrac — fraction of producer counts retained through
+      // reincarnation. al_2 Echo of Mastery, which carries recipes (dead in
+      // v1), additionally retains 10% of each producer's level. al_4 bumps
+      // it to 25% (was the +50 Blood Lotus on rebirth — still applies).
+      keepProducerLevelsFrac:
+        (purchased.has('al_4') ? 0.25
+        : purchased.has('al_2') ? 0.10
+        : 0),
+    };
+  }, [purchased, lives]);
+
+  /** Stat-bundle modifiers fed into computeAllStats via mergeModifiers. */
+  const getStatModifiers = useCallback(() => {
+    const mods = {};
+
+    // md_1 Steady Hands — 10% reduction on cooldowns. We expose this as a
+    // "more" mod on a synthetic `cooldown_mult` stat the combat hook can
+    // pick up. Combat reads it directly off `tree.modifiers.cooldownMult`.
+    // (No stat-bundle entry needed; consumer reads the modifier struct.)
+
+    // md_2 Combat Instinct — +20% exploit chance.
+    if (modifiers.exploitChanceFlat > 0) {
+      mods.exploit_chance = [{ type: 'flat', value: modifiers.exploitChanceFlat }];
+    }
+
+    // hw_1 Soul Tempering — formerly +20% all primary stats. Primary-stat
+    // layer retired in stage 15; the node now grants +20% damage_all.
+    // hw_k Heavenly Constitution — formerly +25% MORE all primary stats;
+    // now +25% MORE damage_all.
+    const dmgMods = [];
+    if (purchased.has('hw_1')) dmgMods.push({ type: 'increased', value: 0.20 });
+    if (purchased.has('hw_k')) dmgMods.push({ type: 'more',      value: 1.25 });
+    if (dmgMods.length) (mods.damage_all ??= []).push(...dmgMods);
+
+    // hw_2 Iron Will — +50% max HP.
+    // hw_k Heavenly Constitution — +25% MORE Health.
+    // yy_1 Wisdom of Lives — `more` on health from completed lives.
+    const hpMods = [];
+    if (purchased.has('hw_2')) hpMods.push({ type: 'increased', value: 0.50 });
+    if (purchased.has('hw_k')) hpMods.push({ type: 'more',      value: 1.25 });
+    if (purchased.has('yy_1') && modifiers.hpMoreFromLives > 1) {
+      hpMods.push({ type: 'more', value: modifiers.hpMoreFromLives });
+    }
+    if (hpMods.length) mods.health = hpMods;
+
+    // cb_is Inherited Strength — +25% basic-attack damage (post-Stage 4).
+    if (purchased.has('cb_is')) {
+      mods.default_attack_damage = [{ type: 'flat', value: 0.25 }];
+    }
+
+    return mods;
+  }, [modifiers, purchased]);
+
+  const _reset = useCallback(() => setPurchased(new Set()), []);
 
   return {
-    // Data
     purchased,
-    nodes:     NODES,
-    branches:  BRANCHES,
-    totalCost: TREE_TOTAL_COST,
-
-    // Modifiers (legacy interface + V1 new)
-    modifiers,
-
-    // Compatibility methods (consumed by the existing EternalTreeScreen until
-    // V1.3 ships the new UI).
+    isPurchased,
+    isAvailable,
     canBuy,
     buy,
-    isAvailable,
-    isPurchased,
-
-    // Modern aliases for the V1.3 UI.
-    purchase: buy,
-    isUnlocked: isAvailable,
-
-    // Refund — used during reincarnation flow or save migration.
-    refund,
+    modifiers,
+    getStatModifiers,
+    nodes: NODES,
+    _reset,
   };
 }
