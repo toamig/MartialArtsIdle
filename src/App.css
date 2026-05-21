@@ -5526,6 +5526,63 @@ body[class*="cf-rung-"] .realm-fill-boosted .realm-fill-inner {
   animation: crystal-full-pulse 0.75s ease-in-out infinite;
 }
 
+/* ── Reservoir VFX — surface sparks + overcharge pulse ──────────────────
+   Replaces the old golden halo. Sparks spawn on the crystal silhouette via
+   spawnCrystalSpark() (DOM-only, no React render). CSS owns the pop animation
+   and the per-tier hue tint. When fill >= 100% the crystal sprite gets
+   `.home-crystal-overcharged` for the gentle 1.8s breathe. */
+
+/* Full-bleed layer over the crystal so sparks can sit on the silhouette. */
+.home-crystal-vfx-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 5; /* above the crystal img */
+}
+
+/* One spark element. Position is set inline (left/top in px). Hue + sat
+   cascade from .home-crystal-img-wrap → tints sparks to match the crystal. */
+@keyframes home-crystal-spark-pop {
+  0%   {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--sscale-start, 0.4)) rotate(0deg);
+  }
+  12%  { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--sscale-end, 0.7)) rotate(var(--srot, 0deg));
+  }
+}
+.home-crystal-vfx-p {
+  position: absolute;
+  pointer-events: none;
+  image-rendering: pixelated;
+  width: auto; height: auto;
+  filter: hue-rotate(var(--spark-hue, 0deg)) saturate(var(--spark-sat, 1));
+  animation: home-crystal-spark-pop 360ms ease-out forwards;
+}
+
+/* Overcharged hue pulse on the crystal sprite. Halved hue angle (30deg) for
+   a subtle warm tilt; 1.8s breathe; gold drop-shadow + slight brightness +
+   saturate lift. Overrides the base .home-crystal-img animation so the glow
+   keyframes cleanly pause while overcharged. */
+@keyframes home-crystal-overcharge-pulse {
+  0%, 100% {
+    filter:
+      brightness(1.05) saturate(1.05) hue-rotate(0deg)
+      drop-shadow(0 0 6px rgba(122, 220, 196, 0.55));
+  }
+  50% {
+    filter:
+      brightness(1.18) saturate(1.30) hue-rotate(30deg)
+      drop-shadow(0 0 12px rgba(245, 175, 20, 0.85));
+  }
+}
+.home-crystal-img.home-crystal-overcharged {
+  animation: home-crystal-overcharge-pulse 1.8s ease-in-out infinite;
+}
+
 /* ── Divine Qi — golden orb ─────────────────────────────────────────────── */
 
 /* Orb sits absolutely within the .home-cultivation-zone. Visual is the

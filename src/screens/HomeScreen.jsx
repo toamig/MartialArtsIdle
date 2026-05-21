@@ -612,6 +612,68 @@ function CharacterEvolutionOverlay({ event, onDone }) {
 // glowA = inner/bright,  glowB = outer/dim,
 // textName = deeper saturated tier hue used for the evolution name/kicker,
 // particles = 5 shades for the stream.
+// ─────────────────────────────────────────────────────────────────────────────
+// Crystal Reservoir VFX — particle pool + per-tier spark tint.
+//
+// Sparks live in /public/sprites/vfx/qi_particles/ and are blue/cyan by default.
+// CSS `hue-rotate` + `saturate` on the spark layer tints them per-tier so each
+// crystal evolution's sparks match its colour family. Values dialled against
+// the crystal sprites; tweak by tier if any tier feels off.
+//   [hueDeg, satMult]
+// ─────────────────────────────────────────────────────────────────────────────
+const CRYSTAL_VFX_SPARK_POOL = ['spark_cross', 'spark_diamond', 'spark_burst'];
+const CRYSTAL_VFX_TIER_TINT = {
+   1: [   0, 0.40],   // blue-grey
+   2: [   0, 0.90],   // blue
+   3: [ -15, 1.10],   // cyan (greenish push)
+   4: [  10, 1.10],   // deep blue
+   5: [  20, 1.15],   // dark blue
+   6: [  55, 1.20],   // violet
+   7: [  85, 1.25],   // purple
+   8: [ 100, 1.10],   // pale lilac
+   9: [-130, 1.35],   // gold (negative rotates blue→gold)
+  10: [-140, 1.40],   // orange-gold
+};
+// Spark spawn-rate intensity model. Below 5% fill: no sparks. Between 5%-75%
+// (CAP_PCT): linear ramp from MAX_MS → MIN_MS interval. Above 75% (incl. 100%+
+// overcharged): rate stays at MIN_MS. No extra particles when overcharged —
+// the hue-pulse on the crystal sprite is the only additional cue.
+const CRYSTAL_VFX_CAP_PCT      = 0.75;
+const CRYSTAL_VFX_OVER_PCT     = 1.00;
+const CRYSTAL_VFX_SPARK_MIN_MS = 90;
+const CRYSTAL_VFX_SPARK_MAX_MS = 1100;
+
+// Spawn one spark on the crystal surface. CSS owns the pop animation +
+// hue-tint cascade; this just appends a positioned <img> and removes it on
+// animationend. Random angle around the crystal centre, radius 28-50 px so
+// sparks land ON the silhouette rather than inside the empty centre or far
+// outside it.
+function spawnCrystalSpark(layer, intensity) {
+  const img = document.createElement('img');
+  img.className = 'home-crystal-vfx-p';
+  const key = CRYSTAL_VFX_SPARK_POOL[
+    Math.floor(Math.random() * CRYSTAL_VFX_SPARK_POOL.length)
+  ];
+  img.src = `${BASE}sprites/vfx/qi_particles/qi_${key}.png`;
+  img.alt = '';
+  img.draggable = false;
+  const w = layer.clientWidth;
+  const h = layer.clientHeight;
+  const cx = w / 2;
+  const cy = h / 2;
+  const angle = Math.random() * Math.PI * 2;
+  const r = 28 + Math.random() * 22;
+  img.style.left = `${cx + Math.cos(angle) * r}px`;
+  img.style.top  = `${cy + Math.sin(angle) * r}px`;
+  // CSS reads --srot for the end-of-pop rotation; --sscale-start scales the
+  // initial pop size with current intensity (less punchy when filling slowly).
+  img.style.setProperty('--srot', `${(Math.random() - 0.5) * 360}deg`);
+  img.style.setProperty('--sscale-start', (0.35 + intensity * 0.35).toFixed(2));
+  img.style.setProperty('--sscale-end',   (0.55 + intensity * 0.30).toFixed(2));
+  img.addEventListener('animationend', () => img.remove(), { once: true });
+  layer.appendChild(img);
+}
+
 const CRYSTAL_COLORS = {
   locked: { glowA: 'rgba(80,80,100,0)',    glowB: 'rgba(50,50,70,0)',     textName: '#aaaabb', particles: ['#555566','#444455','#666677','#333344','#777788'] },
   1:      { glowA: 'rgba(136,153,187,0.9)',glowB: 'rgba(100,120,160,0.5)',textName: '#c8d4e4', particles: ['#8899bb','#aabbcc','#99aacc','#778899','#bbccdd'] },
@@ -656,27 +718,49 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
     onRefine?.();
   };
 
-  const fillBarRef = useRef(null);
-  const anchorRef  = useRef(null);
+  const vfxLayerRef = useRef(null);
+  const crystalImgRef = useRef(null);
+  const anchorRef   = useRef(null);
 
-  // rAF loop — drives the golden reservoir-fill glow overlay.
-  // When the reservoir is full, clear the inline opacity so the CSS pulse
-  // animation takes over; otherwise scale opacity with the fill fraction.
+  // rAF loop — drives the reservoir VFX (replaces the old golden halo). Reads
+  // the same fill fraction the halo used. Spawns sparks via DOM <img> append
+  // (no React re-render); each spark CSS-animates and self-removes on
+  // animationend. Above CAP_PCT the spawn-rate stops growing; at OVER_PCT the
+  // crystal sprite gets `.home-crystal-overcharged` for the hue-pulse.
   useEffect(() => {
     if (!mechanicOn) return;
     let raf;
-    const tick = () => {
+    let lastSpark = 0;
+    let lastOver  = null; // last applied overcharged state — avoids redundant DOM writes
+    const tick = (now) => {
       const rate   = rateRef?.current   ?? 0;
       const capMin = crystalClickCapMinRef?.current ?? 0;
       const cap    = capMin * 60 * rate;
       const reserv = reservoirRef?.current ?? 0;
       const fill   = cap > 0 ? Math.min(1, reserv / cap) : 0;
-      const isFull = fill >= 0.999;
-      if (fillBarRef.current) {
-        // isFull: remove inline so CSS @keyframes pulse wins the cascade
-        fillBarRef.current.style.opacity = isFull ? '' : String(fill * 0.85);
+
+      // Overcharge toggle on the crystal sprite (drives the hue-pulse).
+      const overcharged = fill >= CRYSTAL_VFX_OVER_PCT;
+      if (overcharged !== lastOver) {
+        crystalImgRef.current?.classList.toggle('home-crystal-overcharged', overcharged);
+        lastOver = overcharged;
       }
-      anchorRef.current?.classList.toggle('home-crystal-full', isFull);
+
+      // Spark spawn-rate intensity — 0 below 5%, ramps to 1 at CAP_PCT, stays
+      // at 1 above. Spawn-rate at >=100% deliberately matches the rate at 75%.
+      const intensity = fill <= 0.05
+        ? 0
+        : Math.min(1, (fill - 0.05) / (CRYSTAL_VFX_CAP_PCT - 0.05));
+
+      if (intensity > 0 && vfxLayerRef.current) {
+        const interval = CRYSTAL_VFX_SPARK_MAX_MS
+          - (CRYSTAL_VFX_SPARK_MAX_MS - CRYSTAL_VFX_SPARK_MIN_MS) * intensity;
+        if (now - lastSpark > interval) {
+          spawnCrystalSpark(vfxLayerRef.current, intensity);
+          lastSpark = now;
+        }
+      }
+
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -707,6 +791,7 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
   const { level, crystalQiBonus } = crystal;
   const tier = getCrystalTier(level);
   const { glowA, glowB } = CRYSTAL_COLORS[tier];
+  const [vfxHue, vfxSat] = CRYSTAL_VFX_TIER_TINT[tier] ?? CRYSTAL_VFX_TIER_TINT[1];
   // SFX + VFX are fired by the parent's onCollect handler so cooldown-blocked
   // taps don't produce sound or floaters. Empty taps still grant a small qi
   // floor — the parent decides what feedback to play based on the granted amount.
@@ -723,15 +808,19 @@ function KeyCrystal({ crystal, isUnlocked, particleColors, hidden, cfRung, reser
           <span className="home-crystal-tag-divider">·</span>
           <span className="home-crystal-tag-level">Lv {level}</span>
         </span>
-        <div className="home-crystal-img-wrap">
+        <div
+          className="home-crystal-img-wrap"
+          style={{ '--spark-hue': `${vfxHue}deg`, '--spark-sat': vfxSat }}
+        >
           <img
+            ref={crystalImgRef}
             src={`${BASE}crystals/crystal_${tier}.png`}
             className="home-crystal-img"
             alt="Qi Crystal"
             draggable="false"
           />
           {mechanicOn && (
-            <div ref={fillBarRef} className="home-crystal-reservoir-fill" style={{ opacity: 0 }} />
+            <div ref={vfxLayerRef} className="home-crystal-vfx-layer" aria-hidden="true" />
           )}
         </div>
       </div>
@@ -1680,7 +1769,7 @@ function HomeScreen({
     // tap-spam past the 6.7/sec cap is silent — preserves ad-boost value.
     const granted = collectCrystalReservoir();
     if (granted <= 0) return;
-    const wasFull = document.querySelector('.home-crystal-anchor')?.classList.contains('home-crystal-full');
+    const wasFull = !!document.querySelector('.home-crystal-img.home-crystal-overcharged');
     try { AudioManager.playSfx(wasFull ? 'crystal_tap_max' : 'crystal_tap'); } catch {}
     // Spawn a "+N Qi" floater at the crystal's screen position, offset into
     // fighter-stage coordinates (where the VFX layer lives).
