@@ -2727,36 +2727,26 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
   font-weight: 700;
 }
 
-/* Empty state — matches the empty-card patterns elsewhere in the game */
+/* Empty state — normalised 2026-05-21 to mirror the .cs-upgrades-empty
+   block. Same visual language across both tab empty states. */
 .st-empty {
-  margin: 32px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
   text-align: center;
-  padding: 36px 24px;
-  border: 1px dashed rgba(110, 200, 180, 0.25);
-  border-radius: 14px;
-  background:
-    radial-gradient(ellipse at center top, rgba(167, 139, 250, 0.05), transparent 60%),
-    rgba(20, 28, 36, 0.4);
-}
-.st-empty-mark {
-  font-size: 44px;
-  color: rgba(167, 139, 250, 0.55);
-  margin-bottom: 10px;
-  filter: drop-shadow(0 0 16px rgba(167, 139, 250, 0.35));
+  color: rgba(200, 210, 220, 0.7);
 }
 .st-empty-title {
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: rgba(230, 240, 238, 0.92);
-  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #c2e6ff;
 }
 .st-empty-text {
   font-size: 12px;
-  line-height: 1.55;
-  color: rgba(180, 195, 200, 0.72);
-  max-width: 280px;
-  margin: 0 auto;
+  color: rgba(200, 210, 220, 0.5);
 }
 
 @media (max-width: 480px) {

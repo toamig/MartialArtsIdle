@@ -362,13 +362,16 @@ export default function SparksTab({ qiSparks, producers, cultivation }) {
   const ctx = { now, rate, ownedMap: producers?.owned ?? {}, qiSparks };
 
   if (live.length === 0) {
+    // 2026-05-21 — normalised to match the Upgrades tab's empty state
+    // (plain centred text, no icon, no dashed border) so the two tabs
+    // share the same visual language. CSS class kept as `st-empty` for
+    // backward compatibility; the CSS itself was rewritten to mirror
+    // .cs-upgrades-empty.
     return (
       <div className="st-empty">
-        <div className="st-empty-mark">✦</div>
         <div className="st-empty-title">No active sparks yet</div>
         <div className="st-empty-text">
-          You'll be offered a Qi Spark to pick on every layer breakthrough.
-          Your active sparks will live here, with live contribution math.
+          You'll be offered a Qi Spark on every layer breakthrough. Your active sparks will live here.
         </div>
       </div>
     );
