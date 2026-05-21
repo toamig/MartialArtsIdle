@@ -7251,17 +7251,26 @@ body.cf-rung-pop .home-fighter-stage.stage-boosted::after {
 }
 
 /* VFX: Burst ring */
+/* Cultivator-tap ring — pixel-art ring sprite replacing the old CSS
+   border-circle. Tint cascades from body.crystal-tier-N so the ring
+   always matches the active crystal colour. */
 .vfx-burst {
   width: 60px;
   height: 60px;
-  border: 3px solid rgba(var(--ui-purple-strong-rgb), 0.55);
-  border-radius: 50%;
-  animation: vfx-burst-anim 0.5s ease-out forwards;
+  background-image: url('/sprites/vfx/qi_particles/qi_ring.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  filter: hue-rotate(var(--spark-hue, 0deg)) saturate(var(--spark-sat, 1));
+  animation: vfx-burst-anim 0.55s ease-out forwards;
+  will-change: transform, opacity;
 }
 
 @keyframes vfx-burst-anim {
-  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+  0%   { transform: translate(-50%, -50%) scale(0.25); opacity: 0; }
+  15%  { opacity: 0.85; }
+  100% { transform: translate(-50%, -50%) scale(1.95); opacity: 0; }
 }
 
 /* ─────────────────────────────────────────────
