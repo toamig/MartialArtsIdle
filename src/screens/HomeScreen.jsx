@@ -2017,7 +2017,8 @@ function HomeScreen({
       if (crystalEl) {
         const f = document.createElement('div');
         f.className = 'home-crystal-tap-floater';
-        f.textContent = '+' + fmtDelta(granted);
+        // fmtDelta already prepends the '+'.
+        f.textContent = fmtDelta(granted);
         f.addEventListener('animationend', () => f.remove(), { once: true });
         crystalEl.appendChild(f);
       }
