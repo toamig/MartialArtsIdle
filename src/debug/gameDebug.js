@@ -73,6 +73,52 @@ export function initDebug(hooksRef) {
       }
     },
 
+    /**
+     * Print every multiplier currently feeding the qi/s rate formula. Use
+     * this to diagnose "why is my starting qi/s not 1.0" — every entry shows
+     * the actual ref value plus how much it contributes to the final rate.
+     * The BASE_RATE constant is always 1; the displayed rate is BASE_RATE
+     * times the running product of every multiplier listed below.
+     */
+    rateBreakdown() {
+      const c = g().cultivation;
+      if (!c) return console.log('[debug] cultivation hook not ready');
+      const law = c.activeLaw;
+      const rows = [
+        ['BASE_RATE',              1],
+        ['+ sparkQiFlat (Steady Cult.)',   c.sparkQiFlatRef?.current  ?? 0],
+        ['+ producerRate × upMult × tree', (c.producerRateRef?.current ?? 0)
+                                           * (c.upgradeProducerMultRef?.current ?? 1)
+                                           * (c.treeProducerOutputMultRef?.current ?? 1)],
+        ['× crystalQiBonus',       c.crystalQiBonusRef?.current ?? 1],
+        ['× law cultivation mult', law?.cultivationSpeedMult ?? 1, law?.name ?? '(none)'],
+        ['× artefactQiMult',       c.artefactQiMultRef?.current ?? 1],
+        ['× adBoost',              c.adBoostActive ? 1.5 : 1],
+        ['× pillQiMult',           c.pillQiMultRef?.current ?? 1],
+        ['× sparkQiMult',          c.sparkQiMultRef?.current ?? 1],
+        ['× treeQiMult',           c.treeQiMultRef?.current ?? 1],
+        ['× rebirthCultBuff',      c.rebirthCultBuffRef?.current ?? 1],
+        ['× sparkLegendaryGlobal', c.sparkLegendaryGlobalMultRef?.current ?? 1],
+        ['× debugQiMult',          c.debugQiMultRef?.current ?? 1],
+      ];
+      console.log('━━━ qi/s rate breakdown ━━━');
+      let running = 0;
+      let didAdditive = false;
+      for (const [label, val, extra] of rows) {
+        if (label.startsWith('+ ') || label === 'BASE_RATE') {
+          running += val;
+          didAdditive = true;
+          console.log(label.padEnd(36), val, ' → running additive =', running);
+        } else {
+          if (didAdditive) { console.log('(additive sum captured — switching to multipliers)'); didAdditive = false; }
+          running *= val;
+          console.log(label.padEnd(36), val, extra ? `(${extra})` : '', ' → running =', running);
+        }
+      }
+      console.log('FINAL baseRate (excludes boost/CF transients):', running);
+      console.log('Live rateRef.current (includes transients):    ', c.rateRef?.current);
+    },
+
     // ── Combat ─────────────────────────────────────────────────────────────
 
     /**
