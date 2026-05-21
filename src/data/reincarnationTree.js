@@ -1,43 +1,57 @@
-import { mergeRecordArray } from './config/loader';
-
 /**
- * Reincarnation — Eternal Tree definitions.
+ * Eternal Tree — Plan B V1 redesign (2026-05-21).
  *
- * 5 branches radiating from a root, plus 3 cross-branch connectors.
- * The Yin Yang branch is sealed until 2 of the 4 main keystones (★) are bought.
- * The `cb_pt` capstone connector requires all 4 main keystones (every main
- * branch fully cleared).
+ * The previous tree (5 thematic branches + cross-branch capstones, 24 nodes,
+ * total cost 143) has been scrapped per design direction. This V1 ships only
+ * the **Producer Evolution** branch — eleven nodes that solve the immediate
+ * "first producer becomes irrelevant" problem via the Tier-Up Resonance
+ * mechanic (see `src/hooks/useTierUpResonance.js`).
  *
- * prereqMode:
- *   'or'       — any one prereq satisfies (default, rarely used)
- *   'and'      — every prereq must be satisfied (sequential / cross-branch)
- *   'yyUnlock' — special: requires ≥ 2 of the 4 main keystones
+ * Other branches (Cultivation, Combat, Offline, etc.) are stubbed for the UI
+ * (V1.3) as "Coming soon" placeholders and will land in V7+ of the rollout.
  *
- * Total tree cost = 143 — exactly what one peak life awards. Players reincarnate
- * only when they have reached a higher realm than any previous life (each realm
- * grants karma once via `maxAwarded` tracking). No farming loops.
+ * Schema:
+ *   BRANCHES — array of { id, name, color, colorRgb }
+ *   NODES    — array of { id, branchId, x, y, cost, name, desc, requires,
+ *                         effect: { type, ... } }
+ *
+ * Coordinates are 0-100 % of the canvas (rendered by the V1.3 UI).
+ *
+ * Effect types:
+ *   tier_up_base                — { value }            adds to tier-up baseline (all producers)
+ *   tier_up_per_producer        — { producerId, value } adds to tier-up amplifier (one producer)
+ *
+ * The hook (useReincarnationTree) walks every purchased node, sums the
+ * effects, and exposes the results as { tierUpResonanceBase, tierUpResonancePerProducer }
+ * on `tree.modifiers`. Future branches add new effect types here.
+ *
+ * Save migration: detection + one-shot refund lives in
+ * `src/systems/treeMigration.js`. Triggered at module load on the FIRST
+ * boot after this redesign ships. Wipes old purchase ids, refunds karma
+ * to the player's `totalKarmaForPeak(maxAwarded)` total.
  */
 
+// Karma earning thresholds — these are FROM THE OLD TREE and preserved
+// here for V1 because the karma rework is deferred to V2 (see plan file).
+// Existing consumers (useReincarnationKarma) import these by name.
 export const SAINT_UNLOCK_INDEX = 24;
 export const PEAK_INDEX         = 50;
 
-// Karma awarded for the breakthrough INTO realm index i (first time only).
-//
-// Front-loaded 2026-05-03: previously the player earned only 31 karma by the
-// rebirth threshold (idx 24), translating to a weak first-rebirth payoff.
-// Curve rebalanced so a first rebirth has 53 karma in hand — meaningful
-// tree investment available immediately. Total per peak still equals 143.
+/**
+ * Karma awarded for first-time breakthrough INTO realm index `i`.
+ * Curve unchanged from pre-Plan-B (total 143 over peak life). V2 will
+ * redesign this to Idle Slayer's multi-source model.
+ */
 export function karmaForReachingIndex(i) {
   if (i <= 0) return 0;
-  if (i <= 17) return 2;     // idx 1–17: was 1 each (sum 17 → now 34)
-  if (i <= 23) return 3;     // idx 18–23: was 2 each (sum 12 → now 18)
-  if (i <= 26) return 1;     // idx 24–26: was 2 each (sum 6 → now 3)
-  if (i <= 32) return 2;     // idx 27–32: was 3 each (sum 18 → now 12)
-  if (i <= 38) return 3;     // idx 33–38: was 4 each (sum 24 → now 18)
-  if (i <= 44) return 4;     // idx 39–44: was 5 each (sum 30 → now 24)
-  if (i <= 46) return 5;     // idx 45–46: was 6 each (sum 12 → now 10)
-  return 6;                  // idx 47–50: unchanged at 6 each (sum 24)
-  // Total: 34 + 18 + 3 + 12 + 18 + 24 + 10 + 24 = 143 ✓
+  if (i <= 17) return 2;
+  if (i <= 23) return 3;
+  if (i <= 26) return 1;
+  if (i <= 32) return 2;
+  if (i <= 38) return 3;
+  if (i <= 44) return 4;
+  if (i <= 46) return 5;
+  return 6;
 }
 
 export function totalKarmaForPeak(maxIndex) {
@@ -46,206 +60,173 @@ export function totalKarmaForPeak(maxIndex) {
   return total;
 }
 
-// Branch metadata for colours and labels
+// ── Branches ──────────────────────────────────────────────────────────────
+
 export const BRANCHES = {
-  legacy:  { label: "🏛 Ancestor's Legacy", color: '#f5c842', colorRgb: '245,200,66' },
-  martial: { label: '⚔ Martial Dao',        color: '#ef4444', colorRgb: '239,68,68'  },
-  fate:    { label: "🌟 Fate's Path",        color: '#22d3ee', colorRgb: '34,211,238' },
-  will:    { label: '💪 Heavenly Will',      color: '#4ade80', colorRgb: '74,222,128' },
-  yinyang: { label: '☯ Yin Yang',            color: '#a855f7', colorRgb: '168,85,247' },
-  cross:   { label: 'Cross-Branch',          color: '#94a3b8', colorRgb: '148,163,184' },
+  producer_evolution: {
+    id: 'producer_evolution',
+    label: 'Producer Evolution',
+    color: '#4ade80',
+    colorRgb: '74,222,128',
+  },
+  // V7+ stubs — surfaced by the UI as "Coming soon" placeholders.
+  cultivation_path: {
+    id: 'cultivation_path',
+    label: 'Cultivation Path',
+    color: '#22d3ee',
+    colorRgb: '34,211,238',
+    placeholder: true,
+  },
+  combat_path: {
+    id: 'combat_path',
+    label: 'Combat Path',
+    color: '#ef4444',
+    colorRgb: '239,68,68',
+    placeholder: true,
+  },
+  offline_path: {
+    id: 'offline_path',
+    label: 'Offline Path',
+    color: '#a78bfa',
+    colorRgb: '167,139,250',
+    placeholder: true,
+  },
 };
 
-const NODES_RAW = [
+// ── Nodes ─────────────────────────────────────────────────────────────────
+//
+// All Producer Evolution leaves require the root (`pe_root`) directly.
+// Costs follow a placeholder curve proportional to each producer's
+// `startQiPerSec × 50` rounded into karma units 3-8. Tune via playtest.
 
-  // ── Ancestor's Legacy ────────────────────────────────────────────────────
+export const NODES = [
   {
-    id: 'al_1', branch: 'legacy', step: 0,
-    label: 'Inherited Meridians', icon: '🏛',
-    desc: 'Foundation of Ancestor\'s Legacy. Like every node, contributes its karma cost toward your tree-wide cultivation multiplier.',
-    cost: 3, prereqs: [], prereqMode: 'or',
+    id:       'pe_root',
+    branchId: 'producer_evolution',
+    x: 50, y: 8,
+    cost: 5,
+    name: 'Producer Mastery',
+    desc: 'Tier-Up Resonance unlocked. Every producer gains +0.5 qi/s per unit for each sprite tier it has reached this run.',
+    requires: [],
+    effect: { type: 'tier_up_base', value: 0.5 },
   },
   {
-    id: 'al_2', branch: 'legacy', step: 1,
-    label: 'Echo of Mastery', icon: '📜',
-    desc: 'Each new life starts with all crafting and alchemy recipes from your previous life still discovered.',
-    cost: 4, prereqs: ['al_1'], prereqMode: 'and',
+    id:       'pe_disciple_res',
+    branchId: 'producer_evolution',
+    x: 28, y: 20,
+    cost: 3,
+    name: 'Disciple Resonance',
+    desc: 'Body Tempering Disciples gain an additional +5 qi/s per unit for each sprite tier they reach.',
+    requires: ['pe_root'],
+    effect: { type: 'tier_up_per_producer', producerId: 'p_disciple', value: 5 },
   },
   {
-    id: 'al_3', branch: 'legacy', step: 2,
-    label: "Ancestor's Shelter", icon: '⛩️',
-    desc: 'Offline gains cap raised from 8 h → 16 h.',
-    cost: 5, prereqs: ['al_2'], prereqMode: 'and',
+    id:       'pe_herb_garden_res',
+    branchId: 'producer_evolution',
+    x: 72, y: 20,
+    cost: 4,
+    name: 'Garden Resonance',
+    desc: 'Spirit Herb Gardens gain +50 qi/s per unit for each sprite tier they reach.',
+    requires: ['pe_root'],
+    effect: { type: 'tier_up_per_producer', producerId: 'p_herb_garden', value: 50 },
   },
   {
-    id: 'al_4', branch: 'legacy', step: 3,
-    label: 'Bloodline Vigor', icon: '🩸',
-    desc: 'Each new life starts with +50 Blood Lotus and one banked free Selection re-roll.',
-    cost: 6, prereqs: ['al_3'], prereqMode: 'and',
+    id:       'pe_meridian_furnace_res',
+    branchId: 'producer_evolution',
+    x: 28, y: 30,
+    cost: 4,
+    name: 'Furnace Resonance',
+    desc: 'Meridian Furnaces gain +400 qi/s per unit for each sprite tier they reach.',
+    requires: ['pe_root'],
+    effect: { type: 'tier_up_per_producer', producerId: 'p_meridian_furnace', value: 400 },
   },
   {
-    id: 'al_k', branch: 'legacy', step: 4,
-    label: 'Living Memory', icon: '🌿',
-    desc: 'At the start of every new life, gain a 1-hour ×2 cultivation buff.',
-    cost: 7, prereqs: ['al_4'], prereqMode: 'and', keystone: true,
-  },
-
-  // ── Martial Dao ──────────────────────────────────────────────────────────
-  {
-    id: 'md_1', branch: 'martial', step: 0,
-    label: 'Steady Hands', icon: '🤲',
-    desc: 'All technique cooldowns −10%.',
-    cost: 3, prereqs: [], prereqMode: 'or',
+    id:       'pe_treasure_res',
+    branchId: 'producer_evolution',
+    x: 72, y: 30,
+    cost: 5,
+    name: 'Treasure Resonance',
+    desc: 'Ancestral Treasures gain +2,500 qi/s per unit for each sprite tier they reach.',
+    requires: ['pe_root'],
+    effect: { type: 'tier_up_per_producer', producerId: 'p_treasure', value: 2_500 },
   },
   {
-    id: 'md_2', branch: 'martial', step: 1,
-    label: 'Combat Instinct', icon: '🎯',
-    desc: '+20% exploit chance permanently.',
-    cost: 4, prereqs: ['md_1'], prereqMode: 'and',
+    id:       'pe_beast_pact_res',
+    branchId: 'producer_evolution',
+    x: 28, y: 40,
+    cost: 5,
+    name: 'Beast Resonance',
+    desc: 'Spirit Beast Pacts gain +13,000 qi/s per unit for each sprite tier they reach.',
+    requires: ['pe_root'],
+    effect: { type: 'tier_up_per_producer', producerId: 'p_beast_pact', value: 13_000 },
   },
   {
-    id: 'md_3', branch: 'martial', step: 2,
-    label: 'The Fourth Form', icon: '🔮',
-    desc: 'Unlocks a 4th technique slot.',
-    cost: 5, prereqs: ['md_2'], prereqMode: 'and',
+    id:       'pe_pillar_res',
+    branchId: 'producer_evolution',
+    x: 72, y: 40,
+    cost: 6,
+    name: 'Pillar Resonance',
+    desc: 'Heavenly Pillars gain +70,000 qi/s per unit for each sprite tier they reach.',
+    requires: ['pe_root'],
+    effect: { type: 'tier_up_per_producer', producerId: 'p_pillar', value: 70_000 },
   },
   {
-    id: 'md_4', branch: 'martial', step: 3,
-    label: "Veteran's Eye", icon: '👁️',
-    desc: 'All crafted techniques arrive one quality tier higher.',
-    cost: 6, prereqs: ['md_3'], prereqMode: 'and',
+    id:       'pe_sect_followers_res',
+    branchId: 'producer_evolution',
+    x: 28, y: 50,
+    cost: 6,
+    name: 'Sect Resonance',
+    desc: 'Mortal Sect Followers gain +400,000 qi/s per unit for each sprite tier they reach.',
+    requires: ['pe_root'],
+    effect: { type: 'tier_up_per_producer', producerId: 'p_sect_followers', value: 400_000 },
   },
   {
-    id: 'md_k', branch: 'martial', step: 4,
-    label: 'Killing Stride', icon: '⚡',
-    desc: 'After defeating an enemy, your next technique cast is a guaranteed exploit and deals +50% damage.',
-    cost: 7, prereqs: ['md_4'], prereqMode: 'and', keystone: true,
-  },
-
-  // ── Fate's Path ──────────────────────────────────────────────────────────
-  {
-    id: 'fp_1', branch: 'fate', step: 0,
-    label: 'Lucky Star', icon: '⭐',
-    desc: '+10% chance any artefact craft or pill brew rolls one rarity tier higher than its inputs would normally allow.',
-    cost: 3, prereqs: [], prereqMode: 'or',
+    id:       'pe_void_res',
+    branchId: 'producer_evolution',
+    x: 72, y: 50,
+    cost: 7,
+    name: 'Void Resonance',
+    desc: 'Void Conduits gain +2.2M qi/s per unit for each sprite tier they reach.',
+    requires: ['pe_root'],
+    effect: { type: 'tier_up_per_producer', producerId: 'p_void', value: 2_200_000 },
   },
   {
-    id: 'fp_2', branch: 'fate', step: 1,
-    label: 'Heavenly Nose', icon: '🌺',
-    desc: '10% chance any gathered or mined material is +1 rarity.',
-    cost: 4, prereqs: ['fp_1'], prereqMode: 'and',
+    id:       'pe_dragon_res',
+    branchId: 'producer_evolution',
+    x: 28, y: 60,
+    cost: 7,
+    name: 'Dragon Resonance',
+    desc: 'Slumbering Spirit Dragons gain +13M qi/s per unit for each sprite tier they reach.',
+    requires: ['pe_root'],
+    effect: { type: 'tier_up_per_producer', producerId: 'p_dragon', value: 13_000_000 },
   },
   {
-    id: 'fp_3', branch: 'fate', step: 2,
-    label: 'Reserved', icon: '💎',
-    desc: 'No effect yet — reserved for a future perk.',
-    cost: 5, prereqs: ['fp_2'], prereqMode: 'and',
-  },
-  {
-    id: 'fp_4', branch: 'fate', step: 3,
-    label: "Sage's Foresight", icon: '🔭',
-    desc: 'Selection screens at every major-realm breakthrough show 4 options instead of 3.',
-    cost: 6, prereqs: ['fp_3'], prereqMode: 'and',
-  },
-  {
-    id: 'fp_k', branch: 'fate', step: 4,
-    label: 'Twofold Path', icon: '🌟',
-    desc: 'Auto-Farm can run two zone assignments simultaneously.',
-    cost: 7, prereqs: ['fp_4'], prereqMode: 'and', keystone: true,
-  },
-
-  // ── Heavenly Will ────────────────────────────────────────────────────────
-  {
-    id: 'hw_1', branch: 'will', step: 0,
-    label: 'Soul Tempering', icon: '💪',
-    desc: '+20% to all primary stats (Essence / Body / Soul).',
-    cost: 3, prereqs: [], prereqMode: 'or',
-  },
-  {
-    id: 'hw_2', branch: 'will', step: 1,
-    label: 'Iron Will', icon: '🛡️',
-    desc: '+50% max HP permanently.',
-    cost: 4, prereqs: ['hw_1'], prereqMode: 'and',
-  },
-  {
-    id: 'hw_3', branch: 'will', step: 2,
-    label: 'Undying Resolve', icon: '❤️',
-    desc: 'Once per fight, surviving a lethal hit leaves you at 1 HP instead of dying.',
-    cost: 5, prereqs: ['hw_2'], prereqMode: 'and',
-  },
-  {
-    id: 'hw_4', branch: 'will', step: 3,
-    label: 'Soul Crucible', icon: '🔥',
-    desc: 'All permanent pill stat bonuses are increased by 25%.',
-    cost: 6, prereqs: ['hw_3'], prereqMode: 'and',
-  },
-  {
-    id: 'hw_k', branch: 'will', step: 4,
-    label: 'Heavenly Constitution', icon: '🌌',
-    desc: '+25% MORE all primary stats and +25% MORE max HP (multiplicative on top of every other modifier).',
-    cost: 7, prereqs: ['hw_4'], prereqMode: 'and', keystone: true,
-  },
-
-  // ── Yin Yang — Sealed (unlocks at ≥ 2 main keystones) ────────────────────
-  {
-    id: 'yy_1', branch: 'yinyang', step: 0,
-    label: 'Wisdom of Lives', icon: '☯️',
-    desc: '+5% to all damage and Health per completed life, capped at +50% (10 lives).',
-    cost: 4, prereqs: [], prereqMode: 'yyUnlock',
-  },
-  {
-    id: 'yy_2', branch: 'yinyang', step: 1,
-    label: 'Yin Reservoir', icon: '🌙',
-    desc: 'Every realm starts with 20% of its breakthrough qi cost already accumulated.',
-    cost: 5, prereqs: ['yy_1'], prereqMode: 'and',
-  },
-  {
-    id: 'yy_3', branch: 'yinyang', step: 2,
-    label: 'Yang Resolve', icon: '☀️',
-    desc: 'In combat, regenerate +5% max HP per second while above 50% HP.',
-    cost: 5, prereqs: ['yy_2'], prereqMode: 'and',
-  },
-  {
-    id: 'yy_4', branch: 'yinyang', step: 3,
-    label: 'Equilibrium', icon: '🔄',
-    desc: 'Every 5th technique cast is free (no cooldown applied to that cast).',
-    cost: 6, prereqs: ['yy_3'], prereqMode: 'and',
-  },
-  {
-    id: 'yy_k', branch: 'yinyang', step: 4,
-    label: 'Primordial Balance', icon: '⚖',
-    desc: 'All artefact affix values you own gain a permanent +10% engine-side multiplier.',
-    cost: 8, prereqs: ['yy_4'], prereqMode: 'and', keystone: true,
-  },
-
-  // ── Cross-Branch Connectors ──────────────────────────────────────────────
-  {
-    id: 'cb_is', branch: 'cross', step: 0,
-    label: 'Inherited Strength', icon: '🔗',
-    desc: '+25% basic-attack damage.',
-    cost: 4, prereqs: ['al_k', 'hw_1'], prereqMode: 'and',
-  },
-  {
-    id: 'cb_ts', branch: 'cross', step: 0,
-    label: "Veteran's Hunt", icon: '🔗',
-    desc: 'After defeating 10 enemies in a region, the next gather/mine cycle in that region drops one material at +1 rarity.',
-    cost: 5, prereqs: ['md_k', 'fp_k'], prereqMode: 'and',
-  },
-  {
-    id: 'cb_pt', branch: 'cross', step: 0,
-    label: 'Phase Technique', icon: '☯',
-    desc: 'Grants the Phase Technique law — Transcendent rarity, all 9 types, cannot be unequipped, crafting on it stays at base cost.',
-    cost: 6, prereqs: ['al_k', 'md_k', 'fp_k', 'hw_k'], prereqMode: 'and',
+    id:       'pe_phoenix_res',
+    branchId: 'producer_evolution',
+    x: 72, y: 60,
+    cost: 8,
+    name: 'Phoenix Resonance',
+    desc: 'Sovereign Phoenixes gain +80M qi/s per unit for each sprite tier they reach.',
+    requires: ['pe_root'],
+    effect: { type: 'tier_up_per_producer', producerId: 'p_phoenix', value: 80_000_000 },
   },
 ];
 
-export const NODES = mergeRecordArray(NODES_RAW, 'reincarnationTree', 'id');
-export const NODES_BY_ID     = Object.fromEntries(NODES.map(n => [n.id, n]));
+export const NODES_BY_ID = Object.fromEntries(NODES.map(n => [n.id, n]));
+
 export const TREE_TOTAL_COST = NODES.reduce((s, n) => s + n.cost, 0);
 
-// The 4 main branch keystones — Yin Yang branch unlocks when ≥ 2 are owned.
-export const MAIN_KEYSTONES = ['al_k', 'md_k', 'fp_k', 'hw_k'];
+// ── Legacy stub exports ───────────────────────────────────────────────────
+//
+// The OLD tree exported MAIN_KEYSTONES (the four ★ keystones used to gate
+// the Yin Yang branch) and NODE_DESCRIPTIONS (a tooltip map). Several
+// screens still import these — they're replaced in V1.3 alongside the new
+// UI. Until then, expose empty stubs so build keeps passing. The legacy
+// screens will render no content; they're suppressed from the route in
+// V1.3 too.
 
-// Removed in this redesign — kept here so the migration in useReincarnationTree
-// can refund their old cost when an old save still has them purchased.
-export const RETIRED_NODE_IDS = ['yy_5', 'cb_pt_legacy'];
+/** @deprecated Removed in Plan B V1 — kept as empty stub for legacy imports. */
+export const MAIN_KEYSTONES = [];
+
+/** @deprecated Removed in Plan B V1 — descriptions live on each node now. */
+export const NODE_DESCRIPTIONS = {};

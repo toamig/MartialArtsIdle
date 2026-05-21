@@ -29,6 +29,12 @@ import SettingsScreen from './screens/SettingsScreen';
 import useReincarnationKarma from './hooks/useReincarnationKarma';
 import useReincarnationTree  from './hooks/useReincarnationTree';
 import { wipeReincarnation, SAVE_VERSION, SAVE_VERSION_KEY } from './systems/save';
+import { maybeMigrateTree } from './systems/treeMigration';
+
+// Plan B V1 Eternal Tree redesign — one-shot migration runs at module
+// import, BEFORE any React hook initialises. Detects old-format purchases,
+// wipes them, and refunds karma to the player's earned total. Idempotent.
+maybeMigrateTree();
 import useCultivation from './hooks/useCultivation';
 import useInventory   from './hooks/useInventory';
 import useTechniques  from './hooks/useTechniques';
@@ -192,10 +198,9 @@ function AppInner() {
   // Plan B V1 — Tier-Up Resonance. Reads producers.owned to track the
   // highest sprite tier reached per producer this run, then exposes a
   // per-producer flat qi/s bonus folded into the producer rate calc below.
-  // Tree wiring (V1.4) replaces the placeholder `tree` arg with the real
-  // new tree once that lands. For now the bonus value defaults to 0 and is
-  // only non-zero via `gd.setTierUpBonus(...)` for debug testing.
-  const tierUpResonance = useTierUpResonance({ producers, tree: null });
+  // Bonus values come from `tree.modifiers.tierUpResonanceBase` +
+  // `.tierUpResonancePerProducer` (V1.2: wired). Debug overrides still work.
+  const tierUpResonance = useTierUpResonance({ producers, tree: tree.modifiers });
   const upgrades        = useUpgrades();
   const { clearedRegions, clearRegion } = useClearedRegions();
   const selections      = useLawOffers({ cultivation });
