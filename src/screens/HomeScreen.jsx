@@ -748,6 +748,47 @@ function spawnQiFlowOrb(layer, eff) {
   layer.appendChild(img);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Click-burst VFX — used for the crystal-tap and divine-qi-pickup feedback.
+//
+// Each burst spawns N orb particles at an anchor point. CSS keyframes drive
+// a quick arc up-and-outward then a gravity-fall, fading out as they land.
+// CSS-only motion (no per-particle JS tick); each particle self-removes on
+// animationend. Per-particle randomness (final dx, peak height, landing
+// depth, size) gives a varied splash without identical trails.
+//
+// Hue tint: by default cascades from body.crystal-tier-N (--spark-hue/sat).
+// Pass `tintFilter` to override (e.g. divine-qi uses gold regardless of tier).
+// ─────────────────────────────────────────────────────────────────────────────
+function spawnClickBurst({ parent, x, y, xUnit = 'px', yUnit = 'px', count = 4, src, tintFilter }) {
+  if (!parent) return;
+  if (typeof document !== 'undefined' && document.body.classList.contains('vfx-disabled')) return;
+  for (let i = 0; i < count; i++) {
+    const img = document.createElement('img');
+    img.className = 'home-click-burst-p';
+    img.src = src;
+    img.alt = '';
+    img.draggable = false;
+    img.style.left = `${x}${xUnit}`;
+    img.style.top  = `${y}${yUnit}`;
+    if (tintFilter) img.style.filter = tintFilter;
+    // Per-particle motion vars — CSS keyframes interpolate between these.
+    const bx = (Math.random() - 0.5) * 70;        // -35 → +35 px horizontal final
+    const byPeak = -22 - Math.random() * 22;      // -22 → -44 px peak height
+    const byLand = 28 + Math.random() * 24;       // +28 → +52 px landing depth
+    const sizeVar = 0.8 + Math.random() * 0.35;
+    img.style.setProperty('--bx-mid',  `${(bx * 0.5).toFixed(1)}px`);
+    img.style.setProperty('--bx-end',  `${bx.toFixed(1)}px`);
+    img.style.setProperty('--by-peak', `${byPeak.toFixed(1)}px`);
+    img.style.setProperty('--by-land', `${byLand.toFixed(1)}px`);
+    img.style.setProperty('--bscale-0', (0.45 * sizeVar).toFixed(2));
+    img.style.setProperty('--bscale-1', (0.85 * sizeVar).toFixed(2));
+    img.style.setProperty('--bscale-2', (0.65 * sizeVar).toFixed(2));
+    img.addEventListener('animationend', () => img.remove(), { once: true });
+    parent.appendChild(img);
+  }
+}
+
 const CRYSTAL_COLORS = {
   locked: { glowA: 'rgba(80,80,100,0)',    glowB: 'rgba(50,50,70,0)',     textName: '#aaaabb', particles: ['#555566','#444455','#666677','#333344','#777788'] },
   1:      { glowA: 'rgba(136,153,187,0.9)',glowB: 'rgba(100,120,160,0.5)',textName: '#c8d4e4', particles: ['#8899bb','#aabbcc','#99aacc','#778899','#bbccdd'] },
@@ -1424,6 +1465,23 @@ function DivineQiOrb({ orb, onResolve, onSpawnFloater, rateRef }) {
       const reward = orb.burstSeconds * (rateRef.current ?? 1);
       onSpawnFloater({ x: orb.x, y: orb.y, content: fmtDelta(reward) });
     }
+    // Golden splash burst at the orb position — bigger than the crystal-tap
+    // splash (10 orbs) since divine qi is a rarer, more rewarding moment.
+    // Forced gold tint via inline filter — divine bursts ignore the active
+    // crystal tier so they always feel "divine" regardless of progression.
+    try {
+      const zone = document.querySelector('.home-cultivation-zone');
+      if (zone) {
+        spawnClickBurst({
+          parent: zone,
+          x: orb.x, y: orb.y,
+          xUnit: '%', yUnit: '%',
+          count: 10,
+          src: `${BASE}sprites/vfx/qi_particles/qi_orb_bright.png`,
+          tintFilter: 'hue-rotate(-130deg) saturate(1.5) brightness(1.1)',
+        });
+      }
+    } catch {}
   };
 
   return (
@@ -1954,8 +2012,25 @@ function HomeScreen({
         spawnVFX({ type: 'qi-tick', x, y, content: fmtDelta(granted), duration: 1600,
           style: { '--qi-drift-x': '0px' } });
       }
+      // Click-burst orbs — jump up + fall, count scales with reservoir fill
+      // (1 for an empty-tap floor, up to ~5 for a fully-overcharged collect).
+      // Tint inherits the active crystal-tier hue via the body cascade.
+      if (crystalEl) {
+        const baseRate = cultivation.baseRateRef?.current ?? 1;
+        const capMin   = crystalClickCapMinRef?.current ?? 0;
+        const capMax   = capMin * 60 * baseRate;
+        const fillPct  = capMax > 0 ? Math.min(1, granted / capMax) : 0;
+        const count    = Math.max(1, Math.round(1 + fillPct * 4));
+        spawnClickBurst({
+          parent: crystalEl,
+          x: crystalEl.clientWidth  / 2,
+          y: crystalEl.clientHeight / 2,
+          count,
+          src: `${BASE}sprites/vfx/qi_particles/qi_orb_small.png`,
+        });
+      }
     } catch {}
-  }, [collectCrystalReservoir, spawnVFX]);
+  }, [collectCrystalReservoir, spawnVFX, cultivation.baseRateRef, crystalClickCapMinRef]);
 
   const cultivationAd = useRewardedAd(onCultivationReward, 30 * 60 * 1000, 'mai_ad_cd_cultivation');
 
