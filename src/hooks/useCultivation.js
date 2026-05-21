@@ -733,13 +733,17 @@ export default function useCultivation() {
 
   useEffect(() => {
     const interval = setInterval(() => {
+      // Round to 0.1 (not floor) so each save doesn't drop up to 0.99 qi —
+      // at early-game rates of ~1-2 qi/s that was a meaningful loss every
+      // 2 sec. Display still shows integers; the underlying math stays as
+      // accurate as the dial supports.
       saveGame({
         realmIndex:         indexRef.current,
-        qi:                 Math.floor(qiRef.current),
+        qi:                 Math.round(qiRef.current * 10) / 10,
         // Realm-progress meter — Cookie-Clicker pivot. Missing on legacy
         // saves; defaults to 0 on next load (realm bar starts empty, no
         // breakthrough blocked).
-        qiEarnedThisRealm:  Math.floor(qiEarnedThisRealmRef.current),
+        qiEarnedThisRealm:  Math.round(qiEarnedThisRealmRef.current * 10) / 10,
         adBoostEndsAt:      adBoostEndsAtRef.current,
         ascended:           ascendedRef.current,
       });

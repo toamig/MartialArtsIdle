@@ -64,7 +64,13 @@ const PRODUCERS = [
     name:          'Body Tempering Disciple',
     desc:          'An apprentice kneels in your courtyard, breath even, palms warm. The qi they draw from the air is one thin thread. Every thread strengthens the loom.',
     startCost:     15,
-    startQiPerSec: 0.1,
+    // 2026-05-21 Dial-10: 0.1 → 0.2 qi/s. Sim showed TB completion dropping
+    // ~14% at every engagement level (54m → 46m at light engagement), with
+    // the biggest perceived shortening in the first 5 minutes (L1: 2.1m →
+    // 1.5m). BASE_RATE deliberately stays at 1 qi/s — only the producer
+    // ramp moves. Kept at one-decimal precision (0.1) to avoid float-noise
+    // accumulating across producer purchases.
+    startQiPerSec: 0.2,
     costScaling:   1.22,
     unlock:        { type: 'always' },
     sprites:       [
