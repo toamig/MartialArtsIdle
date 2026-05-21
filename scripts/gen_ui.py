@@ -292,6 +292,43 @@ ELEMENTS = {
         ),
     },
 
+    "karma": {
+        "size": (128, 128),
+        "desc": (
+            "A pixel art icon of a single perfectly round translucent VIOLET pearl-sphere "
+            "of karmic essence. Match the style of the reference pearl exactly — same "
+            "translucent pearl material, same composition, same outline, same halo, same "
+            "specular highlight position. Only the colour family changes (blue → violet) "
+            "and the bright inner glow is replaced by a yin-yang motif. "
+            ""
+            "Standalone subject on transparent background. NO rays, NO wisps, NO frame, "
+            "NO ring, NO ornaments — just the sphere, centred, filling 60-70% of the "
+            "image. Perfectly circular. "
+            ""
+            "Translucent sapphire-style sphere but in deep saturated VIOLET (#5a2a8a), "
+            "with a thin deep-purple crescent (#2a0a4a) at the bottom-right edge for the "
+            "underside, a small white-violet specular highlight (#fbf0ff, ~4-5 px) at "
+            "top-left for glass material, and a subtle 1-2 px lavender halo (#c8a0f0) "
+            "hugging the outside of the sphere. "
+            ""
+            "INSIDE the sphere — replacing the bright inner glow seen on the reference — "
+            "a LARGE clear YIN-YANG occupying 55-60% of the sphere's diameter. The two "
+            "halves use a strong palette contrast: bright pale-lavender half (#f0e0ff) "
+            "and dark deep-violet half (#2a0a4a). Clean S-curve boundary divides them. "
+            "Each half holds the classic small opposing-colour dot. The yin-yang must "
+            "read crisp and unmistakable at 24x24. "
+            ""
+            "Treatment: thick charcoal outline (#111) around the sphere AND around the "
+            "yin-yang, flat colour fills, no gradients (volume built from 3-4 colour "
+            "bands). "
+            ""
+            "Palette: pale lavender highlight (#f0e0ff), violet midtone (#5a2a8a), deep "
+            "purple shadow (#2a0a4a), white specular (#fbf0ff), lavender halo (#c8a0f0), "
+            "charcoal outline (#111). NO blue, NO cyan, NO gold, NO red. "
+            f"{S}"
+        ),
+    },
+
     # ── Cultivation upgrade icons (128×128, sit in cs-up-card top-centre) ─────
     # Style anchor for all upgrade_* icons:
     #   - Same "carved jade + bronze" treatment as card_frame / btn_stone.
@@ -694,18 +731,19 @@ def carve_bar_channel(img, scan_x_pct=(0.25, 0.75), lip_threshold=30):
 
 def _style_ref_for(element_id):
     """
-    Auto-resolve a style-only reference for upgrade_* icons (all upgrades
-    except the tone-setter `upgrade_focus` itself). Returns the finalised
-    upgrade_focus.png so the model echoes its palette/border treatment.
+    Auto-resolve a style-only reference image. Passed as `style_image`
+    (palette/treatment hint), NOT `reference_images` (subject lock).
 
-    NOTE: we pass this ONLY as `style_image`, not as `reference_images`.
-    `reference_images` locks the SUBJECT (it caused PixelLab to copy the
-    third-eye motif in earlier tests); `style_image` just hints at palette
-    and line treatment, letting the subject described in the prompt come
-    through cleanly.
+    - upgrade_* icons (except upgrade_focus): style off upgrade_focus.png
+      so every upgrade shares its carved-jade-and-bronze border treatment.
+    - karma: styles off qi.png so the pearl material/composition/outline
+      matches the qi/qi_divine currency family.
     """
     if element_id.startswith("upgrade_") and element_id != "upgrade_focus":
         p = OUT_DIR / "upgrade_focus.png"
+        return p if p.exists() else None
+    if element_id == "karma":
+        p = OUT_DIR / "qi.png"
         return p if p.exists() else None
     return None
 
