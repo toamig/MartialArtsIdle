@@ -68,6 +68,11 @@ html, body, * {
   --qi-bar-mid:      #6ab8de;
   --qi-bar-edge-bri: #3ddcff;
   --qi-bar-core-bri: #ffffff;
+  /* Default spark tint — overridden per tier below. Cascades from body to
+     every .home-crystal-vfx-p (crystal sparks) AND .home-qi-flow-p (orbs
+     drifting into the cultivator), so both pick up the active tier's hue. */
+  --spark-hue: 0deg;
+  --spark-sat: 1;
 }
 
 /* T1 — blue-grey (icy). Mirrors CRYSTAL_COLORS[1] = #8899bb */
@@ -81,6 +86,8 @@ body.crystal-tier-1 {
   --qi-bar-mid:      #aabbcc;
   --qi-bar-edge-bri: #99aabb;
   --qi-bar-core-bri: #e8eef5;
+  --spark-hue:       0deg;
+  --spark-sat:       0.40;
 }
 /* T2 — blue. Mirrors CRYSTAL_COLORS[2] = #4488bb */
 body.crystal-tier-2 {
@@ -93,6 +100,8 @@ body.crystal-tier-2 {
   --qi-bar-mid:      #6aaad8;
   --qi-bar-edge-bri: #4488bb;
   --qi-bar-core-bri: #d0e6f5;
+  --spark-hue:       0deg;
+  --spark-sat:       0.90;
 }
 /* T3 — cyan. Mirrors CRYSTAL_COLORS[3] = #00bbcc */
 body.crystal-tier-3 {
@@ -105,6 +114,8 @@ body.crystal-tier-3 {
   --qi-bar-mid:      #66dee8;
   --qi-bar-edge-bri: #00bbcc;
   --qi-bar-core-bri: #d4fbff;
+  --spark-hue:       -15deg;
+  --spark-sat:       1.10;
 }
 /* T4 — deep sapphire. Mirrors CRYSTAL_COLORS[4] = #1155cc */
 body.crystal-tier-4 {
@@ -117,6 +128,8 @@ body.crystal-tier-4 {
   --qi-bar-mid:      #5588dd;
   --qi-bar-edge-bri: #1155cc;
   --qi-bar-core-bri: #dceaff;
+  --spark-hue:       10deg;
+  --spark-sat:       1.10;
 }
 /* T5 — navy. Mirrors CRYSTAL_COLORS[5] = #2233aa */
 body.crystal-tier-5 {
@@ -129,6 +142,8 @@ body.crystal-tier-5 {
   --qi-bar-mid:      #5560cc;
   --qi-bar-edge-bri: #2233aa;
   --qi-bar-core-bri: #d0d8ff;
+  --spark-hue:       20deg;
+  --spark-sat:       1.15;
 }
 /* T6 — violet. Mirrors CRYSTAL_COLORS[6] = #6600cc */
 body.crystal-tier-6 {
@@ -141,6 +156,8 @@ body.crystal-tier-6 {
   --qi-bar-mid:      #9966ee;
   --qi-bar-edge-bri: #6600cc;
   --qi-bar-core-bri: #e8d0ff;
+  --spark-hue:       55deg;
+  --spark-sat:       1.20;
 }
 /* T7 — purple. Mirrors CRYSTAL_COLORS[7] = #8800dd */
 body.crystal-tier-7 {
@@ -153,6 +170,8 @@ body.crystal-tier-7 {
   --qi-bar-mid:      #aa66ff;
   --qi-bar-edge-bri: #8800dd;
   --qi-bar-core-bri: #f0dcff;
+  --spark-hue:       85deg;
+  --spark-sat:       1.25;
 }
 /* T8 — pale lilac. Mirrors CRYSTAL_COLORS[8] = #cc99ff */
 body.crystal-tier-8 {
@@ -165,6 +184,8 @@ body.crystal-tier-8 {
   --qi-bar-mid:      #ccaaff;
   --qi-bar-edge-bri: #cc99ff;
   --qi-bar-core-bri: #f8ecff;
+  --spark-hue:       100deg;
+  --spark-sat:       1.10;
 }
 /* T9 — gold. Mirrors CRYSTAL_COLORS[9] = #ffcc44 */
 body.crystal-tier-9 {
@@ -177,6 +198,8 @@ body.crystal-tier-9 {
   --qi-bar-mid:      #ffd966;
   --qi-bar-edge-bri: #ffcc44;
   --qi-bar-core-bri: #fff4c8;
+  --spark-hue:       -130deg;
+  --spark-sat:       1.35;
 }
 /* T10 — orange-gold (peak). Mirrors CRYSTAL_COLORS[10] = #ffaa22 */
 body.crystal-tier-10 {
@@ -189,6 +212,8 @@ body.crystal-tier-10 {
   --qi-bar-mid:      #ffbe55;
   --qi-bar-edge-bri: #ffaa22;
   --qi-bar-core-bri: #fff0c8;
+  --spark-hue:       -140deg;
+  --spark-sat:       1.40;
 }
 
 /* CF-rung "pop" — brief outward glow ring on the cultivator stage when the
@@ -16082,6 +16107,10 @@ button.pl-leader.pl-leader-clickable:focus-visible {
   left: 50%;
   transform: translateX(-50%);
   margin-top: 6px;
+  /* Above the qi-flow particle layer (which sits at z:0 inside the
+     fighter-stage). Without this the orbs drift in FRONT of the refine
+     chip when the spawn ring reaches up into the crystal area. */
+  z-index: 30;
   display: inline-flex;
   align-items: center;
   gap: 8px;
