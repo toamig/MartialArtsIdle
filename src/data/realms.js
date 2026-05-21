@@ -22,20 +22,31 @@ const REALMS_RAW = [
   // prior table. Tempered Body untouched — early game stays brisk.
   // Audit: `scripts/sim-multilife.mjs` should land at 4-5 rebirths reaching
   // Emperor 1st / OH L1 at hardcore pacing.
-  // ── Tempered Body (10 Layers) — onboarding, unchanged ──────────────────────
-  { name: 'Tempered Body',    stage: 'Layer 1',      cost: 50 },
-  { name: 'Tempered Body',    stage: 'Layer 2',      cost: 100 },
-  { name: 'Tempered Body',    stage: 'Layer 3',      cost: 175 },
-  { name: 'Tempered Body',    stage: 'Layer 4',      cost: 300 },
-  { name: 'Tempered Body',    stage: 'Layer 5',      cost: 500 },
-  { name: 'Tempered Body',    stage: 'Layer 6',      cost: 850 },
-  { name: 'Tempered Body',    stage: 'Layer 7',      cost: 1_400 },
-  { name: 'Tempered Body',    stage: 'Layer 8',      cost: 2_400 },
-  { name: 'Tempered Body',    stage: 'Layer 9',      cost: 4_000 },
-  { name: 'Tempered Body',    stage: 'Layer 10',     cost: 6_500 },
+  // ── Tempered Body (10 Layers) — 2026-05-21 Dial-8 ──────────────────────────
+  //    Costs bumped ×2 from the original onboarding values. Playtest showed
+  //    the player hitting first major BT in ~5 min with crystal still at L5
+  //    — they didn't have enough breathing room in TB to explore producers
+  //    + refine crystal to T2 (L10 = Crystal Reservoir unlock). Doubling TB
+  //    cumulative (16K → 32K) gives ~10 min in the first realm so the player
+  //    can naturally invest in BOTH producers and crystal, and the L10 / T2
+  //    unlock lands around or just after the first major BT.
+  { name: 'Tempered Body',    stage: 'Layer 1',      cost: 100 },
+  { name: 'Tempered Body',    stage: 'Layer 2',      cost: 200 },
+  { name: 'Tempered Body',    stage: 'Layer 3',      cost: 350 },
+  { name: 'Tempered Body',    stage: 'Layer 4',      cost: 600 },
+  { name: 'Tempered Body',    stage: 'Layer 5',      cost: 1_000 },
+  { name: 'Tempered Body',    stage: 'Layer 6',      cost: 1_700 },
+  { name: 'Tempered Body',    stage: 'Layer 7',      cost: 2_800 },
+  { name: 'Tempered Body',    stage: 'Layer 8',      cost: 4_800 },
+  { name: 'Tempered Body',    stage: 'Layer 9',      cost: 8_000 },
+  { name: 'Tempered Body',    stage: 'Layer 10',     cost: 13_000 },
 
   // ── Qi Transformation (4 Stages) ───────────────────────────────────────────
-  { name: 'Qi Transformation', stage: 'Early Stage',  cost: 150_000 },
+  //    QT Early bumped ×1.3 too (150K → 200K) so the first major BT moment
+  //    is a slightly bigger achievement — and the player has time during
+  //    QT Early to push crystal across the L10 threshold if they didn't
+  //    make it during TB.
+  { name: 'Qi Transformation', stage: 'Early Stage',  cost: 200_000 },
   { name: 'Qi Transformation', stage: 'Middle Stage', cost: 305_000 },
   { name: 'Qi Transformation', stage: 'Late Stage',   cost: 570_000 },
   { name: 'Qi Transformation', stage: 'Peak Stage',   cost: 1_000_000 },
